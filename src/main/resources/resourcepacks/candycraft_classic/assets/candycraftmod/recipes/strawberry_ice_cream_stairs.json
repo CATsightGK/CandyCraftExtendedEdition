@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "#  ",
+    "## ",
+    "###"
+  ],
+  "key": {
+    "#": {
+      "item": "candycraftmod:strawberry_ice_cream"
+    }
+  },
+  "result": {
+    "item": "candycraftmod:strawberry_ice_cream_stairs",
+    "count": 6
+  }
+}

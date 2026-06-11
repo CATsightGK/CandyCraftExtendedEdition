@@ -1,0 +1,7 @@
+﻿{
+  "parent": "minecraft:block/leaves",
+  "textures": {
+    "all": "candycraftmod:block/chocolate_leaves_white"
+  }
+}
+

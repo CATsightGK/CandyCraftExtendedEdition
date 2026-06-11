@@ -1,0 +1,8 @@
+﻿{
+  "variants": {
+    "axis=x": { "model": "candycraftmod:block/gummy/gummy_worm_block", "x": 90, "y": 90 },
+    "axis=y": { "model": "candycraftmod:block/gummy/gummy_worm_block" },
+    "axis=z": { "model": "candycraftmod:block/gummy/gummy_worm_block", "x": 90 }
+  }
+}
+

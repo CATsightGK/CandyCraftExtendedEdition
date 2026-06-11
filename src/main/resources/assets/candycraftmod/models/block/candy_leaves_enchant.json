@@ -1,6 +1,7 @@
 {
   "parent": "minecraft:block/block",
   "textures": {
+    "particle": "candycraftmod:block/candy_leaves.4",
     "all": "candycraftmod:block/candy_leaves.4"
   },
   "elements": [

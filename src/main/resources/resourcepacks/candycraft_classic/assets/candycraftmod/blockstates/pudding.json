@@ -1,0 +1,10 @@
+{
+    "variants": {
+        "": [
+            { "model": "candycraftmod:block/pudding_normal" },
+            { "model": "candycraftmod:block/pudding_normal", "y": 90 },
+            { "model": "candycraftmod:block/pudding_normal", "y": 180 },
+            { "model": "candycraftmod:block/pudding_normal", "y": 270 }
+        ]
+    }
+}

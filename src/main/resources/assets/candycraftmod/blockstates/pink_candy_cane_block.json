@@ -1,0 +1,9 @@
+﻿{
+  "variants": {
+    "": [
+      {
+        "model": "candycraftmod:block/candy_cane/pink_candy_cane_block"
+      }
+    ]
+  }
+}

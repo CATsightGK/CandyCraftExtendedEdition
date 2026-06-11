@@ -1,0 +1,7 @@
+{
+    "multipart": [
+        { "when": { "axis": "y" }, "apply": { "model": "candycraftmod:block/marshmallow_log.1" } },
+        { "when": { "axis": "z" }, "apply": { "model": "candycraftmod:block/marshmallow_log_side.1" } },
+        { "when": { "axis": "x" }, "apply": { "model": "candycraftmod:block/marshmallow_log_side.1", "y": 90 } }
+    ]
+}

@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "#%#",
+    "%$%",
+    "#%#"
+  ],
+  "key": {
+    "#": {
+      "item": "candycraftmod:licorice"
+    },
+    "%": {
+      "item": "candycraftmod:marshmallow_stick"
+    },
+    "$": {
+      "item": "candycraftmod:candy_cane_wall"
+    }
+  },
+  "result": {
+    "item": "candycraftmod:sugar_factory"
+  }
+}

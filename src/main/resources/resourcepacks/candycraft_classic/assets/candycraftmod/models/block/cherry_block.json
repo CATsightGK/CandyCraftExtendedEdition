@@ -1,0 +1,19 @@
+{
+    "textures": {
+        "particle": "candycraftmod:block/cherry_block",
+        "all": "candycraftmod:block/cherry_block"
+    },
+	"elements": [
+        {   "from": [ 4.8, 9.6, 4.8 ],
+            "to": [ 11.2, 16, 11.2 ],
+            "faces": {
+                "down":  { "uv": [ 0, 0, 16, 16 ], "texture": "#all" },
+                "up":    { "uv": [ 0, 0, 16, 16 ], "texture": "#all", "cullface": "up" },
+                "north": { "uv": [ 0, 0, 16, 16 ], "texture": "#all", "cullface": "north" },
+                "south": { "uv": [ 0, 0, 16, 16 ], "texture": "#all", "cullface": "south" },
+                "west":  { "uv": [ 0, 0, 16, 16 ], "texture": "#all", "cullface": "west" },
+                "east":  { "uv": [ 0, 0, 16, 16 ], "texture": "#all", "cullface": "east" }
+            }
+        }
+    ]
+}

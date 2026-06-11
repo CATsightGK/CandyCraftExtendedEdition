@@ -1,0 +1,5 @@
+{
+    "multipart": [
+        { "apply": { "model": "candycraftmod:block/candy_leaves_enchant" } }
+    ]
+}

@@ -1,0 +1,8 @@
+﻿{
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "candycraftmod:block/milk_chocolate_mushroom0"
+  }
+}
+
+

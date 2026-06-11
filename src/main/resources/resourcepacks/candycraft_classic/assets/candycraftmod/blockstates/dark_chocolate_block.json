@@ -1,0 +1,20 @@
+﻿{
+  "variants": {
+    "": [
+      {
+        "model": "candycraftmod:block/chocolate/dark_chocolate_block"
+      },
+      {
+        "model": "candycraftmod:block/chocolate/dark_chocolate_block_mirrored"
+      },
+      {
+        "model": "candycraftmod:block/chocolate/dark_chocolate_block",
+        "y": 180
+      },
+      {
+        "model": "candycraftmod:block/chocolate/dark_chocolate_block_mirrored",
+        "y": 180
+      }
+    ]
+  }
+}

@@ -1,0 +1,7 @@
+﻿{
+  "parent": "block/leaves",
+  "textures": {
+    "all": "candycraftmod:block/gummy_block_transluscent"
+  }
+}
+

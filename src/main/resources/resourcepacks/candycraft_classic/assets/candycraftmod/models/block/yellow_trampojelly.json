@@ -1,0 +1,6 @@
+{
+    "textures":  {
+                     "all":  "candycraftmod:block/yellow_trampojelly"
+                 },
+    "parent":  "minecraft:block/cube_all"
+}

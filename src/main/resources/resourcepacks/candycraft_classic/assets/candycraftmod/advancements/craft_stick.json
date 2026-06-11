@@ -1,0 +1,36 @@
+{
+  "display": {
+    "icon": {
+      "item": "minecraft:stick"
+    },
+    "title": {
+      "translate": "advancements.candycraft.stick.title"
+    },
+    "description": {
+      "translate": "advancements.candycraft.stick.desc"
+    }
+  },
+  "parent": "candycraftmod:candy_world",
+  "criteria": {
+    "stick": {
+      "trigger": "minecraft:inventory_changed",
+      "items": [
+        {
+          "item": "minecraft:stick"
+        }
+      ]
+    },
+    "recipe": {
+      "trigger": "minecraft:recipe_unlocked",
+      "conditions": {
+        "recipe": "minecraft:stick"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "stick",
+      "recipe"
+    ]
+  ]
+}

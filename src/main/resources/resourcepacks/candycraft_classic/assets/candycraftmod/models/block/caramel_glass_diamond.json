@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/cube_all",
+  "textures": {
+    "all": "candycraftmod:block/caramel_glass_2"
+  }
+}

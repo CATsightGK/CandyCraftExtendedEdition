@@ -1,0 +1,8 @@
+﻿{
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "candycraftmod:block/cotton_candy_bush2"
+  }
+}
+
+

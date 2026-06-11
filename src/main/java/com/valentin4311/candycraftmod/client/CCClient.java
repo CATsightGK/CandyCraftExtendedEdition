@@ -3,6 +3,7 @@ package com.valentin4311.candycraftmod.client;
 import com.valentin4311.candycraftmod.CandyCraft;
 import com.valentin4311.candycraftmod.block.CandyLiquidBlock;
 import com.valentin4311.candycraftmod.block.PuddingBlock;
+import com.valentin4311.candycraftmod.client.particle.ChocolateSplashParticle;
 import com.valentin4311.candycraftmod.client.model.CandyFishModel;
 import com.valentin4311.candycraftmod.client.model.BeeModel;
 import com.valentin4311.candycraftmod.client.model.BeetleModel;
@@ -19,12 +20,12 @@ import com.valentin4311.candycraftmod.registry.CCEntityTypes;
 import com.valentin4311.candycraftmod.registry.CCFluids;
 import com.valentin4311.candycraftmod.registry.CCItems;
 import com.valentin4311.candycraftmod.registry.CCMenus;
+import com.valentin4311.candycraftmod.registry.CCParticleTypes;
 import com.valentin4311.candycraftmod.registry.CCSweetscapeBlocks;
 import com.valentin4311.candycraftmod.item.CaramelCrossbowItem;
 import com.valentin4311.candycraftmod.item.DynamiteItem;
 import com.valentin4311.candycraftmod.item.RawGummyItem;
 import com.valentin4311.candycraftmod.item.SugarPillItem;
-import com.valentin4311.candycraftmod.world.CCDimensions;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -47,6 +48,7 @@ import net.minecraftforge.client.event.RegisterGuiOverlaysEvent;
 import net.minecraftforge.client.event.RenderBlockScreenEffectEvent;
 import net.minecraftforge.client.event.ViewportEvent;
 import net.minecraftforge.client.event.ModelEvent;
+import net.minecraftforge.client.event.RegisterParticleProvidersEvent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RegisterColorHandlersEvent;
 import net.minecraftforge.client.event.EntityRenderersEvent;
@@ -82,6 +84,11 @@ public final class CCClient {
             MenuScreens.register(CCMenus.LICORICE_FURNACE.get(), LicoriceFurnaceScreen::new);
             registerProjectileItemProperties();
         });
+    }
+
+    @SubscribeEvent
+    public static void registerParticles(RegisterParticleProvidersEvent event) {
+        event.registerSpriteSet(CCParticleTypes.CHOCOLATE_SPLASH.get(), ChocolateSplashParticle.Provider::new);
     }
 
     @SubscribeEvent
@@ -550,7 +557,8 @@ public final class CCClient {
         }
 
         private static boolean isCandyWorld(net.minecraft.client.Camera camera) {
-            return camera.getEntity().level().dimension() == CCDimensions.CANDY_WORLD;
+            ResourceLocation dimension = camera.getEntity().level().dimension().location();
+            return CandyCraft.MODID.equals(dimension.getNamespace()) && "candy_world".equals(dimension.getPath());
         }
 
         private static boolean isInLiquidCandy(net.minecraft.world.entity.LivingEntity living) {

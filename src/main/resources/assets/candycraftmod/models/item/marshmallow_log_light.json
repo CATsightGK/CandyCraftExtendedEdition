@@ -1,3 +1,7 @@
 {
-    "parent":  "candycraftmod:block/marshmallow_log_light"
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "end": "candycraftmod:block/marshmallow_log_top.2",
+    "side": "candycraftmod:block/marshmallow_log_side.2"
+  }
 }

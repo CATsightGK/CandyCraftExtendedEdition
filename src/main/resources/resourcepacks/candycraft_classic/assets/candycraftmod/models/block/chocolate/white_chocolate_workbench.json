@@ -1,0 +1,10 @@
+﻿{
+  "parent": "block/cube_bottom_top",
+  "textures": {
+    "top": "candycraftmod:block/chocolate_workbench_white_top",
+    "side": "candycraftmod:block/chocolate_workbench_white_side",
+    "bottom": "candycraftmod:block/wafer_stick_top",
+    "particle": "candycraftmod:block/chocolate_workbench_white_side"
+  }
+}
+

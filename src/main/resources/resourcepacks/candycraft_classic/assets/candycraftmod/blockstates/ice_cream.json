@@ -1,0 +1,8 @@
+{
+    "variants": {
+        "type=0": { "model": "candycraftmod:block/ice_cream.0" },
+		"type=1": { "model": "candycraftmod:block/ice_cream.1" },
+		"type=2": { "model": "candycraftmod:block/ice_cream.2" },
+		"type=3": { "model": "candycraftmod:block/ice_cream.3" }
+    }
+}

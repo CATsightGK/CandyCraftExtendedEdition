@@ -1,0 +1,20 @@
+﻿{
+  "variants": {
+    "facing=north": {
+      "model": "candycraftmod:block/chocolate/milk_chocolate_bar_block",
+      "y": 0
+    },
+    "facing=east": {
+      "model": "candycraftmod:block/chocolate/milk_chocolate_bar_block",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "candycraftmod:block/chocolate/milk_chocolate_bar_block",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "candycraftmod:block/chocolate/milk_chocolate_bar_block",
+      "y": 270
+    }
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "metadata=0": { "model": "candycraftmod:block/banana_seaweed" },
+    "metadata=1": { "model": "candycraftmod:block/banana_seaweed" },
+    "metadata=2": { "model": "candycraftmod:block/banana_seaweed" },
+    "metadata=3": { "model": "candycraftmod:block/banana_seaweed" }
+  }
+}

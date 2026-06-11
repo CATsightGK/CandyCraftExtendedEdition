@@ -158,7 +158,7 @@ public final class CCBlocks {
     public static final RegistryObject<Block> MARSHMALLOW_FLOWER_BLOCK = cutout(register("marshmallow_flower_block", () -> new WaterlilyBlock(plant().strength(0.0F))));
     public static final RegistryObject<Block> GRENADINE_BLOCK = translucent(register("grenadine_block", () -> new GlassBlock(glass(MapColor.COLOR_RED).strength(1.0F))));
     public static final RegistryObject<Block> FRAGILE_GRENADINE_BLOCK = translucent(registerNoItem("fragile_grenadine_block", () -> new FragileGrenadineBlock(glass(MapColor.COLOR_RED).strength(0.25F).randomTicks().noLootTable())));
-    public static final RegistryObject<Block> ICE_CREAM = register("ice_cream", () -> new LegacyTypeBlock(BlockBehaviour.Properties.copy(Blocks.SNOW_BLOCK).mapColor(MapColor.SNOW).strength(1.0F)));
+    public static final RegistryObject<Block> ICE_CREAM = register("ice_cream", () -> new LegacyTypeBlock(BlockBehaviour.Properties.copy(Blocks.SNOW_BLOCK).mapColor(MapColor.SNOW).strength(1.0F), 3));
     public static final RegistryObject<Block> ICE_CREAM_STAIRS_0 = register("ice_cream_stairs.0", () -> stairs(Blocks.SNOW_BLOCK.defaultBlockState(), BlockBehaviour.Properties.copy(Blocks.SNOW_BLOCK).strength(1.0F)));
     public static final RegistryObject<Block> ICE_CREAM_STAIRS_1 = register("ice_cream_stairs.1", () -> stairs(Blocks.SNOW_BLOCK.defaultBlockState(), BlockBehaviour.Properties.copy(Blocks.SNOW_BLOCK).strength(1.0F)));
     public static final RegistryObject<Block> ICE_CREAM_STAIRS_2 = register("ice_cream_stairs.2", () -> stairs(Blocks.SNOW_BLOCK.defaultBlockState(), BlockBehaviour.Properties.copy(Blocks.SNOW_BLOCK).strength(1.0F)));

@@ -1,0 +1,12 @@
+{
+    "variants": {
+        "moisture=0": { "model": "candycraftmod:block/candy_farmland_dry" },
+        "moisture=1": { "model": "candycraftmod:block/candy_farmland_dry" },
+        "moisture=2": { "model": "candycraftmod:block/candy_farmland_dry" },
+        "moisture=3": { "model": "candycraftmod:block/candy_farmland_dry" },
+        "moisture=4": { "model": "candycraftmod:block/candy_farmland_dry" },
+        "moisture=5": { "model": "candycraftmod:block/candy_farmland_dry" },
+        "moisture=6": { "model": "candycraftmod:block/candy_farmland_dry" },
+        "moisture=7": { "model": "candycraftmod:block/candy_farmland_moist" }
+    }
+}

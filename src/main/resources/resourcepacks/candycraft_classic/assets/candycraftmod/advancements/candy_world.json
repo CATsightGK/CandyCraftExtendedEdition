@@ -1,0 +1,24 @@
+{
+  "display": {
+    "icon": {
+      "item": "candycraftmod:marshmallow_log",
+      "data": 0
+    },
+    "title": {
+      "translate": "advancements.candycraft.candy_world.title"
+    },
+    "description": {
+      "translate": "advancements.candycraft.candy_world.desc"
+    },
+    "frame": "goal"
+  },
+  "parent": "candycraftmod:root",
+  "criteria": {
+    "travel_to_dim": {
+      "trigger": "minecraft:changed_dimension",
+      "conditions": {
+        "to": "Candy Valley"
+      }
+    }
+  }
+}

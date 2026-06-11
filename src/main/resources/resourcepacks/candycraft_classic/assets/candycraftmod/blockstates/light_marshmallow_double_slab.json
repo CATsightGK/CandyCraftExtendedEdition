@@ -1,0 +1,7 @@
+{
+    "variants":  {
+                     " ":  {
+                               "model":  "candycraftmod:block/light_marshmallow_double_slab"
+                           }
+                 }
+}

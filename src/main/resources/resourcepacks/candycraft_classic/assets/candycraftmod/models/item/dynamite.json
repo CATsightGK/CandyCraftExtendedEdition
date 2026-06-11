@@ -1,0 +1,20 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "candycraftmod:item/dynamite"
+  },
+  "overrides": [
+    {
+      "predicate": {
+        "stage": 1.0
+      },
+      "model": "candycraftmod:item/dynamite_1"
+    },
+    {
+      "predicate": {
+        "stage": 2.0
+      },
+      "model": "candycraftmod:item/dynamite_2"
+    }
+  ]
+}

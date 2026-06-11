@@ -1,0 +1,38 @@
+{
+  "display": {
+    "icon": {
+      "item": "candycraftmod:sugar_block"
+    },
+    "title": {
+      "translate": "advancements.candycraft.root.title"
+    },
+    "description": {
+      "translate": "advancements.candycraft.root.desc"
+    },
+    "background": "candycraftmod:textures/blocks/chocolate_stone.png",
+    "show_toast": true,
+    "announce_to_chat": false
+  },
+  "criteria": {
+    "sugar_block": {
+      "trigger": "minecraft:inventory_changed",
+      "items": [
+        {
+          "item": "candycraftmod:sugar_block"
+        }
+      ]
+    },
+    "recipe": {
+      "trigger": "minecraft:recipe_unlocked",
+      "conditions": {
+        "recipe": "candycraftmod:sugar_block"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "sugar_block",
+      "recipe"
+    ]
+  ]
+}

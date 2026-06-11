@@ -1,0 +1,10 @@
+{
+    "variants": {
+        "": [
+            { "model": "candycraftmod:block/marshmallow_flower_block" },
+            { "model": "candycraftmod:block/marshmallow_flower_block", "y": 90 },
+            { "model": "candycraftmod:block/marshmallow_flower_block", "y": 180 },
+            { "model": "candycraftmod:block/marshmallow_flower_block", "y": 270 }
+        ]
+    }
+}

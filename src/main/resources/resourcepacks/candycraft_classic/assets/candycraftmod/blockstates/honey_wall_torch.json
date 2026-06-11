@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=east": {
+      "model": "candycraftmod:block/honey_torch_wall"
+    },
+    "facing=south": {
+      "model": "candycraftmod:block/honey_torch_wall",
+      "y": 90
+    },
+    "facing=west": {
+      "model": "candycraftmod:block/honey_torch_wall",
+      "y": 180
+    },
+    "facing=north": {
+      "model": "candycraftmod:block/honey_torch_wall",
+      "y": 270
+    }
+  }
+}

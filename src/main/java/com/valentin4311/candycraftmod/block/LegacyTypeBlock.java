@@ -10,8 +10,12 @@ public class LegacyTypeBlock extends Block {
     public static final IntegerProperty TYPE = IntegerProperty.create("type", 0, 3);
 
     public LegacyTypeBlock(BlockBehaviour.Properties properties) {
+        this(properties, 0);
+    }
+
+    public LegacyTypeBlock(BlockBehaviour.Properties properties, int defaultType) {
         super(properties);
-        registerDefaultState(stateDefinition.any().setValue(TYPE, 0));
+        registerDefaultState(stateDefinition.any().setValue(TYPE, defaultType));
     }
 
     @Override

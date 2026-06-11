@@ -1,0 +1,25 @@
+{
+  "display": {
+    "icon": {
+      "item": "candycraftmod:orange_key"
+    },
+    "title": {
+      "translate": "advancements.candycraft.kill_jelly_queen.title"
+    },
+    "description": {
+      "translate": "advancements.candycraft.kill_jelly_queen.desc"
+    },
+    "frame": "goal"
+  },
+  "parent": "candycraftmod:craft_licorice_sword",
+  "criteria": {
+    "kill_jelly_queen": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {
+        "entity": {
+          "type": "candycraftmod:jelly_queen"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+    "textures":  {
+                     "layer0":  "candycraftmod:block/sweet_grass.0"
+                 },
+    "parent":  "minecraft:item/generated"
+}

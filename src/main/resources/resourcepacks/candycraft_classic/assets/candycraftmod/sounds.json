@@ -1,0 +1,10 @@
+{
+  "records.cd-1": {"category": "record","sounds": [{"name": "candycraftmod:records/cd-1","stream": true}]},
+  "records.cd-2": {"category": "record","sounds": [{"name": "candycraftmod:records/cd-2","stream": true}]},
+  "records.cd-3": {"category": "record","sounds": [{"name": "candycraftmod:records/cd-3","stream": true}]},
+  "records.cd-4": {"category": "record","sounds": [{"name": "candycraftmod:records/cd-4","stream": true}]},
+  "dig.jelly": {"category": "block","sounds": [{"name": "dig/jelly1","stream": false},{"name": "dig/jelly2","stream": false}]},
+  "mob.nessie": {"category": "neutral","sounds": [{"name": "mob/nessie1"},{"name": "mob/nessie2"},{"name": "mob/nessie3"}]},
+  "mob.nessiehurt": {"category": "neutral","sounds": [{"name": "mob/nessiehurt"}]},
+  "step.jelly": {"category": "neutral","sounds": [{"name": "step/jelly1","stream": false},{"name": "step/jelly2","stream": false},{"name": "step/jelly3","stream": false},{"name": "step/jelly4","stream": false}]}
+}

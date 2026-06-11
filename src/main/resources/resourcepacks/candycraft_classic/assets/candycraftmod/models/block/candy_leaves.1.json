@@ -1,0 +1,6 @@
+{
+    "parent": "block/leaves",
+    "textures": {
+        "all": "candycraftmod:block/candy_leaves.1"
+    }
+}

@@ -1,0 +1,16 @@
+{
+  "type": "forge:ore_shaped",
+  "pattern": [
+    "##",
+    "##",
+    "##"
+  ],
+  "key": {
+    "#": {
+      "item": "#MARSHMALLOWPLANKS"
+    }
+  },
+  "result": {
+    "item": "candycraftmod:marshmallow_door"
+  }
+}

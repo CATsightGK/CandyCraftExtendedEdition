@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north": { "model": "candycraftmod:block/nougat_head" },
+    "facing=east": { "model": "candycraftmod:block/nougat_head", "y": 90 },
+    "facing=south": { "model": "candycraftmod:block/nougat_head", "y": 180 },
+    "facing=west": { "model": "candycraftmod:block/nougat_head", "y": 270 }
+  }
+}

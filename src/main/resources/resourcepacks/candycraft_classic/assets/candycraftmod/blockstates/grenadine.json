@@ -1,0 +1,52 @@
+{
+  "variants": {
+    "level=0": {
+      "model": "candycraftmod:block/grenadine"
+    },
+    "level=1": {
+      "model": "candycraftmod:block/grenadine"
+    },
+    "level=2": {
+      "model": "candycraftmod:block/grenadine"
+    },
+    "level=3": {
+      "model": "candycraftmod:block/grenadine"
+    },
+    "level=4": {
+      "model": "candycraftmod:block/grenadine"
+    },
+    "level=5": {
+      "model": "candycraftmod:block/grenadine"
+    },
+    "level=6": {
+      "model": "candycraftmod:block/grenadine"
+    },
+    "level=7": {
+      "model": "candycraftmod:block/grenadine"
+    },
+    "level=8": {
+      "model": "candycraftmod:block/grenadine"
+    },
+    "level=9": {
+      "model": "candycraftmod:block/grenadine"
+    },
+    "level=10": {
+      "model": "candycraftmod:block/grenadine"
+    },
+    "level=11": {
+      "model": "candycraftmod:block/grenadine"
+    },
+    "level=12": {
+      "model": "candycraftmod:block/grenadine"
+    },
+    "level=13": {
+      "model": "candycraftmod:block/grenadine"
+    },
+    "level=14": {
+      "model": "candycraftmod:block/grenadine"
+    },
+    "level=15": {
+      "model": "candycraftmod:block/grenadine"
+    }
+  }
+}

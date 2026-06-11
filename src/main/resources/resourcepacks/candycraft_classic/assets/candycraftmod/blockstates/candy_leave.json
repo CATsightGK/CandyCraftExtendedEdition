@@ -1,0 +1,20 @@
+{
+    "variants": {
+        "check_decay=false,decayable=false,variant=oak": { "model": "candycraftmod:block/candy_leaves.0" },
+		"check_decay=false,decayable=false,variant=spruce": { "model": "candycraftmod:block/candy_leaves.1" },
+		"check_decay=false,decayable=false,variant=birch": { "model": "candycraftmod:block/candy_leaves.2" },
+		"check_decay=false,decayable=false,variant=jungle": { "model": "candycraftmod:block/candy_leaves.3" },
+		"check_decay=true,decayable=false,variant=oak": { "model": "candycraftmod:block/candy_leaves.0" },
+		"check_decay=true,decayable=false,variant=spruce": { "model": "candycraftmod:block/candy_leaves.1" },
+		"check_decay=true,decayable=false,variant=birch": { "model": "candycraftmod:block/candy_leaves.2" },
+		"check_decay=true,decayable=false,variant=jungle": { "model": "candycraftmod:block/candy_leaves.3" },
+		"check_decay=false,decayable=true,variant=oak": { "model": "candycraftmod:block/candy_leaves.0" },
+		"check_decay=false,decayable=true,variant=spruce": { "model": "candycraftmod:block/candy_leaves.1" },
+		"check_decay=false,decayable=true,variant=birch": { "model": "candycraftmod:block/candy_leaves.2" },
+		"check_decay=false,decayable=true,variant=jungle": { "model": "candycraftmod:block/candy_leaves.3" },
+		"check_decay=true,decayable=true,variant=oak": { "model": "candycraftmod:block/candy_leaves.0" },
+		"check_decay=true,decayable=true,variant=spruce": { "model": "candycraftmod:block/candy_leaves.1" },
+		"check_decay=true,decayable=true,variant=birch": { "model": "candycraftmod:block/candy_leaves.2" },
+		"check_decay=true,decayable=true,variant=jungle": { "model": "candycraftmod:block/candy_leaves.3" }
+    }
+}

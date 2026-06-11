@@ -1,63 +1,37 @@
-﻿{
-    "has_precipitation":  false,
-    "temperature":  0.8,
-    "downfall":  0.0,
-    "effects":  {
-                    "sky_color":  16636119,
-                    "fog_color":  16767191,
-                    "water_color":  13473279,
-                    "water_fog_color":  13473279,
-                    "grass_color":  16759756,
-                    "foliage_color":  16759756
-                },
-    "spawners":  {
-
-                 },
-    "spawn_costs":  {
-
-                    },
-    "carvers":  {
-
-                },
-    "features":  [
-                     [
-
-                     ],
-                     [
-
-                     ],
-                     [
-
-                     ],
-                     [
-
-                     ],
-                     [
-
-                     ],
-                     [
-
-                     ],
-                     [
-                         "candycraftmod:ore_honey",
-                         "candycraftmod:ore_licorice",
-                         "candycraftmod:ore_jelly",
-                         "candycraftmod:ore_nougat",
-                         "candycraftmod:ore_pez",
-                         "candycraftmod:ore_lapis",
-                         "candycraftmod:ore_chocolate_copper_slot"
-                     ],
-                     [
-
-                     ],
-                     [
-
-                     ],
-                     [
-
-                     ],
-                     [
-
-                     ]
-                 ]
+{
+  "has_precipitation": false,
+  "temperature": 0.8,
+  "downfall": 0,
+  "effects": {
+    "sky_color": 16636119,
+    "fog_color": 16767191,
+    "water_color": 13473279,
+    "water_fog_color": 13473279,
+    "grass_color": 16759756,
+    "foliage_color": 16759756
+  },
+  "spawners": {},
+  "spawn_costs": {},
+  "carvers": {},
+  "features": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [
+      "candycraftmod:ore_honey",
+      "candycraftmod:ore_licorice",
+      "candycraftmod:ore_jelly",
+      "candycraftmod:ore_nougat",
+      "candycraftmod:ore_pez",
+      "candycraftmod:ore_lapis",
+      "candycraftmod:ore_chocolate_copper_slot"
+    ],
+    [],
+    [],
+    [],
+    []
+  ]
 }

@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "age=0": { "model": "candycraftmod:block/fragile_grenadine_block" },
+    "age=1": { "model": "candycraftmod:block/fragile_grenadine_block" },
+    "age=2": { "model": "candycraftmod:block/fragile_grenadine_block" },
+    "age=3": { "model": "candycraftmod:block/fragile_grenadine_block" }
+  }
+}

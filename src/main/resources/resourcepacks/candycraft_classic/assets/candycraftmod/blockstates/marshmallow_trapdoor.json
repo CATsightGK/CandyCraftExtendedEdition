@@ -1,0 +1,22 @@
+{
+    "variants":  {
+                     "facing=north,half=bottom,open=true,waterlogged=true":  {
+                                                                                 "model":  "candycraftmod:block/marshmallow_trapdoor_open"
+                                                                             },
+                     "facing=north,half=bottom,open=false,waterlogged=false":  {
+                                                                                   "model":  "candycraftmod:block/marshmallow_trapdoor_bottom"
+                                                                               },
+                     "facing=north,half=top,open=false,waterlogged=true":  {
+                                                                               "model":  "candycraftmod:block/marshmallow_trapdoor_top"
+                                                                           },
+                     "facing=north,half=top,open=false,waterlogged=false":  {
+                                                                                "model":  "candycraftmod:block/marshmallow_trapdoor_top"
+                                                                            },
+                     "facing=north,half=bottom,open=false,waterlogged=true":  {
+                                                                                  "model":  "candycraftmod:block/marshmallow_trapdoor_bottom"
+                                                                              },
+                     "facing=north,half=bottom,open=true,waterlogged=false":  {
+                                                                                  "model":  "candycraftmod:block/marshmallow_trapdoor_open"
+                                                                              }
+                 }
+}

@@ -62,6 +62,7 @@ public final class CCSweetscapeBlocks {
     public static final RegistryObject<Block> WHITE_RED_CANDY_CANE_BLOCK = register("white_red_candy_cane_block", () -> new Block(candyCane(MapColor.COLOR_RED)));
     public static final RegistryObject<Block> WHITE_GREEN_CANDY_CANE_BLOCK = register("white_green_candy_cane_block", () -> new Block(candyCane(MapColor.COLOR_GREEN)));
     public static final RegistryObject<Block> RED_GREEN_CANDY_CANE_BLOCK = register("red_green_candy_cane_block", () -> new Block(candyCane(MapColor.COLOR_RED)));
+    public static final RegistryObject<Block> PINK_CANDY_CANE_BLOCK = register("pink_candy_cane_block", () -> new Block(candyCane(MapColor.COLOR_PINK)));
 
     public static final RegistryObject<Block> WHITE_CANDY_CANE_WORKBENCH = register("white_candy_cane_workbench", () -> new Block(candyCane(MapColor.TERRACOTTA_WHITE)));
     public static final RegistryObject<Block> RED_CANDY_CANE_WORKBENCH = register("red_candy_cane_workbench", () -> new Block(candyCane(MapColor.COLOR_RED)));
