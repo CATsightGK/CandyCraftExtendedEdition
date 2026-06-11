@@ -69,7 +69,7 @@ public final class CCBlocks {
     public static final RegistryObject<Block> MARSHMALLOW_LOG = register("marshmallow_log", () -> new LegacyLogBlock(wood(MapColor.COLOR_PINK).strength(2.0F)));
     public static final RegistryObject<Block> CANDY_LEAVE = cutout(registerNoItem("candy_leave", () -> new LegacyLeavesBlock(leaves(MapColor.COLOR_PINK))));
     public static final RegistryObject<Block> CANDY_LEAVE2 = cutout(registerNoItem("candy_leave2", () -> new LegacyLeavesBlock(leaves(MapColor.COLOR_PURPLE))));
-    public static final RegistryObject<Block> CANDY_SAPLING = cutout(registerNoItem("candy_sapling", () -> new LegacySaplingBlock(plant())));
+    public static final RegistryObject<Block> CANDY_SAPLING = cutout(register("candy_sapling", () -> new LegacySaplingBlock(plant())));
     public static final RegistryObject<Block> CANDY_FARMLAND = register("candy_farmland", () -> new CandyFarmlandBlock(earth(MapColor.SAND).strength(0.6F)));
     public static final RegistryObject<Block> SWEET_GRASS = cutout(register("sweet_grass", () -> new LegacyMetadataBlock.Plant(plant())));
     public static final RegistryObject<Block> LICORICE_ORE = register("licorice_ore", () -> new Block(stone().requiresCorrectToolForDrops()));

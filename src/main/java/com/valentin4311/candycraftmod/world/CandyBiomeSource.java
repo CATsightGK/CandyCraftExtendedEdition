@@ -81,10 +81,20 @@ public class CandyBiomeSource extends BiomeSource {
             return candy("sugar_oceans");
         }
         if (biome.is(BiomeIds.SNOWY_PLAINS)) {
-            return biome.type() == 1 ? candy("sugar_mountains") : candy("ice_cream_plains");
+            if (biome.type() == 1) {
+                return skyMountainRegion(quartX, quartZ, worldSeed)
+                    ? candy("ice_cream_sky_mountains")
+                    : candy("sugar_mountains");
+            }
+            return candy("ice_cream_plains");
         }
         if (biome.is(BiomeIds.SNOWY_TAIGA)) {
-            return biome.type() == 1 ? candy("sugar_mountains") : candy("sugar_cold_forest");
+            if (biome.type() == 1) {
+                return skyMountainRegion(quartX, quartZ, worldSeed)
+                    ? candy("ice_cream_sky_mountains")
+                    : candy("sugar_mountains");
+            }
+            return candy("sugar_cold_forest");
         }
         if (biome.is(BiomeIds.SWAMP)) {
             return gummyRegion(quartX, quartZ, worldSeed) ? candy("gummy_swamp") : candy("sugar_plains");
@@ -110,7 +120,9 @@ public class CandyBiomeSource extends BiomeSource {
             return candy("sugar_forest");
         }
         if (biome.is(BiomeIds.WINDSWEPT_FOREST) || biome.is(BiomeIds.STONY_SHORE)) {
-            return candy("sugar_mountains");
+            return skyMountainRegion(quartX, quartZ, worldSeed)
+                ? candy("ice_cream_sky_mountains")
+                : candy("sugar_mountains");
         }
         if (biome.is(BiomeIds.MUSHROOM_FIELDS)) {
             return candy("sugar_plains");
@@ -149,6 +161,10 @@ public class CandyBiomeSource extends BiomeSource {
 
     private static boolean cottonCandyRegion(int quartX, int quartZ, long worldSeed) {
         return regionNoise(quartX, quartZ, worldSeed ^ 0x34F1A52DL, 0.008D) > 0.0D;
+    }
+
+    private static boolean skyMountainRegion(int quartX, int quartZ, long worldSeed) {
+        return regionNoise(quartX, quartZ, worldSeed ^ 0x15CE5CA1E5L, 0.006D) > 0.18D;
     }
 
     private static double regionNoise(int quartX, int quartZ, long salt, double scale) {

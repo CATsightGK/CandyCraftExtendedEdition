@@ -77,18 +77,22 @@ public final class CCSweetscapeItems {
     public static final RegistryObject<Item> MILK_CHOCOLATE_PICKAXE = registerTool("milk_chocolate_pickaxe", () -> new PickaxeItem(CHOCOLATE, 1, -2.8F, food(6, 0.6F)));
     public static final RegistryObject<Item> MILK_CHOCOLATE_SHOVEL = registerTool("milk_chocolate_shovel", () -> new ShovelItem(CHOCOLATE, 1.5F, -3.0F, food(6, 0.6F)));
     public static final RegistryObject<Item> MILK_CHOCOLATE_SWORD = registerTool("milk_chocolate_sword", () -> new SwordItem(CHOCOLATE, 3, -2.4F, food(6, 0.6F)));
+    public static final RegistryObject<Item> MILK_CHOCOLATE_HOE = registerTool("milk_chocolate_hoe", () -> new HoeItem(CHOCOLATE, -2, -1.0F, food(6, 0.6F)));
     public static final RegistryObject<Item> WHITE_CHOCOLATE_AXE = registerTool("white_chocolate_axe", () -> new AxeItem(CHOCOLATE, 5.5F, -3.0F, food(6, 0.6F)));
     public static final RegistryObject<Item> WHITE_CHOCOLATE_PICKAXE = registerTool("white_chocolate_pickaxe", () -> new PickaxeItem(CHOCOLATE, 1, -2.8F, food(6, 0.6F)));
     public static final RegistryObject<Item> WHITE_CHOCOLATE_SHOVEL = registerTool("white_chocolate_shovel", () -> new ShovelItem(CHOCOLATE, 1.5F, -3.0F, food(6, 0.6F)));
     public static final RegistryObject<Item> WHITE_CHOCOLATE_SWORD = registerTool("white_chocolate_sword", () -> new SwordItem(CHOCOLATE, 3, -2.4F, food(6, 0.6F)));
+    public static final RegistryObject<Item> WHITE_CHOCOLATE_HOE = registerTool("white_chocolate_hoe", () -> new HoeItem(CHOCOLATE, -2, -1.0F, food(6, 0.6F)));
     public static final RegistryObject<Item> DARK_CHOCOLATE_AXE = registerTool("dark_chocolate_axe", () -> new AxeItem(CHOCOLATE, 5.5F, -3.0F, food(6, 0.6F)));
     public static final RegistryObject<Item> DARK_CHOCOLATE_PICKAXE = registerTool("dark_chocolate_pickaxe", () -> new PickaxeItem(CHOCOLATE, 1, -2.8F, food(6, 0.6F)));
     public static final RegistryObject<Item> DARK_CHOCOLATE_SHOVEL = registerTool("dark_chocolate_shovel", () -> new ShovelItem(CHOCOLATE, 1.5F, -3.0F, food(6, 0.6F)));
     public static final RegistryObject<Item> DARK_CHOCOLATE_SWORD = registerTool("dark_chocolate_sword", () -> new SwordItem(CHOCOLATE, 3, -2.4F, food(6, 0.6F)));
+    public static final RegistryObject<Item> DARK_CHOCOLATE_HOE = registerTool("dark_chocolate_hoe", () -> new HoeItem(CHOCOLATE, -2, -1.0F, food(6, 0.6F)));
     public static final RegistryObject<Item> COTTON_CANDY_AXE = registerTool("cotton_candy_axe", () -> new AxeItem(COTTON_CANDY, 5.0F, -3.0F, food(1, 0.6F)));
     public static final RegistryObject<Item> COTTON_CANDY_PICKAXE = registerTool("cotton_candy_pickaxe", () -> new PickaxeItem(COTTON_CANDY, 1, -2.8F, food(1, 0.6F)));
     public static final RegistryObject<Item> COTTON_CANDY_SHOVEL = registerTool("cotton_candy_shovel", () -> new ShovelItem(COTTON_CANDY, 1.5F, -3.0F, food(1, 0.6F)));
     public static final RegistryObject<Item> COTTON_CANDY_SWORD = registerTool("cotton_candy_sword", () -> new SwordItem(COTTON_CANDY, 3, -2.4F, food(1, 0.6F)));
+    public static final RegistryObject<Item> COTTON_CANDY_HOE = registerTool("cotton_candy_hoe", () -> new HoeItem(COTTON_CANDY, -2, -1.0F, food(1, 0.6F)));
     public static final RegistryObject<Item> LIQUID_CHOCOLATE_BUCKET = registerSimple("liquid_chocolate_bucket", () -> new BucketItem(CCFluids.SOURCE_LIQUID_CHOCOLATE, new Item.Properties().craftRemainder(Items.BUCKET).stacksTo(1)));
     public static final RegistryObject<Item> LIQUID_CANDY_BUCKET = registerSimple("liquid_candy_bucket", () -> new BucketItem(CCFluids.SOURCE_LIQUID_CANDY, new Item.Properties().craftRemainder(Items.BUCKET).stacksTo(1)));
 

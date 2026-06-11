@@ -1,6 +1,7 @@
 package com.valentin4311.candycraftmod.block;
 
 import com.valentin4311.candycraftmod.registry.CCBlocks;
+import com.valentin4311.candycraftmod.registry.CCItems;
 import com.valentin4311.candycraftmod.world.feature.LegacyCandyTreeFeature;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -9,7 +10,6 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
@@ -52,7 +52,7 @@ public class LegacySaplingBlock extends CCPlantBlock {
     @Override
     public InteractionResult use(BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
         ItemStack stack = player.getItemInHand(hand);
-        if (!stack.is(Items.SUGAR)) {
+        if (!stack.is(CCItems.NOUGAT_POWDER.get())) {
             return InteractionResult.PASS;
         }
         if (!level.isClientSide && level instanceof ServerLevel serverLevel) {

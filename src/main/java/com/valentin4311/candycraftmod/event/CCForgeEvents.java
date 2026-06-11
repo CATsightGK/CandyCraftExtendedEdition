@@ -2,18 +2,31 @@ package com.valentin4311.candycraftmod.event;
 
 import com.valentin4311.candycraftmod.CandyCraft;
 import com.valentin4311.candycraftmod.block.CandyLiquidBlock;
+import com.valentin4311.candycraftmod.block.LegacySaplingBlock;
+import com.valentin4311.candycraftmod.registry.CCBlocks;
 import com.valentin4311.candycraftmod.registry.CCEntityTypes;
 import com.valentin4311.candycraftmod.registry.CCFluids;
 import com.valentin4311.candycraftmod.item.JellyWandItem;
 import com.valentin4311.candycraftmod.registry.CCItems;
+import com.valentin4311.candycraftmod.registry.CCSweetscapeBlocks;
+import com.valentin4311.candycraftmod.world.feature.CottonCandyTreeFeature;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.HoeItem;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.common.ForgeSpawnEggItem;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.player.AttackEntityEvent;
@@ -74,6 +87,14 @@ public final class CCForgeEvents {
     }
 
     @SubscribeEvent
+    public static void onRightClickBlock(PlayerInteractEvent.RightClickBlock event) {
+        if (tryTillCandySoil(event) || tryGrowCandySapling(event)) {
+            event.setCancellationResult(InteractionResult.sidedSuccess(event.getLevel().isClientSide));
+            event.setCanceled(true);
+        }
+    }
+
+    @SubscribeEvent
     public static void onSpawnEggInteractEntity(PlayerInteractEvent.EntityInteractSpecific event) {
         if (event.getItemStack().getItem() instanceof ForgeSpawnEggItem) {
             event.setCancellationResult(net.minecraft.world.InteractionResult.sidedSuccess(event.getLevel().isClientSide));
@@ -121,6 +142,59 @@ public final class CCForgeEvents {
             data.remove(CandyLiquidBlock.PINK_FIRE_TICKS_TAG);
             living.clearFire();
         }
+    }
+
+    private static boolean tryTillCandySoil(PlayerInteractEvent.RightClickBlock event) {
+        ItemStack stack = event.getItemStack();
+        if (!(stack.getItem() instanceof HoeItem)) {
+            return false;
+        }
+
+        Level level = event.getLevel();
+        BlockPos pos = event.getPos();
+        BlockState state = level.getBlockState(pos);
+        if (!state.is(CCBlocks.PUDDING.get()) && !state.is(CCBlocks.FLOUR.get())) {
+            return false;
+        }
+        if (!level.getBlockState(pos.above()).isAir()) {
+            return false;
+        }
+
+        if (!level.isClientSide) {
+            level.setBlock(pos, CCBlocks.CANDY_FARMLAND.get().defaultBlockState(), 11);
+            level.playSound(null, pos, SoundEvents.HOE_TILL, SoundSource.BLOCKS, 1.0F, 1.0F);
+            stack.hurtAndBreak(1, event.getEntity(), player -> player.broadcastBreakEvent(event.getHand()));
+        }
+        return true;
+    }
+
+    private static boolean tryGrowCandySapling(PlayerInteractEvent.RightClickBlock event) {
+        ItemStack stack = event.getItemStack();
+        if (!stack.is(CCItems.NOUGAT_POWDER.get())) {
+            return false;
+        }
+
+        Level level = event.getLevel();
+        BlockPos pos = event.getPos();
+        BlockState state = level.getBlockState(pos);
+        if (state.getBlock() instanceof LegacySaplingBlock) {
+            return false;
+        }
+        if (!state.is(CCSweetscapeBlocks.COTTON_CANDY_SAPLING.get())) {
+            return false;
+        }
+
+        if (!level.isClientSide && level instanceof ServerLevel serverLevel) {
+            level.removeBlock(pos, false);
+            if (!CottonCandyTreeFeature.generate(serverLevel, level.random, pos)) {
+                level.setBlock(pos, state, 4);
+                return false;
+            }
+            if (!event.getEntity().getAbilities().instabuild) {
+                stack.shrink(1);
+            }
+        }
+        return true;
     }
 
     private static boolean has(Player player, Item item) {

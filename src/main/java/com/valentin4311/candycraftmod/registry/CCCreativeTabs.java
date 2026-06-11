@@ -54,7 +54,6 @@ public final class CCCreativeTabs {
                         && !"block_teleporter".equals(path)
                         && !"licorice_furnace_on".equals(path)
                         && !"cherry_block".equals(path)
-                        && !"candy_sapling".equals(path)
                         && !"sweet_grass".equals(path)
                         && !path.matches("caramel_(glass|pane)_[0-9]+")
                         && !path.contains("double_slab")

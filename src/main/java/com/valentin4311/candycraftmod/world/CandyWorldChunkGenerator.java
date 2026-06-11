@@ -71,6 +71,7 @@ public class CandyWorldChunkGenerator extends ChunkGenerator {
     private static final ResourceLocation GUMMY_SWAMP = new ResourceLocation(CandyCraft.MODID, "gummy_swamp");
     private static final ResourceLocation SUGAR_MOUNTAINS = new ResourceLocation(CandyCraft.MODID, "sugar_mountains");
     private static final ResourceLocation SUGAR_HELL_MOUNTAINS = new ResourceLocation(CandyCraft.MODID, "sugar_hell_mountains");
+    private static final ResourceLocation ICE_CREAM_SKY_MOUNTAINS = new ResourceLocation(CandyCraft.MODID, "ice_cream_sky_mountains");
     private static final BlockState AIR = Blocks.AIR.defaultBlockState();
     private static final BlockState WATER = Blocks.WATER.defaultBlockState();
     private static final BlockState BEDROCK = Blocks.BEDROCK.defaultBlockState();
@@ -329,7 +330,7 @@ public class CandyWorldChunkGenerator extends ChunkGenerator {
         int worldX = pos.getBlockX(2 + (int)((roll >>> 8) & 11L));
         int worldZ = pos.getBlockZ(2 + (int)((roll >>> 12) & 11L));
         ResourceLocation biomeId = biomeId(worldX, worldZ, randomState);
-        if (!biomeId.equals(SUGAR_MOUNTAINS) && !biomeId.equals(SUGAR_HELL_MOUNTAINS)) {
+        if (!biomeId.equals(SUGAR_MOUNTAINS) && !biomeId.equals(SUGAR_HELL_MOUNTAINS) && !biomeId.equals(ICE_CREAM_SKY_MOUNTAINS)) {
             return;
         }
 
@@ -895,6 +896,13 @@ public class CandyWorldChunkGenerator extends ChunkGenerator {
         if (biomeId.equals(GUMMY_SWAMP)) {
             return gummySurfaceMaterials(worldX, worldZ, randomState);
         }
+        if (biomeId.equals(ICE_CREAM_SKY_MOUNTAINS)) {
+            return new SurfaceMaterials(
+                CCBlocks.ICE_CREAM.get().defaultBlockState(),
+                CCBlocks.FLOUR.get().defaultBlockState(),
+                CCBlocks.FLOUR.get().defaultBlockState()
+            );
+        }
         BlockState under = CCBlocks.FLOUR.get().defaultBlockState();
         return new SurfaceMaterials(CCBlocks.PUDDING.get().defaultBlockState(), under, under);
     }
@@ -950,6 +958,7 @@ public class CandyWorldChunkGenerator extends ChunkGenerator {
     private BiomeShape biomeShape(int x, int z, RandomState randomState) {
         ResourceLocation location = biomeId(x, z, randomState);
         return switch (location.getPath()) {
+            case "ice_cream_sky_mountains" -> new BiomeShape(3.55F, 2.9F);
             case "sugar_mountains" -> new BiomeShape(0.5F, 0.8F);
             case "sugar_hell_mountains" -> new BiomeShape(1.9F, 2.0F);
             case "sugar_plains" -> new BiomeShape(0.05F, 0.1F);
