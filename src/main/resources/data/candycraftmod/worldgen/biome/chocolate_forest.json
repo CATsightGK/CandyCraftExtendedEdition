@@ -1,4 +1,4 @@
-﻿{
+{
   "has_precipitation": true,
   "temperature": 0.8,
   "downfall": 0.3,
@@ -46,8 +46,7 @@
       "candycraftmod:trees_sweetscape_chocolate",
       "candycraftmod:patch_chocolate_mushroom",
       "candycraftmod:patch_chocolate_bar",
-      "candycraftmod:candy_grass",
-      "candycraftmod:sugar_essence_flowers"
+      "candycraftmod:candy_grass"
     ],
     []
   ]

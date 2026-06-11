@@ -1,4 +1,4 @@
-﻿{
+{
   "has_precipitation": true,
   "temperature": 0.9,
   "downfall": 0.8,
@@ -45,7 +45,6 @@
     [
       "candycraftmod:gummy_worm",
       "candycraftmod:candy_grass",
-      "candycraftmod:sugar_essence_flowers",
       "candycraftmod:candy_seaweed"
     ],
     []
