@@ -1,0 +1,16 @@
+{
+  "feature": "candycraftmod:geyser",
+  "placement": [
+    { "type": "minecraft:rarity_filter", "chance": 250 },
+    { "type": "minecraft:count", "count": 12 },
+    { "type": "minecraft:in_square" },
+    {
+      "type": "minecraft:height_range",
+      "height": {
+        "type": "minecraft:constant",
+        "value": { "absolute": 62 }
+      }
+    },
+    { "type": "minecraft:biome" }
+  ]
+}

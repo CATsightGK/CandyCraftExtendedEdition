@@ -1,0 +1,7 @@
+﻿{
+  "parent": "item/handheld",
+  "textures": {
+    "layer0": "candycraftmod:item/cotton_candy"
+  }
+}
+

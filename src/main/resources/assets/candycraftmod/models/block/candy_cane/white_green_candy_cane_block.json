@@ -1,0 +1,9 @@
+﻿{
+  "parent": "block/cube_column",
+  "textures": {
+    "end": "candycraftmod:block/caneblock_white_green_top",
+    "side": "candycraftmod:block/caneblock_white_green",
+    "particle": "candycraftmod:block/caneblock_white_green"
+  }
+}
+

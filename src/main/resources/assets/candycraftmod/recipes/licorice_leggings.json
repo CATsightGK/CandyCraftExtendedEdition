@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "LLL",
+    "L L",
+    "L L"
+  ],
+  "key": {
+    "L": {
+      "item": "candycraftmod:licorice"
+    }
+  },
+  "result": {
+    "item": "candycraftmod:licorice_leggings"
+  }
+}

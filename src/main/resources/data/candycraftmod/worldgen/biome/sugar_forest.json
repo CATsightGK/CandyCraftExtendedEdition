@@ -1,0 +1,82 @@
+﻿{
+  "has_precipitation": true,
+  "temperature": 0.8,
+  "downfall": 0.5,
+  "effects": {
+    "sky_color": 16636119,
+    "fog_color": 16767191,
+    "water_color": 13473279,
+    "water_fog_color": 13473279,
+    "grass_color": 15641275,
+    "foliage_color": 15641275
+  },
+  "spawners": {
+    "creature": [
+      {
+        "type": "candycraftmod:candy_pig",
+        "weight": 8,
+        "minCount": 2,
+        "maxCount": 4
+      },
+      {
+        "type": "candycraftmod:waffle_sheep",
+        "weight": 6,
+        "minCount": 2,
+        "maxCount": 4
+      }
+    ],
+    "monster": [
+      {
+        "type": "candycraftmod:candy_creeper",
+        "weight": 8,
+        "minCount": 1,
+        "maxCount": 2
+      },
+      {
+        "type": "candycraftmod:cotton_candy_spider",
+        "weight": 6,
+        "minCount": 1,
+        "maxCount": 2
+      },
+      {
+        "type": "candycraftmod:candy_wolf",
+        "weight": 3,
+        "minCount": 1,
+        "maxCount": 2
+      }
+    ]
+  },
+  "spawn_costs": {},
+  "carvers": {},
+  "features": [
+    [],
+    [],
+    [],
+    [
+      "candycraftmod:honey_dungeon",
+      "candycraftmod:underground_village"
+    ],
+    [
+      "candycraftmod:candy_house",
+      "candycraftmod:floating_island"
+    ],
+    [],
+    [
+      "candycraftmod:ore_honey",
+      "candycraftmod:ore_licorice",
+      "candycraftmod:ore_jelly",
+      "candycraftmod:ore_nougat",
+      "candycraftmod:ore_pez",
+      "candycraftmod:ore_lapis",
+      "candycraftmod:ore_chocolate_copper_slot"
+    ],
+    [],
+    [],
+    [
+      "candycraftmod:trees_candy_forest",
+      "candycraftmod:candy_grass",
+      "candycraftmod:candy_seaweed"
+    ],
+    []
+  ]
+}

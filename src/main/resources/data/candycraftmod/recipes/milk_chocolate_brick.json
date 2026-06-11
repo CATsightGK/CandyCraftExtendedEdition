@@ -1,0 +1,16 @@
+﻿{
+    "key":  {
+                "#":  {
+                          "item":  "candycraftmod:milk_chocolate_bar"
+                      }
+            },
+    "category":  "misc",
+    "pattern":  [
+                    "##",
+                    "##"
+                ],
+    "result":  {
+                   "item":  "candycraftmod:milk_chocolate_brick"
+               },
+    "type":  "minecraft:crafting_shaped"
+}

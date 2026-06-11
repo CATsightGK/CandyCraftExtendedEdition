@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:smelting",
+  "category": "blocks",
+  "ingredient": { "item": "candycraftmod:honeycomb_block" },
+  "result": "candycraftmod:honey_lamp",
+  "experience": 0.7,
+  "cookingtime": 200
+}

@@ -1,0 +1,22 @@
+{
+    "variants":  {
+                     "type=bottom,waterlogged=false":  {
+                                                           "model": "candycraftmod:block/half_slab_cotton_candy"
+                                                       },
+                     "type=top,waterlogged=false":  {
+                                                        "model": "candycraftmod:block/upper_slab_cotton_candy"
+                                                    },
+                     "type=double,waterlogged=false":  {
+                                                           "model": "candycraftmod:block/cotton_candy_block"
+                                                       },
+                     "type=bottom,waterlogged=true":  {
+                                                          "model": "candycraftmod:block/half_slab_cotton_candy"
+                                                      },
+                     "type=top,waterlogged=true":  {
+                                                       "model": "candycraftmod:block/upper_slab_cotton_candy"
+                                                   },
+                     "type=double,waterlogged=true":  {
+                                                          "model": "candycraftmod:block/cotton_candy_block"
+                                                      }
+                 }
+}

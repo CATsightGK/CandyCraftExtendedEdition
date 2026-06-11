@@ -1,0 +1,19 @@
+﻿{
+    "key":  {
+                "#":  {
+                          "item":  "candycraftmod:wafer_stick_block"
+                      },
+                "@":  {
+                          "item":  "candycraftmod:milk_chocolate_bar"
+                      }
+            },
+    "category":  "misc",
+    "pattern":  [
+                    "@@",
+                    "##"
+                ],
+    "result":  {
+                   "item":  "candycraftmod:milk_chocolate_workbench"
+               },
+    "type":  "minecraft:crafting_shaped"
+}

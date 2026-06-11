@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "candycraftmod:marshmallow_stick"
+    }
+  ],
+  "result": {
+    "item": "minecraft:stick"
+  }
+}

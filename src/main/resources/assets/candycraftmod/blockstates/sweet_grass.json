@@ -1,0 +1,8 @@
+{
+    "variants": {
+        "metadata=0": { "model": "candycraftmod:block/sweet_grass.0" },
+		"metadata=1": { "model": "candycraftmod:block/sweet_grass.1" },
+		"metadata=2": { "model": "candycraftmod:block/sweet_grass.2" },
+		"metadata=3": { "model": "candycraftmod:block/sweet_grass.3" }
+    }
+}

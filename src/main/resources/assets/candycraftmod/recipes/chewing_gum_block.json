@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "##",
+    "##"
+  ],
+  "key": {
+    "#": {
+      "item": "candycraftmod:chewing_gum"
+    }
+  },
+  "result": {
+    "item": "candycraftmod:chewing_gum_block"
+  }
+}

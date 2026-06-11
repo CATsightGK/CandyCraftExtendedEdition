@@ -1,0 +1,25 @@
+﻿{
+    "ingredients":  [
+                        {
+                            "item":  "minecraft:sugar"
+                        },
+                        {
+                            "tag":  "forge:eggs"
+                        },
+                        {
+                            "item":  "candycraftmod:white_chocolate_bar"
+                        },
+                        {
+                            "tag":  "forge:crops/wheat"
+                        },
+                        {
+                            "item":  "candycraftmod:butter"
+                        }
+                    ],
+    "category":  "misc",
+    "result":  {
+                   "count":  6,
+                   "item":  "candycraftmod:white_brownie"
+               },
+    "type":  "minecraft:crafting_shapeless"
+}

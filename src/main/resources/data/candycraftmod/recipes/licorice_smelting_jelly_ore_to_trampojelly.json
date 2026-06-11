@@ -1,0 +1,8 @@
+{
+  "type": "candycraftmod:licorice_smelting",
+  "category": "blocks",
+  "ingredient": { "item": "candycraftmod:jelly_ore" },
+  "result": { "item": "candycraftmod:trampojelly" },
+  "experience": 1.0,
+  "cookingtime": 200
+}

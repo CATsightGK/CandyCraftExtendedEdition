@@ -1,0 +1,13 @@
+﻿{
+    "ingredients":  [
+                        {
+                            "item":  "candycraftmod:milk_chocolate_block"
+                        }
+                    ],
+    "category":  "misc",
+    "result":  {
+                   "count":  4,
+                   "item":  "candycraftmod:milk_chocolate_bar"
+               },
+    "type":  "minecraft:crafting_shapeless"
+}

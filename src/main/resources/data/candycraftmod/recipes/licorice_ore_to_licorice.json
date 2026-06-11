@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:smelting",
+  "category": "misc",
+  "ingredient": { "item": "candycraftmod:licorice_ore" },
+  "result": "candycraftmod:licorice",
+  "experience": 1.0,
+  "cookingtime": 200
+}

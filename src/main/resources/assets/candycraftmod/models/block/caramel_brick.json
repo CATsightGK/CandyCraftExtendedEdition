@@ -1,0 +1,6 @@
+{
+    "textures":  {
+                     "all":  "candycraftmod:block/caramel_brick"
+                 },
+    "parent":  "minecraft:block/cube_all"
+}

@@ -1,0 +1,8 @@
+{
+    "textures":  {
+                     "bottom":  "candycraftmod:block/marshmallow_planks.2",
+                     "top":  "candycraftmod:block/marshmallow_planks.2",
+                     "side":  "candycraftmod:block/marshmallow_planks.2"
+                 },
+    "parent":  "minecraft:block/stairs"
+}

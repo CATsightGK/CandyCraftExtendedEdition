@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:smelting",
+  "category": "misc",
+  "ingredient": { "item": "candycraftmod:pez_ore" },
+  "result": "candycraftmod:pez",
+  "experience": 1.0,
+  "cookingtime": 200
+}

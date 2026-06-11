@@ -1,0 +1,8 @@
+﻿{
+  "variants": {
+    "": {
+      "model": "candycraftmod:block/ore/teleporter_ore"
+    }
+  }
+}
+

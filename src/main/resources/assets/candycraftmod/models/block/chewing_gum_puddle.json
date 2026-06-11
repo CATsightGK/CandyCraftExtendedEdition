@@ -1,0 +1,20 @@
+{
+    "ambientocclusion": false,
+    "textures": {
+        "particle": "candycraftmod:block/chewing_gum_puddle",
+        "texture": "candycraftmod:block/chewing_gum_puddle"
+    },
+    "elements": [
+        {
+            "from": [ 0, 0.0625, 0 ],
+            "to": [ 16, 0.5625, 16 ],
+            "faces": {
+                "up":    { "uv": [ 16,  0, 0, 16 ], "texture": "#texture" },
+                "north": { "uv": [ 0, 15.5, 16, 16 ], "texture": "#texture" },
+                "south": { "uv": [ 0, 15.5, 16, 16 ], "texture": "#texture" },
+                "west":  { "uv": [ 0, 15.5, 16, 16 ], "texture": "#texture" },
+                "east":  { "uv": [ 0, 15.5, 16, 16 ], "texture": "#texture" }
+            }
+        }
+    ]
+}

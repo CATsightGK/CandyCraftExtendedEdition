@@ -1,0 +1,36 @@
+{
+  "display": {
+    "icon": {
+      "item": "candycraftmod:licorice_furnace"
+    },
+    "title": {
+      "translate": "advancements.candycraft.licorice_furnace.title"
+    },
+    "description": {
+      "translate": "advancements.candycraft.licorice_furnace.desc"
+    }
+  },
+  "parent": "candycraftmod:licorice",
+  "criteria": {
+    "licorice_furnace": {
+      "trigger": "minecraft:inventory_changed",
+      "items": [
+        {
+          "item": "candycraftmod:licorice_furnace"
+        }
+      ]
+    },
+    "recipe": {
+      "trigger": "minecraft:recipe_unlocked",
+      "conditions": {
+        "recipe": "candycraftmod:licorice_furnace"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "licorice_furnace",
+      "recipe"
+    ]
+  ]
+}

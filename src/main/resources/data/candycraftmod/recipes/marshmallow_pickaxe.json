@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "LLL",
+    " S ",
+    " S "
+  ],
+  "key": {
+    "L": {
+      "tag": "candycraftmod:marshmallow_planks"
+    },
+    "S": {
+      "item": "candycraftmod:marshmallow_stick"
+    }
+  },
+  "result": {
+    "item": "candycraftmod:marshmallow_pickaxe"
+  }
+}

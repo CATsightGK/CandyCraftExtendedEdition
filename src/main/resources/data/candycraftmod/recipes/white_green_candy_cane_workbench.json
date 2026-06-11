@@ -1,0 +1,19 @@
+﻿{
+    "key":  {
+                "#":  {
+                          "item":  "candycraftmod:white_green_candy_cane_block"
+                      },
+                "@":  {
+                          "item":  "candycraftmod:cotton_candy"
+                      }
+            },
+    "category":  "misc",
+    "pattern":  [
+                    "@@",
+                    "##"
+                ],
+    "result":  {
+                   "item":  "candycraftmod:white_green_candy_cane_workbench"
+               },
+    "type":  "minecraft:crafting_shaped"
+}

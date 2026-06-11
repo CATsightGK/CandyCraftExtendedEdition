@@ -1,0 +1,13 @@
+﻿{
+    "ingredients":  [
+                        {
+                            "item":  "candycraftmod:yellow_gummy_worm_block"
+                        }
+                    ],
+    "category":  "misc",
+    "result":  {
+                   "count":  4,
+                   "item":  "candycraftmod:yellow_gummy_worm"
+               },
+    "type":  "minecraft:crafting_shapeless"
+}

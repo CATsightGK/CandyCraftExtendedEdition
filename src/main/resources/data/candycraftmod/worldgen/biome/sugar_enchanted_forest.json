@@ -1,0 +1,47 @@
+﻿{
+  "has_precipitation": true,
+  "temperature": 0.7,
+  "downfall": 0.6,
+  "effects": {
+    "sky_color": 14207743,
+    "fog_color": 11587794,
+    "water_color": 13473279,
+    "water_fog_color": 13473279,
+    "grass_color": 10712794,
+    "foliage_color": 11579647
+  },
+  "spawners": {},
+  "spawn_costs": {},
+  "carvers": {},
+  "features": [
+    [],
+    [],
+    [],
+    [
+      "candycraftmod:honey_dungeon",
+      "candycraftmod:underground_village"
+    ],
+    [
+      "candycraftmod:candy_house",
+      "candycraftmod:floating_island"
+    ],
+    [],
+    [
+      "candycraftmod:ore_honey",
+      "candycraftmod:ore_licorice",
+      "candycraftmod:ore_jelly",
+      "candycraftmod:ore_nougat",
+      "candycraftmod:ore_pez",
+      "candycraftmod:ore_lapis",
+      "candycraftmod:ore_chocolate_copper_slot"
+    ],
+    [],
+    [],
+    [
+      "candycraftmod:trees_enchanted_forest",
+      "candycraftmod:candy_grass",
+      "candycraftmod:candy_seaweed"
+    ],
+    []
+  ]
+}

@@ -1,0 +1,120 @@
+{
+    "variants":  {
+                     "east=false,north=false,south=false,west=false,waterlogged=false":  {
+                                                                                             "model": "candycraftmod:block/caramel_pane_0_nsew"
+                                                                                         },
+                     "east=false,north=false,south=false,west=false,waterlogged=true":  {
+                                                                                            "model": "candycraftmod:block/caramel_pane_0_nsew"
+                                                                                        },
+                     "east=false,north=true,south=false,west=false,waterlogged=false":  {
+                                                                                            "model": "candycraftmod:block/caramel_pane_0_n"
+                                                                                        },
+                     "east=false,north=true,south=false,west=false,waterlogged=true":  {
+                                                                                           "model": "candycraftmod:block/caramel_pane_0_n"
+                                                                                       },
+                     "east=true,north=false,south=false,west=false,waterlogged=false":  {
+                                                                                            "model": "candycraftmod:block/caramel_pane_0_n",
+                                                                                            "y":  90
+                                                                                        },
+                     "east=true,north=false,south=false,west=false,waterlogged=true":  {
+                                                                                           "model": "candycraftmod:block/caramel_pane_0_n",
+                                                                                           "y":  90
+                                                                                       },
+                     "east=false,north=false,south=true,west=false,waterlogged=false":  {
+                                                                                            "model": "candycraftmod:block/caramel_pane_0_n",
+                                                                                            "y":  180
+                                                                                        },
+                     "east=false,north=false,south=true,west=false,waterlogged=true":  {
+                                                                                           "model": "candycraftmod:block/caramel_pane_0_n",
+                                                                                           "y":  180
+                                                                                       },
+                     "east=false,north=false,south=false,west=true,waterlogged=false":  {
+                                                                                            "model": "candycraftmod:block/caramel_pane_0_n",
+                                                                                            "y":  270
+                                                                                        },
+                     "east=false,north=false,south=false,west=true,waterlogged=true":  {
+                                                                                           "model": "candycraftmod:block/caramel_pane_0_n",
+                                                                                           "y":  270
+                                                                                       },
+                     "east=true,north=true,south=false,west=false,waterlogged=false":  {
+                                                                                           "model": "candycraftmod:block/caramel_pane_0_ne"
+                                                                                       },
+                     "east=true,north=true,south=false,west=false,waterlogged=true":  {
+                                                                                          "model": "candycraftmod:block/caramel_pane_0_ne"
+                                                                                      },
+                     "east=true,north=false,south=true,west=false,waterlogged=false":  {
+                                                                                           "model": "candycraftmod:block/caramel_pane_0_ne",
+                                                                                           "y":  90
+                                                                                       },
+                     "east=true,north=false,south=true,west=false,waterlogged=true":  {
+                                                                                          "model": "candycraftmod:block/caramel_pane_0_ne",
+                                                                                          "y":  90
+                                                                                      },
+                     "east=false,north=false,south=true,west=true,waterlogged=false":  {
+                                                                                           "model": "candycraftmod:block/caramel_pane_0_ne",
+                                                                                           "y":  180
+                                                                                       },
+                     "east=false,north=false,south=true,west=true,waterlogged=true":  {
+                                                                                          "model": "candycraftmod:block/caramel_pane_0_ne",
+                                                                                          "y":  180
+                                                                                      },
+                     "east=false,north=true,south=false,west=true,waterlogged=false":  {
+                                                                                           "model": "candycraftmod:block/caramel_pane_0_ne",
+                                                                                           "y":  270
+                                                                                       },
+                     "east=false,north=true,south=false,west=true,waterlogged=true":  {
+                                                                                          "model": "candycraftmod:block/caramel_pane_0_ne",
+                                                                                          "y":  270
+                                                                                      },
+                     "east=false,north=true,south=true,west=false,waterlogged=false":  {
+                                                                                           "model": "candycraftmod:block/caramel_pane_0_ns"
+                                                                                       },
+                     "east=false,north=true,south=true,west=false,waterlogged=true":  {
+                                                                                          "model": "candycraftmod:block/caramel_pane_0_ns"
+                                                                                      },
+                     "east=true,north=false,south=false,west=true,waterlogged=false":  {
+                                                                                           "model": "candycraftmod:block/caramel_pane_0_ns",
+                                                                                           "y":  90
+                                                                                       },
+                     "east=true,north=false,south=false,west=true,waterlogged=true":  {
+                                                                                          "model": "candycraftmod:block/caramel_pane_0_ns",
+                                                                                          "y":  90
+                                                                                      },
+                     "east=true,north=true,south=true,west=false,waterlogged=false":  {
+                                                                                          "model": "candycraftmod:block/caramel_pane_0_nse"
+                                                                                      },
+                     "east=true,north=true,south=true,west=false,waterlogged=true":  {
+                                                                                         "model": "candycraftmod:block/caramel_pane_0_nse"
+                                                                                     },
+                     "east=true,north=false,south=true,west=true,waterlogged=false":  {
+                                                                                          "model": "candycraftmod:block/caramel_pane_0_nse",
+                                                                                          "y":  90
+                                                                                      },
+                     "east=true,north=false,south=true,west=true,waterlogged=true":  {
+                                                                                         "model": "candycraftmod:block/caramel_pane_0_nse",
+                                                                                         "y":  90
+                                                                                     },
+                     "east=false,north=true,south=true,west=true,waterlogged=false":  {
+                                                                                          "model": "candycraftmod:block/caramel_pane_0_nse",
+                                                                                          "y":  180
+                                                                                      },
+                     "east=false,north=true,south=true,west=true,waterlogged=true":  {
+                                                                                         "model": "candycraftmod:block/caramel_pane_0_nse",
+                                                                                         "y":  180
+                                                                                     },
+                     "east=true,north=true,south=false,west=true,waterlogged=false":  {
+                                                                                          "model": "candycraftmod:block/caramel_pane_0_nse",
+                                                                                          "y":  270
+                                                                                      },
+                     "east=true,north=true,south=false,west=true,waterlogged=true":  {
+                                                                                         "model": "candycraftmod:block/caramel_pane_0_nse",
+                                                                                         "y":  270
+                                                                                     },
+                     "east=true,north=true,south=true,west=true,waterlogged=false":  {
+                                                                                         "model": "candycraftmod:block/caramel_pane_0_nsew"
+                                                                                     },
+                     "east=true,north=true,south=true,west=true,waterlogged=true":  {
+                                                                                        "model": "candycraftmod:block/caramel_pane_0_nsew"
+                                                                                    }
+                 }
+}

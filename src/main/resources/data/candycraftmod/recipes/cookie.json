@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "#$#"
+  ],
+  "key": {
+    "#": {
+      "item": "candycraftmod:flour"
+    },
+    "$": {
+      "item": "minecraft:dye",
+      "data": 3
+    }
+  },
+  "result": {
+    "item": "minecraft:cookie",
+    "count": 2
+  }
+}

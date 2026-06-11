@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "# ",
+    " $"
+  ],
+  "key": {
+    "#": {
+      "item": "minecraft:fishing_rod"
+    },
+    "$": {
+      "item": "candycraftmod:dragibus"
+    }
+  },
+  "result": {
+    "item": "candycraftmod:dragibus_stick"
+  }
+}

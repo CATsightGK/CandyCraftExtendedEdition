@@ -1,0 +1,13 @@
+﻿{
+    "ingredients":  [
+                        {
+                            "item":  "candycraftmod:milk_brownie_block"
+                        }
+                    ],
+    "category":  "misc",
+    "result":  {
+                   "count":  4,
+                   "item":  "candycraftmod:milk_brownie"
+               },
+    "type":  "minecraft:crafting_shapeless"
+}

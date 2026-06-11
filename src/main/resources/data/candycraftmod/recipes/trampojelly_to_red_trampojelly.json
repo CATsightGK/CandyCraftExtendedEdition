@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:smelting",
+  "category": "blocks",
+  "ingredient": { "item": "candycraftmod:trampojelly" },
+  "result": "candycraftmod:red_trampojelly",
+  "experience": 0.7,
+  "cookingtime": 200
+}

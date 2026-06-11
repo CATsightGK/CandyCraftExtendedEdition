@@ -1,0 +1,8 @@
+{
+  "type": "candycraftmod:licorice_smelting",
+  "category": "blocks",
+  "ingredient": { "item": "candycraftmod:chocolate_cobblestone" },
+  "result": { "item": "candycraftmod:chocolate_stone" },
+  "experience": 0.7,
+  "cookingtime": 200
+}

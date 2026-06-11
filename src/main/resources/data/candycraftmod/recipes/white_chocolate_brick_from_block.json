@@ -1,0 +1,17 @@
+﻿{
+    "key":  {
+                "#":  {
+                          "item":  "candycraftmod:white_chocolate_block"
+                      }
+            },
+    "category":  "misc",
+    "pattern":  [
+                    "##",
+                    "##"
+                ],
+    "result":  {
+                   "count":  4,
+                   "item":  "candycraftmod:white_chocolate_brick"
+               },
+    "type":  "minecraft:crafting_shaped"
+}

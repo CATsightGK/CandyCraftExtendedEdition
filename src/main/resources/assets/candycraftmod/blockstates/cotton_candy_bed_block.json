@@ -1,0 +1,64 @@
+{
+    "variants":  {
+                     "facing=north,part=foot,occupied=false":  {
+                                                                   "model": "candycraftmod:block/cotton_candy_bed_foot",
+                                                                   "y":  180
+                                                               },
+                     "facing=north,part=foot,occupied=true":  {
+                                                                  "model": "candycraftmod:block/cotton_candy_bed_foot",
+                                                                  "y":  180
+                                                              },
+                     "facing=east,part=foot,occupied=false":  {
+                                                                  "model": "candycraftmod:block/cotton_candy_bed_foot",
+                                                                  "y":  270
+                                                              },
+                     "facing=east,part=foot,occupied=true":  {
+                                                                 "model": "candycraftmod:block/cotton_candy_bed_foot",
+                                                                 "y":  270
+                                                             },
+                     "facing=south,part=foot,occupied=false":  {
+                                                                   "model": "candycraftmod:block/cotton_candy_bed_foot"
+                                                               },
+                     "facing=south,part=foot,occupied=true":  {
+                                                                  "model": "candycraftmod:block/cotton_candy_bed_foot"
+                                                              },
+                     "facing=west,part=foot,occupied=false":  {
+                                                                  "model": "candycraftmod:block/cotton_candy_bed_foot",
+                                                                  "y":  90
+                                                              },
+                     "facing=west,part=foot,occupied=true":  {
+                                                                 "model": "candycraftmod:block/cotton_candy_bed_foot",
+                                                                 "y":  90
+                                                             },
+                     "facing=north,part=head,occupied=false":  {
+                                                                   "model": "candycraftmod:block/cotton_candy_bed_head",
+                                                                   "y":  180
+                                                               },
+                     "facing=north,part=head,occupied=true":  {
+                                                                  "model": "candycraftmod:block/cotton_candy_bed_head",
+                                                                  "y":  180
+                                                              },
+                     "facing=east,part=head,occupied=false":  {
+                                                                  "model": "candycraftmod:block/cotton_candy_bed_head",
+                                                                  "y":  270
+                                                              },
+                     "facing=east,part=head,occupied=true":  {
+                                                                 "model": "candycraftmod:block/cotton_candy_bed_head",
+                                                                 "y":  270
+                                                             },
+                     "facing=south,part=head,occupied=false":  {
+                                                                   "model": "candycraftmod:block/cotton_candy_bed_head"
+                                                               },
+                     "facing=south,part=head,occupied=true":  {
+                                                                  "model": "candycraftmod:block/cotton_candy_bed_head"
+                                                              },
+                     "facing=west,part=head,occupied=false":  {
+                                                                  "model": "candycraftmod:block/cotton_candy_bed_head",
+                                                                  "y":  90
+                                                              },
+                     "facing=west,part=head,occupied=true":  {
+                                                                 "model": "candycraftmod:block/cotton_candy_bed_head",
+                                                                 "y":  90
+                                                             }
+                 }
+}

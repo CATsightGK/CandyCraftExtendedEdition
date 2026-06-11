@@ -1,0 +1,22 @@
+{
+    "variants":  {
+                     "type=bottom,waterlogged=false":  {
+                                                           "model": "candycraftmod:block/half_slab_marshmallow.1"
+                                                       },
+                     "type=top,waterlogged=false":  {
+                                                        "model": "candycraftmod:block/upper_slab_marshmallow.1"
+                                                    },
+                     "type=double,waterlogged=false":  {
+                                                           "model": "candycraftmod:block/marshmallow_planks.1"
+                                                       },
+                     "type=bottom,waterlogged=true":  {
+                                                          "model": "candycraftmod:block/half_slab_marshmallow.1"
+                                                      },
+                     "type=top,waterlogged=true":  {
+                                                       "model": "candycraftmod:block/upper_slab_marshmallow.1"
+                                                   },
+                     "type=double,waterlogged=true":  {
+                                                          "model": "candycraftmod:block/marshmallow_planks.1"
+                                                      }
+                 }
+}

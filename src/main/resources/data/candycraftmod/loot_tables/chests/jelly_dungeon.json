@@ -1,0 +1,150 @@
+{
+  "type": "minecraft:chest",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "candycraftmod:jelly_sentry_key"
+        }
+      ]
+    },
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "candycraftmod:jelly_boss_key",
+          "weight": 2
+        },
+        {
+          "type": "minecraft:empty",
+          "weight": 1
+        }
+      ]
+    },
+    {
+      "rolls": {
+        "min": 4,
+        "max": 8
+      },
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "candycraftmod:jelly_crown",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "candycraftmod:jelly_wand",
+          "weight": 2
+        },
+        {
+          "type": "minecraft:item",
+          "name": "candycraftmod:jelly_sentry_key",
+          "weight": 3
+        },
+        {
+          "type": "minecraft:item",
+          "name": "candycraftmod:jelly_boss_key",
+          "weight": 2
+        },
+        {
+          "type": "minecraft:item",
+          "name": "candycraftmod:jump_wand",
+          "weight": 2
+        },
+        {
+          "type": "minecraft:item",
+          "name": "candycraftmod:sugar_crystal",
+          "weight": 8,
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "min": 4,
+                "max": 12
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "candycraftmod:licorice",
+          "weight": 8,
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "min": 6,
+                "max": 18
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "candycraftmod:gummy",
+          "weight": 8,
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "min": 6,
+                "max": 18
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "candycraftmod:pez",
+          "weight": 6,
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "min": 4,
+                "max": 12
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "candycraftmod:chocolate_coin",
+          "weight": 6,
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "min": 12,
+                "max": 36
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "candycraftmod:lollipop_seeds",
+          "weight": 4,
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "min": 4,
+                "max": 12
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "candycraftmod:caramel_bow",
+          "weight": 1
+        }
+      ]
+    }
+  ]
+}

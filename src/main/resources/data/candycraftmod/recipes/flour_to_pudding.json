@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:smelting",
+  "category": "blocks",
+  "ingredient": { "item": "candycraftmod:flour" },
+  "result": "candycraftmod:pudding",
+  "experience": 0.7,
+  "cookingtime": 200
+}

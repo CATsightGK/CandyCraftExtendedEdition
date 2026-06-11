@@ -1,0 +1,8 @@
+{
+  "type": "candycraftmod:licorice_smelting",
+  "category": "misc",
+  "ingredient": { "item": "candycraftmod:pez_ore" },
+  "result": { "item": "candycraftmod:pez" },
+  "experience": 1.0,
+  "cookingtime": 200
+}

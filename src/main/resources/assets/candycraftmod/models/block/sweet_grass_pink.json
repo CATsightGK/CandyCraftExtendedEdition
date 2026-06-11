@@ -1,0 +1,6 @@
+{
+    "textures":  {
+                     "cross":  "candycraftmod:block/sweet_grass.0"
+                 },
+    "parent":  "minecraft:block/cross"
+}

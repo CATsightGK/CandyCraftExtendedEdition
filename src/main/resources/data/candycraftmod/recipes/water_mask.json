@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "###",
+    "#$#",
+    " # "
+  ],
+  "key": {
+    "#": {
+      "item": "candycraftmod:sugar_crystal"
+    },
+    "$": {
+      "item": "candycraftmod:cranberry_scale"
+    }
+  },
+  "result": {
+    "item": "candycraftmod:water_mask"
+  }
+}

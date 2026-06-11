@@ -1,0 +1,22 @@
+{
+  "variants": {
+    "type=bottom,waterlogged=false": {
+      "model": "candycraftmod:block/mint_ice_cream_slab"
+    },
+    "type=bottom,waterlogged=true": {
+      "model": "candycraftmod:block/mint_ice_cream_slab"
+    },
+    "type=top,waterlogged=false": {
+      "model": "candycraftmod:block/mint_ice_cream_slab_top"
+    },
+    "type=top,waterlogged=true": {
+      "model": "candycraftmod:block/mint_ice_cream_slab_top"
+    },
+    "type=double,waterlogged=false": {
+      "model": "candycraftmod:block/mint_ice_cream_slab_double"
+    },
+    "type=double,waterlogged=true": {
+      "model": "candycraftmod:block/mint_ice_cream_slab_double"
+    }
+  }
+}

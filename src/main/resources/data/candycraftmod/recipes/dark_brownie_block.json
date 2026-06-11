@@ -1,0 +1,16 @@
+﻿{
+    "key":  {
+                "#":  {
+                          "item":  "candycraftmod:dark_brownie"
+                      }
+            },
+    "category":  "misc",
+    "pattern":  [
+                    "##",
+                    "##"
+                ],
+    "result":  {
+                   "item":  "candycraftmod:dark_brownie_block"
+               },
+    "type":  "minecraft:crafting_shaped"
+}

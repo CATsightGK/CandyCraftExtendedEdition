@@ -1,0 +1,36 @@
+{
+  "display": {
+    "icon": {
+      "item": "candycraftmod:licorice_sword"
+    },
+    "title": {
+      "translate": "advancements.candycraft.licorice_sword.title"
+    },
+    "description": {
+      "translate": "advancements.candycraft.licorice_sword.desc"
+    }
+  },
+  "parent": "candycraftmod:licorice",
+  "criteria": {
+    "licorice_sword": {
+      "trigger": "minecraft:inventory_changed",
+      "items": [
+        {
+          "item": "candycraftmod:licorice_sword"
+        }
+      ]
+    },
+    "recipe": {
+      "trigger": "minecraft:recipe_unlocked",
+      "conditions": {
+        "recipe": "candycraftmod:licorice_sword"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "licorice_sword",
+      "recipe"
+    ]
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "parent": "candycraftmod:sweetscape_chocolate",
+  "display": {
+    "icon": {
+      "item": "candycraftmod:milk_chocolate_pickaxe"
+    },
+    "title": {
+      "translate": "advancements.candycraft.sweetscape_tools.title"
+    },
+    "description": {
+      "translate": "advancements.candycraft.sweetscape_tools.desc"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": false
+  },
+  "criteria": {
+    "has_tool": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "candycraftmod:milk_chocolate_pickaxe",
+              "candycraftmod:white_chocolate_pickaxe",
+              "candycraftmod:dark_chocolate_pickaxe",
+              "candycraftmod:cotton_candy_pickaxe"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has_tool"
+    ]
+  ]
+}

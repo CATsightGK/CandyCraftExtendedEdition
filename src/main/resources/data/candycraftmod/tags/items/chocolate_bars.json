@@ -1,0 +1,8 @@
+﻿{
+    "replace":  false,
+    "values":  [
+                   "candycraftmod:milk_chocolate_bar",
+                   "candycraftmod:white_chocolate_bar",
+                   "candycraftmod:dark_chocolate_bar"
+               ]
+}

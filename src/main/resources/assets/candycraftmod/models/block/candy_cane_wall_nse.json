@@ -1,0 +1,8 @@
+{
+    "parent": "candycraftmod:block/wall_nse",
+    "textures": {
+		"top": "candycraftmod:block/candy_cane_top",
+		"bottom": "candycraftmod:block/candy_cane_top",
+        "wall": "candycraftmod:block/candy_cane_side_wall"
+    }
+}

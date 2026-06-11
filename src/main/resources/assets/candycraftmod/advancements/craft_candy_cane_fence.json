@@ -1,0 +1,36 @@
+{
+  "display": {
+    "icon": {
+      "item": "candycraftmod:candy_cane_fence"
+    },
+    "title": {
+      "translate": "advancements.candycraft.candy_cane_fence.title"
+    },
+    "description": {
+      "translate": "advancements.candycraft.candy_cane_fence.desc"
+    }
+  },
+  "parent": "candycraftmod:candy_cane",
+  "criteria": {
+    "candy_cane_fence": {
+      "trigger": "minecraft:inventory_changed",
+      "items": [
+        {
+          "item": "candycraftmod:candy_cane_fence"
+        }
+      ]
+    },
+    "recipe": {
+      "trigger": "minecraft:recipe_unlocked",
+      "conditions": {
+        "recipe": "candycraftmod:candy_cane_fence"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "candy_cane_fence",
+      "recipe"
+    ]
+  ]
+}

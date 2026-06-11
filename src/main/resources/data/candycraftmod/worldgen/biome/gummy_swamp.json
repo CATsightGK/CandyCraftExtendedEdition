@@ -1,0 +1,52 @@
+﻿{
+  "has_precipitation": true,
+  "temperature": 0.9,
+  "downfall": 0.8,
+  "effects": {
+    "sky_color": 16776684,
+    "fog_color": 16767130,
+    "water_color": 14608288,
+    "water_fog_color": 8409728,
+    "grass_color": 16776880,
+    "foliage_color": 16776880
+  },
+  "spawners": {},
+  "spawn_costs": {},
+  "carvers": {},
+  "features": [
+    [],
+    [],
+    [],
+    [
+      "candycraftmod:honey_dungeon",
+      "candycraftmod:underground_village"
+    ],
+    [
+      "candycraftmod:floating_island"
+    ],
+    [],
+    [
+      "candycraftmod:ore_honey",
+      "candycraftmod:ore_licorice",
+      "candycraftmod:ore_jelly",
+      "candycraftmod:ore_nougat",
+      "candycraftmod:ore_pez",
+      "candycraftmod:ore_lapis",
+      "candycraftmod:ore_chocolate_copper_slot",
+      "candycraftmod:ore_sweetscape_milk_brownie",
+      "candycraftmod:ore_sweetscape_white_brownie",
+      "candycraftmod:ore_sweetscape_dark_brownie",
+      "candycraftmod:ore_sweetscape_sugar_cookie",
+      "candycraftmod:ore_sweetscape_teleporter",
+      "candycraftmod:ore_sweetscape_sugar_sand"
+    ],
+    [],
+    [],
+    [
+      "candycraftmod:gummy_worm",
+      "candycraftmod:candy_grass",
+      "candycraftmod:candy_seaweed"
+    ],
+    []
+  ]
+}

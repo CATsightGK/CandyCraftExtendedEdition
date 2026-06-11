@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "LLL",
+    "L L",
+    "L L"
+  ],
+  "key": {
+    "L": {
+      "item": "candycraftmod:pez"
+    }
+  },
+  "result": {
+    "item": "candycraftmod:pez_leggings"
+  }
+}

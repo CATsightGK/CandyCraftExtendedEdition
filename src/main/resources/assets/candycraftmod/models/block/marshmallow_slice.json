@@ -1,0 +1,6 @@
+{
+    "textures":  {
+                     "cross":  "candycraftmod:block/marshmallow_slice"
+                 },
+    "parent":  "minecraft:block/cross"
+}

@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "#  ",
+    "## ",
+    "###"
+  ],
+  "key": {
+    "#": {
+      "item": "candycraftmod:licorice"
+    }
+  },
+  "result": {
+    "item": "candycraftmod:licorice_brick_stairs",
+    "count": 6
+  }
+}

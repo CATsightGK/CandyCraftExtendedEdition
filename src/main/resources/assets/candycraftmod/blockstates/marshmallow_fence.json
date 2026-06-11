@@ -1,0 +1,150 @@
+{
+    "variants":  {
+                     "east=false,north=false,south=false,west=false,waterlogged=false":  {
+                                                                                             "model": "candycraftmod:block/marshmallow_fence_post"
+                                                                                         },
+                     "east=false,north=false,south=false,west=false,waterlogged=true":  {
+                                                                                            "model": "candycraftmod:block/marshmallow_fence_post"
+                                                                                        },
+                     "east=false,north=true,south=false,west=false,waterlogged=false":  {
+                                                                                            "model": "candycraftmod:block/marshmallow_fence_n",
+                                                                                            "uvlock":  true
+                                                                                        },
+                     "east=false,north=true,south=false,west=false,waterlogged=true":  {
+                                                                                           "model": "candycraftmod:block/marshmallow_fence_n",
+                                                                                           "uvlock":  true
+                                                                                       },
+                     "east=true,north=false,south=false,west=false,waterlogged=false":  {
+                                                                                            "model": "candycraftmod:block/marshmallow_fence_n",
+                                                                                            "y":  90,
+                                                                                            "uvlock":  true
+                                                                                        },
+                     "east=true,north=false,south=false,west=false,waterlogged=true":  {
+                                                                                           "model": "candycraftmod:block/marshmallow_fence_n",
+                                                                                           "y":  90,
+                                                                                           "uvlock":  true
+                                                                                       },
+                     "east=false,north=false,south=true,west=false,waterlogged=false":  {
+                                                                                            "model": "candycraftmod:block/marshmallow_fence_n",
+                                                                                            "y":  180,
+                                                                                            "uvlock":  true
+                                                                                        },
+                     "east=false,north=false,south=true,west=false,waterlogged=true":  {
+                                                                                           "model": "candycraftmod:block/marshmallow_fence_n",
+                                                                                           "y":  180,
+                                                                                           "uvlock":  true
+                                                                                       },
+                     "east=false,north=false,south=false,west=true,waterlogged=false":  {
+                                                                                            "model": "candycraftmod:block/marshmallow_fence_n",
+                                                                                            "y":  270,
+                                                                                            "uvlock":  true
+                                                                                        },
+                     "east=false,north=false,south=false,west=true,waterlogged=true":  {
+                                                                                           "model": "candycraftmod:block/marshmallow_fence_n",
+                                                                                           "y":  270,
+                                                                                           "uvlock":  true
+                                                                                       },
+                     "east=true,north=true,south=false,west=false,waterlogged=false":  {
+                                                                                           "model": "candycraftmod:block/marshmallow_fence_ne",
+                                                                                           "uvlock":  true
+                                                                                       },
+                     "east=true,north=true,south=false,west=false,waterlogged=true":  {
+                                                                                          "model": "candycraftmod:block/marshmallow_fence_ne",
+                                                                                          "uvlock":  true
+                                                                                      },
+                     "east=true,north=false,south=true,west=false,waterlogged=false":  {
+                                                                                           "model": "candycraftmod:block/marshmallow_fence_ne",
+                                                                                           "y":  90,
+                                                                                           "uvlock":  true
+                                                                                       },
+                     "east=true,north=false,south=true,west=false,waterlogged=true":  {
+                                                                                          "model": "candycraftmod:block/marshmallow_fence_ne",
+                                                                                          "y":  90,
+                                                                                          "uvlock":  true
+                                                                                      },
+                     "east=false,north=false,south=true,west=true,waterlogged=false":  {
+                                                                                           "model": "candycraftmod:block/marshmallow_fence_ne",
+                                                                                           "y":  180,
+                                                                                           "uvlock":  true
+                                                                                       },
+                     "east=false,north=false,south=true,west=true,waterlogged=true":  {
+                                                                                          "model": "candycraftmod:block/marshmallow_fence_ne",
+                                                                                          "y":  180,
+                                                                                          "uvlock":  true
+                                                                                      },
+                     "east=false,north=true,south=false,west=true,waterlogged=false":  {
+                                                                                           "model": "candycraftmod:block/marshmallow_fence_ne",
+                                                                                           "y":  270,
+                                                                                           "uvlock":  true
+                                                                                       },
+                     "east=false,north=true,south=false,west=true,waterlogged=true":  {
+                                                                                          "model": "candycraftmod:block/marshmallow_fence_ne",
+                                                                                          "y":  270,
+                                                                                          "uvlock":  true
+                                                                                      },
+                     "east=false,north=true,south=true,west=false,waterlogged=false":  {
+                                                                                           "model": "candycraftmod:block/marshmallow_fence_ns",
+                                                                                           "uvlock":  true
+                                                                                       },
+                     "east=false,north=true,south=true,west=false,waterlogged=true":  {
+                                                                                          "model": "candycraftmod:block/marshmallow_fence_ns",
+                                                                                          "uvlock":  true
+                                                                                      },
+                     "east=true,north=false,south=false,west=true,waterlogged=false":  {
+                                                                                           "model": "candycraftmod:block/marshmallow_fence_ns",
+                                                                                           "y":  90,
+                                                                                           "uvlock":  true
+                                                                                       },
+                     "east=true,north=false,south=false,west=true,waterlogged=true":  {
+                                                                                          "model": "candycraftmod:block/marshmallow_fence_ns",
+                                                                                          "y":  90,
+                                                                                          "uvlock":  true
+                                                                                      },
+                     "east=true,north=true,south=true,west=false,waterlogged=false":  {
+                                                                                          "model": "candycraftmod:block/marshmallow_fence_nse",
+                                                                                          "uvlock":  true
+                                                                                      },
+                     "east=true,north=true,south=true,west=false,waterlogged=true":  {
+                                                                                         "model": "candycraftmod:block/marshmallow_fence_nse",
+                                                                                         "uvlock":  true
+                                                                                     },
+                     "east=true,north=false,south=true,west=true,waterlogged=false":  {
+                                                                                          "model": "candycraftmod:block/marshmallow_fence_nse",
+                                                                                          "y":  90,
+                                                                                          "uvlock":  true
+                                                                                      },
+                     "east=true,north=false,south=true,west=true,waterlogged=true":  {
+                                                                                         "model": "candycraftmod:block/marshmallow_fence_nse",
+                                                                                         "y":  90,
+                                                                                         "uvlock":  true
+                                                                                     },
+                     "east=false,north=true,south=true,west=true,waterlogged=false":  {
+                                                                                          "model": "candycraftmod:block/marshmallow_fence_nse",
+                                                                                          "y":  180,
+                                                                                          "uvlock":  true
+                                                                                      },
+                     "east=false,north=true,south=true,west=true,waterlogged=true":  {
+                                                                                         "model": "candycraftmod:block/marshmallow_fence_nse",
+                                                                                         "y":  180,
+                                                                                         "uvlock":  true
+                                                                                     },
+                     "east=true,north=true,south=false,west=true,waterlogged=false":  {
+                                                                                          "model": "candycraftmod:block/marshmallow_fence_nse",
+                                                                                          "y":  270,
+                                                                                          "uvlock":  true
+                                                                                      },
+                     "east=true,north=true,south=false,west=true,waterlogged=true":  {
+                                                                                         "model": "candycraftmod:block/marshmallow_fence_nse",
+                                                                                         "y":  270,
+                                                                                         "uvlock":  true
+                                                                                     },
+                     "east=true,north=true,south=true,west=true,waterlogged=false":  {
+                                                                                         "model": "candycraftmod:block/marshmallow_fence_nsew",
+                                                                                         "uvlock":  true
+                                                                                     },
+                     "east=true,north=true,south=true,west=true,waterlogged=true":  {
+                                                                                        "model": "candycraftmod:block/marshmallow_fence_nsew",
+                                                                                        "uvlock":  true
+                                                                                    }
+                 }
+}

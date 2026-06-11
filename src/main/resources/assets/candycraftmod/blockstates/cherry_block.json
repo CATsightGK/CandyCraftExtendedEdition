@@ -1,0 +1,10 @@
+{
+    "variants": {
+        "facing=up": { "model": "candycraftmod:block/cherry_block" },
+        "facing=down": { "model": "candycraftmod:block/cherry_block_down" },
+        "facing=north": { "model": "candycraftmod:block/cherry_block_north" },
+        "facing=south": { "model": "candycraftmod:block/cherry_block_south" },
+        "facing=west": { "model": "candycraftmod:block/cherry_block_west" },
+        "facing=east": { "model": "candycraftmod:block/cherry_block_east" }
+    }
+}

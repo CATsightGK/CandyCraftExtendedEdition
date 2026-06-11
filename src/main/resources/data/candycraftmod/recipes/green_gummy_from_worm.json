@@ -1,0 +1,13 @@
+﻿{
+    "ingredients":  [
+                        {
+                            "item":  "candycraftmod:green_gummy_worm"
+                        }
+                    ],
+    "category":  "misc",
+    "result":  {
+                   "count":  3,
+                   "item":  "candycraftmod:green_gummy"
+               },
+    "type":  "minecraft:crafting_shapeless"
+}

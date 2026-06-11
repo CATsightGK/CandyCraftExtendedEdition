@@ -1,0 +1,26 @@
+{
+    "textures": {
+        "particle": "candycraftmod:block/cotton_candy_bed_top_lower",
+        "top": "candycraftmod:block/cotton_candy_bed_top_lower",
+        "bottom": "candycraftmod:block/marshmallow_planks.0",
+        "end": "candycraftmod:block/cotton_candy_bed_back",
+        "side": "candycraftmod:block/cotton_candy_bed_side_lower"
+    },
+    "elements": [
+        {   "from": [ 0, 0, 0 ],
+            "to": [ 16, 9, 16 ],
+            "faces": {
+                "up":    { "uv": [  0, 16, 16,  0 ], "texture": "#top", "rotation": 90 },
+                "north": { "uv": [  0,  7, 16, 16 ], "texture": "#end" },
+                "west":  { "uv": [  0,  7, 16, 16 ], "texture": "#side" },
+                "east":  { "uv": [ 16,  7,  0, 16 ], "texture": "#side" }
+            }
+        },
+        {   "from": [ 0, 3, 0 ],
+            "to": [ 16, 3, 16 ],
+            "faces": {
+                "down":  { "uv": [ 0, 0, 16, 16 ], "texture": "#bottom" }
+            }
+        }
+    ]
+}

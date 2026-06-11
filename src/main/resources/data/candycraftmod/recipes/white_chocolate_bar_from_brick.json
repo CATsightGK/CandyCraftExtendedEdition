@@ -1,0 +1,13 @@
+﻿{
+    "ingredients":  [
+                        {
+                            "item":  "candycraftmod:white_chocolate_brick"
+                        }
+                    ],
+    "category":  "misc",
+    "result":  {
+                   "count":  4,
+                   "item":  "candycraftmod:white_chocolate_bar"
+               },
+    "type":  "minecraft:crafting_shapeless"
+}

@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "#$#",
+    "#$#",
+    "#$#"
+  ],
+  "key": {
+    "#": {
+      "item": "candycraftmod:waffle_nugget"
+    },
+    "$": {
+      "item": "candycraftmod:nougat_powder"
+    }
+  },
+  "result": {
+    "item": "candycraftmod:dynamite",
+    "count": 3
+  }
+}

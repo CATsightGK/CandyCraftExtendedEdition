@@ -1,0 +1,22 @@
+﻿{
+    "ingredients":  [
+                        {
+                            "item":  "minecraft:sugar"
+                        },
+                        {
+                            "item":  "candycraftmod:milk_chocolate_egg"
+                        },
+                        {
+                            "tag":  "forge:crops/wheat"
+                        },
+                        {
+                            "item":  "candycraftmod:butter"
+                        }
+                    ],
+    "category":  "misc",
+    "result":  {
+                   "count":  6,
+                   "item":  "candycraftmod:milk_brownie"
+               },
+    "type":  "minecraft:crafting_shapeless"
+}

@@ -1,0 +1,9 @@
+﻿{
+  "parent": "block/cube_column",
+  "textures": {
+    "end": "candycraftmod:block/caneblock_red_top",
+    "side": "candycraftmod:block/caneblock_red",
+    "particle": "candycraftmod:block/caneblock_red"
+  }
+}
+

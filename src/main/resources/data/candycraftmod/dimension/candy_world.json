@@ -1,0 +1,24 @@
+{
+  "type": "candycraftmod:candy_world",
+  "generator": {
+    "type": "candycraftmod:candy_world",
+    "biome_source": {
+      "type": "candycraftmod:candy_world",
+      "biomes": [
+        "candycraftmod:sugar_oceans",
+        "candycraftmod:sugar_river",
+        "candycraftmod:sugar_plains",
+        "candycraftmod:sugar_forest",
+        "candycraftmod:sugar_enchanted_forest",
+        "candycraftmod:chocolate_forest",
+        "candycraftmod:cotton_candy_plains",
+        "candycraftmod:gummy_swamp",
+        "candycraftmod:caramel_forest",
+        "candycraftmod:sugar_cold_forest",
+        "candycraftmod:ice_cream_plains",
+        "candycraftmod:sugar_mountains",
+        "candycraftmod:sugar_hell_mountains"
+      ]
+    }
+  }
+}

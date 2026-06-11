@@ -1,0 +1,19 @@
+﻿{
+    "ingredients":  [
+                        {
+                            "item":  "minecraft:cocoa_beans"
+                        },
+                        {
+                            "item":  "minecraft:sugar"
+                        },
+                        {
+                            "item":  "minecraft:milk_bucket"
+                        }
+                    ],
+    "category":  "misc",
+    "result":  {
+                   "count":  3,
+                   "item":  "candycraftmod:milk_chocolate_bar"
+               },
+    "type":  "minecraft:crafting_shapeless"
+}

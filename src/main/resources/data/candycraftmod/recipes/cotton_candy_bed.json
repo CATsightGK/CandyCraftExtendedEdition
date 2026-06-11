@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "###",
+    "$$$"
+  ],
+  "key": {
+    "#": {
+      "item": "candycraftmod:cotton_candy"
+    },
+    "$": {
+      "tag": "candycraftmod:marshmallow_planks"
+    }
+  },
+  "result": {
+    "item": "candycraftmod:cotton_candy_bed_block"
+  }
+}

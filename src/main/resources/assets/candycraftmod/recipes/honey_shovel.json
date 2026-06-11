@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "L",
+    "S",
+    "S"
+  ],
+  "key": {
+    "L": {
+      "item": "candycraftmod:honeycomb"
+    },
+    "S": {
+      "item": "candycraftmod:marshmallow_stick"
+    }
+  },
+  "result": {
+    "item": "candycraftmod:honey_shovel"
+  }
+}

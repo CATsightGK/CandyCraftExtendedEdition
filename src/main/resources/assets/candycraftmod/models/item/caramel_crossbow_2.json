@@ -1,0 +1,6 @@
+{
+    "parent": "candycraftmod:item/caramel_crossbow",
+    "textures": {
+        "layer0": "candycraftmod:item/caramel_crossbow_1"
+    }
+}

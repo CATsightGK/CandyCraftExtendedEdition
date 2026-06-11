@@ -1,0 +1,17 @@
+﻿{
+    "key":  {
+                "#":  {
+                          "item":  "candycraftmod:green_gummy"
+                      }
+            },
+    "category":  "misc",
+    "pattern":  [
+                    "  #",
+                    " # ",
+                    "#  "
+                ],
+    "result":  {
+                   "item":  "candycraftmod:green_gummy_worm"
+               },
+    "type":  "minecraft:crafting_shaped"
+}

@@ -1,0 +1,22 @@
+{
+    "variants":  {
+                     "type=bottom,waterlogged=false":  {
+                                                           "model": "candycraftmod:block/half_slab_ice_cream.3"
+                                                       },
+                     "type=top,waterlogged=false":  {
+                                                        "model": "candycraftmod:block/upper_slab_ice_cream.3"
+                                                    },
+                     "type=double,waterlogged=false":  {
+                                                           "model": "candycraftmod:block/ice_cream.3"
+                                                       },
+                     "type=bottom,waterlogged=true":  {
+                                                          "model": "candycraftmod:block/half_slab_ice_cream.3"
+                                                      },
+                     "type=top,waterlogged=true":  {
+                                                       "model": "candycraftmod:block/upper_slab_ice_cream.3"
+                                                   },
+                     "type=double,waterlogged=true":  {
+                                                          "model": "candycraftmod:block/ice_cream.3"
+                                                      }
+                 }
+}

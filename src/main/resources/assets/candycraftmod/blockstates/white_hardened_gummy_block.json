@@ -1,0 +1,10 @@
+﻿{
+  "variants": {
+    "": [
+      {
+        "model": "candycraftmod:block/gummy/hardened_gummy_block"
+      }
+    ]
+  }
+}
+

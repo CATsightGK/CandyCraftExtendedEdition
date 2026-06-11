@@ -1,0 +1,20 @@
+{
+    "replace":  false,
+    "values":  [
+                   "candycraftmod:acid_mint_flower",
+                   "candycraftmod:banana_seaweed",
+                   "candycraftmod:candy_leave",
+                   "candycraftmod:candy_leave2",
+                   "candycraftmod:candy_sapling",
+                   "candycraftmod:chewing_gum_puddle",
+                   "candycraftmod:cranberry_spikes",
+                   "candycraftmod:dragibus_crops",
+                   "candycraftmod:fraise_tagada_flower",
+                   "candycraftmod:lollipop_block",
+                   "candycraftmod:lollipop_plant",
+                   "candycraftmod:mint",
+                   "candycraftmod:sugar_essence_flower",
+                   "candycraftmod:sugar_spikes",
+                   "candycraftmod:sweet_grass"
+               ]
+}

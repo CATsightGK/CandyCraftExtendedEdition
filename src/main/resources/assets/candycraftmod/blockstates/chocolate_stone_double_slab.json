@@ -1,0 +1,7 @@
+{
+    "variants":  {
+                     "":  {
+                               "model":  "candycraftmod:block/chocolate_stone_double_slab"
+                           }
+                 }
+}

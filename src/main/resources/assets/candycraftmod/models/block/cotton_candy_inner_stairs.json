@@ -1,0 +1,8 @@
+{
+    "parent": "block/inner_stairs",
+    "textures": {
+        "bottom": "candycraftmod:block/cotton_candy_block",
+        "top": "candycraftmod:block/cotton_candy_block",
+        "side": "candycraftmod:block/cotton_candy_block"
+    }
+}

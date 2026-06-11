@@ -1,0 +1,16 @@
+﻿{
+    "key":  {
+                "#":  {
+                          "item":  "candycraftmod:dark_chocolate_bar"
+                      }
+            },
+    "category":  "misc",
+    "pattern":  [
+                    "##",
+                    "##"
+                ],
+    "result":  {
+                   "item":  "candycraftmod:dark_chocolate_brick"
+               },
+    "type":  "minecraft:crafting_shaped"
+}

@@ -1,0 +1,19 @@
+{
+    "variants":  {
+                     "type=top,waterlogged=true":  {
+                                                       "model":  "candycraftmod:block/dark_marshmallow_slab_top"
+                                                   },
+                     "type=top,waterlogged=false":  {
+                                                        "model":  "candycraftmod:block/dark_marshmallow_slab_top"
+                                                    },
+                     "type=double,waterlogged=false":  {
+                                                           "model":  "candycraftmod:block/dark_marshmallow_slab_double"
+                                                       },
+                     "type=bottom,waterlogged=false":  {
+                                                           "model":  "candycraftmod:block/dark_marshmallow_slab"
+                                                       },
+                     "type=bottom,waterlogged=true":  {
+                                                          "model":  "candycraftmod:block/dark_marshmallow_slab"
+                                                      }
+                 }
+}

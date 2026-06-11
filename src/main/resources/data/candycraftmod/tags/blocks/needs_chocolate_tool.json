@@ -1,0 +1,8 @@
+﻿{
+    "replace":  false,
+    "values":  [
+                   "candycraftmod:crystallized_sugar_cookie_ore",
+                   "candycraftmod:cookie_ore",
+                   "candycraftmod:teleporter_ore"
+               ]
+}

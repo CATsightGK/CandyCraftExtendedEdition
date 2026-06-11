@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "L",
+    "S",
+    "S"
+  ],
+  "key": {
+    "L": {
+      "item": "candycraftmod:pez"
+    },
+    "S": {
+      "item": "candycraftmod:marshmallow_stick"
+    }
+  },
+  "result": {
+    "item": "candycraftmod:pez_shovel"
+  }
+}

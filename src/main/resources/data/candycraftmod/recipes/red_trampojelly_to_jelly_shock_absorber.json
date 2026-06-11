@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:smelting",
+  "category": "blocks",
+  "ingredient": { "item": "candycraftmod:red_trampojelly" },
+  "result": "candycraftmod:jelly_shock_absorber",
+  "experience": 0.7,
+  "cookingtime": 200
+}

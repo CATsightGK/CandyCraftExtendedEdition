@@ -1,0 +1,25 @@
+{
+  "display": {
+    "icon": {
+      "item": "candycraftmod:wiki"
+    },
+    "title": {
+      "translate": "advancements.candycraft.wiki_obtained.title"
+    },
+    "description": {
+      "translate": "advancements.candycraft.wiki_obtained.desc"
+    },
+    "frame": "challenge"
+  },
+  "parent": "candycraftmod:root",
+  "criteria": {
+    "wiki": {
+      "trigger": "minecraft:inventory_changed",
+      "items": [
+        {
+          "item": "candycraftmod:wiki"
+        }
+      ]
+    }
+  }
+}

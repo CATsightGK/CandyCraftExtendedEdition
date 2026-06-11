@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "#  ",
+    "## ",
+    "###"
+  ],
+  "key": {
+    "#": {
+      "item": "candycraftmod:marshmallow_planks_dark"
+    }
+  },
+  "result": {
+    "item": "candycraftmod:dark_marshmallow_stairs",
+    "count": 6
+  }
+}

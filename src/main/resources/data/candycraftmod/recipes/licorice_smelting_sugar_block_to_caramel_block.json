@@ -1,0 +1,8 @@
+{
+  "type": "candycraftmod:licorice_smelting",
+  "category": "blocks",
+  "ingredient": { "item": "candycraftmod:sugar_block" },
+  "result": { "item": "candycraftmod:caramel_block" },
+  "experience": 0.7,
+  "cookingtime": 200
+}

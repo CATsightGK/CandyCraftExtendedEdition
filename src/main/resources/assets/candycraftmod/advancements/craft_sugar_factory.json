@@ -1,0 +1,37 @@
+{
+  "display": {
+    "icon": {
+      "item": "candycraftmod:sugar_factory"
+    },
+    "title": {
+      "translate": "advancements.candycraft.sugar_factory.title"
+    },
+    "description": {
+      "translate": "advancements.candycraft.sugar_factory.desc"
+    },
+    "frame": "goal"
+  },
+  "parent": "candycraftmod:craft_stick",
+  "criteria": {
+    "sugar_factory": {
+      "trigger": "minecraft:inventory_changed",
+      "items": [
+        {
+          "item": "candycraftmod:sugar_factory"
+        }
+      ]
+    },
+    "recipe": {
+      "trigger": "minecraft:recipe_unlocked",
+      "conditions": {
+        "recipe": "candycraftmod:sugar_factory"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "sugar_factory",
+      "recipe"
+    ]
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "display": {
+    "icon": {
+      "item": "candycraftmod:lollipop"
+    },
+    "title": {
+      "translate": "advancements.candycraft.heal_candy_wolf.title"
+    },
+    "description": {
+      "translate": "advancements.candycraft.heal_candy_wolf.desc"
+    }
+  },
+  "parent": "candycraftmod:plant_lollipop",
+  "criteria": {
+    "heal_animal": {
+      "trigger": "candycraftmod:heal_candy_wolf"
+    }
+  }
+}

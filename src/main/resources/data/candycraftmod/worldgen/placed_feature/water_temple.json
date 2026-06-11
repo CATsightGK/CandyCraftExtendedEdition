@@ -1,0 +1,15 @@
+{
+  "feature": "candycraftmod:water_temple",
+  "placement": [
+    { "type": "minecraft:rarity_filter", "chance": 300 },
+    { "type": "minecraft:in_square" },
+    {
+      "type": "minecraft:height_range",
+      "height": {
+        "type": "minecraft:constant",
+        "value": { "absolute": 62 }
+      }
+    },
+    { "type": "minecraft:biome" }
+  ]
+}

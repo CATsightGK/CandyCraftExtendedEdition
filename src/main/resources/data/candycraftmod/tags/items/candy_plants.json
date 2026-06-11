@@ -1,0 +1,17 @@
+{
+  "replace": false,
+  "values": [
+    "candycraftmod:sweet_grass_pink",
+    "candycraftmod:sweet_grass_pale",
+    "candycraftmod:sweet_grass_yellow",
+    "candycraftmod:sweet_grass_red",
+    "candycraftmod:acid_mint_flower",
+    "candycraftmod:fraise_tagada_flower",
+    "candycraftmod:sugar_essence_flower",
+    "candycraftmod:cotton_candy_plant",
+    "candycraftmod:cotton_candy_bush",
+    "candycraftmod:milk_chocolate_mushroom",
+    "candycraftmod:white_chocolate_mushroom",
+    "candycraftmod:dark_chocolate_mushroom"
+  ]
+}

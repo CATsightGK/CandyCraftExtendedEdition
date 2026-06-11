@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "###",
+    "###"
+  ],
+  "key": {
+    "#": {
+      "item": "candycraftmod:caramel_glass"
+    }
+  },
+  "result": {
+    "item": "candycraftmod:caramel_pane",
+    "count": 16
+  }
+}

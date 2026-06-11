@@ -1,0 +1,19 @@
+{
+  "type": "forge:ore_shaped",
+  "pattern": [
+    "L",
+    "S",
+    "S"
+  ],
+  "key": {
+    "L": {
+      "item": "#MARSHMALLOWPLANKS"
+    },
+    "S": {
+      "item": "candycraftmod:marshmallow_stick"
+    }
+  },
+  "result": {
+    "item": "candycraftmod:marshmallow_shovel"
+  }
+}

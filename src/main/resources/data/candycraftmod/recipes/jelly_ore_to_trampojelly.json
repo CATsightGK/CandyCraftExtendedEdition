@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:smelting",
+  "category": "blocks",
+  "ingredient": { "item": "candycraftmod:jelly_ore" },
+  "result": "candycraftmod:trampojelly",
+  "experience": 1.0,
+  "cookingtime": 200
+}

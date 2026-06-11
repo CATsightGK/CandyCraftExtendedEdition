@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_all",
+  "textures": {
+    "particle": "candycraftmod:block/liquid_chocolate_still",
+    "all": "candycraftmod:block/liquid_chocolate_still"
+  }
+}

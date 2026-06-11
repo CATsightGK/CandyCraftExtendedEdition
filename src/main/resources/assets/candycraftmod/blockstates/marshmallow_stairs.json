@@ -1,0 +1,40 @@
+{
+    "variants":  {
+                     "facing=west,half=bottom,shape=straight,waterlogged=true":  {
+                                                                                     "y":  180,
+                                                                                     "uvlock":  true,
+                                                                                     "model":  "candycraftmod:block/marshmallow_stairs"
+                                                                                 },
+                     "facing=east,half=bottom,shape=straight,waterlogged=true":  {
+                                                                                     "model":  "candycraftmod:block/marshmallow_stairs"
+                                                                                 },
+                     "facing=north,half=bottom,shape=straight,waterlogged=true":  {
+                                                                                      "y":  270,
+                                                                                      "uvlock":  true,
+                                                                                      "model":  "candycraftmod:block/marshmallow_stairs"
+                                                                                  },
+                     "facing=east,half=bottom,shape=straight,waterlogged=false":  {
+                                                                                      "model":  "candycraftmod:block/marshmallow_stairs"
+                                                                                  },
+                     "facing=south,half=bottom,shape=straight,waterlogged=true":  {
+                                                                                      "y":  90,
+                                                                                      "uvlock":  true,
+                                                                                      "model":  "candycraftmod:block/marshmallow_stairs"
+                                                                                  },
+                     "facing=south,half=bottom,shape=straight,waterlogged=false":  {
+                                                                                       "y":  90,
+                                                                                       "uvlock":  true,
+                                                                                       "model":  "candycraftmod:block/marshmallow_stairs"
+                                                                                   },
+                     "facing=west,half=bottom,shape=straight,waterlogged=false":  {
+                                                                                      "y":  180,
+                                                                                      "uvlock":  true,
+                                                                                      "model":  "candycraftmod:block/marshmallow_stairs"
+                                                                                  },
+                     "facing=north,half=bottom,shape=straight,waterlogged=false":  {
+                                                                                       "y":  270,
+                                                                                       "uvlock":  true,
+                                                                                       "model":  "candycraftmod:block/marshmallow_stairs"
+                                                                                   }
+                 }
+}

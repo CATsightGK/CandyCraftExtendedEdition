@@ -1,0 +1,23 @@
+﻿{
+    "key":  {
+                "C":  {
+                          "item":  "minecraft:chorus_fruit"
+                      },
+                "P":  {
+                          "item":  "minecraft:blaze_powder"
+                      },
+                "B":  {
+                          "tag":  "candycraftmod:chocolate_bars"
+                      }
+            },
+    "category":  "misc",
+    "pattern":  [
+                    "PBP",
+                    "BCB",
+                    "PBP"
+                ],
+    "result":  {
+                   "item":  "candycraftmod:teleporter"
+               },
+    "type":  "minecraft:crafting_shaped"
+}

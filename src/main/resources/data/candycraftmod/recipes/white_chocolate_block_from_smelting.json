@@ -1,0 +1,10 @@
+﻿{
+    "cookingtime":  200,
+    "experience":  0.4,
+    "ingredient":  {
+                       "item":  "candycraftmod:white_chocolate_brick"
+                   },
+    "type":  "minecraft:smelting",
+    "category":  "misc",
+    "result":  "candycraftmod:white_chocolate_block"
+}

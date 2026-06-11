@@ -1,0 +1,20 @@
+﻿{
+    "key":  {
+                "W":  {
+                          "item":  "candycraftmod:wafer_stick"
+                      },
+                "B":  {
+                          "item":  "candycraftmod:white_chocolate_bar"
+                      }
+            },
+    "category":  "equipment",
+    "pattern":  [
+                    "BBB",
+                    " W ",
+                    " W "
+                ],
+    "result":  {
+                   "item":  "candycraftmod:white_chocolate_pickaxe"
+               },
+    "type":  "minecraft:crafting_shaped"
+}

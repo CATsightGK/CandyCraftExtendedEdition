@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "candycraftmod:dynamite"
+    },
+    {
+      "item": "candycraftmod:chewing_gum"
+    }
+  ],
+  "result": {
+    "item": "candycraftmod:glue_dynamite"
+  }
+}

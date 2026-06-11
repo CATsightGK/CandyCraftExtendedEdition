@@ -1,0 +1,19 @@
+﻿{
+    "key":  {
+                "#":  {
+                          "item":  "candycraftmod:yellow_gummy_worm_block"
+                      },
+                "@":  {
+                          "item":  "candycraftmod:yellow_gummy"
+                      }
+            },
+    "category":  "misc",
+    "pattern":  [
+                    "@@",
+                    "##"
+                ],
+    "result":  {
+                   "item":  "candycraftmod:yellow_gummy_workbench"
+               },
+    "type":  "minecraft:crafting_shaped"
+}

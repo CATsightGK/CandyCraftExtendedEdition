@@ -1,0 +1,13 @@
+{
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "candycraftmod:block/cotton_candy_sapling"
+  },
+  "display": {
+    "thirdperson_righthand": { "scale": [0.55, 0.55, 0.55] },
+    "thirdperson_lefthand": { "scale": [0.55, 0.55, 0.55] },
+    "firstperson_righthand": { "scale": [0.7, 0.7, 0.7] },
+    "firstperson_lefthand": { "scale": [0.7, 0.7, 0.7] },
+    "ground": { "scale": [0.5, 0.5, 0.5] }
+  }
+}

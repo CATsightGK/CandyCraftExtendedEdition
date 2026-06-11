@@ -1,0 +1,36 @@
+{
+  "display": {
+    "icon": {
+      "item": "candycraftmod:marshmallow_stick"
+    },
+    "title": {
+      "translate": "advancements.candycraft.marshmallow_stick.title"
+    },
+    "description": {
+      "translate": "advancements.candycraft.marshmallow_stick.desc"
+    }
+  },
+  "parent": "candycraftmod:candy_world",
+  "criteria": {
+    "marshmallow_stick": {
+      "trigger": "minecraft:inventory_changed",
+      "items": [
+        {
+          "item": "candycraftmod:marshmallow_stick"
+        }
+      ]
+    },
+    "recipe": {
+      "trigger": "minecraft:recipe_unlocked",
+      "conditions": {
+        "recipe": "candycraftmod:marshmallow_stick"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "marshmallow_stick",
+      "recipe"
+    ]
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "display": {
+    "icon": {
+      "item": "candycraftmod:pudding"
+    },
+    "title": {
+      "translate": "advancements.candycraft.eat_block.title"
+    },
+    "description": {
+      "translate": "advancements.candycraft.eat_block.desc"
+    },
+    "goal": "challenge"
+  },
+  "parent": "candycraftmod:craft_fork",
+  "criteria": {
+    "eat_block": {
+      "trigger": "candycraftmod:eat_block"
+    }
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "  $",
+    " $ ",
+    "#  "
+  ],
+  "key": {
+    "#": {
+      "item": "candycraftmod:candy_cane"
+    },
+    "$": {
+      "item": "candycraftmod:honey_shard"
+    }
+  },
+  "result": {
+    "item": "candycraftmod:honey_arrow",
+    "count": 4
+  }
+}

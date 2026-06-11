@@ -1,0 +1,6 @@
+{
+    "parent": "block/cross",
+    "textures": {
+        "cross": "candycraftmod:block/sugar_essence_flower"
+    }
+}

@@ -1,0 +1,19 @@
+﻿{
+    "key":  {
+                "#":  {
+                          "item":  "candycraftmod:white_candy_cane"
+                      },
+                "@":  {
+                          "item":  "candycraftmod:green_candy_cane"
+                      }
+            },
+    "category":  "misc",
+    "pattern":  [
+                    "#@",
+                    "@#"
+                ],
+    "result":  {
+                   "item":  "candycraftmod:white_green_candy_cane_block"
+               },
+    "type":  "minecraft:crafting_shaped"
+}

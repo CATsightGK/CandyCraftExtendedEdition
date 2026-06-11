@@ -1,0 +1,22 @@
+{
+  "display": {
+    "icon": {
+      "item": "candycraftmod:lollipop_seeds"
+    },
+    "title": {
+      "translate": "advancements.candycraft.lollipop_plant.title"
+    },
+    "description": {
+      "translate": "advancements.candycraft.lollipop_plant.description"
+    }
+  },
+  "parent": "candycraftmod:plant_dragibus",
+  "criteria": {
+    "lollipop_plant": {
+      "trigger": "minecraft:placed_block",
+      "conditions": {
+        "block": "candycraftmod:dragibus_crops"
+      }
+    }
+  }
+}

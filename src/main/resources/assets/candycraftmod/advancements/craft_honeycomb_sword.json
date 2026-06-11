@@ -1,0 +1,36 @@
+{
+  "display": {
+    "icon": {
+      "item": "candycraftmod:honey_sword"
+    },
+    "title": {
+      "translate": "advancements.candycraft.honeycomb_sword.title"
+    },
+    "description": {
+      "translate": "advancements.candycraft.honeycomb_sword.desc"
+    }
+  },
+  "parent": "candycraftmod:honeycomb",
+  "criteria": {
+    "honeycomb_sword": {
+      "trigger": "minecraft:inventory_changed",
+      "items": [
+        {
+          "item": "candycraftmod:honeycomb_sword"
+        }
+      ]
+    },
+    "recipe": {
+      "trigger": "minecraft:recipe_unlocked",
+      "conditions": {
+        "recipe": "candycraftmod:honey_sword"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "honeycomb_sword",
+      "recipe"
+    ]
+  ]
+}

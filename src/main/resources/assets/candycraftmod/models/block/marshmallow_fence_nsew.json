@@ -1,0 +1,6 @@
+{
+    "parent": "candycraftmod:block/fence_nsew",
+    "textures": {
+        "texture": "candycraftmod:block/marshmallow_planks.0"
+    }
+}

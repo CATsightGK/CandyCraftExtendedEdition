@@ -1,0 +1,8 @@
+{
+  "type": "candycraftmod:licorice_smelting",
+  "category": "blocks",
+  "ingredient": { "item": "candycraftmod:red_trampojelly" },
+  "result": { "item": "candycraftmod:jelly_shock_absorber" },
+  "experience": 0.7,
+  "cookingtime": 200
+}

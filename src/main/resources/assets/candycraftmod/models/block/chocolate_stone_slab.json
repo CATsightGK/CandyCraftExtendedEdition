@@ -1,0 +1,8 @@
+{
+    "textures":  {
+                     "bottom":  "candycraftmod:block/chocolate_stone",
+                     "top":  "candycraftmod:block/chocolate_stone",
+                     "side":  "candycraftmod:block/chocolate_stone"
+                 },
+    "parent":  "minecraft:block/slab"
+}

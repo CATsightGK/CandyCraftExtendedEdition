@@ -1,0 +1,22 @@
+﻿{
+    "ingredients":  [
+                        {
+                            "item":  "minecraft:sugar"
+                        },
+                        {
+                            "item":  "minecraft:sugar"
+                        },
+                        {
+                            "item":  "minecraft:water_bucket"
+                        },
+                        {
+                            "tag":  "forge:dyes/red"
+                        }
+                    ],
+    "category":  "misc",
+    "result":  {
+                   "count":  4,
+                   "item":  "candycraftmod:red_candy_cane"
+               },
+    "type":  "minecraft:crafting_shapeless"
+}

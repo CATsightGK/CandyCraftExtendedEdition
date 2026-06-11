@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "LL",
+    " S",
+    " S"
+  ],
+  "key": {
+    "L": {
+      "item": "candycraftmod:licorice"
+    },
+    "S": {
+      "item": "candycraftmod:marshmallow_stick"
+    }
+  },
+  "result": {
+    "item": "candycraftmod:licorice_hoe"
+  }
+}

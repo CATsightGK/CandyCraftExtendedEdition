@@ -1,0 +1,6 @@
+{
+    "textures":  {
+                     "cross":  "candycraftmod:block/candy_sapling.2"
+                 },
+    "parent":  "minecraft:block/cross"
+}

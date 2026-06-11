@@ -1,0 +1,20 @@
+﻿{
+    "key":  {
+                "W":  {
+                          "item":  "candycraftmod:wafer_stick"
+                      },
+                "B":  {
+                          "item":  "candycraftmod:milk_chocolate_bar"
+                      }
+            },
+    "category":  "equipment",
+    "pattern":  [
+                    " B ",
+                    " W ",
+                    " W "
+                ],
+    "result":  {
+                   "item":  "candycraftmod:milk_chocolate_shovel"
+               },
+    "type":  "minecraft:crafting_shaped"
+}

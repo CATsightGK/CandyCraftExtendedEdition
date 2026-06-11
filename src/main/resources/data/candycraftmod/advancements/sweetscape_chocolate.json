@@ -1,0 +1,38 @@
+{
+  "parent": "candycraftmod:candy_world",
+  "display": {
+    "icon": {
+      "item": "candycraftmod:milk_chocolate_bar"
+    },
+    "title": {
+      "translate": "advancements.candycraft.sweetscape_chocolate.title"
+    },
+    "description": {
+      "translate": "advancements.candycraft.sweetscape_chocolate.desc"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": false
+  },
+  "criteria": {
+    "has_chocolate": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "candycraftmod:milk_chocolate_bar",
+              "candycraftmod:white_chocolate_bar",
+              "candycraftmod:dark_chocolate_bar"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has_chocolate"
+    ]
+  ]
+}

@@ -1,0 +1,10 @@
+﻿{
+  "parent": "block/cube_bottom_top",
+  "textures": {
+    "top": "candycraftmod:block/candy_cane_workbench_top",
+    "side": "candycraftmod:block/candy_cane_workbench_red_side",
+    "bottom": "candycraftmod:block/caneblock_red_top",
+    "particle": "candycraftmod:block/caneblock_red"
+  }
+}
+

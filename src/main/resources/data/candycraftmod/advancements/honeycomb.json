@@ -1,0 +1,24 @@
+{
+  "display": {
+    "icon": {
+      "item": "candycraftmod:honeycomb"
+    },
+    "title": {
+      "translate": "advancements.candycraft.honeycomb.title"
+    },
+    "description": {
+      "translate": "advancements.candycraft.honeycomb.desc"
+    }
+  },
+  "parent": "candycraftmod:craft_sugar_factory",
+  "criteria": {
+    "honeycomb": {
+      "trigger": "minecraft:inventory_changed",
+      "items": [
+        {
+          "item": "candycraftmod:honeycomb"
+        }
+      ]
+    }
+  }
+}

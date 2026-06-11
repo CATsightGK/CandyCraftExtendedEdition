@@ -1,0 +1,8 @@
+{
+  "type": "candycraftmod:licorice_smelting",
+  "category": "food",
+  "ingredient": { "item": "candycraftmod:cranberry_fish" },
+  "result": { "item": "candycraftmod:cranberry_fish_cooked" },
+  "experience": 0.7,
+  "cookingtime": 200
+}

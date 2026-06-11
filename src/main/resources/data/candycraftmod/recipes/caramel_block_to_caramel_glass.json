@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:smelting",
+  "category": "blocks",
+  "ingredient": { "item": "candycraftmod:caramel_block" },
+  "result": "candycraftmod:caramel_glass",
+  "experience": 0.7,
+  "cookingtime": 200
+}

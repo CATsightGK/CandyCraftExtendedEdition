@@ -1,0 +1,21 @@
+﻿{
+    "key":  {
+                "W":  {
+                          "item":  "candycraftmod:wafer_stick"
+                      },
+                "B":  {
+                          "item":  "candycraftmod:cotton_candy"
+                      }
+            },
+    "category":  "equipment",
+    "pattern":  [
+                    " B ",
+                    " B ",
+                    " W "
+                ],
+    "result":  {
+                   "item":  "candycraftmod:cotton_candy_sword"
+               },
+    "type":  "minecraft:crafting_shaped"
+}
+

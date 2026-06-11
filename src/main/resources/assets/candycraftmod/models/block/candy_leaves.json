@@ -1,0 +1,6 @@
+{
+    "textures":  {
+                     "all":  "candycraftmod:block/candy_leaves.0"
+                 },
+    "parent":  "minecraft:block/cube_all"
+}

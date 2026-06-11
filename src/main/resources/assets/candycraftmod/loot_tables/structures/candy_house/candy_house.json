@@ -1,0 +1,53 @@
+{
+  "pools": [
+    {
+      "rolls": 4,
+      "entries": [
+        {
+          "type": "loot_table",
+          "name": "candycraftmod:structures/junk",
+          "weight": 10
+        },
+        {
+          "type": "item",
+          "name": "candycraftmod:licorice_helmet",
+          "weight": 3
+        },
+        {
+          "type": "item",
+          "name": "candycraftmod:licorice_plate",
+          "weight": 3
+        },
+        {
+          "type": "item",
+          "name": "candycraftmod:licorice_leggings",
+          "weight": 3
+        },
+        {
+          "type": "item",
+          "name": "candycraftmod:licorice_boots",
+          "weight": 3
+        },
+        {
+          "type": "item",
+          "name": "candycraftmod:sugar_block",
+          "functions": [
+            {
+              "function": "set_count",
+              "count": {
+                "min": 1,
+                "max": 12
+              }
+            }
+          ],
+          "weight": 7
+        },
+        {
+          "type": "item",
+          "name": "minecraft:lava_bucket",
+          "weight": 7
+        }
+      ]
+    }
+  ]
+}

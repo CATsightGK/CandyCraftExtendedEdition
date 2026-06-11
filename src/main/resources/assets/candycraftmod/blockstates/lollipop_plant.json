@@ -1,0 +1,12 @@
+{
+    "variants": {
+        "age=0": { "model": "candycraftmod:block/lollipop_stem_growth0" },
+        "age=1": { "model": "candycraftmod:block/lollipop_stem_growth1" },
+        "age=2": { "model": "candycraftmod:block/lollipop_stem_growth2" },
+        "age=3": { "model": "candycraftmod:block/lollipop_stem_growth3" },
+        "age=4": { "model": "candycraftmod:block/lollipop_stem_growth4" },
+        "age=5": { "model": "candycraftmod:block/lollipop_stem_growth5" },
+        "age=6": { "model": "candycraftmod:block/lollipop_stem_growth6" },
+        "age=7": { "model": "candycraftmod:block/lollipop_stem_growth7" }
+    }
+}

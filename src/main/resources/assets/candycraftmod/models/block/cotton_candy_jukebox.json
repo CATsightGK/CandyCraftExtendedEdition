@@ -1,0 +1,12 @@
+{
+    "textures":  {
+                     "north":  "candycraftmod:block/jukebox_side",
+                     "south":  "candycraftmod:block/jukebox_side",
+                     "up":  "candycraftmod:block/jukebox_top_empty",
+                     "west":  "candycraftmod:block/jukebox_side",
+                     "particle":  "candycraftmod:block/jukebox_side",
+                     "east":  "candycraftmod:block/jukebox_side",
+                     "down":  "candycraftmod:block/jukebox_side"
+                 },
+    "parent":  "minecraft:block/cube"
+}

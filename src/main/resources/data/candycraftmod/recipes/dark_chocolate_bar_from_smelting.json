@@ -1,0 +1,10 @@
+﻿{
+    "cookingtime":  200,
+    "experience":  0.4,
+    "ingredient":  {
+                       "item":  "candycraftmod:dark_chocolate_egg"
+                   },
+    "type":  "minecraft:smelting",
+    "category":  "misc",
+    "result":  "candycraftmod:dark_chocolate_bar"
+}

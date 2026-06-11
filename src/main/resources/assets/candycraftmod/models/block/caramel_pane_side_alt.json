@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/template_glass_pane_side_alt",
+  "textures": {
+    "pane": "candycraftmod:block/caramel_glass_0",
+    "edge": "candycraftmod:block/caramel_glass_top"
+  }
+}

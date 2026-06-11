@@ -1,0 +1,8 @@
+﻿{
+  "parent": "item/handheld",
+  "textures": {
+    "layer0": "candycraftmod:item/wafer_stick"
+  }
+}
+
+
