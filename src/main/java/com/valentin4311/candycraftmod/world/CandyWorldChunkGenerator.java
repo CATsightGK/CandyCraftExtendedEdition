@@ -69,6 +69,8 @@ public class CandyWorldChunkGenerator extends ChunkGenerator {
     private static final ResourceLocation COTTON_CANDY_PLAINS = new ResourceLocation(CandyCraft.MODID, "cotton_candy_plains");
     private static final ResourceLocation CHOCOLATE_FOREST = new ResourceLocation(CandyCraft.MODID, "chocolate_forest");
     private static final ResourceLocation GUMMY_SWAMP = new ResourceLocation(CandyCraft.MODID, "gummy_swamp");
+    private static final ResourceLocation SUGAR_MOUNTAINS = new ResourceLocation(CandyCraft.MODID, "sugar_mountains");
+    private static final ResourceLocation SUGAR_HELL_MOUNTAINS = new ResourceLocation(CandyCraft.MODID, "sugar_hell_mountains");
     private static final BlockState AIR = Blocks.AIR.defaultBlockState();
     private static final BlockState WATER = Blocks.WATER.defaultBlockState();
     private static final BlockState BEDROCK = Blocks.BEDROCK.defaultBlockState();
@@ -231,18 +233,19 @@ public class CandyWorldChunkGenerator extends ChunkGenerator {
         }
 
         generateSurfacePools(chunk, randomState);
+        generateMountainCandySprings(chunk, randomState);
     }
 
     private void generateSurfacePools(ChunkAccess chunk, RandomState randomState) {
         ChunkPos pos = chunk.getPos();
         long seed = worldSeed(randomState);
         long poolRoll = positiveHash(pos.x, pos.z, 0, seed ^ 0x4752454E4144494EL);
-        if (poolRoll % 520L == 0L) {
+        if (poolRoll % 1200L == 0L) {
             generateSurfacePool(chunk, randomState, CCBlocks.GRENADINE.get().defaultBlockState(), seed ^ 0x6C616B655F677265L);
         }
 
         long candyRoll = positiveHash(pos.x, pos.z, 0, seed ^ 0x4C49515549444341L);
-        if (candyRoll % 620L == 0L) {
+        if (candyRoll % 1400L == 0L) {
             generateSurfacePool(chunk, randomState, liquidCandy(), seed ^ 0x6C616B655F63616EL);
         }
     }
@@ -265,7 +268,7 @@ public class CandyWorldChunkGenerator extends ChunkGenerator {
         int radiusX = 2 + (int)((bits >>> 6) & 1L);
         int radiusZ = 2 + (int)((bits >>> 7) & 1L);
         BlockPos.MutableBlockPos mutable = new BlockPos.MutableBlockPos();
-        int waterline = centerTop - 1;
+        int waterline = centerTop - 2;
 
         for (int dx = -radiusX - 1; dx <= radiusX + 1; ++dx) {
             int worldX = centerX + dx;
@@ -290,18 +293,22 @@ public class CandyWorldChunkGenerator extends ChunkGenerator {
                 }
 
                 int top = findTopTerrain(chunk, worldX, worldZ);
-                if (Math.abs(top - centerTop) > 2) {
+                if (Math.abs(top - centerTop) > 3 || top < waterline - 1) {
                     continue;
                 }
 
                 boolean inner = distance < 0.62D;
                 BlockState rim = surfaceMaterials(biomeId(worldX, worldZ, randomState), worldX, worldZ, randomState).under();
-                for (int y = top + 2; y > waterline; --y) {
+                for (int y = top + 1; y > waterline; --y) {
                     chunk.setBlockState(mutable.set(worldX, y, worldZ), AIR, false);
                 }
                 if (inner) {
-                    chunk.setBlockState(mutable.set(worldX, waterline, worldZ), fluid, false);
-                    chunk.setBlockState(mutable.set(worldX, waterline - 1, worldZ), fluid, false);
+                    for (int y = waterline; y >= waterline - 1; --y) {
+                        BlockState current = chunk.getBlockState(mutable.set(worldX, y, worldZ));
+                        if (current.isAir() || isBaseStone(current) || current.getFluidState().isEmpty()) {
+                            chunk.setBlockState(mutable, fluid, false);
+                        }
+                    }
                 } else {
                     chunk.setBlockState(mutable.set(worldX, waterline, worldZ), AIR, false);
                     chunk.setBlockState(mutable.set(worldX, waterline - 1, worldZ), rim, false);
@@ -309,6 +316,68 @@ public class CandyWorldChunkGenerator extends ChunkGenerator {
                 chunk.setBlockState(mutable.set(worldX, waterline - 2, worldZ), rim, false);
             }
         }
+    }
+
+    private void generateMountainCandySprings(ChunkAccess chunk, RandomState randomState) {
+        ChunkPos pos = chunk.getPos();
+        long seed = worldSeed(randomState);
+        long roll = positiveHash(pos.x, pos.z, 0, seed ^ 0x4D544E5F53595250L);
+        if (roll % 90L != 0L) {
+            return;
+        }
+
+        int worldX = pos.getBlockX(2 + (int)((roll >>> 8) & 11L));
+        int worldZ = pos.getBlockZ(2 + (int)((roll >>> 12) & 11L));
+        ResourceLocation biomeId = biomeId(worldX, worldZ, randomState);
+        if (!biomeId.equals(SUGAR_MOUNTAINS) && !biomeId.equals(SUGAR_HELL_MOUNTAINS)) {
+            return;
+        }
+
+        int top = findTopTerrain(chunk, worldX, worldZ);
+        if (top < SEA_LEVEL + 8 || top > HEIGHT - 8) {
+            return;
+        }
+
+        BlockPos.MutableBlockPos mutable = new BlockPos.MutableBlockPos();
+        for (int attempt = 0; attempt < 6; ++attempt) {
+            int y = top - 2 - attempt * 2;
+            if (y <= SEA_LEVEL || y >= HEIGHT - 2) {
+                continue;
+            }
+            if (tryPlaceMountainCandySpring(chunk, mutable, worldX, y, worldZ)) {
+                return;
+            }
+        }
+    }
+
+    private boolean tryPlaceMountainCandySpring(ChunkAccess chunk, BlockPos.MutableBlockPos mutable, int worldX, int y, int worldZ) {
+        if (!isBaseStone(chunk.getBlockState(mutable.set(worldX, y, worldZ)))) {
+            return false;
+        }
+
+        int airSides = 0;
+        int solidSides = 0;
+        int outX = worldX;
+        int outZ = worldZ;
+        int[][] directions = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+        for (int[] direction : directions) {
+            BlockState neighbor = chunk.getBlockState(mutable.set(worldX + direction[0], y, worldZ + direction[1]));
+            if (neighbor.isAir()) {
+                airSides++;
+                outX = worldX + direction[0];
+                outZ = worldZ + direction[1];
+            } else if (isBaseStone(neighbor)) {
+                solidSides++;
+            }
+        }
+
+        if (airSides != 1 || solidSides < 3 || !isBaseStone(chunk.getBlockState(mutable.set(worldX, y - 1, worldZ)))) {
+            return false;
+        }
+
+        chunk.setBlockState(mutable.set(worldX, y, worldZ), liquidCandy(), false);
+        chunk.setBlockState(mutable.set(outX, y, outZ), liquidCandy(), false);
+        return true;
     }
 
     @Override

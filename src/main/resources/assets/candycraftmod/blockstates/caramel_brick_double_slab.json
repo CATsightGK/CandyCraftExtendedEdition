@@ -1,6 +1,6 @@
 {
     "variants":  {
-                     " ":  {
+                     "":  {
                                "model":  "candycraftmod:block/caramel_brick_double_slab"
                            }
                  }

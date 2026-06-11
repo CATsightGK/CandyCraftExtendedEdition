@@ -63,8 +63,8 @@ public final class CCBlocks {
     public static final List<RegistryObject<? extends Block>> CUTOUT_BLOCKS = new ArrayList<>();
     public static final List<RegistryObject<? extends Block>> TRANSLUCENT_BLOCKS = new ArrayList<>();
 
-    public static final RegistryObject<Block> PUDDING = cutout(register("pudding", () -> new PuddingBlock(earth(MapColor.COLOR_PINK).randomTicks())));
-    public static final RegistryObject<Block> FLOUR = register("flour", () -> new Block(earth(MapColor.SAND)));
+    public static final RegistryObject<Block> PUDDING = cutout(register("pudding", () -> new PuddingBlock(wool(MapColor.COLOR_PINK).strength(0.6F).randomTicks())));
+    public static final RegistryObject<Block> FLOUR = register("flour", () -> new Block(wool(MapColor.SAND).strength(0.6F)));
     public static final RegistryObject<Block> MARSHMALLOW_PLANKS = register("marshmallow_planks", () -> new LegacyMetadataBlock(wood(MapColor.COLOR_PINK).strength(3.0F, 5.0F)));
     public static final RegistryObject<Block> MARSHMALLOW_LOG = register("marshmallow_log", () -> new LegacyLogBlock(wood(MapColor.COLOR_PINK).strength(2.0F)));
     public static final RegistryObject<Block> CANDY_LEAVE = cutout(registerNoItem("candy_leave", () -> new LegacyLeavesBlock(leaves(MapColor.COLOR_PINK))));
@@ -123,7 +123,7 @@ public final class CCBlocks {
     public static final RegistryObject<Block> HONEY_TORCH = cutout(register("honey_torch", () -> new TorchBlock(BlockBehaviour.Properties.copy(Blocks.TORCH).lightLevel(state -> 15), ParticleTypes.FLAME)));
     public static final RegistryObject<Block> HONEY_WALL_TORCH = cutout(registerNoItem("honey_wall_torch", () -> new WallTorchBlock(BlockBehaviour.Properties.copy(Blocks.WALL_TORCH).lightLevel(state -> 15), ParticleTypes.FLAME)));
     public static final RegistryObject<Block> HONEYCOMB_BLOCK = register("honeycomb_block", () -> new Block(stone().mapColor(MapColor.COLOR_YELLOW).strength(2.0F)));
-    public static final RegistryObject<Block> HONEY_LAMP = register("honey_lamp", () -> new Block(metal(MapColor.COLOR_YELLOW).strength(1.0F).lightLevel(state -> 15)));
+    public static final RegistryObject<Block> HONEY_LAMP = register("honey_lamp", () -> new Block(metal(MapColor.COLOR_YELLOW).strength(1.0F).sound(SoundType.GLASS).lightLevel(state -> 15)));
     public static final RegistryObject<Block> PEZ_ORE = register("pez_ore", () -> new Block(stone().strength(3.0F, 5.0F).requiresCorrectToolForDrops()));
     public static final RegistryObject<Block> PEZ_BLOCK = register("pez_block", () -> new Block(metal(MapColor.COLOR_RED).strength(5.0F, 10.0F)));
     public static final RegistryObject<LiquidBlock> CARAMEL = translucent(registerNoItem("caramel", () -> new CandyLiquidBlock(CCFluids.SOURCE_CARAMEL, liquid(MapColor.COLOR_ORANGE), CandyLiquidBlock.Kind.CARAMEL)));
@@ -137,8 +137,8 @@ public final class CCBlocks {
     public static final RegistryObject<Block> COTTON_CANDY_SLAB = register("cotton_candy_slab", () -> new SlabBlock(wool(MapColor.COLOR_PINK).strength(3.0F, 5.0F)));
     public static final RegistryObject<Block> COTTON_CANDY_DOUBLE_SLAB = register("cotton_candy_double_slab", () -> new SlabBlock(wool(MapColor.COLOR_PINK).strength(3.0F, 5.0F)));
     public static final RegistryObject<Block> COTTON_CANDY_BED_BLOCK = cutout(register("cotton_candy_bed_block", () -> new BedBlock(DyeColor.PINK, wool(MapColor.COLOR_PINK).strength(0.2F).noOcclusion())));
-    public static final RegistryObject<Block> MINT_BLOCK = register("mint_block", () -> new Block(wool(MapColor.COLOR_LIGHT_GREEN).strength(1.0F)));
-    public static final RegistryObject<Block> RASPBERRY_BLOCK = register("raspberry_block", () -> new Block(wool(MapColor.COLOR_RED).strength(1.0F)));
+    public static final RegistryObject<Block> MINT_BLOCK = register("mint_block", () -> new Block(wool(MapColor.COLOR_LIGHT_GREEN).strength(1.0F).sound(SoundType.GRASS)));
+    public static final RegistryObject<Block> RASPBERRY_BLOCK = register("raspberry_block", () -> new Block(wool(MapColor.COLOR_RED).strength(1.0F).sound(SoundType.GRASS)));
     public static final RegistryObject<Block> JELLY_SENTRY_KEY_HOLE = register("jelly_sentry_key_hole", () -> new DungeonLockBlock(DungeonLockBlock.Kind.JELLY_SENTRY, stone().strength(-1.0F, 6000000.0F)));
     public static final RegistryObject<Block> JELLY_BOSS_KEY_HOLE = register("jelly_boss_key_hole", () -> new DungeonLockBlock(DungeonLockBlock.Kind.JELLY_BOSS, stone().strength(-1.0F, 6000000.0F)));
     public static final RegistryObject<Block> SUGAR_SPIKES = cutout(register("sugar_spikes", () -> new SpikesBlock(4, plant())));
@@ -151,14 +151,14 @@ public final class CCBlocks {
     public static final RegistryObject<Block> ACID_MINT_FLOWER = cutout(register("acid_mint_flower", () -> new AcidMintFlowerBlock(plant())));
     public static final RegistryObject<Block> NOUGAT_BLOCK = register("nougat_block", () -> new Block(metal(MapColor.COLOR_BROWN).strength(1.0F)));
     public static final RegistryObject<Block> NOUGAT_HEAD = register("nougat_head", () -> new FacingModelBlock(metal(MapColor.COLOR_BROWN).strength(1.0F)));
-    public static final RegistryObject<Block> BANANA_BLOCK = register("banana_block", () -> new Block(wool(MapColor.COLOR_YELLOW).strength(1.0F)));
-    public static final RegistryObject<Block> CHEWING_GUM_BLOCK = register("chewing_gum_block", () -> new ChewingGumBlock(wool(MapColor.COLOR_PINK).strength(1.0F).noOcclusion()));
-    public static final RegistryObject<Block> CHEWING_GUM_PUDDLE = cutout(register("chewing_gum_puddle", () -> new ChewingGumPuddleBlock(plant().strength(1.0F))));
-    public static final RegistryObject<Block> ALCHEMY_TABLE = cutout(register("alchemy_table", () -> new AlchemyTableBlock(wood(MapColor.COLOR_BROWN).strength(1.0F).noOcclusion())));
+    public static final RegistryObject<Block> BANANA_BLOCK = register("banana_block", () -> new Block(wool(MapColor.COLOR_YELLOW).strength(1.0F).sound(SoundType.GRASS)));
+    public static final RegistryObject<Block> CHEWING_GUM_BLOCK = register("chewing_gum_block", () -> new ChewingGumBlock(jelly().mapColor(MapColor.COLOR_PINK).strength(1.0F).noOcclusion()));
+    public static final RegistryObject<Block> CHEWING_GUM_PUDDLE = cutout(register("chewing_gum_puddle", () -> new ChewingGumPuddleBlock(jelly().mapColor(MapColor.COLOR_PINK).strength(1.0F).noCollission().noOcclusion())));
+    public static final RegistryObject<Block> ALCHEMY_TABLE = cutout(register("alchemy_table", () -> new AlchemyTableBlock(stone().mapColor(MapColor.COLOR_BROWN).strength(1.0F).sound(SoundType.METAL).noOcclusion())));
     public static final RegistryObject<Block> MARSHMALLOW_FLOWER_BLOCK = cutout(register("marshmallow_flower_block", () -> new WaterlilyBlock(plant().strength(0.0F))));
     public static final RegistryObject<Block> GRENADINE_BLOCK = translucent(register("grenadine_block", () -> new GlassBlock(glass(MapColor.COLOR_RED).strength(1.0F))));
     public static final RegistryObject<Block> FRAGILE_GRENADINE_BLOCK = translucent(registerNoItem("fragile_grenadine_block", () -> new FragileGrenadineBlock(glass(MapColor.COLOR_RED).strength(0.25F).randomTicks().noLootTable())));
-    public static final RegistryObject<Block> ICE_CREAM = register("ice_cream", () -> new LegacyTypeBlock(BlockBehaviour.Properties.copy(Blocks.SAND).mapColor(MapColor.SNOW).strength(1.0F)));
+    public static final RegistryObject<Block> ICE_CREAM = register("ice_cream", () -> new LegacyTypeBlock(BlockBehaviour.Properties.copy(Blocks.SNOW_BLOCK).mapColor(MapColor.SNOW).strength(1.0F)));
     public static final RegistryObject<Block> ICE_CREAM_STAIRS_0 = register("ice_cream_stairs.0", () -> stairs(Blocks.SNOW_BLOCK.defaultBlockState(), BlockBehaviour.Properties.copy(Blocks.SNOW_BLOCK).strength(1.0F)));
     public static final RegistryObject<Block> ICE_CREAM_STAIRS_1 = register("ice_cream_stairs.1", () -> stairs(Blocks.SNOW_BLOCK.defaultBlockState(), BlockBehaviour.Properties.copy(Blocks.SNOW_BLOCK).strength(1.0F)));
     public static final RegistryObject<Block> ICE_CREAM_STAIRS_2 = register("ice_cream_stairs.2", () -> stairs(Blocks.SNOW_BLOCK.defaultBlockState(), BlockBehaviour.Properties.copy(Blocks.SNOW_BLOCK).strength(1.0F)));
