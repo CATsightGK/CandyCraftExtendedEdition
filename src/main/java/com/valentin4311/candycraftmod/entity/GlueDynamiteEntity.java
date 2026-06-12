@@ -3,6 +3,9 @@ package com.valentin4311.candycraftmod.entity;
 import com.valentin4311.candycraftmod.registry.CCEntityTypes;
 import com.valentin4311.candycraftmod.registry.CCItems;
 import net.minecraft.core.Direction;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ItemParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
@@ -19,9 +22,10 @@ import net.minecraft.world.phys.Vec3;
 import org.joml.Vector3f;
 
 public class GlueDynamiteEntity extends DynamiteEntity {
-    private static final DustParticleOptions GLUE_PARTICLE = new DustParticleOptions(new Vector3f(1.0F, 0.5F, 0.5F), 1.0F);
+    private static final int STUCK_FUSE_TICKS = 65;
+    private static final DustParticleOptions GLUE_PARTICLE = new DustParticleOptions(new Vector3f(0.64F, 0.32F, 0.86F), 1.0F);
+    private static final EntityDataAccessor<Boolean> GLUED = SynchedEntityData.defineId(GlueDynamiteEntity.class, EntityDataSerializers.BOOLEAN);
     private Entity stuckEntity;
-    private boolean glued;
 
     public GlueDynamiteEntity(EntityType<? extends GlueDynamiteEntity> entityType, Level level) {
         super(entityType, level);
@@ -44,24 +48,35 @@ public class GlueDynamiteEntity extends DynamiteEntity {
     }
 
     @Override
+    protected void defineSynchedData() {
+        super.defineSynchedData();
+        entityData.define(GLUED, false);
+    }
+
+    @Override
     protected float getGravity() {
-        return glued ? 0.0F : super.getGravity();
+        return isGlued() ? 0.0F : super.getGravity();
     }
 
     @Override
     public void tick() {
-        if (stuckEntity != null && stuckEntity.isAlive()) {
-            Vec3 center = stuckEntity.position().add(0.0D, stuckEntity.getBbHeight() * 0.6D, 0.0D);
-            setPos(center.x, center.y, center.z);
-            setBoundingBox(makeBoundingBox(center));
+        if (isGlued()) {
+            noPhysics = true;
+            if (stuckEntity != null && stuckEntity.isAlive()) {
+                Vec3 center = stuckEntity.position().add(0.0D, stuckEntity.getBbHeight() * 0.6D, 0.0D);
+                setPos(center.x, center.y, center.z);
+                setBoundingBox(makeBoundingBox(center));
+            }
             setDeltaMovement(Vec3.ZERO);
-        }
 
-        super.tick();
-
-        if (glued) {
-            setDeltaMovement(Vec3.ZERO);
             if (level().isClientSide) {
+                for (int i = 0; i < 2; i++) {
+                    level().addParticle(ParticleTypes.LARGE_SMOKE,
+                        getX() + (random.nextDouble() - 0.5D) * getBbWidth(),
+                        getY() + random.nextDouble() * getBbHeight(),
+                        getZ() + (random.nextDouble() - 0.5D) * getBbWidth(),
+                        0.0D, 0.0D, 0.0D);
+                }
                 for (int i = 0; i < 10; i++) {
                     level().addParticle(GLUE_PARTICLE,
                         getX() + (random.nextDouble() * 2.0D - 1.0D) * getBbWidth(),
@@ -70,7 +85,14 @@ public class GlueDynamiteEntity extends DynamiteEntity {
                         0.0D, 0.0D, 0.0D);
                 }
             }
+
+            if (!level().isClientSide && --fuse <= 0) {
+                explode();
+            }
+            return;
         }
+
+        super.tick();
     }
 
     @Override
@@ -82,24 +104,23 @@ public class GlueDynamiteEntity extends DynamiteEntity {
         entity.hurt(damageSources().thrown(this, getOwner()), 0.0F);
         if (entity instanceof LivingEntity) {
             stuckEntity = entity;
-            glued = true;
             stickAt(entity.position().add(0.0D, entity.getBbHeight() * 0.6D, 0.0D), Direction.UP);
         }
     }
 
     @Override
     protected void onBlockImpact(BlockHitResult result) {
-        if (level().isClientSide || chocked || level().getBlockState(result.getBlockPos()).getCollisionShape(level(), result.getBlockPos()).isEmpty()) {
+        if (chocked || level().getBlockState(result.getBlockPos()).getCollisionShape(level(), result.getBlockPos()).isEmpty()) {
             return;
         }
-        glued = true;
         stickAt(surfaceCenter(result), result.getDirection());
     }
 
     protected void stickAt(Vec3 center, Direction face) {
         chocked = true;
-        glued = true;
+        entityData.set(GLUED, true);
         stuckFace = face;
+        fuse = Math.max(fuse, STUCK_FUSE_TICKS);
         noPhysics = true;
         setDeltaMovement(Vec3.ZERO);
         setPos(center.x, center.y, center.z);
@@ -107,6 +128,10 @@ public class GlueDynamiteEntity extends DynamiteEntity {
         yo = center.y;
         zo = center.z;
         setBoundingBox(makeBoundingBox(center));
+    }
+
+    private boolean isGlued() {
+        return entityData.get(GLUED);
     }
 
     @Override
@@ -122,12 +147,13 @@ public class GlueDynamiteEntity extends DynamiteEntity {
     @Override
     public void addAdditionalSaveData(CompoundTag tag) {
         super.addAdditionalSaveData(tag);
-        tag.putBoolean("Glued", glued);
+        tag.putBoolean("Glued", isGlued());
     }
 
     @Override
     public void readAdditionalSaveData(CompoundTag tag) {
         super.readAdditionalSaveData(tag);
-        glued = tag.getBoolean("Glued");
+        entityData.set(GLUED, tag.getBoolean("Glued"));
+        noPhysics = isGlued();
     }
 }

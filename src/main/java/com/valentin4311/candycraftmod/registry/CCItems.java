@@ -64,7 +64,7 @@ public final class CCItems {
     public static final RegistryObject<Item> CANDIED_CHERRY = registerPortItem("candied_cherry", () -> new CandiedCherryItem(foodProperties(4, 0.3F)));
     public static final RegistryObject<Item> CANDY_CANE = registerFood("candy_cane", 2, 0.2F);
     public static final RegistryObject<Item> CHEWING_GUM = registerFood("chewing_gum", 1, 0.1F);
-    public static final RegistryObject<Item> COTTON_CANDY = registerFood("cotton_candy", 3, 0.2F);
+    public static final RegistryObject<Item> COTTON_CANDY = registerFood("raspberry_cotton_candy", 3, 0.2F);
     public static final RegistryObject<Item> CRANBERRY_FISH = registerFood("cranberry_fish", 2, 0.1F);
     public static final RegistryObject<Item> CRANBERRY_FISH_COOKED = registerFood("cranberry_fish_cooked", 5, 0.6F);
     public static final RegistryObject<Item> DRAGIBUS_STICK = registerFood("dragibus_stick", 5, 0.4F);

@@ -15,8 +15,11 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.FallingBlock;
 import net.minecraft.world.level.block.LiquidBlock;
+import net.minecraft.world.level.block.SlabBlock;
 import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.block.StairBlock;
 import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.MapColor;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
@@ -52,7 +55,10 @@ public final class CCSweetscapeBlocks {
     public static final RegistryObject<Block> DARK_CHOCOLATE_WORKBENCH = register("dark_chocolate_workbench", () -> new Block(wood(MapColor.TERRACOTTA_BROWN).strength(0.9F)));
 
     public static final RegistryObject<Block> COTTON_CANDY_SAPLING = cutout(register("cotton_candy_sapling", () -> new CCPlantBlock(plant())));
-    public static final RegistryObject<Block> COTTON_CANDY_LEAVES = cutout(register("cotton_candy_leaves", () -> new Block(leaves(MapColor.COLOR_PINK).sound(SoundType.WOOL))));
+    public static final RegistryObject<Block> COTTON_CANDY_BLOCK = cutout(register("cotton_candy_block", () -> new Block(leaves(MapColor.COLOR_PINK).sound(SoundType.WOOL))));
+    public static final RegistryObject<Block> COTTON_CANDY_STAIRS = cutout(register("cotton_candy_stairs", () -> stairs(Blocks.WHITE_WOOL.defaultBlockState(), leaves(MapColor.COLOR_PINK).sound(SoundType.WOOL))));
+    public static final RegistryObject<Block> COTTON_CANDY_SLAB = cutout(register("cotton_candy_slab", () -> new SlabBlock(leaves(MapColor.COLOR_PINK).sound(SoundType.WOOL))));
+    public static final RegistryObject<Block> COTTON_CANDY_DOUBLE_SLAB = cutout(register("cotton_candy_double_slab", () -> new SlabBlock(leaves(MapColor.COLOR_PINK).sound(SoundType.WOOL))));
     public static final RegistryObject<Block> COTTON_CANDY_PLANT = cutout(register("cotton_candy_plant", () -> new CCPlantBlock(candyPlant(MapColor.COLOR_PINK).sound(SoundType.WOOL))));
     public static final RegistryObject<Block> COTTON_CANDY_BUSH = cutout(register("cotton_candy_bush", () -> new CCPlantBlock(candyPlant(MapColor.COLOR_PINK).sound(SoundType.WOOL))));
 
@@ -176,5 +182,9 @@ public final class CCSweetscapeBlocks {
 
     private static BlockBehaviour.Properties gummy(MapColor color) {
         return BlockBehaviour.Properties.copy(Blocks.SLIME_BLOCK).mapColor(color).strength(0.4F).friction(0.6F).noOcclusion();
+    }
+
+    private static StairBlock stairs(BlockState baseState, BlockBehaviour.Properties properties) {
+        return new StairBlock(baseState, properties);
     }
 }

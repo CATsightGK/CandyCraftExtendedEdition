@@ -33,7 +33,7 @@ public class CottonCandyTreeFeature extends Feature<NoneFeatureConfiguration> {
 
         int trunkHeight = 5 + random.nextInt(3);
         BlockState trunk = CCSweetscapeBlocks.WHITE_CANDY_CANE_BLOCK.get().defaultBlockState();
-        BlockState leaves = CCSweetscapeBlocks.COTTON_CANDY_LEAVES.get().defaultBlockState();
+        BlockState leaves = CCSweetscapeBlocks.COTTON_CANDY_BLOCK.get().defaultBlockState();
         for (int y = 0; y < trunkHeight; y++) {
             setReplaceable(level, base.above(y), trunk);
         }
@@ -94,7 +94,7 @@ public class CottonCandyTreeFeature extends Feature<NoneFeatureConfiguration> {
     }
 
     private static void clear(LevelAccessor level, BlockPos pos) {
-        if (!level.isOutsideBuildHeight(pos) && (level.isEmptyBlock(pos) || level.getBlockState(pos).is(CCSweetscapeBlocks.COTTON_CANDY_LEAVES.get()))) {
+        if (!level.isOutsideBuildHeight(pos) && (level.isEmptyBlock(pos) || level.getBlockState(pos).is(CCSweetscapeBlocks.COTTON_CANDY_BLOCK.get()))) {
             level.removeBlock(pos, false);
         }
     }
@@ -104,7 +104,7 @@ public class CottonCandyTreeFeature extends Feature<NoneFeatureConfiguration> {
             return;
         }
         BlockState current = level.getBlockState(pos);
-        if (current.isAir() || current.canBeReplaced() || current.is(CCSweetscapeBlocks.COTTON_CANDY_LEAVES.get())) {
+        if (current.isAir() || current.canBeReplaced() || current.is(CCSweetscapeBlocks.COTTON_CANDY_BLOCK.get())) {
             level.setBlock(pos, state, 2 | 16);
         }
     }

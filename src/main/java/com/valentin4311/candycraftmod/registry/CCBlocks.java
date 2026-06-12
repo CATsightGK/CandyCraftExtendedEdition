@@ -130,12 +130,12 @@ public final class CCBlocks {
     public static final RegistryObject<LiquidBlock> GRENADINE = translucent(registerNoItem("grenadine", () -> new CandyLiquidBlock(CCFluids.SOURCE_GRENADINE, liquid(MapColor.COLOR_RED), CandyLiquidBlock.Kind.GRENADINE)));
     public static final RegistryObject<Block> JAW_BREAKER_BLOCK = register("jaw_breaker_block", () -> new Block(stone().strength(-1.0F, 6000000.0F)));
     public static final RegistryObject<Block> PURPLE_TRAMPOJELLY = translucent(register("purple_trampojelly", () -> new JellyBlock(2.1D, jelly().lightLevel(state -> 13))));
-    public static final RegistryObject<Block> COTTON_CANDY_BLOCK = register("cotton_candy_block", () -> new Block(wool(MapColor.COLOR_PINK).strength(0.6F)));
+    public static final RegistryObject<Block> COTTON_CANDY_BLOCK = register("raspberry_cotton_candy_block", () -> new Block(wool(MapColor.COLOR_PINK).strength(0.6F)));
     public static final RegistryObject<Block> JAW_BREAKER_LIGHT = register("jaw_breaker_light", () -> new Block(stone().strength(-1.0F, 6000000.0F).lightLevel(state -> 11)));
     public static final RegistryObject<Block> CRANBERRY_SPIKES = cutout(register("cranberry_spikes", () -> new SpikesBlock(2, plant())));
-    public static final RegistryObject<Block> COTTON_CANDY_STAIRS = register("cotton_candy_stairs", () -> stairs(Blocks.WHITE_WOOL.defaultBlockState(), wool(MapColor.COLOR_PINK).strength(0.6F)));
-    public static final RegistryObject<Block> COTTON_CANDY_SLAB = register("cotton_candy_slab", () -> new SlabBlock(wool(MapColor.COLOR_PINK).strength(3.0F, 5.0F)));
-    public static final RegistryObject<Block> COTTON_CANDY_DOUBLE_SLAB = register("cotton_candy_double_slab", () -> new SlabBlock(wool(MapColor.COLOR_PINK).strength(3.0F, 5.0F)));
+    public static final RegistryObject<Block> COTTON_CANDY_STAIRS = register("raspberry_cotton_candy_stairs", () -> stairs(Blocks.WHITE_WOOL.defaultBlockState(), wool(MapColor.COLOR_PINK).strength(0.6F)));
+    public static final RegistryObject<Block> COTTON_CANDY_SLAB = register("raspberry_cotton_candy_slab", () -> new SlabBlock(wool(MapColor.COLOR_PINK).strength(3.0F, 5.0F)));
+    public static final RegistryObject<Block> COTTON_CANDY_DOUBLE_SLAB = register("raspberry_cotton_candy_double_slab", () -> new SlabBlock(wool(MapColor.COLOR_PINK).strength(3.0F, 5.0F)));
     public static final RegistryObject<Block> COTTON_CANDY_BED_BLOCK = cutout(register("cotton_candy_bed_block", () -> new BedBlock(DyeColor.PINK, wool(MapColor.COLOR_PINK).strength(0.2F).noOcclusion())));
     public static final RegistryObject<Block> MINT_BLOCK = register("mint_block", () -> new Block(wool(MapColor.COLOR_LIGHT_GREEN).strength(1.0F).sound(SoundType.GRASS)));
     public static final RegistryObject<Block> RASPBERRY_BLOCK = register("raspberry_block", () -> new Block(wool(MapColor.COLOR_RED).strength(1.0F).sound(SoundType.GRASS)));

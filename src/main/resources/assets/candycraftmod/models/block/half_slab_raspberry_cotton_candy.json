@@ -1,0 +1,8 @@
+﻿{
+    "parent": "minecraft:block/slab",
+    "textures": {
+        "bottom": "candycraftmod:block/raspberry_cotton_candy_block",
+        "top": "candycraftmod:block/raspberry_cotton_candy_block",
+        "side": "candycraftmod:block/raspberry_cotton_candy_block"
+    }
+}

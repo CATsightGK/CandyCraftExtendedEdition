@@ -1,4 +1,4 @@
-{
+﻿{
     "parent": "block/outer_stairs",
     "textures": {
         "bottom": "candycraftmod:block/cotton_candy_block",

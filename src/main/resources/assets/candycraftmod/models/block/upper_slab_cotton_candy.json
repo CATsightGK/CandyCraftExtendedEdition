@@ -1,4 +1,4 @@
-{
+﻿{
     "parent": "minecraft:block/slab_top",
     "textures": {
         "bottom": "candycraftmod:block/cotton_candy_block",

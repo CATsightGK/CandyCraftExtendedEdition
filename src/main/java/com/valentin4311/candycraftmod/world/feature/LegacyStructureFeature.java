@@ -36,15 +36,28 @@ public class LegacyStructureFeature extends Feature<NoneFeatureConfiguration> {
 
     @Override
     public boolean place(FeaturePlaceContext<NoneFeatureConfiguration> context) {
-        return switch (kind) {
-            case CANDY_HOUSE -> candyHouse(context.level(), context.random(), surface(context.level(), context.origin()));
-            case ICE_TOWER -> iceTower(context.level(), context.random(), surface(context.level(), context.origin()));
-            case WATER_TEMPLE -> waterTemple(context.level(), context.random(), context.origin());
-            case GEYSER -> geyser(context.level(), context.random(), context.origin());
-            case CHEWING_GUM_TOTEM -> chewingGumTotem(context.level(), context.random(), surface(context.level(), context.origin()));
-            case FLOATING_ISLAND -> floatingIsland(context.level(), context.random(), context.origin());
-            case UNDERGROUND_VILLAGE -> undergroundVillage(context.level(), context.random(), context.origin());
-        };
+        WorldGenLevel level = context.level();
+        RandomSource random = context.random();
+        BlockPos origin = context.origin();
+        if (kind == Kind.CANDY_HOUSE) {
+            return candyHouse(level, random, surface(level, origin));
+        }
+        if (kind == Kind.ICE_TOWER) {
+            return iceTower(level, random, surface(level, origin));
+        }
+        if (kind == Kind.WATER_TEMPLE) {
+            return waterTemple(level, random, origin);
+        }
+        if (kind == Kind.GEYSER) {
+            return geyser(level, random, origin);
+        }
+        if (kind == Kind.CHEWING_GUM_TOTEM) {
+            return chewingGumTotem(level, random, surface(level, origin));
+        }
+        if (kind == Kind.FLOATING_ISLAND) {
+            return floatingIsland(level, random, origin);
+        }
+        return undergroundVillage(level, random, origin);
     }
 
     private static BlockPos surface(WorldGenLevel level, BlockPos origin) {
@@ -377,12 +390,17 @@ public class LegacyStructureFeature extends Feature<NoneFeatureConfiguration> {
     }
 
     private static BlockState leafState(int metadata) {
-        LegacyLeavesBlock.LeafVariant variant = switch (metadata & 3) {
-            case 1 -> LegacyLeavesBlock.LeafVariant.SPRUCE;
-            case 2 -> LegacyLeavesBlock.LeafVariant.BIRCH;
-            case 3 -> LegacyLeavesBlock.LeafVariant.JUNGLE;
-            default -> LegacyLeavesBlock.LeafVariant.OAK;
-        };
+        int variantId = metadata & 3;
+        LegacyLeavesBlock.LeafVariant variant;
+        if (variantId == 1) {
+            variant = LegacyLeavesBlock.LeafVariant.SPRUCE;
+        } else if (variantId == 2) {
+            variant = LegacyLeavesBlock.LeafVariant.BIRCH;
+        } else if (variantId == 3) {
+            variant = LegacyLeavesBlock.LeafVariant.JUNGLE;
+        } else {
+            variant = LegacyLeavesBlock.LeafVariant.OAK;
+        }
         return CCBlocks.CANDY_LEAVE.get().defaultBlockState()
             .setValue(LegacyLeavesBlock.CHECK_DECAY, false)
             .setValue(LegacyLeavesBlock.DECAYABLE, false)
@@ -444,12 +462,17 @@ public class LegacyStructureFeature extends Feature<NoneFeatureConfiguration> {
     }
 
     private static BlockPos houseWallPos(BlockPos base, int side, int offset) {
-        return switch (side & 3) {
-            case 0 -> base.offset(4, 1, 1 + offset);
-            case 1 -> base.offset(1 + offset, 1, 4);
-            case 2 -> base.offset(0, 1, 1 + offset);
-            default -> base.offset(1 + offset, 1, 0);
-        };
+        int direction = side & 3;
+        if (direction == 0) {
+            return base.offset(4, 1, 1 + offset);
+        }
+        if (direction == 1) {
+            return base.offset(1 + offset, 1, 4);
+        }
+        if (direction == 2) {
+            return base.offset(0, 1, 1 + offset);
+        }
+        return base.offset(1 + offset, 1, 0);
     }
 
     private static void buildSmallHouse(WorldGenLevel level, BlockPos base, RandomSource random, boolean chest) {

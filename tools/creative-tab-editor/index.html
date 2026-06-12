@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CandyCraft Creative Inventory Editor</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div>
+        <h1>&#21019;&#36896;&#27169;&#24335;&#29289;&#21697;&#26639;&#32534;&#36753;&#22120;</h1>
+        <p>&#20687; Minecraft &#21019;&#36896;&#29289;&#21697;&#26639;&#19968;&#26679;&#25302;&#21160;&#26684;&#23376;&#12290;&#20445;&#23384;&#21518;&#38656;&#35201;&#37325;&#26032;&#26500;&#24314; jar&#12290;</p>
+      </div>
+      <div id="connection" class="pill ok">&#24050;&#21152;&#36733;</div>
+    </header>
+
+    <section class="controls">
+      <button class="tab active" data-tab="blocks">&#26041;&#22359;</button>
+      <button class="tab" data-tab="food">&#39135;&#29289;</button>
+      <button class="tab" data-tab="tools_armor">&#24037;&#20855;&#19982;&#30420;&#30002;</button>
+      <button class="tab" data-tab="misc">&#26434;&#39033;</button>
+      <input id="search" placeholder="Search / &#25628;&#32034;&#29289;&#21697;&#21517;&#25110;&#27880;&#20876;&#21517;">
+      <button id="save" class="save">&#20445;&#23384;&#39034;&#24207;</button>
+    </section>
+
+    <main class="layout">
+      <section class="minecraft-panel">
+        <div class="panel-title">
+          <span id="activeTitle">CandyCraft</span>
+          <span id="activeCount">__ACTIVE_COUNT__</span>
+        </div>
+        <div id="activeGrid" class="mc-grid">__ACTIVE_SLOTS__</div>
+        <div class="trash" id="trash">&#25302;&#21040;&#36825;&#37324;&#65306;&#31227;&#20986;&#24403;&#21069;&#29289;&#21697;&#26639;</div>
+      </section>
+
+      <aside class="library-panel">
+        <div class="panel-title">
+          <span>&#20840;&#37096;&#29289;&#21697;&#21644;&#26041;&#22359;</span>
+          <span id="libraryCount">__LIBRARY_COUNT__</span>
+        </div>
+        <div class="hint">&#20174;&#36825;&#37324;&#25302;&#21040;&#24038;&#36793;&#26684;&#23376;&#65307;&#24038;&#36793;&#26684;&#23376;&#20043;&#38388;&#25302;&#21160;&#23601;&#33021;&#25442;&#39034;&#24207;&#12290;</div>
+        <div id="libraryGrid" class="mc-grid library">__LIBRARY_SLOTS__</div>
+      </aside>
+    </main>
+  </div>
+
+  <div id="toast"></div>
+
+  <script>
+    const initialState = __INITIAL_STATE__;
+    const state = {
+      items: new Map(initialState.items.map(item => [item.id, item])),
+      tabs: {
+        blocks: [...(initialState.tabs.blocks || [])],
+        food: [...(initialState.tabs.food || [])],
+        tools_armor: [...(initialState.tabs.tools_armor || [])],
+        misc: [...(initialState.tabs.misc || [])]
+      },
+      activeTab: "blocks"
+    };
+
+    const activeGrid = document.getElementById("activeGrid");
+    const libraryGrid = document.getElementById("libraryGrid");
+    const activeTitle = document.getElementById("activeTitle");
+    const activeCount = document.getElementById("activeCount");
+    const libraryCount = document.getElementById("libraryCount");
+    const search = document.getElementById("search");
+    const toast = document.getElementById("toast");
+
+    function showToast(text) {
+      toast.textContent = text;
+      toast.className = "show";
+      setTimeout(() => toast.className = "", 1800);
+    }
+
+    function itemName(item) {
+      return item ? item.name : "";
+    }
+
+    function shortId(id) {
+      return id.replace("candycraftmod:", "");
+    }
+
+    function itemSlot(item, place) {
+      const slot = document.createElement("button");
+      slot.className = "slot";
+      slot.draggable = true;
+      slot.dataset.id = item.id;
+      slot.dataset.place = place;
+      slot.title = `${item.name}\n${item.id}`;
+      slot.innerHTML = `
+        <span class="sprite">${item.texture ? `<img src="${item.texture}" alt="">` : ""}</span>
+        <span class="tooltip">${escapeHtml(item.name)}<br><small>${shortId(item.id)}</small></span>
+      `;
+      slot.addEventListener("dragstart", event => {
+        event.dataTransfer.setData("text/plain", item.id);
+      });
+      slot.addEventListener("dragover", event => event.preventDefault());
+      slot.addEventListener("drop", event => {
+        event.preventDefault();
+        const draggedId = event.dataTransfer.getData("text/plain");
+        dropIntoActive(draggedId, item.id);
+      });
+      return slot;
+    }
+
+    function emptySlot(index) {
+      const slot = document.createElement("div");
+      slot.className = "slot empty";
+      slot.addEventListener("dragover", event => event.preventDefault());
+      slot.addEventListener("drop", event => {
+        event.preventDefault();
+        const draggedId = event.dataTransfer.getData("text/plain");
+        dropIntoActive(draggedId, null);
+      });
+      return slot;
+    }
+
+    function escapeHtml(text) {
+      return String(text).replace(/[&<>"']/g, s => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[s]));
+    }
+
+    function removeEverywhere(id) {
+      for (const tab of Object.keys(state.tabs)) {
+        state.tabs[tab] = state.tabs[tab].filter(x => x !== id);
+      }
+    }
+
+    function dropIntoActive(id, beforeId) {
+      if (!state.items.has(id)) return;
+      const oldList = [...state.tabs[state.activeTab]];
+      removeEverywhere(id);
+      const list = state.tabs[state.activeTab];
+      let index = beforeId ? list.indexOf(beforeId) : -1;
+      if (index < 0 && beforeId) {
+        index = oldList.filter(x => x !== id).indexOf(beforeId);
+      }
+      if (index >= 0) list.splice(index, 0, id);
+      else list.push(id);
+      render();
+    }
+
+    function removeFromActive(id) {
+      state.tabs[state.activeTab] = state.tabs[state.activeTab].filter(x => x !== id);
+      render();
+    }
+
+    function matches(item, query) {
+      if (!query) return true;
+      const q = query.toLowerCase();
+      return item.name.toLowerCase().includes(q) || item.id.toLowerCase().includes(q);
+    }
+
+    function render() {
+      const query = search.value.trim();
+      const active = state.tabs[state.activeTab];
+      const used = new Set(Object.values(state.tabs).flat());
+      activeTitle.textContent = {
+        blocks: "\u65b9\u5757",
+        food: "\u98df\u7269",
+        tools_armor: "\u5de5\u5177\u4e0e\u76d4\u7532",
+        misc: "\u6742\u9879"
+      }[state.activeTab] || state.activeTab;
+      activeCount.textContent = `${active.length} items`;
+      activeGrid.innerHTML = "";
+
+      const visibleActive = active.filter(id => state.items.has(id) && matches(state.items.get(id), query));
+      for (const id of visibleActive) activeGrid.appendChild(itemSlot(state.items.get(id), "active"));
+      const minSlots = Math.max(54, Math.ceil(visibleActive.length / 9) * 9);
+      for (let i = visibleActive.length; i < minSlots; i++) activeGrid.appendChild(emptySlot(i));
+
+      const libraryItems = [...state.items.values()]
+        .filter(item => !used.has(item.id))
+        .filter(item => matches(item, query))
+        .sort((a, b) => itemName(a).localeCompare(itemName(b), "zh-Hans-CN"));
+      libraryCount.textContent = `${libraryItems.length} items`;
+      libraryGrid.innerHTML = "";
+      for (const item of libraryItems) libraryGrid.appendChild(itemSlot(item, "library"));
+    }
+
+    function setActiveTab(tab) {
+      state.activeTab = tab;
+      document.querySelectorAll(".tab").forEach(button => {
+        button.classList.toggle("active", button.dataset.tab === tab);
+      });
+      render();
+    }
+
+    async function save() {
+      const res = await fetch("/api/save", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(state.tabs)
+      });
+      const data = await res.json();
+      if (!data.ok) {
+        showToast("Save failed");
+        alert(data.error || "Save failed");
+        return;
+      }
+      showToast("\u5df2\u4fdd\u5b58 order.json");
+    }
+
+    document.querySelectorAll(".tab").forEach(button => {
+      button.addEventListener("click", () => setActiveTab(button.dataset.tab));
+    });
+    document.getElementById("save").addEventListener("click", save);
+    search.addEventListener("input", render);
+    document.getElementById("trash").addEventListener("dragover", event => event.preventDefault());
+    document.getElementById("trash").addEventListener("drop", event => {
+      event.preventDefault();
+      const id = event.dataTransfer.getData("text/plain");
+      removeFromActive(id);
+    });
+    activeGrid.addEventListener("dragover", event => event.preventDefault());
+    activeGrid.addEventListener("drop", event => {
+      if (event.target.closest(".slot")) return;
+      event.preventDefault();
+      dropIntoActive(event.dataTransfer.getData("text/plain"), null);
+    });
+
+    render();
+  </script>
+</body>
+</html>

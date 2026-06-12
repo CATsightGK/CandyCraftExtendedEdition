@@ -1,75 +1,76 @@
 package com.valentin4311.candycraftmod.registry;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.valentin4311.candycraftmod.CandyCraft;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.RegistryObject;
 
 public final class CCCreativeTabs {
     public static final DeferredRegister<CreativeModeTab> TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, CandyCraft.MODID);
+    private static final String CREATIVE_TAB_ORDER_PATH = "data/" + CandyCraft.MODID + "/creative_tabs/order.json";
+    private static JsonObject creativeTabOrder;
+    private static boolean creativeTabOrderLoaded;
 
-    public static final RegistryObject<CreativeModeTab> CANDYCRAFT = TABS.register("candycraft", () -> CreativeModeTab.builder()
-        .title(Component.translatable("itemGroup.candycraftmod"))
+    public static final RegistryObject<CreativeModeTab> BLOCKS = TABS.register("blocks", () -> CreativeModeTab.builder()
+        .title(Component.translatable("itemGroup.candycraftmod.blocks"))
         .icon(() -> new ItemStack(CCBlocks.PUDDING.get()))
         .displayItems((parameters, output) -> {
-            List<RegistryObject<Item>> orderedItems = List.of(
-                CCItems.HONEY_SHARD, CCItems.HONEYCOMB, CCItems.NOUGAT_POWDER, CCItems.PEZ, CCItems.PEZ_DUST,
-                CCItems.LICORICE, CCItems.CHOCOLATE_COIN, CCItems.CRANBERRY_SCALE, CCItems.SUGAR_CRYSTAL,
-                CCItems.WAFFLE_NUGGET, CCItems.MARSHMALLOW_STICK,
-                CCItems.LOLLIPOP_SEEDS, CCItems.DRAGIBUS, CCItems.MARSHMALLOW_FLOWER,
-                CCItems.CANDIED_CHERRY, CCItems.CANDY_CANE, CCItems.CHEWING_GUM, CCItems.COTTON_CANDY,
-                CCItems.CRANBERRY_FISH, CCItems.CRANBERRY_FISH_COOKED, CCItems.DRAGIBUS_STICK, CCItems.GUMMY,
-                CCItems.HOT_GUMMY, CCItems.LOLLIPOP, CCItems.SUGAR_PILL, CCItems.WAFFLE,
-                CCItems.MARSHMALLOW_SWORD, CCItems.MARSHMALLOW_SHOVEL, CCItems.MARSHMALLOW_PICKAXE, CCItems.MARSHMALLOW_AXE, CCItems.MARSHMALLOW_HOE,
-                CCItems.LICORICE_SWORD, CCItems.LICORICE_SHOVEL, CCItems.LICORICE_PICKAXE, CCItems.LICORICE_AXE, CCItems.LICORICE_HOE,
-                CCItems.HONEY_SWORD, CCItems.HONEY_SHOVEL, CCItems.HONEY_PICKAXE, CCItems.HONEY_AXE, CCItems.HONEY_HOE,
-                CCItems.PEZ_SWORD, CCItems.PEZ_SHOVEL, CCItems.PEZ_PICKAXE, CCItems.PEZ_AXE, CCItems.PEZ_HOE,
-                CCItems.FORK, CCItems.LICORICE_SPEAR, CCItems.CARAMEL_BOW, CCItems.CARAMEL_CROSSBOW, CCItems.HONEY_ARROW, CCItems.HONEY_BOLT,
-                CCItems.GUMMY_BALL, CCItems.DYNAMITE, CCItems.GLUE_DYNAMITE,
-                CCItems.HONEY_HELMET, CCItems.HONEY_PLATE, CCItems.HONEY_LEGGINGS, CCItems.HONEY_BOOTS,
-                CCItems.LICORICE_HELMET, CCItems.LICORICE_PLATE, CCItems.LICORICE_LEGGINGS, CCItems.LICORICE_BOOTS,
-                CCItems.PEZ_HELMET, CCItems.PEZ_PLATE, CCItems.PEZ_LEGGINGS, CCItems.PEZ_BOOTS, CCItems.JELLY_BOOTS,
-                CCItems.BEETLE_KEY, CCItems.JELLY_KEY, CCItems.JELLY_SENTRY_KEY, CCItems.JELLY_BOSS_KEY,
-                CCItems.SUGUARD_KEY, CCItems.SUGUARD_SENTRY_KEY, CCItems.SUGUARD_BOSS_KEY, CCItems.SKY_KEY,
-                CCItems.CHEWING_GUM_EMBLEM, CCItems.CRANBERRY_EMBLEM, CCItems.GINGERBREAD_EMBLEM, CCItems.HONEY_EMBLEM,
-                CCItems.JELLY_EMBLEM, CCItems.SKY_EMBLEM, CCItems.SUGUARD_EMBLEM, CCItems.WATER_EMBLEM,
-                CCItems.JELLY_CROWN, CCItems.WATER_MASK, CCItems.JELLY_WAND, CCItems.JUMP_WAND,
-                CCItems.RECORD_1, CCItems.RECORD_2, CCItems.RECORD_3, CCItems.RECORD_4,
-                CCItems.CARAMEL_BUCKET, CCItems.GRENADINE_BUCKET
-            );
-            orderedItems.forEach(item -> output.accept(item.get()));
-            CCItems.BLOCK_ITEMS.stream()
-                .filter(item -> {
-                    String path = item.getId().getPath();
-                    return !"candy_portal".equals(path)
-                        && !"block_teleporter".equals(path)
-                        && !"licorice_furnace_on".equals(path)
-                        && !"cherry_block".equals(path)
-                        && !"sweet_grass".equals(path)
-                        && !path.matches("caramel_(glass|pane)_[0-9]+")
-                        && !path.contains("double_slab")
-                        && !path.contains(".");
-                })
-                .forEach(item -> output.accept(item.get()));
+            if (acceptOrderedTab("blocks", output)) {
+                return;
+            }
+            CCItems.BLOCK_ITEMS.forEach(item -> output.accept(item.get()));
+            CCSweetscapeItems.BLOCK_ITEMS.forEach(item -> output.accept(item.get()));
         })
         .build());
 
-    public static final RegistryObject<CreativeModeTab> SWEETSCAPE = TABS.register("sweetscape", () -> CreativeModeTab.builder()
-        .title(Component.translatable("itemGroup.candycraftmod.sweetscape"))
-        .icon(() -> new ItemStack(CCSweetscapeBlocks.CANDY_GRASS_BLOCK.get()))
+    public static final RegistryObject<CreativeModeTab> FOOD = TABS.register("food", () -> CreativeModeTab.builder()
+        .title(Component.translatable("itemGroup.candycraftmod.food"))
+        .icon(() -> new ItemStack(CCItems.CANDIED_CHERRY.get()))
         .displayItems((parameters, output) -> {
+            if (acceptOrderedTab("food", output)) {
+                return;
+            }
+            CCItems.PORT_ITEMS.forEach(item -> output.accept(item.get()));
             CCSweetscapeItems.SIMPLE_ITEMS.forEach(item -> output.accept(item.get()));
+        })
+        .build());
+
+    public static final RegistryObject<CreativeModeTab> TOOLS_ARMOR = TABS.register("tools_armor", () -> CreativeModeTab.builder()
+        .title(Component.translatable("itemGroup.candycraftmod.tools_armor"))
+        .icon(() -> new ItemStack(CCItems.HONEY_SWORD.get()))
+        .displayItems((parameters, output) -> {
+            if (acceptOrderedTab("tools_armor", output)) {
+                return;
+            }
             CCSweetscapeItems.TOOL_ITEMS.forEach(item -> output.accept(item.get()));
-            CCSweetscapeItems.BLOCK_ITEMS.forEach(item -> output.accept(item.get()));
+        })
+        .build());
+
+    public static final RegistryObject<CreativeModeTab> MISC = TABS.register("misc", () -> CreativeModeTab.builder()
+        .title(Component.translatable("itemGroup.candycraftmod.misc"))
+        .icon(() -> new ItemStack(CCItems.CHOCOLATE_COIN.get()))
+        .displayItems((parameters, output) -> {
+            if (acceptOrderedTab("misc", output)) {
+                return;
+            }
+            CCItems.PORT_ITEMS.forEach(item -> output.accept(item.get()));
         })
         .build());
 
@@ -99,4 +100,43 @@ public final class CCCreativeTabs {
         );
         spawnEggs.forEach(item -> event.accept(item.get()));
     }
+
+    private static boolean acceptOrderedTab(String key, CreativeModeTab.Output output) {
+        JsonObject order = creativeTabOrder();
+        if (order == null || !order.has(key) || !order.get(key).isJsonArray()) {
+            return false;
+        }
+        JsonArray entries = order.getAsJsonArray(key);
+        for (JsonElement entry : entries) {
+            if (!entry.isJsonPrimitive()) {
+                continue;
+            }
+            ResourceLocation id = ResourceLocation.tryParse(entry.getAsString());
+            if (id == null) {
+                continue;
+            }
+            BuiltInRegistries.ITEM.getOptional(id).ifPresent(output::accept);
+        }
+        return true;
+    }
+
+    private static JsonObject creativeTabOrder() {
+        if (creativeTabOrderLoaded) {
+            return creativeTabOrder;
+        }
+        creativeTabOrderLoaded = true;
+        try (InputStream stream = CCCreativeTabs.class.getClassLoader().getResourceAsStream(CREATIVE_TAB_ORDER_PATH)) {
+            if (stream == null) {
+                return null;
+            }
+            JsonElement parsed = JsonParser.parseReader(new InputStreamReader(stream, StandardCharsets.UTF_8));
+            if (parsed != null && parsed.isJsonObject()) {
+                creativeTabOrder = parsed.getAsJsonObject();
+            }
+        } catch (RuntimeException | java.io.IOException ignored) {
+            creativeTabOrder = null;
+        }
+        return creativeTabOrder;
+    }
+
 }

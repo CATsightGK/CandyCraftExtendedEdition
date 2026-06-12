@@ -1,6 +1,6 @@
-{
-    "parent": "block/cube_all",
-    "textures": {
-        "all": "candycraftmod:block/cotton_candy_block"
-    }
+﻿{
+  "parent": "block/cube_all",
+  "textures": {
+    "all": "candycraftmod:block/cotton_candy_block"
+  }
 }

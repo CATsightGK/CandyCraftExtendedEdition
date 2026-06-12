@@ -1,4 +1,4 @@
-{
+﻿{
     "replace":  false,
     "values":  [
                    "candycraftmod:candy_cane_block",
@@ -9,6 +9,10 @@
                    "candycraftmod:candy_cane_wall",
                    "candycraftmod:cherry_block",
                    "candycraftmod:cotton_candy_bed_block",
+                   "candycraftmod:raspberry_cotton_candy_block",
+                   "candycraftmod:raspberry_cotton_candy_double_slab",
+                   "candycraftmod:raspberry_cotton_candy_slab",
+                   "candycraftmod:raspberry_cotton_candy_stairs",
                    "candycraftmod:cotton_candy_block",
                    "candycraftmod:cotton_candy_double_slab",
                    "candycraftmod:cotton_candy_slab",

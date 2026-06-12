@@ -1,11 +1,11 @@
-{
+﻿{
   "type": "minecraft:crafting_shaped",
   "pattern": [
     "###"
   ],
   "key": {
     "#": {
-      "item": "candycraftmod:cotton_candy"
+      "item": "candycraftmod:cotton_candy_block"
     }
   },
   "result": {

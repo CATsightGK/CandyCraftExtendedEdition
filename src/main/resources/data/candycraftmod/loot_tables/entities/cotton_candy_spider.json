@@ -1,4 +1,4 @@
-{
+﻿{
   "type": "minecraft:entity",
   "pools": [
     {
@@ -6,7 +6,7 @@
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "candycraftmod:cotton_candy"
+          "name": "candycraftmod:raspberry_cotton_candy"
         }
       ],
       "functions": [

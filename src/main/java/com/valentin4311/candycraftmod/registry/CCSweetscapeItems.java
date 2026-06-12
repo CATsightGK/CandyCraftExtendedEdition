@@ -40,10 +40,10 @@ public final class CCSweetscapeItems {
         ));
     private static final Tier COTTON_CANDY = new ForgeTier(1, 5, 15.0F, 5.0F, 65,
         BlockTags.create(new ResourceLocation(CandyCraft.MODID, "needs_cotton_candy_tool")),
-        () -> Ingredient.of(CCItems.COTTON_CANDY.get()));
+        () -> Ingredient.of(BuiltInRegistries.ITEM.get(new ResourceLocation(CandyCraft.MODID, "cotton_candy"))));
 
     public static final RegistryObject<Item> BUTTER = registerFood("butter", 1, 1.0F);
-    public static final RegistryObject<Item> CANDY_FLOSS = registerFood("candy_floss", 4, 0.5F);
+    public static final RegistryObject<Item> CANDY_FLOSS = registerFood("cotton_candy", 4, 0.5F);
     public static final RegistryObject<Item> WAFER_STICK = registerFood("wafer_stick", 5, 0.6F);
     public static final RegistryObject<Item> ROCK_CANDY = registerFood("rock_candy", 4, 0.2F);
     public static final RegistryObject<Item> WHITE_CANDY_CANE = registerFood("white_candy_cane", 5, 0.6F);

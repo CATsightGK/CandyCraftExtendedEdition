@@ -16,12 +16,16 @@ public class CCArmorItem extends ArmorItem {
     @Override
     public String getArmorTexture(ItemStack stack, Entity entity, EquipmentSlot slot, String type) {
         ArmorMaterial material = getMaterial();
-        boolean innerModel = slot == EquipmentSlot.LEGS;
-        String texture = material == CCArmorMaterials.JELLY
-            ? (getType() == Type.HELMET ? "jelly_crown" : "armor_boots")
-            : material == CCArmorMaterials.MASK
-                ? "armor_mask"
-                : "armor_" + material.getName().substring((CandyCraft.MODID + ":").length()) + "_" + (innerModel ? "2" : "1");
+        String texture;
+        if (material == CCArmorMaterials.JELLY) {
+            texture = getType() == Type.HELMET ? "jelly_crown" : "jelly_layer_1";
+        } else if (material == CCArmorMaterials.MASK) {
+            texture = "armor_mask";
+        } else {
+            boolean leggings = slot == EquipmentSlot.LEGS;
+            String materialName = material.getName().substring((CandyCraft.MODID + ":").length());
+            texture = materialName + "_layer_" + (leggings ? "2" : "1");
+        }
         return CandyCraft.MODID + ":textures/models/armor/" + texture + ".png";
     }
 }

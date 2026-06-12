@@ -1,4 +1,4 @@
-{
+﻿{
   "type": "minecraft:chest",
   "pools": [
     {
@@ -65,7 +65,7 @@
         },
         {
           "type": "minecraft:item",
-          "name": "candycraftmod:cotton_candy",
+          "name": "candycraftmod:raspberry_cotton_candy",
           "weight": 8,
           "functions": [
             {

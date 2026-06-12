@@ -1,4 +1,4 @@
-{
+﻿{
   "pools": [
     {
       "rolls": 2,
@@ -136,7 +136,7 @@
         },
         {
           "type": "item",
-          "name": "candycraftmod:cotton_candy",
+          "name": "candycraftmod:raspberry_cotton_candy",
           "functions": [
             {
               "function": "set_count",
