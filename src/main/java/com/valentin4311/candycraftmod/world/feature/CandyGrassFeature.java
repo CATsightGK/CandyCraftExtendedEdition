@@ -22,6 +22,13 @@ public class CandyGrassFeature extends Feature<NoneFeatureConfiguration> {
         WorldGenLevel level = context.level();
         RandomSource random = context.random();
         BlockPos origin = context.origin();
+        String originBiome = level.getBiome(origin).unwrapKey()
+            .map(key -> key.location().getPath())
+            .orElse("");
+        if ("ice_cream_plains".equals(originBiome) || "ice_cream_sky_mountains".equals(originBiome)) {
+            return false;
+        }
+
         int surfaceY = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, origin.getX(), origin.getZ());
         int startY = nextInt(random, surfaceY * 2);
         BlockPos base = new BlockPos(origin.getX(), startY, origin.getZ());
