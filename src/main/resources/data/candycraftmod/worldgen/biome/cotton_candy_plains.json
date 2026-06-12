@@ -10,36 +10,7 @@
     "grass_color": 16762596,
     "foliage_color": 16762596
   },
-  "spawners": {
-    "creature": [
-      {
-        "type": "candycraftmod:waffle_sheep",
-        "weight": 10,
-        "minCount": 2,
-        "maxCount": 4
-      },
-      {
-        "type": "candycraftmod:candy_pig",
-        "weight": 4,
-        "minCount": 2,
-        "maxCount": 3
-      }
-    ],
-    "monster": [
-      {
-        "type": "candycraftmod:cotton_candy_spider",
-        "weight": 10,
-        "minCount": 1,
-        "maxCount": 2
-      },
-      {
-        "type": "candycraftmod:candy_creeper",
-        "weight": 4,
-        "minCount": 1,
-        "maxCount": 2
-      }
-    ]
-  },
+  "spawners": {},
   "spawn_costs": {},
   "carvers": {},
   "features": [

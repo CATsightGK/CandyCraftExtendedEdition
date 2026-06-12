@@ -1,4 +1,4 @@
-﻿{
+{
   "has_precipitation": true,
   "temperature": 0,
   "downfall": 0.5,
@@ -10,16 +10,7 @@
     "grass_color": 16777215,
     "foliage_color": 16777215
   },
-  "spawners": {
-    "monster": [
-      {
-        "type": "candycraftmod:pingouin",
-        "weight": 10,
-        "minCount": 2,
-        "maxCount": 4
-      }
-    ]
-  },
+  "spawners": {},
   "spawn_costs": {},
   "carvers": {},
   "features": [
@@ -42,12 +33,17 @@
       "candycraftmod:ore_nougat",
       "candycraftmod:ore_pez",
       "candycraftmod:ore_lapis",
-      "candycraftmod:ore_chocolate_copper_slot"
+      "candycraftmod:ore_chocolate_copper_slot",
+      "candycraftmod:ore_sweetscape_milk_brownie",
+      "candycraftmod:ore_sweetscape_white_brownie",
+      "candycraftmod:ore_sweetscape_dark_brownie",
+      "candycraftmod:ore_sweetscape_sugar_cookie",
+      "candycraftmod:ore_sweetscape_teleporter",
+      "candycraftmod:ore_sweetscape_sugar_sand"
     ],
     [],
     [],
     [
-      "candycraftmod:candy_grass",
       "candycraftmod:sugar_essence_flowers",
       "candycraftmod:candy_seaweed"
     ],

@@ -32,7 +32,13 @@
       "candycraftmod:ore_nougat",
       "candycraftmod:ore_pez",
       "candycraftmod:ore_lapis",
-      "candycraftmod:ore_chocolate_copper_slot"
+      "candycraftmod:ore_chocolate_copper_slot",
+      "candycraftmod:ore_sweetscape_milk_brownie",
+      "candycraftmod:ore_sweetscape_white_brownie",
+      "candycraftmod:ore_sweetscape_dark_brownie",
+      "candycraftmod:ore_sweetscape_sugar_cookie",
+      "candycraftmod:ore_sweetscape_teleporter",
+      "candycraftmod:ore_sweetscape_sugar_sand"
     ],
     [],
     [],

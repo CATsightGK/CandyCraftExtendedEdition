@@ -202,16 +202,10 @@ public class LegacyStructureFeature extends Feature<NoneFeatureConfiguration> {
                         : CCBlocks.CHOCOLATE_STONE.get().defaultBlockState();
                     set(level, center.offset(dx, y, dz), state);
                 }
-                if (random.nextInt(4) == 0) {
-                    set(level, center.offset(dx, 1, dz), random.nextBoolean()
-                        ? CCBlocks.SWEET_GRASS.get().defaultBlockState()
-                        : CCBlocks.DRAGIBUS_CROPS.get().defaultBlockState());
-                }
             }
         }
         if (random.nextBoolean()) {
             buildSmallHouse(level, center.offset(-2, 1, -2), random, true);
-            spawnGingerbread(level, center.offset(0, 2, 0));
         }
         return true;
     }

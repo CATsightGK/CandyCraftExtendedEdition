@@ -9,6 +9,7 @@ import com.valentin4311.candycraftmod.registry.CCFluids;
 import com.valentin4311.candycraftmod.item.JellyWandItem;
 import com.valentin4311.candycraftmod.registry.CCItems;
 import com.valentin4311.candycraftmod.registry.CCSweetscapeBlocks;
+import com.valentin4311.candycraftmod.world.CCDimensions;
 import com.valentin4311.candycraftmod.world.feature.CottonCandyTreeFeature;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -18,7 +19,9 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.DamageTypeTags;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.InteractionResult;
@@ -28,6 +31,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.common.ForgeSpawnEggItem;
+import net.minecraftforge.event.entity.EntityJoinLevelEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.player.AttackEntityEvent;
 import net.minecraftforge.event.entity.living.MobSpawnEvent;
@@ -65,7 +69,33 @@ public final class CCForgeEvents {
         if (living.level().isClientSide) {
             return;
         }
+        if (isBlockedCandyWorldMob(living)) {
+            living.discard();
+            return;
+        }
         tickPinkFire(living);
+    }
+
+    @SubscribeEvent
+    public static void onEntityJoinLevel(EntityJoinLevelEvent event) {
+        if (!event.getLevel().isClientSide && isBlockedCandyWorldMob(event.getEntity())) {
+            event.setCanceled(true);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onLevelTick(TickEvent.LevelTickEvent event) {
+        if (event.phase != TickEvent.Phase.END || event.level.isClientSide || !isCandyWorld(event.level)) {
+            return;
+        }
+        if (event.level.getGameTime() % 20L != 0L || !(event.level instanceof ServerLevel serverLevel)) {
+            return;
+        }
+        for (Entity entity : serverLevel.getAllEntities()) {
+            if (isBlockedCandyWorldMob(entity)) {
+                entity.discard();
+            }
+        }
     }
 
     @SubscribeEvent
@@ -114,6 +144,10 @@ public final class CCForgeEvents {
         }
         if (event.getSpawnType() == net.minecraft.world.entity.MobSpawnType.NATURAL
             || event.getSpawnType() == net.minecraft.world.entity.MobSpawnType.CHUNK_GENERATION) {
+            if (isCandyWorld(event.getLevel().getLevel())) {
+                event.setSpawnCancelled(true);
+                return;
+            }
             ResourceLocation id = ForgeRegistries.ENTITY_TYPES.getKey(event.getEntity().getType());
             if (id != null && CandyCraft.MODID.equals(id.getNamespace())) {
                 event.setSpawnCancelled(true);
@@ -142,6 +176,18 @@ public final class CCForgeEvents {
             data.remove(CandyLiquidBlock.PINK_FIRE_TICKS_TAG);
             living.clearFire();
         }
+    }
+
+    private static boolean isCandyWorld(Level level) {
+        return level.dimension().equals(CCDimensions.CANDY_WORLD);
+    }
+
+    private static boolean isBlockedCandyWorldMob(Entity entity) {
+        if (!(entity instanceof Mob) || !isCandyWorld(entity.level())) {
+            return false;
+        }
+        ResourceLocation id = ForgeRegistries.ENTITY_TYPES.getKey(entity.getType());
+        return id != null && "minecraft".equals(id.getNamespace());
     }
 
     private static boolean tryTillCandySoil(PlayerInteractEvent.RightClickBlock event) {

@@ -10,30 +10,7 @@
     "grass_color": 15641275,
     "foliage_color": 15641275
   },
-  "spawners": {
-    "creature": [
-      {
-        "type": "candycraftmod:candy_pig",
-        "weight": 10,
-        "minCount": 2,
-        "maxCount": 4
-      },
-      {
-        "type": "candycraftmod:waffle_sheep",
-        "weight": 8,
-        "minCount": 2,
-        "maxCount": 4
-      }
-    ],
-    "monster": [
-      {
-        "type": "candycraftmod:candy_creeper",
-        "weight": 8,
-        "minCount": 1,
-        "maxCount": 2
-      }
-    ]
-  },
+  "spawners": {},
   "spawn_costs": {},
   "carvers": {},
   "features": [
@@ -55,7 +32,13 @@
       "candycraftmod:ore_nougat",
       "candycraftmod:ore_pez",
       "candycraftmod:ore_lapis",
-      "candycraftmod:ore_chocolate_copper_slot"
+      "candycraftmod:ore_chocolate_copper_slot",
+      "candycraftmod:ore_sweetscape_milk_brownie",
+      "candycraftmod:ore_sweetscape_white_brownie",
+      "candycraftmod:ore_sweetscape_dark_brownie",
+      "candycraftmod:ore_sweetscape_sugar_cookie",
+      "candycraftmod:ore_sweetscape_teleporter",
+      "candycraftmod:ore_sweetscape_sugar_sand"
     ],
     [],
     [],
