@@ -47,6 +47,7 @@
   </div>
 
   <div id="toast"></div>
+  <div id="dragGhost" class="drag-ghost"></div>
 
   <script>
     const initialState = __INITIAL_STATE__;
@@ -68,6 +69,8 @@
     const libraryCount = document.getElementById("libraryCount");
     const search = document.getElementById("search");
     const toast = document.getElementById("toast");
+    const dragGhost = document.getElementById("dragGhost");
+    let dragState = null;
 
     function showToast(text) {
       toast.textContent = text;
@@ -86,7 +89,8 @@
     function itemSlot(item, place) {
       const slot = document.createElement("button");
       slot.className = "slot";
-      slot.draggable = true;
+      slot.type = "button";
+      slot.draggable = false;
       slot.dataset.id = item.id;
       slot.dataset.place = place;
       slot.title = `${item.name}\n${item.id}`;
@@ -94,27 +98,13 @@
         <span class="sprite">${item.texture ? `<img src="${item.texture}" alt="">` : ""}</span>
         <span class="tooltip">${escapeHtml(item.name)}<br><small>${shortId(item.id)}</small></span>
       `;
-      slot.addEventListener("dragstart", event => {
-        event.dataTransfer.setData("text/plain", item.id);
-      });
-      slot.addEventListener("dragover", event => event.preventDefault());
-      slot.addEventListener("drop", event => {
-        event.preventDefault();
-        const draggedId = event.dataTransfer.getData("text/plain");
-        dropIntoActive(draggedId, item.id);
-      });
+      slot.addEventListener("pointerdown", event => startDrag(event, item.id, slot));
       return slot;
     }
 
     function emptySlot(index) {
       const slot = document.createElement("div");
       slot.className = "slot empty";
-      slot.addEventListener("dragover", event => event.preventDefault());
-      slot.addEventListener("drop", event => {
-        event.preventDefault();
-        const draggedId = event.dataTransfer.getData("text/plain");
-        dropIntoActive(draggedId, null);
-      });
       return slot;
     }
 
@@ -128,14 +118,17 @@
       }
     }
 
-    function dropIntoActive(id, beforeId) {
+    function dropIntoActive(id, targetId, placement = "append") {
       if (!state.items.has(id)) return;
-      const oldList = [...state.tabs[state.activeTab]];
+      const oldList = [...state.tabs[state.activeTab]].filter(x => x !== id);
       removeEverywhere(id);
       const list = state.tabs[state.activeTab];
-      let index = beforeId ? list.indexOf(beforeId) : -1;
-      if (index < 0 && beforeId) {
-        index = oldList.filter(x => x !== id).indexOf(beforeId);
+      let index = -1;
+      if (targetId) {
+        index = oldList.indexOf(targetId);
+        if (index >= 0 && placement === "after") {
+          index += 1;
+        }
       }
       if (index >= 0) list.splice(index, 0, id);
       else list.push(id);
@@ -151,6 +144,130 @@
       if (!query) return true;
       const q = query.toLowerCase();
       return item.name.toLowerCase().includes(q) || item.id.toLowerCase().includes(q);
+    }
+
+    function startDrag(event, id, slot) {
+      if (event.button !== 0 || !state.items.has(id)) return;
+      event.preventDefault();
+      slot.setPointerCapture(event.pointerId);
+      const item = state.items.get(id);
+      dragState = {
+        id,
+        pointerId: event.pointerId,
+        startX: event.clientX,
+        startY: event.clientY,
+        moved: false,
+        target: null,
+        sourceSlot: slot
+      };
+      dragGhost.innerHTML = `<span class="sprite">${item.texture ? `<img src="${item.texture}" alt="">` : ""}</span>`;
+      dragGhost.className = "drag-ghost";
+      moveGhost(event.clientX, event.clientY);
+      slot.classList.add("drag-source");
+      document.body.classList.add("is-dragging");
+      slot.addEventListener("pointermove", dragMove);
+      slot.addEventListener("pointerup", finishDrag);
+      slot.addEventListener("pointercancel", cancelDrag);
+    }
+
+    function dragMove(event) {
+      if (!dragState || event.pointerId !== dragState.pointerId) return;
+      const dx = Math.abs(event.clientX - dragState.startX);
+      const dy = Math.abs(event.clientY - dragState.startY);
+      if (!dragState.moved && dx + dy > 3) {
+        dragState.moved = true;
+        dragGhost.classList.add("show");
+      }
+      if (!dragState.moved) return;
+      event.preventDefault();
+      moveGhost(event.clientX, event.clientY);
+      updateDropTarget(event.clientX, event.clientY);
+      autoScrollNearEdge(event.clientX, event.clientY);
+    }
+
+    function finishDrag(event) {
+      if (!dragState || event.pointerId !== dragState.pointerId) return;
+      const stateToDrop = dragState;
+      cleanupDrag();
+      if (!stateToDrop.moved || !stateToDrop.target) return;
+      if (stateToDrop.target.type === "trash") {
+        removeFromActive(stateToDrop.id);
+      } else if (stateToDrop.target.type === "active") {
+        if (stateToDrop.target.id === stateToDrop.id) {
+          return;
+        }
+        dropIntoActive(stateToDrop.id, stateToDrop.target.id, stateToDrop.target.placement);
+      }
+    }
+
+    function cancelDrag(event) {
+      if (!dragState || event.pointerId !== dragState.pointerId) return;
+      cleanupDrag();
+    }
+
+    function cleanupDrag() {
+      clearDropHints();
+      if (dragState && dragState.sourceSlot) {
+        dragState.sourceSlot.classList.remove("drag-source");
+        dragState.sourceSlot.removeEventListener("pointermove", dragMove);
+        dragState.sourceSlot.removeEventListener("pointerup", finishDrag);
+        dragState.sourceSlot.removeEventListener("pointercancel", cancelDrag);
+      }
+      document.body.classList.remove("is-dragging");
+      dragGhost.className = "drag-ghost";
+      dragGhost.innerHTML = "";
+      dragState = null;
+    }
+
+    function moveGhost(x, y) {
+      dragGhost.style.transform = `translate(${x + 14}px, ${y + 14}px)`;
+    }
+
+    function updateDropTarget(x, y) {
+      clearDropHints();
+      if (!dragState) return;
+      const trash = document.getElementById("trash");
+      const trashRect = trash.getBoundingClientRect();
+      if (pointInRect(x, y, trashRect)) {
+        trash.classList.add("drop-trash");
+        dragState.target = { type: "trash" };
+        return;
+      }
+      const element = document.elementFromPoint(x, y);
+      const grid = element && element.closest && element.closest("#activeGrid");
+      if (!grid) {
+        dragState.target = null;
+        return;
+      }
+      const slot = element.closest(".slot");
+      if (!slot || slot.classList.contains("empty")) {
+        grid.classList.add("drop-append");
+        dragState.target = { type: "active", id: null, placement: "append" };
+        return;
+      }
+      const rect = slot.getBoundingClientRect();
+      const placement = x < rect.left + rect.width / 2 ? "before" : "after";
+      slot.classList.add(placement === "before" ? "drop-before" : "drop-after");
+      dragState.target = { type: "active", id: slot.dataset.id, placement };
+    }
+
+    function clearDropHints() {
+      document.querySelectorAll(".drop-before,.drop-after,.drop-append,.drop-trash")
+        .forEach(element => element.classList.remove("drop-before", "drop-after", "drop-append", "drop-trash"));
+    }
+
+    function pointInRect(x, y, rect) {
+      return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
+    }
+
+    function autoScrollNearEdge(x, y) {
+      for (const grid of [activeGrid, libraryGrid]) {
+        const rect = grid.getBoundingClientRect();
+        if (!pointInRect(x, y, rect)) continue;
+        const edge = 42;
+        if (y < rect.top + edge) grid.scrollTop -= 16;
+        if (y > rect.bottom - edge) grid.scrollTop += 16;
+      }
     }
 
     function render() {
@@ -208,19 +325,6 @@
     });
     document.getElementById("save").addEventListener("click", save);
     search.addEventListener("input", render);
-    document.getElementById("trash").addEventListener("dragover", event => event.preventDefault());
-    document.getElementById("trash").addEventListener("drop", event => {
-      event.preventDefault();
-      const id = event.dataTransfer.getData("text/plain");
-      removeFromActive(id);
-    });
-    activeGrid.addEventListener("dragover", event => event.preventDefault());
-    activeGrid.addEventListener("drop", event => {
-      if (event.target.closest(".slot")) return;
-      event.preventDefault();
-      dropIntoActive(event.dataTransfer.getData("text/plain"), null);
-    });
-
     render();
   </script>
 </body>

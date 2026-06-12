@@ -4,6 +4,7 @@ body {
   background: #2b2630;
   color: #2a252b;
   font-family: "Microsoft YaHei", "Segoe UI", Arial, sans-serif;
+  user-select: none;
 }
 .app {
   min-height: 100vh;
@@ -107,13 +108,60 @@ input {
   box-shadow: inset 2px 2px #d8d8d8, inset -2px -2px #5b5660;
   display: grid;
   place-items: center;
+  touch-action: none;
+  cursor: grab;
 }
+.slot:active { cursor: grabbing; }
 .slot.empty {
   opacity: 0.55;
+  cursor: default;
 }
 .slot:hover {
   outline: 3px solid #ffffff;
   z-index: 3;
+}
+.is-dragging .slot:hover .tooltip {
+  display: none;
+}
+.slot.drag-source {
+  opacity: 0.38;
+  filter: grayscale(0.25);
+}
+.slot.drop-before,
+.slot.drop-after {
+  outline: 3px solid #ffe8fb;
+  z-index: 4;
+}
+.slot.drop-before::before,
+.slot.drop-after::after {
+  content: "";
+  position: absolute;
+  top: -5px;
+  bottom: -5px;
+  width: 5px;
+  background: #ff75ce;
+  box-shadow: 0 0 0 2px #ffffff, 0 0 10px #ff75ce;
+  z-index: 6;
+}
+.slot.drop-before::before { left: -5px; }
+.slot.drop-after::after { right: -5px; }
+.mc-grid.drop-append {
+  outline: 4px solid #ff75ce;
+  outline-offset: 2px;
+}
+.mc-grid.drop-append::after {
+  content: "放到末尾";
+  position: sticky;
+  left: 8px;
+  bottom: 8px;
+  grid-column: 1 / -1;
+  justify-self: start;
+  padding: 5px 9px;
+  background: #fff1fb;
+  border: 2px solid #b23a86;
+  color: #4a203d;
+  font-weight: 700;
+  z-index: 5;
 }
 .sprite {
   width: 32px;
@@ -156,6 +204,27 @@ input {
   border: 2px solid #5f3434;
   text-align: center;
   font-weight: 700;
+}
+.trash.drop-trash {
+  background: #f09b9b;
+  outline: 4px solid #fff0f0;
+}
+.drag-ghost {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 44px;
+  height: 44px;
+  display: none;
+  place-items: center;
+  pointer-events: none;
+  z-index: 1000;
+  background: rgba(238, 229, 239, 0.82);
+  border: 2px solid #ff75ce;
+  box-shadow: 0 0 0 2px #ffffff, 0 8px 18px rgba(0, 0, 0, 0.45);
+}
+.drag-ghost.show {
+  display: grid;
 }
 #toast {
   position: fixed;
