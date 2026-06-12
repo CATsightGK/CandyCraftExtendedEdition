@@ -1,7 +1,7 @@
 package com.valentin4311.candycraftmod.block;
 
 import com.valentin4311.candycraftmod.block.entity.AlchemyTableBlockEntity;
-import com.valentin4311.candycraftmod.block.entity.AlchemyTableBlockEntity.LiquidKind;
+import com.valentin4311.candycraftmod.block.entity.AlchemyLiquidKind;
 import com.valentin4311.candycraftmod.alchemy.AlchemyMixing;
 import com.valentin4311.candycraftmod.registry.CCBlockEntities;
 import com.valentin4311.candycraftmod.registry.CCItems;
@@ -66,8 +66,8 @@ public class AlchemyTableBlock extends BaseEntityBlock implements EntityBlock {
             return InteractionResult.sidedSuccess(level.isClientSide);
         }
 
-        LiquidKind heldLiquid = liquidForBucket(heldItem);
-        if (heldLiquid != LiquidKind.NONE && blockEntity.canAddLiquid(heldLiquid)) {
+        AlchemyLiquidKind heldLiquid = liquidForBucket(heldItem);
+        if (heldLiquid != AlchemyLiquidKind.NONE && blockEntity.canAddLiquid(heldLiquid)) {
             if (!level.isClientSide && blockEntity.addLiquid(heldLiquid)) {
                 replaceHeldBucket(player, hand);
             }
@@ -75,7 +75,7 @@ public class AlchemyTableBlock extends BaseEntityBlock implements EntityBlock {
         }
 
         if (heldItem.is(Items.BUCKET)) {
-            if (blockEntity.getLiquidKind() != LiquidKind.NONE) {
+            if (blockEntity.getLiquidKind() != AlchemyLiquidKind.NONE) {
                 if (!level.isClientSide) {
                     ItemStack filled = blockEntity.removeLiquidBucket();
                     if (!filled.isEmpty()) {
@@ -144,7 +144,7 @@ public class AlchemyTableBlock extends BaseEntityBlock implements EntityBlock {
             return;
         }
 
-        if (!blockEntity.isMixing() || blockEntity.getLiquidKind() == LiquidKind.NONE) {
+        if (!blockEntity.isMixing() || blockEntity.getLiquidKind() == AlchemyLiquidKind.NONE) {
             return;
         }
 
@@ -183,32 +183,32 @@ public class AlchemyTableBlock extends BaseEntityBlock implements EntityBlock {
         }
     }
 
-    private static LiquidKind liquidForBucket(ItemStack stack) {
+    private static AlchemyLiquidKind liquidForBucket(ItemStack stack) {
         if (stack.is(CCItems.GRENADINE_BUCKET.get())) {
-            return LiquidKind.GRENADINE;
+            return AlchemyLiquidKind.GRENADINE;
         }
         if (stack.is(Items.WATER_BUCKET)) {
-            return LiquidKind.WATER;
+            return AlchemyLiquidKind.WATER;
         }
         if (stack.is(Items.MILK_BUCKET)) {
-            return LiquidKind.MILK;
+            return AlchemyLiquidKind.MILK;
         }
         if (stack.is(CCSweetscapeItems.LIQUID_CHOCOLATE_BUCKET.get())) {
-            return LiquidKind.CHOCOLATE;
+            return AlchemyLiquidKind.CHOCOLATE;
         }
         if (stack.is(CCSweetscapeItems.LIQUID_CANDY_BUCKET.get())) {
-            return LiquidKind.LIQUID_CANDY;
+            return AlchemyLiquidKind.LIQUID_CANDY;
         }
         if (stack.is(Items.LAVA_BUCKET)) {
-            return LiquidKind.LAVA;
+            return AlchemyLiquidKind.LAVA;
         }
         if (stack.is(CCItems.CARAMEL_BUCKET.get())) {
-            return LiquidKind.CARAMEL;
+            return AlchemyLiquidKind.CARAMEL;
         }
-        return LiquidKind.NONE;
+        return AlchemyLiquidKind.NONE;
     }
 
-    private static float[] particleColor(LiquidKind kind) {
+    private static float[] particleColor(AlchemyLiquidKind kind) {
         return switch (kind) {
             case GRENADINE -> new float[] { 1.0F, 0.13F, 0.26F };
             case WATER -> new float[] { 0.25F, 0.55F, 1.0F };

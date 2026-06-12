@@ -5,7 +5,7 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
 import com.valentin4311.candycraftmod.CandyCraft;
 import com.valentin4311.candycraftmod.block.entity.AlchemyTableBlockEntity;
-import com.valentin4311.candycraftmod.block.entity.AlchemyTableBlockEntity.LiquidKind;
+import com.valentin4311.candycraftmod.block.entity.AlchemyLiquidKind;
 import com.valentin4311.candycraftmod.registry.CCItems;
 import java.util.List;
 import net.minecraft.client.Minecraft;
@@ -202,7 +202,7 @@ public class AlchemyTableRenderer implements BlockEntityRenderer<AlchemyTableBlo
         return blockEntity.getLevel() != null ? blockEntity.getLevel().getGameTime() + partialTick : partialTick;
     }
 
-    private static LiquidStyle liquidStyle(LiquidKind kind) {
+    private static LiquidStyle liquidStyle(AlchemyLiquidKind kind) {
         return switch (kind) {
             case GRENADINE -> new LiquidStyle(GRENADINE_TEXTURE, true, false, 170, 115);
             case WATER -> new LiquidStyle(WATER_TEXTURE, true, false, 120, 80);

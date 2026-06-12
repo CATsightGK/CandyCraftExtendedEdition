@@ -89,6 +89,6 @@ public class CandyGrassFeature extends Feature<NoneFeatureConfiguration> {
     }
 
     private static boolean isRareSugarEssenceBiome(String biome) {
-        return "sugar_enchanted_forest".equals(biome) || "ice_cream_plains".equals(biome);
+        return "sugar_enchanted_forest".equals(biome);
     }
 }

@@ -28,7 +28,7 @@ public class AlchemyTableBlockEntity extends BlockEntity {
     private static final int MAX_LIQUID_UNITS = 6;
     private static final int BREW_TIME_TICKS = 20 * 10;
     private static final int ADVANCED_BREW_TIME_TICKS = 20 * 5;
-    private LiquidKind liquidKind = LiquidKind.NONE;
+    private AlchemyLiquidKind liquidKind = AlchemyLiquidKind.NONE;
     private boolean topFilled;
     private int liquidAmount;
     private boolean hasMixerPower;
@@ -44,7 +44,7 @@ public class AlchemyTableBlockEntity extends BlockEntity {
     }
 
     public boolean isTopFilled() {
-        return liquidKind != LiquidKind.NONE && topFilled;
+        return liquidKind != AlchemyLiquidKind.NONE && topFilled;
     }
 
     public static void serverTick(Level level, BlockPos pos, BlockState state, AlchemyTableBlockEntity blockEntity) {
@@ -61,7 +61,7 @@ public class AlchemyTableBlockEntity extends BlockEntity {
             return;
         }
 
-        if (liquidKind != LiquidKind.GRENADINE || !isTopFilled() || getIngredientCount() < AlchemyMixing.INPUT_SLOTS || !isMixing() || !hasCraftableRecipe()) {
+        if (liquidKind != AlchemyLiquidKind.GRENADINE || !isTopFilled() || getIngredientCount() < AlchemyMixing.INPUT_SLOTS || !isMixing() || !hasCraftableRecipe()) {
             resetBrewTicks();
             return;
         }
@@ -80,15 +80,15 @@ public class AlchemyTableBlockEntity extends BlockEntity {
 
     public void setTopFilled(boolean topFilled) {
         this.topFilled = topFilled;
-        if (topFilled && liquidKind == LiquidKind.NONE) {
-            liquidKind = LiquidKind.GRENADINE;
+        if (topFilled && liquidKind == AlchemyLiquidKind.NONE) {
+            liquidKind = AlchemyLiquidKind.GRENADINE;
         } else if (!topFilled && liquidAmount <= 0) {
-            liquidKind = LiquidKind.NONE;
+            liquidKind = AlchemyLiquidKind.NONE;
         }
         sync();
     }
 
-    public LiquidKind getLiquidKind() {
+    public AlchemyLiquidKind getLiquidKind() {
         return liquidKind;
     }
 
@@ -97,7 +97,7 @@ public class AlchemyTableBlockEntity extends BlockEntity {
     }
 
     public int getDisplayedSyrupUnits() {
-        if (liquidKind == LiquidKind.NONE) {
+        if (liquidKind == AlchemyLiquidKind.NONE) {
             return 0;
         }
         return Math.max(0, Math.min(MAX_LIQUID_UNITS, liquidAmount + (topFilled ? 1 : 0)));
@@ -106,26 +106,26 @@ public class AlchemyTableBlockEntity extends BlockEntity {
     public void setLiquidAmount(int liquidAmount) {
         this.liquidAmount = Math.max(0, Math.min(MAX_LIQUID_UNITS - 1, liquidAmount));
         if (this.liquidAmount <= 0 && !topFilled) {
-            liquidKind = LiquidKind.NONE;
+            liquidKind = AlchemyLiquidKind.NONE;
         }
         sync();
     }
 
-    public boolean canAddLiquid(LiquidKind kind) {
-        return kind != LiquidKind.NONE
+    public boolean canAddLiquid(AlchemyLiquidKind kind) {
+        return kind != AlchemyLiquidKind.NONE
             && getIngredientCount() == 0
             && brewTicks == 0
             && mixerSugarCharges == 0
-            && (liquidKind == LiquidKind.NONE || liquidKind == kind)
+            && (liquidKind == AlchemyLiquidKind.NONE || liquidKind == kind)
             && getDisplayedSyrupUnits() < MAX_LIQUID_UNITS;
     }
 
-    public boolean addLiquid(LiquidKind kind) {
+    public boolean addLiquid(AlchemyLiquidKind kind) {
         if (level == null || level.isClientSide || !canAddLiquid(kind)) {
             return false;
         }
 
-        if (liquidKind == LiquidKind.NONE) {
+        if (liquidKind == AlchemyLiquidKind.NONE) {
             liquidKind = kind;
             topFilled = true;
             liquidAmount = 0;
@@ -139,7 +139,7 @@ public class AlchemyTableBlockEntity extends BlockEntity {
     }
 
     public ItemStack removeLiquidBucket() {
-        if (level == null || level.isClientSide || liquidKind == LiquidKind.NONE || getIngredientCount() > 0 || brewTicks > 0 || mixerSugarCharges > 0) {
+        if (level == null || level.isClientSide || liquidKind == AlchemyLiquidKind.NONE || getIngredientCount() > 0 || brewTicks > 0 || mixerSugarCharges > 0) {
             return ItemStack.EMPTY;
         }
 
@@ -148,7 +148,7 @@ public class AlchemyTableBlockEntity extends BlockEntity {
             liquidAmount--;
         } else {
             topFilled = false;
-            liquidKind = LiquidKind.NONE;
+            liquidKind = AlchemyLiquidKind.NONE;
         }
         sync();
         return bucket;
@@ -232,7 +232,7 @@ public class AlchemyTableBlockEntity extends BlockEntity {
         }
         updateMixerState();
         return isTopFilled()
-            && liquidKind == LiquidKind.GRENADINE
+            && liquidKind == AlchemyLiquidKind.GRENADINE
             && getIngredientCount() >= AlchemyMixing.INPUT_SLOTS
             && mixerSugarCharges <= 0
             && isMixing()
@@ -240,7 +240,7 @@ public class AlchemyTableBlockEntity extends BlockEntity {
     }
 
     public boolean addIngredient(ItemStack stack) {
-        if (level == null || level.isClientSide || stack.isEmpty() || liquidKind != LiquidKind.GRENADINE || !isTopFilled() || !AlchemyMixing.isValidIngredient(stack)) {
+        if (level == null || level.isClientSide || stack.isEmpty() || liquidKind != AlchemyLiquidKind.GRENADINE || !isTopFilled() || !AlchemyMixing.isValidIngredient(stack)) {
             return false;
         }
 
@@ -308,7 +308,7 @@ public class AlchemyTableBlockEntity extends BlockEntity {
             liquidAmount--;
             setTopFilled(true);
         } else {
-            liquidKind = LiquidKind.NONE;
+            liquidKind = AlchemyLiquidKind.NONE;
         }
         sync();
     }
@@ -427,11 +427,11 @@ public class AlchemyTableBlockEntity extends BlockEntity {
         topFilled = tag.getBoolean("TopFilled");
         liquidAmount = tag.getInt("LiquidAmount");
         if (tag.contains("LiquidKind")) {
-            liquidKind = LiquidKind.byId(tag.getString("LiquidKind"));
+            liquidKind = AlchemyLiquidKind.byId(tag.getString("LiquidKind"));
         } else {
-            liquidKind = topFilled || liquidAmount > 0 ? LiquidKind.GRENADINE : LiquidKind.NONE;
+            liquidKind = topFilled || liquidAmount > 0 ? AlchemyLiquidKind.GRENADINE : AlchemyLiquidKind.NONE;
         }
-        if (liquidKind == LiquidKind.NONE) {
+        if (liquidKind == AlchemyLiquidKind.NONE) {
             topFilled = false;
             liquidAmount = 0;
         }
@@ -447,7 +447,7 @@ public class AlchemyTableBlockEntity extends BlockEntity {
     @Override
     protected void saveAdditional(CompoundTag tag) {
         super.saveAdditional(tag);
-        tag.putString("LiquidKind", liquidKind.id);
+        tag.putString("LiquidKind", liquidKind.id());
         tag.putBoolean("TopFilled", topFilled);
         tag.putInt("LiquidAmount", liquidAmount);
         tag.putBoolean("HasMixerPower", hasMixerPower);
@@ -466,48 +466,5 @@ public class AlchemyTableBlockEntity extends BlockEntity {
     }
 
     private record MixerState(boolean hasPower, boolean hasSugar, boolean hasAdvancedSugar) {
-    }
-
-    public enum LiquidKind {
-        NONE("none"),
-        GRENADINE("grenadine"),
-        WATER("water"),
-        MILK("milk"),
-        CHOCOLATE("chocolate"),
-        LIQUID_CANDY("liquid_candy"),
-        LAVA("lava"),
-        CARAMEL("caramel");
-
-        private final String id;
-
-        LiquidKind(String id) {
-            this.id = id;
-        }
-
-        public String id() {
-            return id;
-        }
-
-        public ItemStack bucket() {
-            return switch (this) {
-                case GRENADINE -> new ItemStack(CCItems.GRENADINE_BUCKET.get());
-                case WATER -> new ItemStack(Items.WATER_BUCKET);
-                case MILK -> new ItemStack(Items.MILK_BUCKET);
-                case CHOCOLATE -> new ItemStack(CCSweetscapeItems.LIQUID_CHOCOLATE_BUCKET.get());
-                case LIQUID_CANDY -> new ItemStack(CCSweetscapeItems.LIQUID_CANDY_BUCKET.get());
-                case LAVA -> new ItemStack(Items.LAVA_BUCKET);
-                case CARAMEL -> new ItemStack(CCItems.CARAMEL_BUCKET.get());
-                case NONE -> ItemStack.EMPTY;
-            };
-        }
-
-        public static LiquidKind byId(String id) {
-            for (LiquidKind kind : values()) {
-                if (kind.id.equals(id)) {
-                    return kind;
-                }
-            }
-            return NONE;
-        }
     }
 }
