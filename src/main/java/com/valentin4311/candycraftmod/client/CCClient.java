@@ -288,12 +288,7 @@ public final class CCClient {
         if (!level.hasChunkAt(pos)) {
             return CANDY_WORLD_SKY_FALLBACK;
         }
-        Minecraft minecraft = Minecraft.getInstance();
-        if (minecraft.player == null || !(level instanceof ClientLevel clientLevel)) {
-            return CANDY_WORLD_SKY_FALLBACK;
-        }
-        Vec3 sky = clientLevel.getSkyColor(minecraft.player.position(), partialTick);
-        return toRgb(sky);
+        return level.getBiome(pos).value().getSkyColor();
     }
 
     private static int toRgb(Vec3 color) {
@@ -652,10 +647,6 @@ public final class CCClient {
         @Override
         public boolean renderSky(ClientLevel level, int ticks, float partialTick, PoseStack poseStack, Camera camera, Matrix4f projectionMatrix, boolean isFoggy, Runnable setupFog) {
             net.minecraft.core.BlockPos pos = camera.getBlockPosition();
-            if (level.hasChunkAt(pos)) {
-                return false;
-            }
-
             setupFog.run();
             Vec3 sky = rgbVec(legacyCandySkyColor(level, pos, partialTick));
             RenderSystem.depthMask(false);
