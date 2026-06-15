@@ -158,9 +158,7 @@ public class DungeonTeleporterBlock extends Block {
                 level.getChunk(cx, cz);
             }
         }
-        if (level.getBlockState(JELLY_DUNGEON_ENTRY).is(Blocks.AIR)) {
-            JellyDungeonFeature.generateInDungeonLevel(level, JELLY_DUNGEON_ORIGIN);
-        }
+        JellyDungeonFeature.generateInDungeonLevel(level, JELLY_DUNGEON_ORIGIN);
     }
 
     private static void prepareSuguardDungeon(ServerLevel level) {
@@ -171,9 +169,7 @@ public class DungeonTeleporterBlock extends Block {
                 level.getChunk(cx, cz);
             }
         }
-        if (level.getBlockState(SUGUARD_DUNGEON_ENTRY).is(Blocks.AIR)) {
-            SuguardDungeonFeature.generateInDungeonLevel(level, SUGUARD_DUNGEON_ORIGIN);
-        }
+        SuguardDungeonFeature.generateInDungeonLevel(level, SUGUARD_DUNGEON_ORIGIN);
     }
 
     @Override

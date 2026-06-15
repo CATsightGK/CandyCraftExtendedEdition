@@ -26,7 +26,7 @@ public class SuguardModel<T extends BasicCandyZombieEntity> extends EntityModel<
     private final ModelPart earRight;
     private final ModelPart earLeft;
     private final ModelPart leftArm;
-    private final ModelPart rightArm;
+    public final ModelPart rightArm;
     private final ModelPart shield;
     private final ModelPart hatTop;
 
@@ -74,6 +74,14 @@ public class SuguardModel<T extends BasicCandyZombieEntity> extends EntityModel<
         earLeft.yRot = yaw;
         leg1.xRot = Mth.cos(limbSwing * 0.6662F) * 1.4F * limbSwingAmount;
         leg2.xRot = Mth.cos(limbSwing * 0.6662F + (float)Math.PI) * 1.4F * limbSwingAmount;
+        leg1.yRot = 0.0F;
+        leg2.yRot = 0.0F;
+        rightArm.xRot = -1.050296F;
+        leftArm.xRot = -1.570796F;
+    }
+
+    public void translateToRightArm(PoseStack poseStack) {
+        rightArm.translateAndRotate(poseStack);
     }
 
     @Override

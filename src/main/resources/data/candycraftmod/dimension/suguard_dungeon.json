@@ -8,7 +8,7 @@
       "lakes": false,
       "layers": [
         {
-          "block": "minecraft:bedrock",
+          "block": "candycraftmod:jaw_breaker_block",
           "height": 1
         }
       ],

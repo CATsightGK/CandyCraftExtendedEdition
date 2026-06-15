@@ -122,6 +122,15 @@ public class SuguardDungeonFeature extends Feature<NoneFeatureConfiguration> {
         } else {
             box(level, x, y + 1, z - 4, x, y + 2, z - 4, Blocks.AIR.defaultBlockState());
         }
+        clearEntry(level, x, y, z);
+    }
+
+    private void clearEntry(WorldGenLevel level, int x, int y, int z) {
+        set(level, x, y, z, caramel());
+        set(level, x, y + 1, z, suguardTeleporter());
+        box(level, x - 1, y + 1, z - 1, x + 1, y + 3, z + 1, Blocks.AIR.defaultBlockState());
+        set(level, x, y, z, caramel());
+        set(level, x, y + 1, z, suguardTeleporter());
     }
 
     private void zCorridor(WorldGenLevel level, int x, int y, int z) {

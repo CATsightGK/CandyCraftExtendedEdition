@@ -17,9 +17,12 @@ import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.block.LadderBlock;
 import net.minecraft.world.level.block.SlabBlock;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.DoorBlock;
 import net.minecraft.world.level.block.LeverBlock;
 import net.minecraft.world.level.block.RepeaterBlock;
 import net.minecraft.world.level.block.state.properties.AttachFace;
+import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
+import net.minecraft.world.level.block.state.properties.DoorHingeSide;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.block.entity.SpawnerBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -337,7 +340,7 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
         for (int i = 1; i < 23; i++) {
             for (int j = 5; j < 23; j++) {
                 for (int k = 1; k < 23; k++) {
-                    if (water && j < 21) {
+                    if (water && j < 20) {
                         set(level, x + i - 12, y + j, z - k - 1, Blocks.WATER.defaultBlockState());
                     }
                     if (random.nextInt(100) == 0) {
@@ -409,12 +412,10 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
             genColumn189(level, random, x - 7, y + 1, z - 7 - i * 6, false, i + 1);
         }
         clearDoor(level, x, y + 2, z - 1, 2, 3);
-        set(level, x, y + 2, z - 55, Blocks.IRON_DOOR.defaultBlockState());
-        set(level, x, y + 3, z - 55, Blocks.IRON_DOOR.defaultBlockState());
-        set(level, x + 1, y + 2, z - 55, Blocks.IRON_DOOR.defaultBlockState());
-        set(level, x + 1, y + 3, z - 55, Blocks.IRON_DOOR.defaultBlockState());
-        set(level, x + 1, y, z - 53, Blocks.REPEATER.defaultBlockState());
-        set(level, x - 2, y, z - 51, Blocks.REPEATER.defaultBlockState());
+        ironDoor(level, x, y + 2, z - 55, Direction.WEST, false);
+        ironDoor(level, x + 1, y + 2, z - 55, Direction.WEST, true);
+        set(level, x + 1, y, z - 53, Blocks.REPEATER.defaultBlockState().setValue(RepeaterBlock.FACING, Direction.EAST));
+        set(level, x - 2, y, z - 51, Blocks.REPEATER.defaultBlockState().setValue(RepeaterBlock.FACING, Direction.WEST));
         posX += 55;
     }
 
@@ -459,13 +460,16 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
         set(level, x, y + 5, z - 1, CCBlocks.LICORICE_BRICK_STAIRS.get().defaultBlockState());
         set(level, x, y + 2, z - 1, CCBlocks.LICORICE_BRICK_SLAB.get().defaultBlockState());
         set(level, x, y + 2, z + 1, CCBlocks.LICORICE_BRICK_SLAB.get().defaultBlockState());
-        set(level, x + (side ? -1 : 1), y + 1, z, Blocks.LEVER.defaultBlockState());
-        set(level, x + (side ? 1 : -1), y + 1, z, Blocks.REDSTONE_TORCH.defaultBlockState());
+        set(level, x + (side ? -1 : 1), y + 1, z, Blocks.LEVER.defaultBlockState()
+            .setValue(LeverBlock.FACE, AttachFace.WALL)
+            .setValue(LeverBlock.FACING, side ? Direction.WEST : Direction.EAST));
+        set(level, x + (side ? 1 : -1), y + 1, z, Blocks.REDSTONE_WALL_TORCH.defaultBlockState()
+            .setValue(BlockStateProperties.HORIZONTAL_FACING, side ? Direction.EAST : Direction.WEST));
         genRedstone189(level, x + (side ? 1 : -1), y - 1, z);
         genRedstone189(level, x + (side ? 1 : -1), y - 2, z - 1);
         clearDoor(level, x + (side ? 1 : -1), y, z - 1, 1, 1);
         if (id != 8) {
-            set(level, x, y - 1, z - 2, Blocks.REPEATER.defaultBlockState());
+            set(level, x, y - 1, z - 2, Blocks.REPEATER.defaultBlockState().setValue(RepeaterBlock.FACING, Direction.SOUTH));
         }
     }
 
@@ -700,6 +704,16 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
     private void genRedstone189(WorldGenLevel level, int x, int y, int z) {
         set(level, x, y, z, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
         set(level, x, y + 1, z, Blocks.REDSTONE_WIRE.defaultBlockState());
+    }
+
+    private static void ironDoor(WorldGenLevel level, int x, int y, int z, Direction facing, boolean rightHinge) {
+        BlockState lower = Blocks.IRON_DOOR.defaultBlockState()
+            .setValue(DoorBlock.FACING, facing)
+            .setValue(DoorBlock.HALF, DoubleBlockHalf.LOWER)
+            .setValue(DoorBlock.HINGE, rightHinge ? DoorHingeSide.RIGHT : DoorHingeSide.LEFT);
+        BlockState upper = lower.setValue(DoorBlock.HALF, DoubleBlockHalf.UPPER);
+        set(level, x, y, z, lower);
+        set(level, x, y + 1, z, upper);
     }
 
     private static BlockState slab(net.minecraft.world.level.block.Block block, boolean top) {
