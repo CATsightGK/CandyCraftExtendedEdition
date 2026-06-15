@@ -1,0 +1,18 @@
+{
+  "type": "candycraftmod:jelly_dungeon",
+  "generator": {
+    "type": "minecraft:flat",
+    "settings": {
+      "biome": "candycraftmod:candycraft_dungeon",
+      "features": false,
+      "lakes": false,
+      "layers": [
+        {
+          "block": "minecraft:bedrock",
+          "height": 1
+        }
+      ],
+      "structure_overrides": []
+    }
+  }
+}

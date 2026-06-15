@@ -1,7 +1,9 @@
 package com.valentin4311.candycraftmod.block;
 
 import com.valentin4311.candycraftmod.CandyCraft;
+import com.valentin4311.candycraftmod.world.CCDimensions;
 import com.valentin4311.candycraftmod.world.feature.JellyDungeonFeature;
+import com.valentin4311.candycraftmod.world.feature.SuguardDungeonFeature;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
@@ -19,22 +21,46 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.EnumProperty;
+import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.VoxelShape;
 
 public class DungeonTeleporterBlock extends Block {
+    private static final VoxelShape SHAPE = Block.box(3.2D, 0.0D, 3.2D, 12.8D, 0.96D, 12.8D);
+    public static final EnumProperty<DungeonKind> DUNGEON = EnumProperty.create("dungeon", DungeonKind.class);
     private static final String RETURN_DIM = "CandyCraftDungeonReturnDim";
     private static final String RETURN_X = "CandyCraftDungeonReturnX";
     private static final String RETURN_Y = "CandyCraftDungeonReturnY";
     private static final String RETURN_Z = "CandyCraftDungeonReturnZ";
-    private static final ResourceKey<Level> CANDY_DUNGEON = ResourceKey.create(
-        Registries.DIMENSION,
-        new ResourceLocation(CandyCraft.MODID, "candy_dungeon")
-    );
     private static final BlockPos JELLY_DUNGEON_ORIGIN = new BlockPos(0, 64, 0);
-    private static final BlockPos JELLY_DUNGEON_EXIT = JELLY_DUNGEON_ORIGIN.offset(-3, 2, -3);
+    private static final BlockPos JELLY_DUNGEON_ENTRY = JELLY_DUNGEON_ORIGIN.offset(1, 1, 1);
+    private static final BlockPos SUGUARD_DUNGEON_ORIGIN = new BlockPos(0, 64, 10000);
+    private static final BlockPos SUGUARD_DUNGEON_ENTRY = SUGUARD_DUNGEON_ORIGIN.offset(0, 1, 0);
 
     public DungeonTeleporterBlock(BlockBehaviour.Properties properties) {
         super(properties);
+        registerDefaultState(stateDefinition.any().setValue(DUNGEON, DungeonKind.JELLY));
+    }
+
+    public static void markSuguard(Level level, BlockPos pos) {
+        if (!level.isClientSide) {
+            level.setBlock(pos, level.getBlockState(pos).setValue(DUNGEON, DungeonKind.SUGUARD), Block.UPDATE_ALL);
+        }
+    }
+
+    @Override
+    public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+        return SHAPE;
+    }
+
+    @Override
+    public boolean canSurvive(BlockState state, LevelReader level, BlockPos pos) {
+        return level.getBlockState(pos.below()).isSolid();
     }
 
     @Override
@@ -43,17 +69,27 @@ public class DungeonTeleporterBlock extends Block {
             return InteractionResult.sidedSuccess(level.isClientSide);
         }
 
-        if (level.dimension() == CANDY_DUNGEON) {
-            returnFromDungeon(serverPlayer);
+        if (level.dimension() == CCDimensions.JELLY_DUNGEON || level.dimension() == CCDimensions.SUGUARD_DUNGEON) {
+            if (state.getValue(DUNGEON) == DungeonKind.SUGUARD && pos.closerThan(SUGUARD_DUNGEON_ORIGIN, 220.0D) && !pos.closerThan(SUGUARD_DUNGEON_ENTRY, 4.0D)) {
+                serverPlayer.setPortalCooldown(80);
+                serverPlayer.teleportTo((ServerLevel) level, SUGUARD_DUNGEON_ENTRY.getX() + 0.5D, SUGUARD_DUNGEON_ENTRY.getY(), SUGUARD_DUNGEON_ENTRY.getZ() + 0.5D, serverPlayer.getYRot(), serverPlayer.getXRot());
+                level.playSound(null, SUGUARD_DUNGEON_ENTRY, SoundEvents.PORTAL_TRAVEL, SoundSource.PLAYERS, 0.8F, 1.0F);
+            } else {
+                returnFromDungeon(serverPlayer);
+            }
         } else {
-            enterJellyDungeon(serverPlayer, pos);
+            if (state.getValue(DUNGEON) == DungeonKind.SUGUARD) {
+                enterSuguardDungeon(serverPlayer, pos);
+            } else {
+                enterJellyDungeon(serverPlayer, pos);
+            }
         }
         return InteractionResult.CONSUME;
     }
 
     private static void enterJellyDungeon(ServerPlayer player, BlockPos sourcePos) {
         ServerLevel source = player.serverLevel();
-        ServerLevel target = player.server.getLevel(CANDY_DUNGEON);
+        ServerLevel target = player.server.getLevel(CCDimensions.JELLY_DUNGEON);
         if (target == null) {
             return;
         }
@@ -67,8 +103,28 @@ public class DungeonTeleporterBlock extends Block {
         prepareDungeon(target);
         player.setPortalCooldown(80);
         source.playSound(null, player.blockPosition(), SoundEvents.PORTAL_TRAVEL, SoundSource.PLAYERS, 0.8F, 1.0F);
-        player.teleportTo(target, JELLY_DUNGEON_EXIT.getX() + 0.5D, JELLY_DUNGEON_EXIT.getY() + 1.0D, JELLY_DUNGEON_EXIT.getZ() + 0.5D, player.getYRot(), player.getXRot());
-        target.playSound(null, JELLY_DUNGEON_EXIT, SoundEvents.PORTAL_TRAVEL, SoundSource.PLAYERS, 0.8F, 1.0F);
+        player.teleportTo(target, JELLY_DUNGEON_ENTRY.getX() + 0.5D, JELLY_DUNGEON_ENTRY.getY(), JELLY_DUNGEON_ENTRY.getZ() + 0.5D, player.getYRot(), player.getXRot());
+        target.playSound(null, JELLY_DUNGEON_ENTRY, SoundEvents.PORTAL_TRAVEL, SoundSource.PLAYERS, 0.8F, 1.0F);
+    }
+
+    private static void enterSuguardDungeon(ServerPlayer player, BlockPos sourcePos) {
+        ServerLevel source = player.serverLevel();
+        ServerLevel target = player.server.getLevel(CCDimensions.SUGUARD_DUNGEON);
+        if (target == null) {
+            return;
+        }
+
+        CompoundTag data = player.getPersistentData();
+        data.putString(RETURN_DIM, source.dimension().location().toString());
+        data.putInt(RETURN_X, sourcePos.getX());
+        data.putInt(RETURN_Y, sourcePos.getY());
+        data.putInt(RETURN_Z, sourcePos.getZ());
+
+        prepareSuguardDungeon(target);
+        player.setPortalCooldown(80);
+        source.playSound(null, player.blockPosition(), SoundEvents.PORTAL_TRAVEL, SoundSource.PLAYERS, 0.8F, 1.0F);
+        player.teleportTo(target, SUGUARD_DUNGEON_ENTRY.getX() + 0.5D, SUGUARD_DUNGEON_ENTRY.getY(), SUGUARD_DUNGEON_ENTRY.getZ() + 0.5D, player.getYRot(), player.getXRot());
+        target.playSound(null, SUGUARD_DUNGEON_ENTRY, SoundEvents.PORTAL_TRAVEL, SoundSource.PLAYERS, 0.8F, 1.0F);
     }
 
     private static void returnFromDungeon(ServerPlayer player) {
@@ -102,8 +158,42 @@ public class DungeonTeleporterBlock extends Block {
                 level.getChunk(cx, cz);
             }
         }
-        if (level.getBlockState(JELLY_DUNGEON_EXIT).is(Blocks.AIR)) {
+        if (level.getBlockState(JELLY_DUNGEON_ENTRY).is(Blocks.AIR)) {
             JellyDungeonFeature.generateInDungeonLevel(level, JELLY_DUNGEON_ORIGIN);
+        }
+    }
+
+    private static void prepareSuguardDungeon(ServerLevel level) {
+        int centerChunkX = SUGUARD_DUNGEON_ORIGIN.getX() >> 4;
+        int centerChunkZ = SUGUARD_DUNGEON_ORIGIN.getZ() >> 4;
+        for (int cx = centerChunkX - 8; cx <= centerChunkX + 4; cx++) {
+            for (int cz = centerChunkZ - 10; cz <= centerChunkZ + 10; cz++) {
+                level.getChunk(cx, cz);
+            }
+        }
+        if (level.getBlockState(SUGUARD_DUNGEON_ENTRY).is(Blocks.AIR)) {
+            SuguardDungeonFeature.generateInDungeonLevel(level, SUGUARD_DUNGEON_ORIGIN);
+        }
+    }
+
+    @Override
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
+        builder.add(DUNGEON);
+    }
+
+    public enum DungeonKind implements StringRepresentable {
+        JELLY("jelly"),
+        SUGUARD("suguard");
+
+        private final String name;
+
+        DungeonKind(String name) {
+            this.name = name;
+        }
+
+        @Override
+        public String getSerializedName() {
+            return name;
         }
     }
 }

@@ -3,21 +3,38 @@ package com.valentin4311.candycraftmod.world.feature;
 import com.mojang.serialization.Codec;
 import com.valentin4311.candycraftmod.CandyCraft;
 import com.valentin4311.candycraftmod.registry.CCBlocks;
+import com.valentin4311.candycraftmod.registry.CCEntityTypes;
+import com.valentin4311.candycraftmod.registry.CCItems;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.WorldGenLevel;
+import net.minecraft.world.level.block.LadderBlock;
+import net.minecraft.world.level.block.SlabBlock;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.LeverBlock;
+import net.minecraft.world.level.block.RepeaterBlock;
+import net.minecraft.world.level.block.state.properties.AttachFace;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
+import net.minecraft.world.level.block.entity.SpawnerBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.SlabType;
 import net.minecraft.world.level.levelgen.feature.Feature;
 import net.minecraft.world.level.levelgen.feature.FeaturePlaceContext;
 import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
+import net.minecraft.core.Direction;
 
 public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
     private static final ResourceLocation LOOT_TABLE = new ResourceLocation(CandyCraft.MODID, "chests/jelly_dungeon");
     private int cursorZ;
+    private int posX;
+    private int incrementer;
 
     public JellyDungeonFeature(Codec<NoneFeatureConfiguration> codec) {
         super(codec);
@@ -25,16 +42,8 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
 
     public static void generateInDungeonLevel(ServerLevel level, BlockPos origin) {
         RandomSource random = level.getRandom();
-        BlockState wall = CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState();
-        for (int x = -32; x <= 32; x++) {
-            for (int z = -32; z <= 32; z++) {
-                level.setBlock(origin.offset(x, -1, z), wall, 2);
-                for (int y = 0; y <= 18; y++) {
-                    level.setBlock(origin.offset(x, y, z), Blocks.AIR.defaultBlockState(), 2);
-                }
-            }
-        }
-        new JellyDungeonFeature(NoneFeatureConfiguration.CODEC).compactDungeon(level, random, origin);
+        clearArea(level, origin, -36, 36, -7, 56, -430, 24);
+        new JellyDungeonFeature(NoneFeatureConfiguration.CODEC).legacyDungeon(level, random, origin);
     }
 
     @Override
@@ -49,8 +58,518 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
             return false;
         }
 
-        compactDungeon(level, random, origin);
+        legacyDungeon(level, random, origin);
         return true;
+    }
+
+    private void legacyDungeon(WorldGenLevel level, RandomSource random, BlockPos origin) {
+        int x = origin.getX();
+        int y = origin.getY();
+        int z = origin.getZ();
+        posX = 0;
+        spawnRoom189(level, random, x - 1, y - 1, z - 1);
+        int route = random.nextInt(4);
+        if (route == 0) {
+            genCoridor189(level, random, x + 7, y, z - posX);
+            genJumpCraft189(level, random, x + 5, y - 3, z - posX);
+            genCoridor189(level, random, x + 7, y, z - posX);
+            genWaterRoom189(level, random, x + 7, y, z - posX);
+            genCoridor189(level, random, x + 7, y, z - posX);
+            genMob189(level, random, x + 7, y, z - posX);
+        } else if (route == 1) {
+            genCoridor189(level, random, x + 7, y, z - posX);
+            genMob189(level, random, x + 7, y, z - posX);
+            genCoridor189(level, random, x + 7, y, z - posX);
+            genWaterRoom189(level, random, x + 7, y, z - posX);
+            genCoridor189(level, random, x + 7, y, z - posX);
+            genJumpCraft189(level, random, x + 5, y - 3, z - posX);
+        } else if (route == 2) {
+            genCoridor189(level, random, x + 7, y, z - posX);
+            genJumpCraft189(level, random, x + 5, y - 3, z - posX);
+            genCoridor189(level, random, x + 7, y, z - posX);
+            genMob189(level, random, x + 7, y, z - posX);
+            genCoridor189(level, random, x + 7, y, z - posX);
+            genWaterRoom189(level, random, x + 7, y, z - posX);
+        } else {
+            genCoridor189(level, random, x + 7, y, z - posX);
+            genWaterRoom189(level, random, x + 7, y, z - posX);
+            genCoridor189(level, random, x + 7, y, z - posX);
+            genMob189(level, random, x + 7, y, z - posX);
+            genCoridor189(level, random, x + 7, y, z - posX);
+            genJumpCraft189(level, random, x + 5, y - 3, z - posX);
+        }
+        genCoridor189(level, random, x + 7, y, z - posX);
+        genMiniBossRoom189(level, random, x + 7, y, z - posX);
+        genCoridor189(level, random, x + 7, y - 2, z - posX);
+        if (random.nextBoolean()) {
+            genJumpCraft189(level, random, x + 5, y - 5, z - posX);
+            genCoridor189(level, random, x + 7, y - 2, z - posX);
+            genMob189(level, random, x + 7, y - 2, z - posX);
+        } else {
+            genMob189(level, random, x + 7, y - 2, z - posX);
+            genCoridor189(level, random, x + 7, y - 2, z - posX);
+            genJumpCraft189(level, random, x + 5, y - 5, z - posX);
+        }
+        genCoridor189(level, random, x + 7, y - 2, z - posX);
+        genBossRoom189(level, random, x + 7, y - 2, z - posX);
+        genCoridor189(level, random, x + 7, y - 3, z - posX);
+        genReward189(level, random, x + 7, y - 3, z - posX);
+    }
+
+    private void spawnRoom189(WorldGenLevel level, RandomSource random, int x, int y, int z) {
+        for (int i = 0; i < 10; i++) {
+            for (int k = 0; k < 2; k++) {
+                for (int j = 0; j < 3; j++) {
+                    set(level, x + i, y + 1 + k * 4, z + j, jawBreaker(random));
+                }
+            }
+        }
+        for (int i = 0; i < 10; i++) {
+            for (int k = 0; k < 3; k++) {
+                for (int j = 0; j < 2; j++) {
+                    if (!(j == 0 && i >= 8)) {
+                        set(level, x + i, y + 2 + k, z - 1 + j * 4, jawBreaker(random));
+                    }
+                }
+            }
+        }
+        for (int i = 0; i < 2; i++) {
+            for (int k = 0; k < 3; k++) {
+                for (int j = 0; j < 3; j++) {
+                    set(level, x - 1 + i * 11, y + 2 + k, z + j, jawBreaker(random));
+                }
+            }
+        }
+        for (int i = 0; i < 2; i++) {
+            for (int k = 0; k < 2; k++) {
+                for (int j = 0; j < 3; j++) {
+                    set(level, x + 8 + i, y + 1 + k * 4, z + j - 3, jawBreaker(random));
+                }
+            }
+        }
+        for (int i = 0; i < 2; i++) {
+            for (int k = 0; k < 3; k++) {
+                for (int j = 0; j < 3; j++) {
+                    set(level, x + 7 + i * 3, y + 2 + k, z + j - 3, jawBreaker(random));
+                }
+            }
+        }
+        legacyDoorMechanism(level, x, y, z - 4, true);
+        set(level, x + 1, y + 1, z + 1, CCBlocks.CARAMEL_BLOCK.get().defaultBlockState());
+        set(level, x + 1, y + 2, z + 1, CCBlocks.BLOCK_TELEPORTER.get().defaultBlockState());
+        set(level, x - 1, y + 3, z + 1, CCBlocks.TRAMPOJELLY.get().defaultBlockState());
+        set(level, x - 2, y + 3, z + 1, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
+        set(level, x + 10, y + 3, z + 1, CCBlocks.TRAMPOJELLY.get().defaultBlockState());
+        set(level, x + 11, y + 3, z + 1, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
+        set(level, x + 10, y + 3, z - 2, CCBlocks.TRAMPOJELLY.get().defaultBlockState());
+        set(level, x + 11, y + 3, z - 2, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
+        set(level, x + 7, y + 3, z - 2, CCBlocks.TRAMPOJELLY.get().defaultBlockState());
+        set(level, x + 6, y + 3, z - 2, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
+        set(level, x + 6, y + 3, z - 1, CCBlocks.TRAMPOJELLY.get().defaultBlockState());
+        set(level, x + 6, y + 3, z + 3, CCBlocks.TRAMPOJELLY.get().defaultBlockState());
+        set(level, x + 6, y + 3, z + 4, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
+        set(level, x + 2, y + 3, z - 1, CCBlocks.TRAMPOJELLY.get().defaultBlockState());
+        set(level, x + 2, y + 3, z - 2, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
+        set(level, x + 2, y + 3, z + 3, CCBlocks.TRAMPOJELLY.get().defaultBlockState());
+        set(level, x + 2, y + 3, z + 4, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
+        for (int i = 0; i < 3; i++) {
+            set(level, x + 6, y + 2 + i, z + 1, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
+        }
+        posX += 5;
+    }
+
+    private void genCoridor189(WorldGenLevel level, RandomSource random, int x, int y, int z) {
+        for (int i = 0; i < 4; i++) {
+            for (int k = 0; k < 2; k++) {
+                for (int j = 0; j < 10; j++) {
+                    set(level, x - 1 + i, y + 1 + k * 4, z - 1 - j, jawBreaker(random));
+                }
+            }
+        }
+        boolean lamp = false;
+        boolean side = false;
+        for (int i = 0; i < 2; i++) {
+            for (int k = 0; k < 3; k++) {
+                for (int j = 0; j < 10; j++) {
+                    int px = x - 1 + i * 3;
+                    int py = y + 2 + k;
+                    int pz = z - 1 - j;
+                    if (!lamp) {
+                        set(level, px, py, pz, jawBreaker(random));
+                    } else {
+                        set(level, px, py, pz, j < 9 ? CCBlocks.RED_TRAMPOJELLY.get().defaultBlockState() : jawBreaker(random));
+                        set(level, px + (side ? 1 : -1), py, pz, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
+                    }
+                    lamp = !lamp;
+                }
+            }
+            side = !side;
+        }
+        legacyDoorMechanism(level, x - 8, y, z - 6, false);
+        posX += 10;
+    }
+
+    private void genJumpCraft189(WorldGenLevel level, RandomSource random, int x, int y, int z) {
+        incrementer = -2;
+        for (int i = 0; i < 8; i++) {
+            for (int k = 0; k < 2; k++) {
+                for (int j = 0; j < 41; j++) {
+                    set(level, x - 1 + i, y + 1 + k * 32, z - 1 - j, jawBreaker(random));
+                }
+            }
+        }
+        boolean lamp = false;
+        boolean side = false;
+        for (int i = 0; i < 2; i++) {
+            for (int k = 0; k < 31; k++) {
+                for (int j = 0; j < 41; j++) {
+                    int px = x - 1 + i * 7;
+                    int py = y + 2 + k;
+                    int pz = z - 1 - j;
+                    if (!lamp) {
+                        set(level, px, py, pz, jawBreaker(random));
+                    } else {
+                        set(level, px, py, pz, CCBlocks.JELLY_SHOCK_ABSORBER.get().defaultBlockState());
+                        set(level, px + (side ? 1 : -1), py, pz, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
+                    }
+                    lamp = !lamp;
+                }
+            }
+            side = !side;
+        }
+        for (int i = 0; i < 8; i++) {
+            for (int k = 0; k < 31; k++) {
+                for (int j = 0; j < 10; j++) {
+                    set(level, x - 1 + i, y + 2 + k, z - 41 + j, jawBreaker(random));
+                }
+            }
+        }
+        for (int i = 0; i < 8; i++) {
+            for (int k = 0; k < 25; k++) {
+                for (int j = 0; j < 10; j++) {
+                    set(level, x - 1 + i, y + 8 + k, z + j, jawBreaker(random));
+                }
+            }
+        }
+        for (int i = 0; i < 8; i++) {
+            for (int k = 0; k < 4; k++) {
+                for (int j = 0; j < 10; j++) {
+                    set(level, x - 1 + i, y + 1 + k, z + j, jawBreaker(random));
+                }
+            }
+        }
+        for (int i = 0; i < 6; i++) {
+            for (int k = 0; k < 2; k++) {
+                for (int j = 0; j < 40; j++) {
+                    set(level, x + i, y + 2 + k, z + j - 40, Blocks.WATER.defaultBlockState());
+                }
+            }
+        }
+        set(level, x + 1 + random.nextInt(5), y + 5, z - 2, CCBlocks.PURPLE_TRAMPOJELLY.get().defaultBlockState());
+        for (int i = 0; i < 9; i++) {
+            genStep189(level, random, x, y, z + (i == 0 ? 0 : incrementer));
+        }
+        clearDoor(level, x + 2, y + 5, z - 41, 2, 3);
+        set(level, x + 3, y + 4, z - 1, CCBlocks.MARSHMALLOW_LADDER.get().defaultBlockState().setValue(LadderBlock.FACING, Direction.SOUTH));
+        set(level, x + 2, y + 4, z - 1, CCBlocks.MARSHMALLOW_LADDER.get().defaultBlockState().setValue(LadderBlock.FACING, Direction.SOUTH));
+        set(level, x, y + 8, z - 40, CCBlocks.JELLY_SHOCK_ABSORBER.get().defaultBlockState());
+        set(level, x + 1, y + 8, z - 40, CCBlocks.JELLY_SHOCK_ABSORBER.get().defaultBlockState());
+        set(level, x + 4, y + 8, z - 40, CCBlocks.JELLY_SHOCK_ABSORBER.get().defaultBlockState());
+        set(level, x + 5, y + 8, z - 40, CCBlocks.JELLY_SHOCK_ABSORBER.get().defaultBlockState());
+        for (int i = 0; i < 4; i++) {
+            for (int k = 0; k < 2; k++) {
+                for (int j = 0; j < 3; j++) {
+                    set(level, x + 1 + i, y + 4 + k * 4, z - 42 - j, jawBreaker(random));
+                }
+            }
+        }
+        for (int i = 0; i < 2; i++) {
+            for (int k = 0; k < 3; k++) {
+                for (int j = 0; j < 3; j++) {
+                    set(level, x + 1 + i * 3, y + 5 + k, z - 42 - j, jawBreaker(random));
+                }
+            }
+        }
+        clearDoor(level, x + 2, y + 5, z - 41, 2, 3);
+        set(level, x + 4, y + 11, z - 41, Blocks.REDSTONE_LAMP.defaultBlockState());
+        set(level, x + 4, y + 11, z - 40, Blocks.LEVER.defaultBlockState()
+            .setValue(LeverBlock.FACE, AttachFace.WALL)
+            .setValue(LeverBlock.FACING, Direction.SOUTH));
+        genRedstone189(level, x + 4, y + 10, z - 42);
+        genRedstone189(level, x + 5, y + 8, z - 42);
+        genRedstone189(level, x + 6, y + 6, z - 42);
+        genRedstone189(level, x + 6, y + 4, z - 43);
+        set(level, x + 5, y + 10, z - 42, Blocks.REDSTONE_WALL_TORCH.defaultBlockState().setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.EAST));
+        set(level, x + 6, y + 8, z - 42, Blocks.REDSTONE_WALL_TORCH.defaultBlockState().setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.EAST));
+        set(level, x + 6, y + 6, z - 43, Blocks.REDSTONE_WALL_TORCH.defaultBlockState().setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.NORTH));
+        for (int i = 0; i < 6; i++) {
+            set(level, x + i, y + 3, z - 41, CCBlocks.JELLY_SHOCK_ABSORBER.get().defaultBlockState());
+            set(level, x + i, y + 3, z - 42, Blocks.STICKY_PISTON.defaultBlockState().setValue(BlockStateProperties.FACING, Direction.SOUTH));
+            genRedstone189(level, x + i, y + 3, z - 43);
+        }
+        set(level, x + 2, y + 5, z - 43, slab(CCBlocks.LICORICE_BRICK_SLAB.get(), false));
+        set(level, x + 3, y + 5, z - 43, slab(CCBlocks.LICORICE_BRICK_SLAB.get(), false));
+        clearDoor(level, x + 2, y + 5, z - 41, 2, 3);
+        posX += 44;
+    }
+
+    private void genStep189(WorldGenLevel level, RandomSource random, int x, int y, int z) {
+        if (random.nextBoolean()) {
+            incrementer -= 4;
+            set(level, x + 1 + random.nextInt(5), y + 5 + random.nextInt(4), z - 6, CCBlocks.PURPLE_TRAMPOJELLY.get().defaultBlockState());
+        } else {
+            incrementer -= 3;
+            set(level, x + 2 + random.nextInt(3), y + 20, z - 4, CCBlocks.HONEY_LAMP.get().defaultBlockState());
+        }
+    }
+
+    private void genWaterRoom189(WorldGenLevel level, RandomSource random, int x, int y, int z) {
+        for (int i = 0; i < 24; i++) {
+            for (int j = 1; j < 24; j++) {
+                for (int k = 0; k < 24; k++) {
+                    if (i == 0 || i == 23 || j == 1 || j == 23 || k == 0 || k == 23) {
+                        set(level, x + i - 12, y + j, z - k - 1, jawBreaker(random));
+                    }
+                }
+            }
+        }
+        boolean water = true;
+        for (int i = 1; i < 23; i++) {
+            for (int j = 5; j < 23; j++) {
+                for (int k = 1; k < 23; k++) {
+                    if (water && j < 21) {
+                        set(level, x + i - 12, y + j, z - k - 1, Blocks.WATER.defaultBlockState());
+                    }
+                    if (random.nextInt(100) == 0) {
+                        spawnEntity(level, CCEntityTypes.TORNADO_JELLY.get(), x + i - 12 + 0.5D, y + j + 0.5D, z - k - 1 + 0.5D, random);
+                    }
+                }
+                water = !water;
+            }
+        }
+        for (int i = 1; i < 23; i++) {
+            for (int k = 1; k < 23; k++) {
+                BlockState floor = random.nextBoolean() ? slab(CCBlocks.LICORICE_BRICK_SLAB.get(), false) : random.nextBoolean() ? CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState() : random.nextBoolean() ? CCBlocks.LICORICE_BLOCK.get().defaultBlockState() : CCBlocks.JAW_BREAKER_LIGHT.get().defaultBlockState();
+                set(level, x + i - 12, y + 2, z - k - 1, floor);
+            }
+        }
+        clearDoor(level, x, y + 2, z - 1, 2, 3);
+        clearDoor(level, x, y + 20, z - 24, 2, 3);
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j < 19; j++) {
+                set(level, x + i - 1, y + j + 5, z - 27, jawBreaker(random));
+            }
+        }
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 23; j++) {
+                set(level, x - 1, y + j + 1, z - 25 - i, jawBreaker(random));
+                set(level, x + 2, y + j + 1, z - 25 - i, jawBreaker(random));
+            }
+        }
+        for (int dx = 0; dx <= 1; dx++) {
+            for (int dz = -26; dz <= -25; dz++) {
+                set(level, x + dx, y + 23, z + dz, jawBreaker(random));
+                set(level, x + dx, y + 1, z + dz, CCBlocks.JELLY_SHOCK_ABSORBER.get().defaultBlockState());
+                set(level, x + dx, y, z + dz, jawBreaker(random));
+            }
+        }
+        set(level, x + 1, y + 1, z - 27, jawBreaker(random));
+        set(level, x, y + 1, z - 27, jawBreaker(random));
+        posX += 27;
+    }
+
+    private void genMob189(WorldGenLevel level, RandomSource random, int x, int y, int z) {
+        for (int i = 0; i < 22; i++) {
+            for (int j = 0; j < 7; j++) {
+                for (int k = 0; k < 55; k++) {
+                    if (i == 0 || i == 21 || j == 0 || j == 6 || k == 0 || k == 54) {
+                        BlockState wall = random.nextInt(3) != 0 ? CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState() : random.nextInt(10) == 0 ? CCBlocks.LICORICE_BLOCK.get().defaultBlockState() : CCBlocks.LICORICE_BRICK.get().defaultBlockState();
+                        set(level, x + i - 10, y + j + 1, z - k - 1, wall);
+                    }
+                }
+            }
+        }
+        for (int k = 6; k < 56; k++) {
+            genRedstone189(level, x + 8, y - 1, z - k);
+            genRedstone189(level, x - 7, y - 1, z - k);
+        }
+        for (int k = 6; k < 20; k++) {
+            if (k != 13 && k != 12) {
+                genRedstone189(level, x - 12 + k, y - 1, z - 55);
+            }
+            genRedstone189(level, x - 12 + k, y - 1, z - 53);
+            genRedstone189(level, x - 12 + k, y - 1, z - 51);
+        }
+        set(level, x + 2, y, z - 55, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
+        set(level, x - 1, y, z - 55, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
+        set(level, x + 1, y, z - 55, Blocks.REDSTONE_TORCH.defaultBlockState());
+        set(level, x, y, z - 55, Blocks.REDSTONE_TORCH.defaultBlockState());
+        for (int i = 0; i < 8; i++) {
+            genColumn189(level, random, x + 8, y + 1, z - 7 - i * 6, true, i + 1);
+            genColumn189(level, random, x - 7, y + 1, z - 7 - i * 6, false, i + 1);
+        }
+        clearDoor(level, x, y + 2, z - 1, 2, 3);
+        set(level, x, y + 2, z - 55, Blocks.IRON_DOOR.defaultBlockState());
+        set(level, x, y + 3, z - 55, Blocks.IRON_DOOR.defaultBlockState());
+        set(level, x + 1, y + 2, z - 55, Blocks.IRON_DOOR.defaultBlockState());
+        set(level, x + 1, y + 3, z - 55, Blocks.IRON_DOOR.defaultBlockState());
+        set(level, x + 1, y, z - 53, Blocks.REPEATER.defaultBlockState());
+        set(level, x - 2, y, z - 51, Blocks.REPEATER.defaultBlockState());
+        posX += 55;
+    }
+
+    private void genColumn189(WorldGenLevel level, RandomSource random, int x, int y, int z, boolean side, int id) {
+        set(level, x, y, z, Blocks.SPAWNER.defaultBlockState());
+        if (level.getBlockEntity(new BlockPos(x, y, z)) instanceof SpawnerBlockEntity spawner) {
+            EntityType<?> type = switch (random.nextInt(3)) {
+                case 0 -> CCEntityTypes.YELLOW_JELLY.get();
+                case 1 -> CCEntityTypes.RED_JELLY.get();
+                default -> CCEntityTypes.TORNADO_JELLY.get();
+            };
+            spawner.setEntityId(type, level.getRandom());
+        }
+        set(level, x, y + 1, z, CCBlocks.LICORICE_BLOCK.get().defaultBlockState());
+        set(level, x, y + 5, z, CCBlocks.LICORICE_BLOCK.get().defaultBlockState());
+        set(level, x, y + 2, z, Blocks.REDSTONE_LAMP.defaultBlockState());
+        set(level, x, y + 3, z, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
+        set(level, x, y + 4, z, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
+        set(level, x + (side ? 2 : -2), y + 5, z, CCBlocks.LICORICE_BRICK.get().defaultBlockState());
+        set(level, x + (side ? 1 : -1), y + 5, z, CCBlocks.LICORICE_BRICK.get().defaultBlockState());
+        set(level, x + (side ? 2 : -2), y + 1, z, CCBlocks.LICORICE_BRICK.get().defaultBlockState());
+        set(level, x + (side ? 1 : -1), y + 1, z, CCBlocks.LICORICE_BRICK.get().defaultBlockState());
+        set(level, x + (side ? -1 : 1), y + 1, z + 1, CCBlocks.LICORICE_BRICK_SLAB.get().defaultBlockState());
+        set(level, x + (side ? -1 : 1), y + 1, z - 1, CCBlocks.LICORICE_BRICK_SLAB.get().defaultBlockState());
+        set(level, x + (side ? -1 : 1), y + 5, z + 1, slab(CCBlocks.LICORICE_BRICK_SLAB.get(), true));
+        set(level, x + (side ? -1 : 1), y + 5, z - 1, slab(CCBlocks.LICORICE_BRICK_SLAB.get(), true));
+        set(level, x + (side ? 2 : -2), y + 4, z, slab(CCBlocks.LICORICE_BRICK_SLAB.get(), true));
+        set(level, x + (side ? 1 : -1), y + 4, z, slab(CCBlocks.LICORICE_BRICK_SLAB.get(), true));
+        set(level, x + (side ? 2 : -2), y + 2, z, CCBlocks.LICORICE_BRICK_SLAB.get().defaultBlockState());
+        set(level, x + (side ? 1 : -1), y + 2, z, CCBlocks.LICORICE_BRICK_SLAB.get().defaultBlockState());
+        set(level, x + (side ? 1 : -1), y + 1, z + 1, CCBlocks.LICORICE_BRICK_STAIRS.get().defaultBlockState());
+        set(level, x + (side ? 2 : -2), y + 1, z + 1, CCBlocks.LICORICE_BRICK_STAIRS.get().defaultBlockState());
+        set(level, x, y + 1, z + 1, CCBlocks.LICORICE_BRICK_STAIRS.get().defaultBlockState());
+        set(level, x + (side ? 1 : -1), y + 5, z + 1, CCBlocks.LICORICE_BRICK_STAIRS.get().defaultBlockState());
+        set(level, x + (side ? 2 : -2), y + 5, z + 1, CCBlocks.LICORICE_BRICK_STAIRS.get().defaultBlockState());
+        set(level, x, y + 5, z + 1, CCBlocks.LICORICE_BRICK_STAIRS.get().defaultBlockState());
+        set(level, x + (side ? 1 : -1), y + 1, z - 1, CCBlocks.LICORICE_BRICK_STAIRS.get().defaultBlockState());
+        set(level, x + (side ? 2 : -2), y + 1, z - 1, CCBlocks.LICORICE_BRICK_STAIRS.get().defaultBlockState());
+        set(level, x, y + 1, z - 1, CCBlocks.LICORICE_BRICK_STAIRS.get().defaultBlockState());
+        set(level, x + (side ? 1 : -1), y + 5, z - 1, CCBlocks.LICORICE_BRICK_STAIRS.get().defaultBlockState());
+        set(level, x + (side ? 2 : -2), y + 5, z - 1, CCBlocks.LICORICE_BRICK_STAIRS.get().defaultBlockState());
+        set(level, x, y + 5, z - 1, CCBlocks.LICORICE_BRICK_STAIRS.get().defaultBlockState());
+        set(level, x, y + 2, z - 1, CCBlocks.LICORICE_BRICK_SLAB.get().defaultBlockState());
+        set(level, x, y + 2, z + 1, CCBlocks.LICORICE_BRICK_SLAB.get().defaultBlockState());
+        set(level, x + (side ? -1 : 1), y + 1, z, Blocks.LEVER.defaultBlockState());
+        set(level, x + (side ? 1 : -1), y + 1, z, Blocks.REDSTONE_TORCH.defaultBlockState());
+        genRedstone189(level, x + (side ? 1 : -1), y - 1, z);
+        genRedstone189(level, x + (side ? 1 : -1), y - 2, z - 1);
+        clearDoor(level, x + (side ? 1 : -1), y, z - 1, 1, 1);
+        if (id != 8) {
+            set(level, x, y - 1, z - 2, Blocks.REPEATER.defaultBlockState());
+        }
+    }
+
+    private void genMiniBossRoom189(WorldGenLevel level, RandomSource random, int x, int y, int z) {
+        y -= 2;
+        for (int i = 0; i < 24; i++) {
+            for (int j = 0; j < 24; j++) {
+                for (int k = 0; k < 24; k++) {
+                    if (i == 0 || i == 23 || j == 0 || j == 1 || j == 23 || k == 0 || k == 23) {
+                        set(level, x + i - 11, y + j, z - k - 1, jawBreaker(random));
+                    }
+                    if (k != 0 && k != 23 && i != 23 && i != 0 && j == 1 && (i == 1 || i == 3 || i == 5 || i == 7 || i == 22 || i == 20 || i == 18 || i == 16 || k == 1 || k == 3 || k == 5 || k == 7 || k == 22 || k == 20 || k == 18 || k == 16)) {
+                        set(level, x + i - 11, y + j, z - k - 1, CCBlocks.GRENADINE.get().defaultBlockState());
+                    }
+                    if (j == 6 && (i == 1 || i == 22 || k == 1 || k == 22)) {
+                        set(level, x + i - 11, y + j, z - k - 1, jawBreaker(random));
+                    }
+                    if (j == 6 && ((i == 1 && k == 1) || (i == 22 && k == 1) || (i == 1 && k == 22) || (i == 22 && k == 22))) {
+                        set(level, x + i - 11, y + j, z - k - 1, CCBlocks.GRENADINE.get().defaultBlockState());
+                    }
+                }
+            }
+        }
+        set(level, x - 10, y + 23, z - 2, Blocks.GLASS.defaultBlockState());
+        set(level, x + 11, y + 23, z - 2, Blocks.GLASS.defaultBlockState());
+        set(level, x - 10, y + 23, z - 23, Blocks.GLASS.defaultBlockState());
+        set(level, x + 11, y + 23, z - 23, Blocks.GLASS.defaultBlockState());
+        set(level, x, y + 2, z - 24, CCBlocks.JELLY_SENTRY_KEY_HOLE.get().defaultBlockState());
+        set(level, x, y + 3, z - 24, CCBlocks.JELLY_SENTRY_KEY_HOLE.get().defaultBlockState());
+        set(level, x + 1, y + 4, z - 1, Blocks.AIR.defaultBlockState());
+        set(level, x, y + 4, z - 1, Blocks.AIR.defaultBlockState());
+        set(level, x, y + 5, z - 1, Blocks.AIR.defaultBlockState());
+        spawnEntity(level, CCEntityTypes.PEZ_JELLY.get(), x + 1.0D, y + 2.0D, z - 12.0D, random);
+        posX += 24;
+    }
+
+    private void genBossRoom189(WorldGenLevel level, RandomSource random, int x, int y, int z) {
+        for (int i = 0; i < 50; i++) {
+            for (int j = 0; j < 50; j++) {
+                for (int k = 0; k < 49; k++) {
+                    if (i == 0 || i == 49 || j == 0 || j == 1 || j == 49 || k == 0 || k == 48) {
+                        set(level, x + i - 24, y + j - 1, z - k - 1, jawBreaker(random));
+                    }
+                }
+            }
+        }
+        for (int i = 0; i < 50; i += 2) {
+            for (int k = 0; k < 49; k++) {
+                if (i != 0 && i != 49 && k != 0 && k != 48) {
+                    set(level, x + i - 24, y, z - k - 1, CCBlocks.CANDY_CANE_SLAB.get().defaultBlockState());
+                }
+            }
+        }
+        for (int i = 0; i < 50; i++) {
+            for (int k = 0; k < 49; k += 2) {
+                if (i != 0 && i != 49 && k != 0 && k != 48) {
+                    set(level, x + i - 24, y, z - k - 1, CCBlocks.CANDY_CANE_SLAB.get().defaultBlockState());
+                }
+            }
+        }
+        set(level, x - 23, y + 48, z - 2, Blocks.GLASS.defaultBlockState());
+        set(level, x + 24, y + 48, z - 2, Blocks.GLASS.defaultBlockState());
+        set(level, x - 23, y + 48, z - 48, Blocks.GLASS.defaultBlockState());
+        set(level, x + 24, y + 48, z - 48, Blocks.GLASS.defaultBlockState());
+        set(level, x + 1, y + 3, z - 1, Blocks.AIR.defaultBlockState());
+        set(level, x, y + 3, z - 1, Blocks.AIR.defaultBlockState());
+        set(level, x + 1, y + 4, z - 1, Blocks.AIR.defaultBlockState());
+        set(level, x, y + 4, z - 1, Blocks.AIR.defaultBlockState());
+        set(level, x, y + 2, z - 49, CCBlocks.JELLY_BOSS_KEY_HOLE.get().defaultBlockState());
+        set(level, x, y + 1, z - 49, CCBlocks.JELLY_BOSS_KEY_HOLE.get().defaultBlockState());
+        spawnEntity(level, CCEntityTypes.KING_SLIME.get(), x + 1.0D, y + 2.0D, z - 25.0D, random);
+        posX += 49;
+    }
+
+    private void genReward189(WorldGenLevel level, RandomSource random, int x, int y, int z) {
+        for (int i = 0; i < 24; i++) {
+            for (int j = 0; j < 24; j++) {
+                for (int k = 0; k < 24; k++) {
+                    if (i == 0 || i == 23 || j == 0 || j == 1 || j == 23 || k == 0 || k == 23) {
+                        set(level, x + i - 11, y + j, z - k - 1, jawBreaker(random));
+                    }
+                    if (k != 0 && k != 23 && i != 23 && i != 0 && j == 1 && (i == 1 || i == 3 || i == 5 || i == 7 || i == 22 || i == 20 || i == 18 || i == 16 || k == 1 || k == 3 || k == 5 || k == 7 || k == 22 || k == 20 || k == 18 || k == 16)) {
+                        set(level, x + i - 11, y + j, z - k - 1, CCBlocks.GRENADINE.get().defaultBlockState());
+                    }
+                    if ((j == 12 || j == 6) && (i == 1 || i == 22 || k == 1 || k == 22)) {
+                        set(level, x + i - 11, y + j, z - k - 1, jawBreaker(random));
+                    }
+                    if ((j == 12 || j == 6) && ((i == 1 && k == 1) || (i == 22 && k == 1) || (i == 1 && k == 22) || (i == 22 && k == 22))) {
+                        set(level, x + i - 11, y + j, z - k - 1, CCBlocks.GRENADINE.get().defaultBlockState());
+                    }
+                }
+            }
+        }
+        set(level, x + 1, y + 2, z - 1, Blocks.AIR.defaultBlockState());
+        set(level, x, y + 2, z - 1, Blocks.AIR.defaultBlockState());
+        set(level, x + 1, y + 3, z - 1, Blocks.AIR.defaultBlockState());
+        set(level, x, y + 3, z - 1, Blocks.AIR.defaultBlockState());
+        BlockPos chestPos = new BlockPos(x, y + 2, z - 15);
+        set(level, chestPos, Blocks.CHEST.defaultBlockState());
+        if (level.getBlockEntity(chestPos) instanceof ChestBlockEntity chest) {
+            chest.setLootTable(LOOT_TABLE, random.nextLong());
+            chest.setItem(0, new ItemStack(CCItems.JELLY_CROWN.get()));
+        }
+        set(level, x + 1, y + 2, z - 15, CCBlocks.BLOCK_TELEPORTER.get().defaultBlockState());
     }
 
     private static boolean canFit(WorldGenLevel level, BlockPos origin) {
@@ -98,7 +617,7 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
         placeJellyPads(level, x, y + 1, z - 2, 4, CCBlocks.TRAMPOJELLY.get().defaultBlockState());
         set(level, new BlockPos(x - 3, y + 1, z - 3), CCBlocks.CARAMEL_BLOCK.get().defaultBlockState());
         set(level, new BlockPos(x - 3, y + 2, z - 3), CCBlocks.BLOCK_TELEPORTER.get().defaultBlockState());
-        lootChest(level, random, new BlockPos(x + 3, y + 1, z - 3));
+        keyChest(level, new BlockPos(x + 3, y + 1, z - 3), CCItems.JELLY_SENTRY_KEY.get());
 
         for (int i = 0; i < 5; i++) {
             set(level, new BlockPos(x - 2 + i, y + 2 + i, z - 10 - i), randomJelly(random));
@@ -110,27 +629,119 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
                 }
             }
         }
-        setSpawner(level, new BlockPos(x - 13, y + 1, z));
+        setSpawner(level, new BlockPos(x - 13, y + 1, z), CCEntityTypes.YELLOW_JELLY.get());
         set(level, new BlockPos(x - 13, y + 1, z + 3), CCBlocks.JELLY_SENTRY_KEY_HOLE.get().defaultBlockState());
-        setSpawner(level, new BlockPos(x + 13, y + 1, z));
+        setSpawner(level, new BlockPos(x + 13, y + 1, z), CCEntityTypes.RED_JELLY.get());
         set(level, new BlockPos(x + 13, y + 1, z - 3), CCBlocks.JELLY_BOSS_KEY_HOLE.get().defaultBlockState());
-        setSpawner(level, new BlockPos(x - 13, y + 5, z - 13));
-        setSpawner(level, new BlockPos(x + 13, y + 5, z - 13));
+        setSpawner(level, new BlockPos(x - 13, y + 5, z - 13), CCEntityTypes.TORNADO_JELLY.get());
+        setSpawner(level, new BlockPos(x + 13, y + 5, z - 13), CCEntityTypes.YELLOW_JELLY.get());
         placeJellyPads(level, x - 13, y + 5, z - 13, 4, CCBlocks.PURPLE_TRAMPOJELLY.get().defaultBlockState());
         placeJellyPads(level, x + 13, y + 5, z - 13, 4, CCBlocks.RED_TRAMPOJELLY.get().defaultBlockState());
         set(level, new BlockPos(x - 13, y - 2, z + 13), CCBlocks.JELLY_SHOCK_ABSORBER.get().defaultBlockState());
         set(level, new BlockPos(x + 13, y - 2, z + 13), CCBlocks.JELLY_BOSS_KEY_HOLE.get().defaultBlockState());
 
         BlockPos chestPos = new BlockPos(x + 13, y + 1, z + 3);
-        lootChest(level, random, chestPos);
+        keyChest(level, chestPos, CCItems.JELLY_BOSS_KEY.get());
+        setSpawner(level, new BlockPos(x + 13, y - 2, z + 13), CCEntityTypes.KING_SLIME.get());
         BlockPos crownChestPos = new BlockPos(x + 13, y - 2, z + 15);
         lootChest(level, random, crownChestPos);
+    }
+
+    private void legacyDoorMechanism(WorldGenLevel level, int x, int y, int z, boolean useStairsCenter) {
+        set(level, x + 7, y + 2, z, CCBlocks.LICORICE_BRICK.get().defaultBlockState());
+        set(level, x + 10, y + 2, z, CCBlocks.LICORICE_BRICK.get().defaultBlockState());
+        set(level, x + 8, y + 5, z, CCBlocks.LICORICE_BRICK.get().defaultBlockState());
+        set(level, x + 9, y + 5, z, CCBlocks.LICORICE_BRICK.get().defaultBlockState());
+        set(level, x + 8, y + 3, z, CCBlocks.LICORICE_BRICK_STAIRS.get().defaultBlockState());
+        set(level, x + 9, y + 3, z, CCBlocks.LICORICE_BRICK_STAIRS.get().defaultBlockState());
+        set(level, x + 8, y + 4, z, CCBlocks.LICORICE_BRICK_STAIRS.get().defaultBlockState());
+        set(level, x + 9, y + 4, z, CCBlocks.LICORICE_BRICK_STAIRS.get().defaultBlockState());
+        set(level, x + 8, y + 2, z, useStairsCenter ? CCBlocks.LICORICE_BRICK_STAIRS.get().defaultBlockState() : CCBlocks.LICORICE_BRICK_SLAB.get().defaultBlockState());
+        set(level, x + 9, y + 2, z, useStairsCenter ? CCBlocks.LICORICE_BRICK_STAIRS.get().defaultBlockState() : CCBlocks.LICORICE_BRICK_SLAB.get().defaultBlockState());
+        set(level, x + 6, y + 3, z, Blocks.STICKY_PISTON.defaultBlockState().setValue(BlockStateProperties.FACING, Direction.EAST));
+        set(level, x + 6, y + 4, z, Blocks.STICKY_PISTON.defaultBlockState().setValue(BlockStateProperties.FACING, Direction.EAST));
+        set(level, x + 7, y + 3, z, Blocks.PISTON_HEAD.defaultBlockState().setValue(BlockStateProperties.FACING, Direction.EAST));
+        set(level, x + 7, y + 4, z, Blocks.PISTON_HEAD.defaultBlockState().setValue(BlockStateProperties.FACING, Direction.EAST));
+        set(level, x + 11, y + 3, z, Blocks.STICKY_PISTON.defaultBlockState().setValue(BlockStateProperties.FACING, Direction.WEST));
+        set(level, x + 11, y + 4, z, Blocks.STICKY_PISTON.defaultBlockState().setValue(BlockStateProperties.FACING, Direction.WEST));
+        set(level, x + 10, y + 3, z, Blocks.PISTON_HEAD.defaultBlockState().setValue(BlockStateProperties.FACING, Direction.WEST));
+        set(level, x + 10, y + 4, z, Blocks.PISTON_HEAD.defaultBlockState().setValue(BlockStateProperties.FACING, Direction.WEST));
+        genRedstone189(level, x + 9, y, z);
+        genRedstone189(level, x + 8, y, z);
+        genRedstone189(level, x + 11, y, z);
+        genRedstone189(level, x + 6, y, z);
+        genRedstone189(level, x + 11, y, z + 1);
+        genRedstone189(level, x + 6, y, z + 1);
+        for (int step = 0; step <= 3; step++) {
+            genRedstone189(level, x + 12 + step, y + 1, z + 1);
+            genRedstone189(level, x + 5 - step, y + 1, z + 1);
+        }
+        set(level, x + 10, y, z, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
+        set(level, x + 7, y, z, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
+        set(level, x + 10, y + 1, z, Blocks.REPEATER.defaultBlockState().setValue(RepeaterBlock.FACING, Direction.EAST));
+        set(level, x + 7, y + 1, z, Blocks.REPEATER.defaultBlockState().setValue(RepeaterBlock.FACING, Direction.WEST));
+        genRedstone189(level, x + 15, y + 2, z);
+        genRedstone189(level, x + 2, y + 2, z);
+        genRedstone189(level, x + 14, y + 2, z);
+        genRedstone189(level, x + 3, y + 2, z);
+        set(level, x + 13, y + 3, z, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
+        set(level, x + 4, y + 3, z, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
+        set(level, x + 12, y + 4, z, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
+        set(level, x + 5, y + 4, z, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
+        set(level, x + 5, y + 3, z, Blocks.REDSTONE_WALL_TORCH.defaultBlockState().setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.WEST));
+        set(level, x + 12, y + 3, z, Blocks.REDSTONE_WALL_TORCH.defaultBlockState().setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.EAST));
+        set(level, x + 14, y + 3, z + 1, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
+        set(level, x + 3, y + 3, z + 1, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
+        set(level, x + 8, y + 2, z + 1, Blocks.STONE_PRESSURE_PLATE.defaultBlockState());
+        set(level, x + 9, y + 2, z + 1, Blocks.STONE_PRESSURE_PLATE.defaultBlockState());
+        clearDoor(level, x + 8, y + 3, z, 2, 2);
+    }
+
+    private void genRedstone189(WorldGenLevel level, int x, int y, int z) {
+        set(level, x, y, z, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
+        set(level, x, y + 1, z, Blocks.REDSTONE_WIRE.defaultBlockState());
+    }
+
+    private static BlockState slab(net.minecraft.world.level.block.Block block, boolean top) {
+        return block.defaultBlockState().setValue(SlabBlock.TYPE, top ? SlabType.TOP : SlabType.BOTTOM);
+    }
+
+    private static void clearDoor(WorldGenLevel level, int x, int y, int z, int width, int height) {
+        for (int dx = 0; dx < width; dx++) {
+            for (int dy = 0; dy < height; dy++) {
+                set(level, new BlockPos(x + dx, y + dy, z), Blocks.AIR.defaultBlockState());
+            }
+        }
+    }
+
+    private static void spawnEntity(WorldGenLevel level, EntityType<?> type, double x, double y, double z, RandomSource random) {
+        if (!(level instanceof ServerLevel serverLevel)) {
+            return;
+        }
+        Entity entity = type.create(serverLevel);
+        if (entity != null) {
+            entity.moveTo(x, y, z, random.nextFloat() * 360.0F, 0.0F);
+            serverLevel.addFreshEntity(entity);
+        }
+    }
+
+    private static void set(WorldGenLevel level, int x, int y, int z, BlockState state) {
+        set(level, new BlockPos(x, y, z), state);
     }
 
     private void lootChest(WorldGenLevel level, RandomSource random, BlockPos pos) {
         set(level, pos, Blocks.CHEST.defaultBlockState());
         if (level.getBlockEntity(pos) instanceof ChestBlockEntity chest) {
             chest.setLootTable(LOOT_TABLE, random.nextLong());
+        }
+    }
+
+    private void keyChest(WorldGenLevel level, BlockPos pos, Item key) {
+        set(level, pos, Blocks.CHEST.defaultBlockState());
+        if (level.getBlockEntity(pos) instanceof ChestBlockEntity chest) {
+            chest.setItem(11, new ItemStack(CCItems.GUMMY.get(), 8));
+            chest.setItem(13, new ItemStack(key));
+            chest.setItem(15, new ItemStack(CCItems.PEZ.get(), 4));
         }
     }
 
@@ -250,8 +861,8 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
     private void mobRoom(WorldGenLevel level, RandomSource random, int x, int y) {
         int z = cursorZ;
         room(level, random, x, y, z, 8, 8, 18);
-        setSpawner(level, new BlockPos(x - 3, y + 1, z - 7));
-        setSpawner(level, new BlockPos(x + 3, y + 1, z - 10));
+        setSpawner(level, new BlockPos(x - 3, y + 1, z - 7), CCEntityTypes.YELLOW_JELLY.get());
+        setSpawner(level, new BlockPos(x + 3, y + 1, z - 10), CCEntityTypes.RED_JELLY.get());
         set(level, new BlockPos(x, y + 1, z - 15), CCBlocks.JELLY_SENTRY_KEY_HOLE.get().defaultBlockState());
         placeJellyPads(level, x, y + 1, z - 8, 6, CCBlocks.RED_TRAMPOJELLY.get().defaultBlockState());
         cursorZ -= 18;
@@ -260,7 +871,7 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
     private void miniBossRoom(WorldGenLevel level, RandomSource random, int x, int y) {
         int z = cursorZ;
         room(level, random, x, y, z, 9, 9, 22);
-        setSpawner(level, new BlockPos(x, y + 1, z - 11));
+        setSpawner(level, new BlockPos(x, y + 1, z - 11), CCEntityTypes.PEZ_JELLY.get());
         set(level, new BlockPos(x - 6, y + 1, z - 11), CCBlocks.JELLY_SENTRY_KEY_HOLE.get().defaultBlockState());
         set(level, new BlockPos(x + 6, y + 1, z - 11), CCBlocks.JELLY_SENTRY_KEY_HOLE.get().defaultBlockState());
         cursorZ -= 22;
@@ -269,7 +880,7 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
     private void bossRoom(WorldGenLevel level, RandomSource random, int x, int y) {
         int z = cursorZ;
         room(level, random, x, y, z, 11, 12, 28);
-        setSpawner(level, new BlockPos(x, y + 1, z - 14));
+        setSpawner(level, new BlockPos(x, y + 1, z - 14), CCEntityTypes.KING_SLIME.get());
         set(level, new BlockPos(x, y + 1, z - 25), CCBlocks.JELLY_BOSS_KEY_HOLE.get().defaultBlockState());
         for (int dx = -7; dx <= 7; dx += 7) {
             for (int dz = -20; dz <= -8; dz += 6) {
@@ -341,12 +952,25 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
         };
     }
 
-    private static void setSpawner(WorldGenLevel level, BlockPos pos) {
+    private static void setSpawner(WorldGenLevel level, BlockPos pos, EntityType<?> entityType) {
         set(level, pos, Blocks.SPAWNER.defaultBlockState());
+        if (level.getBlockEntity(pos) instanceof SpawnerBlockEntity spawner) {
+            spawner.setEntityId(entityType, level.getRandom());
+        }
     }
 
     private static void set(WorldGenLevel level, BlockPos pos, BlockState state) {
         level.setBlock(pos, state, 2);
+    }
+
+    private static void clearArea(ServerLevel level, BlockPos origin, int minX, int maxX, int minY, int maxY, int minZ, int maxZ) {
+        for (int x = minX; x <= maxX; x++) {
+            for (int z = minZ; z <= maxZ; z++) {
+                for (int y = minY; y <= maxY; y++) {
+                    level.setBlock(origin.offset(x, y, z), Blocks.AIR.defaultBlockState(), 2);
+                }
+            }
+        }
     }
 
     private enum Module {

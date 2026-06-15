@@ -16,13 +16,21 @@ public final class CCDimensions {
         Registries.DIMENSION_TYPE,
         new ResourceLocation(CandyCraft.MODID, "candy_world")
     );
-    public static final ResourceKey<Level> CANDY_DUNGEON = ResourceKey.create(
+    public static final ResourceKey<Level> JELLY_DUNGEON = ResourceKey.create(
         Registries.DIMENSION,
-        new ResourceLocation(CandyCraft.MODID, "candy_dungeon")
+        new ResourceLocation(CandyCraft.MODID, "jelly_dungeon")
     );
-    public static final ResourceKey<DimensionType> CANDY_DUNGEON_TYPE = ResourceKey.create(
+    public static final ResourceKey<DimensionType> JELLY_DUNGEON_TYPE = ResourceKey.create(
         Registries.DIMENSION_TYPE,
-        new ResourceLocation(CandyCraft.MODID, "candy_dungeon")
+        new ResourceLocation(CandyCraft.MODID, "jelly_dungeon")
+    );
+    public static final ResourceKey<Level> SUGUARD_DUNGEON = ResourceKey.create(
+        Registries.DIMENSION,
+        new ResourceLocation(CandyCraft.MODID, "suguard_dungeon")
+    );
+    public static final ResourceKey<DimensionType> SUGUARD_DUNGEON_TYPE = ResourceKey.create(
+        Registries.DIMENSION_TYPE,
+        new ResourceLocation(CandyCraft.MODID, "suguard_dungeon")
     );
 
     private CCDimensions() {

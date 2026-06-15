@@ -14,6 +14,7 @@ import com.valentin4311.candycraftmod.client.model.NessieModel;
 import com.valentin4311.candycraftmod.client.model.NougatGolemModel;
 import com.valentin4311.candycraftmod.client.model.PingouinModel;
 import com.valentin4311.candycraftmod.client.model.SuguardModel;
+import com.valentin4311.candycraftmod.client.model.WaffleSheepModel;
 import com.valentin4311.candycraftmod.entity.CandyFishEntity;
 import com.valentin4311.candycraftmod.registry.CCBlocks;
 import com.valentin4311.candycraftmod.registry.CCEntityTypes;
@@ -26,18 +27,29 @@ import com.valentin4311.candycraftmod.item.CaramelCrossbowItem;
 import com.valentin4311.candycraftmod.item.DynamiteItem;
 import com.valentin4311.candycraftmod.item.RawGummyItem;
 import com.valentin4311.candycraftmod.item.SugarPillItem;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.Camera;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.renderer.DimensionSpecialEffects;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.client.color.block.BlockColors;
 import net.minecraft.client.color.item.ItemColors;
 import net.minecraft.client.renderer.BiomeColors;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.item.ItemProperties;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.item.CrossbowItem;
@@ -50,6 +62,7 @@ import net.minecraftforge.client.event.ViewportEvent;
 import net.minecraftforge.client.event.ModelEvent;
 import net.minecraftforge.client.event.RegisterParticleProvidersEvent;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.RegisterDimensionSpecialEffectsEvent;
 import net.minecraftforge.client.event.RegisterColorHandlersEvent;
 import net.minecraftforge.client.event.EntityRenderersEvent;
 import net.minecraftforge.event.TickEvent;
@@ -59,10 +72,15 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraft.world.entity.SpawnPlacements;
 import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.phys.Vec3;
+import org.joml.Matrix4f;
 
 @Mod.EventBusSubscriber(modid = CandyCraft.MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public final class CCClient {
     private static final ResourceLocation PINK_FIRE_TEXTURE = new ResourceLocation("minecraft", "textures/block/fire_1.png");
+    private static final ResourceLocation CANDY_WORLD_EFFECTS = new ResourceLocation(CandyCraft.MODID, "candy_world_effects");
+    private static final int CANDY_WORLD_FOG_FALLBACK = 0xEEAABB;
+    private static final int CANDY_WORLD_SKY_FALLBACK = 0xFFD6E6;
 
     private CCClient() {
     }
@@ -94,6 +112,11 @@ public final class CCClient {
     @SubscribeEvent
     public static void registerAdditionalModels(ModelEvent.RegisterAdditional event) {
         event.register(AlchemyTableRenderer.MIX_MODEL);
+    }
+
+    @SubscribeEvent
+    public static void registerDimensionSpecialEffects(RegisterDimensionSpecialEffectsEvent event) {
+        event.register(CANDY_WORLD_EFFECTS, new CandyWorldEffects());
     }
 
     @SubscribeEvent
@@ -225,7 +248,7 @@ public final class CCClient {
 
     private static int legacyCandyFogColor(Level level, net.minecraft.core.BlockPos pos) {
         if (!level.hasChunkAt(pos)) {
-            return legacyCandyGrassColor("sugar_plains", pos.getX(), pos.getZ());
+            return CANDY_WORLD_FOG_FALLBACK;
         }
 
         String path = biomePath(level.getBiome(pos));
@@ -256,9 +279,32 @@ public final class CCClient {
         }
 
         if (samples == 0) {
-            return legacyCandyGrassColor("sugar_plains", pos.getX(), pos.getZ());
+            return CANDY_WORLD_FOG_FALLBACK;
         }
         return ((red / samples) & 255) << 16 | ((green / samples) & 255) << 8 | (blue / samples) & 255;
+    }
+
+    private static int legacyCandySkyColor(Level level, net.minecraft.core.BlockPos pos, float partialTick) {
+        if (!level.hasChunkAt(pos)) {
+            return CANDY_WORLD_SKY_FALLBACK;
+        }
+        Minecraft minecraft = Minecraft.getInstance();
+        if (minecraft.player == null || !(level instanceof ClientLevel clientLevel)) {
+            return CANDY_WORLD_SKY_FALLBACK;
+        }
+        Vec3 sky = clientLevel.getSkyColor(minecraft.player.position(), partialTick);
+        return toRgb(sky);
+    }
+
+    private static int toRgb(Vec3 color) {
+        int red = Mth.clamp((int)Math.round(color.x * 255.0D), 0, 255);
+        int green = Mth.clamp((int)Math.round(color.y * 255.0D), 0, 255);
+        int blue = Mth.clamp((int)Math.round(color.z * 255.0D), 0, 255);
+        return (red << 16) | (green << 8) | blue;
+    }
+
+    private static Vec3 rgbVec(int color) {
+        return new Vec3(((color >> 16) & 255) / 255.0D, ((color >> 8) & 255) / 255.0D, (color & 255) / 255.0D);
     }
 
     private static String biomePath(net.minecraft.core.Holder<Biome> biome) {
@@ -435,6 +481,8 @@ public final class CCClient {
         event.registerLayerDefinition(GummyBunnyModel.LAYER, GummyBunnyModel::createBodyLayer);
         event.registerLayerDefinition(GingerbreadManModel.LAYER, GingerbreadManModel::createBodyLayer);
         event.registerLayerDefinition(SuguardModel.LAYER, SuguardModel::createBodyLayer);
+        event.registerLayerDefinition(WaffleSheepModel.LAYER, WaffleSheepModel::createBodyLayer);
+        event.registerLayerDefinition(WaffleSheepModel.FUR_LAYER, WaffleSheepModel::createFurLayer);
         event.registerLayerDefinition(BeeModel.LAYER, BeeModel::createBodyLayer);
         event.registerLayerDefinition(BeetleModel.LAYER, BeetleModel::createBodyLayer);
         event.registerLayerDefinition(NessieModel.LAYER, NessieModel::createBodyLayer);
@@ -573,6 +621,67 @@ public final class CCClient {
         private static float candyDayFactor(Level level, float partialTick) {
             float value = (float)Math.cos(level.getTimeOfDay(partialTick) * ((float)Math.PI * 2.0F)) * 2.0F + 0.5F;
             return Math.max(0.0F, Math.min(1.0F, value));
+        }
+    }
+
+    private static final class CandyWorldEffects extends DimensionSpecialEffects {
+        private CandyWorldEffects() {
+            super(192.0F, true, SkyType.NORMAL, false, false);
+        }
+
+        @Override
+        public Vec3 getBrightnessDependentFogColor(Vec3 color, float brightness) {
+            Vec3 fallback = rgbVec(CANDY_WORLD_FOG_FALLBACK);
+            return new Vec3(
+                color.x * 0.94D + fallback.x * 0.06D,
+                color.y * 0.94D + fallback.y * 0.06D,
+                color.z * 0.94D + fallback.z * 0.06D
+            );
+        }
+
+        @Override
+        public boolean isFoggyAt(int x, int z) {
+            return false;
+        }
+
+        @Override
+        public boolean renderClouds(ClientLevel level, int ticks, float partialTick, PoseStack poseStack, double camX, double camY, double camZ, Matrix4f projectionMatrix) {
+            return !level.hasChunkAt(net.minecraft.core.BlockPos.containing(camX, camY, camZ));
+        }
+
+        @Override
+        public boolean renderSky(ClientLevel level, int ticks, float partialTick, PoseStack poseStack, Camera camera, Matrix4f projectionMatrix, boolean isFoggy, Runnable setupFog) {
+            net.minecraft.core.BlockPos pos = camera.getBlockPosition();
+            if (level.hasChunkAt(pos)) {
+                return false;
+            }
+
+            setupFog.run();
+            Vec3 sky = rgbVec(legacyCandySkyColor(level, pos, partialTick));
+            RenderSystem.depthMask(false);
+            RenderSystem.enableBlend();
+            RenderSystem.defaultBlendFunc();
+            RenderSystem.setShader(GameRenderer::getPositionShader);
+            RenderSystem.setShaderColor((float)sky.x, (float)sky.y, (float)sky.z, 1.0F);
+
+            poseStack.pushPose();
+            poseStack.mulPose(Axis.XP.rotationDegrees(90.0F));
+            Matrix4f matrix = poseStack.last().pose();
+            Tesselator tesselator = Tesselator.getInstance();
+            BufferBuilder buffer = tesselator.getBuilder();
+            buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
+            float radius = 128.0F;
+            buffer.vertex(matrix, -radius, -radius, -radius).endVertex();
+            buffer.vertex(matrix, -radius, -radius, radius).endVertex();
+            buffer.vertex(matrix, radius, -radius, radius).endVertex();
+            buffer.vertex(matrix, radius, -radius, -radius).endVertex();
+            tesselator.end();
+            poseStack.popPose();
+
+            RenderSystem.disableBlend();
+            RenderSystem.depthMask(true);
+            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+            return true;
         }
     }
 }
