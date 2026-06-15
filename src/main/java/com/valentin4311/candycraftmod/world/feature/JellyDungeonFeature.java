@@ -243,7 +243,7 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
         for (int i = 0; i < 8; i++) {
             for (int k = 0; k < 31; k++) {
                 for (int j = 0; j < 10; j++) {
-                    set(level, x - 1 + i, y + 2 + k, z - 41 + j, jawBreaker(random));
+                    set(level, x - 1 + i, y + 2 + k, z - 41, jawBreaker(random));
                 }
             }
         }
@@ -273,8 +273,10 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
             genStep189(level, random, x, y, z + (i == 0 ? 0 : incrementer));
         }
         clearDoor(level, x + 2, y + 5, z - 41, 2, 3);
-        set(level, x + 3, y + 4, z - 1, CCBlocks.MARSHMALLOW_LADDER.get().defaultBlockState().setValue(LadderBlock.FACING, Direction.SOUTH));
-        set(level, x + 2, y + 4, z - 1, CCBlocks.MARSHMALLOW_LADDER.get().defaultBlockState().setValue(LadderBlock.FACING, Direction.SOUTH));
+        set(level, x + 3, y + 4, z, jawBreaker(random));
+        set(level, x + 2, y + 4, z, jawBreaker(random));
+        set(level, x + 3, y + 4, z - 1, CCBlocks.MARSHMALLOW_LADDER.get().defaultBlockState().setValue(LadderBlock.FACING, Direction.NORTH));
+        set(level, x + 2, y + 4, z - 1, CCBlocks.MARSHMALLOW_LADDER.get().defaultBlockState().setValue(LadderBlock.FACING, Direction.NORTH));
         set(level, x, y + 8, z - 40, CCBlocks.JELLY_SHOCK_ABSORBER.get().defaultBlockState());
         set(level, x + 1, y + 8, z - 40, CCBlocks.JELLY_SHOCK_ABSORBER.get().defaultBlockState());
         set(level, x + 4, y + 8, z - 40, CCBlocks.JELLY_SHOCK_ABSORBER.get().defaultBlockState());
