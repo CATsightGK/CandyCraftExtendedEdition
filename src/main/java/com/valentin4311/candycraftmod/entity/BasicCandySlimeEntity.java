@@ -6,32 +6,50 @@ import com.valentin4311.candycraftmod.registry.CCSoundEvents;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerBossEvent;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.BossEvent;
+import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.MobSpawnType;
+import net.minecraft.world.entity.SpawnGroupData;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.monster.Slime;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
+import org.jetbrains.annotations.Nullable;
 
 public class BasicCandySlimeEntity extends Slime {
     private int specialAttackCooldown;
     private boolean bossAwake;
     private int bossJumpCooldown;
+    private final ServerBossEvent bossEvent = new ServerBossEvent(getDisplayName(), BossEvent.BossBarColor.PURPLE, BossEvent.BossBarOverlay.PROGRESS);
 
     public BasicCandySlimeEntity(EntityType<? extends BasicCandySlimeEntity> type, Level level) {
         super(type, level);
     }
 
     @Override
+    @Nullable
+    public SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty, MobSpawnType spawnType, @Nullable SpawnGroupData spawnData, @Nullable CompoundTag tag) {
+        SpawnGroupData data = super.finalizeSpawn(level, difficulty, spawnType, spawnData, tag);
+        applyLegacySpawnSize();
+        return data;
+    }
+
+    @Override
     public void aiStep() {
         super.aiStep();
+        updateBossBar();
         if (specialAttackCooldown > 0) {
             specialAttackCooldown--;
         }
@@ -112,16 +130,23 @@ public class BasicCandySlimeEntity extends Slime {
     }
 
     @Override
+    public void startSeenByPlayer(ServerPlayer player) {
+        super.startSeenByPlayer(player);
+        if (isCandyBoss()) {
+            bossEvent.addPlayer(player);
+        }
+    }
+
+    @Override
+    public void stopSeenByPlayer(ServerPlayer player) {
+        super.stopSeenByPlayer(player);
+        bossEvent.removePlayer(player);
+    }
+
+    @Override
     public void remove(RemovalReason reason) {
-        if (!level().isClientSide && reason == RemovalReason.KILLED && (isRedJelly() || isTornadoJelly()) && getSize() > 1) {
-            for (int i = 0; i < 2 + random.nextInt(3); i++) {
-                BasicCandySlimeEntity child = createSplitChild();
-                if (child != null) {
-                    child.setSize(Math.max(1, getSize() / 2), true);
-                    child.moveTo(getX() + (random.nextDouble() - 0.5D), getY() + 0.5D, getZ() + (random.nextDouble() - 0.5D), random.nextFloat() * 360.0F, 0.0F);
-                    level().addFreshEntity(child);
-                }
-            }
+        if (!level().isClientSide && reason == RemovalReason.KILLED && getSize() > 1) {
+            setSize(1, false);
         }
         super.remove(reason);
     }
@@ -233,6 +258,15 @@ public class BasicCandySlimeEntity extends Slime {
         }
     }
 
+    private void updateBossBar() {
+        if (!isCandyBoss() || level().isClientSide) {
+            return;
+        }
+        bossEvent.setName(getType().getDescription());
+        bossEvent.setColor(isKingSlime() ? BossEvent.BossBarColor.GREEN : BossEvent.BossBarColor.PURPLE);
+        bossEvent.setProgress(Math.max(0.0F, Math.min(1.0F, getHealth() / getMaxHealth())));
+    }
+
     private void performBossJumpAttack() {
         if (!(level() instanceof ServerLevel serverLevel)) {
             return;
@@ -295,13 +329,17 @@ public class BasicCandySlimeEntity extends Slime {
         return isPezJelly() || isKingSlime() || isJellyQueen();
     }
 
-    private BasicCandySlimeEntity createSplitChild() {
+    private void applyLegacySpawnSize() {
         if (isRedJelly()) {
-            return CCEntityTypes.RED_JELLY.get().create(level());
+            setSize(2, true);
+        } else if (isYellowJelly() || isTornadoJelly()) {
+            setSize(1, true);
+        } else if (isPezJelly()) {
+            setSize(10, true);
+        } else if (isKingSlime()) {
+            setSize(13, true);
+        } else if (isJellyQueen()) {
+            setSize(8, true);
         }
-        if (isTornadoJelly()) {
-            return CCEntityTypes.TORNADO_JELLY.get().create(level());
-        }
-        return null;
     }
 }

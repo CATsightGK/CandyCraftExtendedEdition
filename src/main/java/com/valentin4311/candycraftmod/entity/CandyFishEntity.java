@@ -107,17 +107,17 @@ public class CandyFishEntity extends WaterAnimal {
 
     @Override
     protected SoundEvent getAmbientSound() {
-        return SoundEvents.COD_AMBIENT;
+        return null;
     }
 
     @Override
     protected SoundEvent getHurtSound(DamageSource source) {
-        return SoundEvents.COD_HURT;
+        return null;
     }
 
     @Override
     protected SoundEvent getDeathSound() {
-        return SoundEvents.COD_DEATH;
+        return null;
     }
 
     @Override

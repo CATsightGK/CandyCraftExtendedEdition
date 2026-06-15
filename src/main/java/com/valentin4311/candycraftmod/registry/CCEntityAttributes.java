@@ -17,7 +17,6 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.animal.Pig;
 import net.minecraft.world.entity.animal.Rabbit;
-import net.minecraft.world.entity.animal.Sheep;
 import net.minecraft.world.entity.animal.Wolf;
 import net.minecraft.world.entity.monster.Creeper;
 import net.minecraft.world.entity.monster.Spider;
@@ -35,11 +34,14 @@ public final class CCEntityAttributes {
     @SubscribeEvent
     public static void register(EntityAttributeCreationEvent event) {
         event.put(CCEntityTypes.CANDY_PIG.get(), Pig.createAttributes().build());
-        event.put(CCEntityTypes.WAFFLE_SHEEP.get(), Sheep.createAttributes()
+        event.put(CCEntityTypes.WAFFLE_SHEEP.get(), Mob.createMobAttributes()
             .add(Attributes.MAX_HEALTH, 10.0D)
             .add(Attributes.MOVEMENT_SPEED, 0.23000000417232513D)
             .build());
-        event.put(CCEntityTypes.CANDY_WOLF.get(), Wolf.createAttributes().build());
+        event.put(CCEntityTypes.CANDY_WOLF.get(), Wolf.createAttributes()
+            .add(Attributes.MAX_HEALTH, 10.0D)
+            .add(Attributes.ATTACK_DAMAGE, 2.0D)
+            .build());
         event.put(CCEntityTypes.GUMMY_BUNNY.get(), Rabbit.createAttributes()
             .add(Attributes.MAX_HEALTH, 10.0D)
             .add(Attributes.MOVEMENT_SPEED, 0.20000000298023224D)
@@ -73,6 +75,16 @@ public final class CCEntityAttributes {
             .add(Attributes.ATTACK_DAMAGE, 3.0D)
             .build();
         putZombie(event, zombie);
+        event.put(CCEntityTypes.DRAGON.get(), Zombie.createAttributes()
+            .add(Attributes.MAX_HEALTH, 80.0D)
+            .add(Attributes.MOVEMENT_SPEED, 0.4D)
+            .add(Attributes.ATTACK_DAMAGE, 6.0D)
+            .build());
+        event.put(CCEntityTypes.KING_BEETLE.get(), Zombie.createAttributes()
+            .add(Attributes.MAX_HEALTH, 80.0D)
+            .add(Attributes.MOVEMENT_SPEED, 0.3D)
+            .add(Attributes.ATTACK_DAMAGE, 8.0D)
+            .build());
 
         AttributeSupplier spider = Spider.createAttributes()
             .add(Attributes.MAX_HEALTH, 16.0D)
@@ -84,6 +96,8 @@ public final class CCEntityAttributes {
         AttributeSupplier slime = Mob.createMobAttributes()
             .add(Attributes.MAX_HEALTH, 16.0D)
             .add(Attributes.MOVEMENT_SPEED, 0.35D)
+            .add(Attributes.FOLLOW_RANGE, 16.0D)
+            .add(Attributes.ATTACK_DAMAGE, 4.0D)
             .build();
         putSlime(event, slime);
 
@@ -110,17 +124,19 @@ public final class CCEntityAttributes {
         event.put(CCEntityTypes.JELLY_QUEEN.get(), Mob.createMobAttributes()
             .add(Attributes.MAX_HEALTH, 300.0D)
             .add(Attributes.MOVEMENT_SPEED, 0.7D)
+            .add(Attributes.FOLLOW_RANGE, 32.0D)
+            .add(Attributes.ATTACK_DAMAGE, 8.0D)
             .build());
         event.put(CCEntityTypes.KING_SLIME.get(), Mob.createMobAttributes()
             .add(Attributes.MAX_HEALTH, 800.0D)
             .add(Attributes.MOVEMENT_SPEED, 0.35D)
+            .add(Attributes.FOLLOW_RANGE, 32.0D)
+            .add(Attributes.ATTACK_DAMAGE, 12.0D)
             .build());
     }
 
     private static void putZombie(EntityAttributeCreationEvent event, AttributeSupplier attributes) {
         event.put(CCEntityTypes.NESSIE.get(), attributes);
-        event.put(CCEntityTypes.DRAGON.get(), attributes);
-        event.put(CCEntityTypes.KING_BEETLE.get(), attributes);
         event.put(CCEntityTypes.MERMAID.get(), attributes);
         event.put(CCEntityTypes.NOUGAT_GOLEM.get(), attributes);
     }
