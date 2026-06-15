@@ -339,8 +339,7 @@ public class SuguardDungeonFeature extends Feature<NoneFeatureConfiguration> {
 
     private void bossRoom(WorldGenLevel level, RandomSource random, int x, int y, int z, int doorX, int doorY, int doorZ, boolean boss) {
         hollowCylinder(level, x, y, z, 20, 30, CCBlocks.LICORICE_BLOCK.get().defaultBlockState(), CCBlocks.JAW_BREAKER_LIGHT.get().defaultBlockState(), random);
-        cylinder(level, x, y, z, 20, 1, checker(random, CCBlocks.LICORICE_BLOCK.get().defaultBlockState(), CCBlocks.JAW_BREAKER_LIGHT.get().defaultBlockState()));
-        cylinder(level, x, y, z, 6, 1, checker(random, CCBlocks.JAW_BREAKER_LIGHT.get().defaultBlockState(), CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState()));
+        bossFloor(level, x, y, z);
         for (int dx : new int[]{-14, 14}) {
             for (int dz : new int[]{-7, 7}) {
                 bossPillar(level, x + dx, y, z + dz);
@@ -363,7 +362,7 @@ public class SuguardDungeonFeature extends Feature<NoneFeatureConfiguration> {
             box(level, x + 7, y + dy, z - 14, x + 7, y + dy, z + 14, beam);
         }
         box(level, x + doorX, y + doorY + 1, z + doorZ, x + doorX, y + doorY + 3, z + doorZ, Blocks.AIR.defaultBlockState());
-        hollowBox(level, x - 1, y - 2, z - 1, x + 1, y, z + 1, CCBlocks.LICORICE_BLOCK.get().defaultBlockState());
+        box(level, x - 1, y - 2, z - 1, x + 1, y, z + 1, CCBlocks.LICORICE_BLOCK.get().defaultBlockState());
         if (boss) {
             setSpawner(level, x, y + 1, z, CCEntityTypes.BOSS_SUGUARD.get());
             keyChest(level, x + 2, y + 1, z, CCItems.SUGUARD_EMBLEM.get());
@@ -371,6 +370,23 @@ public class SuguardDungeonFeature extends Feature<NoneFeatureConfiguration> {
             set(level, x, y, z, CCBlocks.MARSHMALLOW_TRAPDOOR.get().defaultBlockState().setValue(TrapDoorBlock.HALF, Half.BOTTOM));
             set(level, x, y - 1, z, suguardTeleporter());
             keyChest(level, x + 2, y + 1, z, CCItems.SUGUARD_BOSS_KEY.get());
+        }
+    }
+
+    private void bossFloor(WorldGenLevel level, int x, int y, int z) {
+        BlockState licorice = CCBlocks.LICORICE_BLOCK.get().defaultBlockState();
+        BlockState lightJawBreaker = CCBlocks.JAW_BREAKER_LIGHT.get().defaultBlockState();
+        BlockState jawBreaker = CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState();
+        for (int dx = -20; dx <= 20; dx++) {
+            for (int dz = -20; dz <= 20; dz++) {
+                int distance = dx * dx + dz * dz;
+                if (distance <= 20 * 20) {
+                    set(level, x + dx, y, z + dz, fastChecker(x + dx, y, z + dz, licorice, lightJawBreaker));
+                }
+                if (distance <= 6 * 6) {
+                    set(level, x + dx, y, z + dz, checker(x + dx, y, z + dz, lightJawBreaker, jawBreaker));
+                }
+            }
         }
     }
 
@@ -463,6 +479,14 @@ public class SuguardDungeonFeature extends Feature<NoneFeatureConfiguration> {
 
     private BlockState checker(RandomSource random, BlockState a, BlockState b) {
         return random.nextBoolean() ? a : b;
+    }
+
+    private BlockState checker(int x, int y, int z, BlockState a, BlockState b) {
+        return Math.floorMod(x + y + z, 2) == 0 ? a : b;
+    }
+
+    private BlockState fastChecker(int x, int y, int z, BlockState a, BlockState b) {
+        return ((x + y + z) & 1) == 0 ? a : b;
     }
 
     private BlockState caramel() { return CCBlocks.CARAMEL_BLOCK.get().defaultBlockState(); }
