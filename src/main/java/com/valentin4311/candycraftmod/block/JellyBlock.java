@@ -29,7 +29,10 @@ public class JellyBlock extends Block {
     @Override
     public void fallOn(Level level, BlockState state, BlockPos pos, Entity entity, float fallDistance) {
         if (jump == -1.0D || jump == 2.1D) {
-            entity.causeFallDamage(fallDistance, 0.0F, level.damageSources().fall());
+            entity.resetFallDistance();
+            if (!(entity instanceof LivingEntity)) {
+                entity.causeFallDamage(fallDistance, 0.0F, level.damageSources().fall());
+            }
         } else {
             super.fallOn(level, state, pos, entity, fallDistance);
         }
@@ -39,9 +42,13 @@ public class JellyBlock extends Block {
     public void entityInside(BlockState state, Level level, BlockPos pos, Entity entity) {
         if (jump != -1.0D && (entity instanceof LivingEntity || entity.isControlledByLocalInstance())) {
             Vec3 movement = entity.getDeltaMovement();
+            if (jump == 2.1D) {
+                entity.resetFallDistance();
+            }
             if (movement.y <= 0.0D) {
                 entity.setDeltaMovement(movement.x, movement.y + jump, movement.z);
                 entity.resetFallDistance();
+                entity.hasImpulse = true;
             }
         }
     }

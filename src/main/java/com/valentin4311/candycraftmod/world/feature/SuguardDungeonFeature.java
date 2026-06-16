@@ -82,7 +82,7 @@ public class SuguardDungeonFeature extends Feature<NoneFeatureConfiguration> {
         int x = pos.getX();
         int y = pos.getY();
         int z = pos.getZ();
-        box(level, x - 4, y, z - 4, x + 4, y, z + 4, checker(random, caramel(), honeyLamp()));
+        checkerBox(level, x - 4, y, z - 4, x + 4, y, z + 4, caramel(), honeyLamp());
         set(level, x, y, z, caramel());
         set(level, x, y + 1, z, suguardTeleporter());
         pillar(level, x - 3, y + 1, z - 3);
@@ -110,8 +110,8 @@ public class SuguardDungeonFeature extends Feature<NoneFeatureConfiguration> {
         box(level, x + 6, y + 1, z, x + 6, y + 2, z, CCBlocks.SUGUARD_BOSS_KEY_HOLE.get().defaultBlockState());
         box(level, x + 8, y + 1, z, x + 8, y + 2, z, CCBlocks.SUGUARD_BOSS_KEY_HOLE.get().defaultBlockState());
         box(level, x + 10, y + 1, z, x + 10, y + 2, z, CCBlocks.SUGUARD_SENTRY_KEY_HOLE.get().defaultBlockState());
-        box(level, x + 5, y, z, x + 10, y, z, checker(random, caramel(), honeyLamp()));
-        box(level, x + 5, y + 3, z - 1, x + 10, y + 3, z + 1, checker(random, caramel(), chocolate()));
+        checkerBox(level, x + 5, y, z, x + 10, y, z, caramel(), honeyLamp());
+        checkerBox(level, x + 5, y + 3, z - 1, x + 10, y + 3, z + 1, caramel(), chocolate());
         box(level, x + 5, y + 1, z + 1, x + 10, y + 2, z + 1, caramelBrick());
         box(level, x + 5, y + 1, z - 1, x + 10, y + 2, z - 1, caramelBrick());
         int r = random.nextInt(3);
@@ -128,7 +128,7 @@ public class SuguardDungeonFeature extends Feature<NoneFeatureConfiguration> {
     private void clearEntry(WorldGenLevel level, int x, int y, int z) {
         set(level, x, y, z, caramel());
         set(level, x, y + 1, z, suguardTeleporter());
-        box(level, x - 1, y + 1, z - 1, x + 1, y + 3, z + 1, Blocks.AIR.defaultBlockState());
+        box(level, x - 2, y + 1, z - 2, x + 2, y + 4, z + 2, Blocks.AIR.defaultBlockState());
         set(level, x, y, z, caramel());
         set(level, x, y + 1, z, suguardTeleporter());
     }
@@ -145,7 +145,7 @@ public class SuguardDungeonFeature extends Feature<NoneFeatureConfiguration> {
         redstone(level, x + 1, y, z - 3);
         redstone(level, x + 2, y, z - 4);
         set(level, x + 3, y, z - 4, chocolate());
-        set(level, x + 3, y + 1, z - 4, Blocks.REDSTONE_WALL_TORCH.defaultBlockState().setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.EAST));
+        set(level, x + 3, y + 1, z - 4, Blocks.REDSTONE_TORCH.defaultBlockState());
         set(level, x + 3, y + 2, z - 4, chocolate());
         box(level, x + 2, y + 1, z - 4, x + 2, y + 2, z - 4, Blocks.STICKY_PISTON.defaultBlockState().setValue(BlockStateProperties.FACING, Direction.WEST));
         box(level, x + 1, y + 1, z - 3, x + 1, y + 3, z - 3, caramel());
@@ -170,7 +170,7 @@ public class SuguardDungeonFeature extends Feature<NoneFeatureConfiguration> {
         redstone(level, x - 3, y, z + 1);
         redstone(level, x - 4, y, z + 2);
         set(level, x - 4, y, z + 3, chocolate());
-        set(level, x - 4, y + 1, z + 3, Blocks.REDSTONE_WALL_TORCH.defaultBlockState().setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.SOUTH));
+        set(level, x - 4, y + 1, z + 3, Blocks.REDSTONE_TORCH.defaultBlockState());
         set(level, x - 4, y + 2, z + 3, chocolate());
         box(level, x - 4, y + 1, z + 2, x - 4, y + 2, z + 2, Blocks.STICKY_PISTON.defaultBlockState().setValue(BlockStateProperties.FACING, Direction.NORTH));
         box(level, x - 3, y + 1, z + 1, x - 3, y + 3, z + 1, caramel());
@@ -322,10 +322,10 @@ public class SuguardDungeonFeature extends Feature<NoneFeatureConfiguration> {
         set(level, x - 24, 30 + yOffset, z, Blocks.STICKY_PISTON.defaultBlockState().setValue(BlockStateProperties.FACING, Direction.WEST));
         set(level, x - 26, 11 + yOffset, z, CCBlocks.GRENADINE.get().defaultBlockState());
         box(level, x - 26, 31 + yOffset, z, x - 26, 32 + yOffset, z, CCBlocks.GRENADINE.get().defaultBlockState());
-        set(level, x - 24, 12 + yOffset, z, Blocks.REDSTONE_WALL_TORCH.defaultBlockState().setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.EAST));
-        set(level, x - 16, 12 + yOffset, z, Blocks.REDSTONE_WALL_TORCH.defaultBlockState().setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.WEST));
-        set(level, x - 20, 12 + yOffset, z - 4, Blocks.REDSTONE_WALL_TORCH.defaultBlockState().setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.SOUTH));
-        set(level, x - 20, 12 + yOffset, z + 4, Blocks.REDSTONE_WALL_TORCH.defaultBlockState().setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.NORTH));
+        set(level, x - 24, 12 + yOffset, z, Blocks.REDSTONE_TORCH.defaultBlockState());
+        set(level, x - 16, 12 + yOffset, z, Blocks.REDSTONE_TORCH.defaultBlockState());
+        set(level, x - 20, 12 + yOffset, z - 4, Blocks.REDSTONE_TORCH.defaultBlockState());
+        set(level, x - 20, 12 + yOffset, z + 4, Blocks.REDSTONE_TORCH.defaultBlockState());
         box(level, x - 24, 13 + yOffset, z, x - 24, 29 + yOffset, z, Blocks.REDSTONE_LAMP.defaultBlockState());
         box(level, x - 16, 13 + yOffset, z, x - 16, 29 + yOffset, z, Blocks.REDSTONE_LAMP.defaultBlockState());
         box(level, x - 20, 13 + yOffset, z - 4, x - 20, 29 + yOffset, z - 4, Blocks.REDSTONE_LAMP.defaultBlockState());
@@ -338,7 +338,9 @@ public class SuguardDungeonFeature extends Feature<NoneFeatureConfiguration> {
     }
 
     private void bossRoom(WorldGenLevel level, RandomSource random, int x, int y, int z, int doorX, int doorY, int doorZ, boolean boss) {
-        hollowCylinder(level, x, y, z, 20, 30, CCBlocks.LICORICE_BLOCK.get().defaultBlockState(), CCBlocks.JAW_BREAKER_LIGHT.get().defaultBlockState(), random);
+        BlockState licorice = CCBlocks.LICORICE_BLOCK.get().defaultBlockState();
+        BlockState lightJawBreaker = CCBlocks.JAW_BREAKER_LIGHT.get().defaultBlockState();
+        hollowCylinder(level, x, y + 1, z, 20, 15, licorice, lightJawBreaker, random);
         bossFloor(level, x, y, z);
         for (int dx : new int[]{-14, 14}) {
             for (int dz : new int[]{-7, 7}) {
@@ -350,19 +352,19 @@ public class SuguardDungeonFeature extends Feature<NoneFeatureConfiguration> {
                 bossPillar(level, x + dx, y, z + dz);
             }
         }
-        BlockState beam = checker(random, CCBlocks.LICORICE_BLOCK.get().defaultBlockState(), CCBlocks.JAW_BREAKER_LIGHT.get().defaultBlockState());
         for (int dy = 10; dy < 31; dy += 5) {
-            box(level, x - 14, y + dy, z - 14, x - 14, y + dy, z + 14, beam);
-            box(level, x + 14, y + dy, z - 14, x + 14, y + dy, z + 14, beam);
-            box(level, x - 14, y + dy, z - 14, x + 14, y + dy, z - 14, beam);
-            box(level, x - 14, y + dy, z + 14, x + 14, y + dy, z + 14, beam);
-            box(level, x - 14, y + dy, z - 7, x + 14, y + dy, z - 7, beam);
-            box(level, x - 14, y + dy, z + 7, x + 14, y + dy, z + 7, beam);
-            box(level, x - 7, y + dy, z - 14, x - 7, y + dy, z + 14, beam);
-            box(level, x + 7, y + dy, z - 14, x + 7, y + dy, z + 14, beam);
+            checkerBox(level, x - 14, y + dy, z - 14, x - 14, y + dy, z + 14, licorice, lightJawBreaker);
+            checkerBox(level, x + 14, y + dy, z - 14, x + 14, y + dy, z + 14, licorice, lightJawBreaker);
+            checkerBox(level, x - 14, y + dy, z - 14, x + 14, y + dy, z - 14, licorice, lightJawBreaker);
+            checkerBox(level, x - 14, y + dy, z + 14, x + 14, y + dy, z + 14, licorice, lightJawBreaker);
+            checkerBox(level, x - 14, y + dy, z - 7, x + 14, y + dy, z - 7, licorice, lightJawBreaker);
+            checkerBox(level, x - 14, y + dy, z + 7, x + 14, y + dy, z + 7, licorice, lightJawBreaker);
+            checkerBox(level, x - 7, y + dy, z - 14, x - 7, y + dy, z + 14, licorice, lightJawBreaker);
+            checkerBox(level, x + 7, y + dy, z - 14, x + 7, y + dy, z + 14, licorice, lightJawBreaker);
         }
+        topSphere(level, x, y + 16, z, 20, licorice, lightJawBreaker);
         box(level, x + doorX, y + doorY + 1, z + doorZ, x + doorX, y + doorY + 3, z + doorZ, Blocks.AIR.defaultBlockState());
-        box(level, x - 1, y - 2, z - 1, x + 1, y, z + 1, CCBlocks.LICORICE_BLOCK.get().defaultBlockState());
+        hollowBox(level, x - 1, y - 2, z - 1, x + 1, y, z + 1, licorice);
         if (boss) {
             setSpawner(level, x, y + 1, z, CCEntityTypes.BOSS_SUGUARD.get());
             keyChest(level, x + 2, y + 1, z, CCItems.SUGUARD_EMBLEM.get());
@@ -526,6 +528,19 @@ public class SuguardDungeonFeature extends Feature<NoneFeatureConfiguration> {
         }
     }
 
+    private void checkerBox(WorldGenLevel level, int x1, int y1, int z1, int x2, int y2, int z2, BlockState a, BlockState b) {
+        int minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+        int minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
+        int minZ = Math.min(z1, z2), maxZ = Math.max(z1, z2);
+        for (int x = minX; x <= maxX; x++) {
+            for (int y = minY; y <= maxY; y++) {
+                for (int z = minZ; z <= maxZ; z++) {
+                    set(level, x, y, z, fastChecker(x, y, z, a, b));
+                }
+            }
+        }
+    }
+
     private void cylinder(WorldGenLevel level, int cx, int y, int cz, int radius, int height, BlockState state) {
         for (int dy = 0; dy < height; dy++) {
             for (int x = -radius; x <= radius; x++) {
@@ -551,12 +566,40 @@ public class SuguardDungeonFeature extends Feature<NoneFeatureConfiguration> {
         }
     }
 
+    private void topSphere(WorldGenLevel level, int cx, int cy, int cz, int radius, BlockState a, BlockState b) {
+        for (int x = -radius; x <= radius; x++) {
+            for (int y = 0; y <= radius; y++) {
+                for (int z = -radius; z <= radius; z++) {
+                    double distance = Math.sqrt(x * x + y * y + z * z);
+                    if (Math.round(distance) == radius) {
+                        int px = cx + x;
+                        int py = cy + y;
+                        int pz = cz + z;
+                        set(level, px, py, pz, fastChecker(px, py, pz, a, b));
+                    }
+                }
+            }
+        }
+    }
+
     private static void set(WorldGenLevel level, int x, int y, int z, BlockState state) {
         set(level, new BlockPos(x, y, z), state);
     }
 
     private static void set(WorldGenLevel level, BlockPos pos, BlockState state) {
-        level.setBlock(pos, state, 2);
+        level.setBlock(pos, state, updateNeighbors(state) ? 3 : 2);
+    }
+
+    private static boolean updateNeighbors(BlockState state) {
+        Block block = state.getBlock();
+        return block == Blocks.REDSTONE_WIRE
+            || block == Blocks.REDSTONE_TORCH
+            || block == Blocks.REDSTONE_WALL_TORCH
+            || block == Blocks.REDSTONE_LAMP
+            || block == Blocks.STICKY_PISTON
+            || block == Blocks.PISTON_HEAD
+            || block == Blocks.STONE_PRESSURE_PLATE
+            || block == Blocks.LEVER;
     }
 
     private static void clearArea(ServerLevel level, BlockPos origin, int minX, int maxX, int minY, int maxY, int minZ, int maxZ) {

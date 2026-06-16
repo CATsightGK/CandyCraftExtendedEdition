@@ -18,11 +18,12 @@ import net.minecraft.world.level.Level;
 
 public class JellyWandItem extends Item {
     private static final String USES_TAG = "CandyCraftJellyWandUses";
-    private static final String CHARGE_BONUS_TAG = "CandyCraftJellyWandChargeBonus";
+    private static final String TAP_CHARGE_TAG = "CandyCraftJellyWandTapCharge";
     private static final int MAX_USES = 99;
     private static final int RECHARGE_USES = 11;
-    private static final int FULL_CHARGE_TICKS = 70;
-    private static final int LEFT_CLICK_BONUS_TICKS = 8;
+    private static final int TAP_CHARGES = 5;
+    private static final int AIM_MODE_TICKS = 10;
+    private static final int RED_JELLY_CHARGE_TICKS = 30;
 
     public JellyWandItem(Properties properties) {
         super(properties);
@@ -40,19 +41,40 @@ public class JellyWandItem extends Item {
             return InteractionResultHolder.fail(stack);
         }
 
-        stack.getOrCreateTag().putInt(CHARGE_BONUS_TAG, 0);
         player.startUsingItem(hand);
         return InteractionResultHolder.consume(stack);
     }
 
     @Override
     public void releaseUsing(ItemStack stack, Level level, LivingEntity entity, int timeLeft) {
-        int usedTicks = getUseDuration(stack) - timeLeft + getChargeBonus(stack);
-        stack.getOrCreateTag().remove(CHARGE_BONUS_TAG);
-        if (usedTicks < FULL_CHARGE_TICKS || getUses(stack) <= 0) {
+        int usedTicks = getUseDuration(stack) - timeLeft;
+        if (getUses(stack) <= 0) {
             return;
         }
 
+        if (usedTicks < AIM_MODE_TICKS) {
+            if (entity instanceof Player player) {
+                addTapCharge(stack, level, player);
+            }
+            return;
+        }
+
+        fireRedJellyShot(stack, level, entity, usedTicks);
+    }
+
+    private void addTapCharge(ItemStack stack, Level level, Player player) {
+        int charge = Math.min(TAP_CHARGES, getTapCharge(stack) + 1);
+        setTapCharge(stack, charge);
+        level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.NOTE_BLOCK_HAT.value(), SoundSource.PLAYERS, 0.45F, 0.9F + charge * 0.12F);
+        if (charge < TAP_CHARGES) {
+            return;
+        }
+
+        setTapCharge(stack, 0);
+        fireScatterShot(stack, level, player);
+    }
+
+    private void fireScatterShot(ItemStack stack, Level level, LivingEntity entity) {
         if (!level.isClientSide) {
             int count = 3 + level.getRandom().nextInt(2);
             for (int i = 0; i < count; i++) {
@@ -66,7 +88,25 @@ public class JellyWandItem extends Item {
         }
 
         level.playSound(null, entity.getX(), entity.getY(), entity.getZ(), SoundEvents.ARROW_SHOOT, SoundSource.PLAYERS, 0.8F, 0.85F + level.getRandom().nextFloat() * 0.25F);
-        setUses(stack, getUses(stack) - 1);
+        consumeUse(stack, entity);
+        if (entity instanceof Player player) {
+            player.awardStat(Stats.ITEM_USED.get(this));
+        }
+    }
+
+    private void fireRedJellyShot(ItemStack stack, Level level, LivingEntity entity, int usedTicks) {
+        setTapCharge(stack, 0);
+        if (!level.isClientSide) {
+            float charge = Mth.clamp((usedTicks - AIM_MODE_TICKS) / (float)(RED_JELLY_CHARGE_TICKS - AIM_MODE_TICKS), 0.0F, 1.0F);
+            GummyBallEntity ball = new GummyBallEntity(level, entity, 4);
+            ball.setVisualVariant(GummyBallEntity.RED_JELLY_VISUAL);
+            ball.setBonusDamage(5.0F + charge * 4.0F);
+            ball.shootFromRotation(entity, entity.getXRot(), entity.getYRot(), 0.0F, 2.1F + charge * 0.25F, 0.5F);
+            level.addFreshEntity(ball);
+        }
+
+        level.playSound(null, entity.getX(), entity.getY(), entity.getZ(), SoundEvents.SLIME_SQUISH, SoundSource.PLAYERS, 0.9F, 0.75F + level.getRandom().nextFloat() * 0.2F);
+        consumeUse(stack, entity);
         if (entity instanceof Player player) {
             player.awardStat(Stats.ITEM_USED.get(this));
         }
@@ -102,19 +142,6 @@ public class JellyWandItem extends Item {
         return repairCandidate.is(CCItems.GUMMY_BALL.get());
     }
 
-    public static void accelerateCharge(Player player) {
-        if (!player.isUsingItem()) {
-            return;
-        }
-        ItemStack stack = player.getUseItem();
-        if (!stack.is(CCItems.JELLY_WAND.get())) {
-            return;
-        }
-        CompoundTag tag = stack.getOrCreateTag();
-        int bonus = Math.min(FULL_CHARGE_TICKS, tag.getInt(CHARGE_BONUS_TAG) + LEFT_CLICK_BONUS_TICKS);
-        tag.putInt(CHARGE_BONUS_TAG, bonus);
-    }
-
     public static int getUses(ItemStack stack) {
         CompoundTag tag = stack.getTag();
         if (tag == null || !tag.contains(USES_TAG)) {
@@ -123,13 +150,48 @@ public class JellyWandItem extends Item {
         return Mth.clamp(tag.getInt(USES_TAG), 0, MAX_USES);
     }
 
+    public static int getTapCharge(ItemStack stack) {
+        CompoundTag tag = stack.getTag();
+        return tag != null ? Mth.clamp(tag.getInt(TAP_CHARGE_TAG), 0, TAP_CHARGES) : 0;
+    }
+
+    public static float getTapChargeProgress(ItemStack stack) {
+        return getTapCharge(stack) / (float)TAP_CHARGES;
+    }
+
+    public static float getAimProgress(Player player) {
+        ItemStack stack = player.getUseItem();
+        if (!player.isUsingItem() || !stack.is(CCItems.JELLY_WAND.get())) {
+            return 0.0F;
+        }
+        int usedTicks = stack.getUseDuration() - player.getUseItemRemainingTicks();
+        return usedTicks > 0
+            ? Mth.clamp(usedTicks / (float)RED_JELLY_CHARGE_TICKS, 0.0F, 1.0F)
+            : 0.0F;
+    }
+
+    public static boolean isAiming(Player player) {
+        return getAimProgress(player) > 0.0F;
+    }
+
     private static void setUses(ItemStack stack, int uses) {
         stack.getOrCreateTag().putInt(USES_TAG, Mth.clamp(uses, 0, MAX_USES));
     }
 
-    private static int getChargeBonus(ItemStack stack) {
-        CompoundTag tag = stack.getTag();
-        return tag != null ? tag.getInt(CHARGE_BONUS_TAG) : 0;
+    private static void setTapCharge(ItemStack stack, int charge) {
+        CompoundTag tag = stack.getOrCreateTag();
+        if (charge <= 0) {
+            tag.remove(TAP_CHARGE_TAG);
+        } else {
+            tag.putInt(TAP_CHARGE_TAG, Mth.clamp(charge, 0, TAP_CHARGES));
+        }
+    }
+
+    private static void consumeUse(ItemStack stack, LivingEntity entity) {
+        if (entity instanceof Player player && (player.getAbilities().instabuild || player.isSpectator())) {
+            return;
+        }
+        setUses(stack, getUses(stack) - 1);
     }
 
     private static boolean tryRecharge(Player player, ItemStack wand) {

@@ -88,6 +88,10 @@ public class BasicCandySlimeEntity extends Slime {
 
     @Override
     public void playerTouch(Player player) {
+        if (!isSurvivalLike(player)) {
+            super.playerTouch(player);
+            return;
+        }
         if (!isAlive() || specialAttackCooldown > 0) {
             super.playerTouch(player);
             return;
@@ -119,6 +123,9 @@ public class BasicCandySlimeEntity extends Slime {
 
     @Override
     public boolean hurt(DamageSource source, float amount) {
+        if (source.getEntity() instanceof BasicCandySlimeEntity) {
+            return false;
+        }
         if (isCandyBoss() && source.is(net.minecraft.tags.DamageTypeTags.IS_PROJECTILE)) {
             return false;
         }
@@ -327,6 +334,10 @@ public class BasicCandySlimeEntity extends Slime {
 
     private boolean isCandyBoss() {
         return isPezJelly() || isKingSlime() || isJellyQueen();
+    }
+
+    private static boolean isSurvivalLike(Player player) {
+        return !player.getAbilities().instabuild && !player.isSpectator();
     }
 
     private void applyLegacySpawnSize() {
