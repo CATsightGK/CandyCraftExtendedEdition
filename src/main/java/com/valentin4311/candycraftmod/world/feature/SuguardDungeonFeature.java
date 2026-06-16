@@ -91,7 +91,7 @@ public class SuguardDungeonFeature extends Feature<NoneFeatureConfiguration> {
         pillar(level, x - 3, y + 1, z + 3);
 
         hollowBox(level, x - 4, y + 1, z - 4, x + 4, y + 3, z + 4, caramelBrick());
-        hollowBox(level, x - 3, y + 4, z - 3, x + 3, y + 4, z + 3, chocolate());
+        hollowBox(level, x - 3, y + 4, z - 3, x + 3, y + 4, z + 3, caramelBrick());
         hollowBox(level, x - 2, y + 5, z - 2, x + 2, y + 5, z + 2, caramel());
         set(level, x - 2, y + 4, z - 2, chocolate());
         set(level, x + 2, y + 4, z - 2, chocolate());
@@ -128,7 +128,7 @@ public class SuguardDungeonFeature extends Feature<NoneFeatureConfiguration> {
     private void clearEntry(WorldGenLevel level, int x, int y, int z) {
         set(level, x, y, z, caramel());
         set(level, x, y + 1, z, suguardTeleporter());
-        box(level, x - 2, y + 1, z - 2, x + 2, y + 4, z + 2, Blocks.AIR.defaultBlockState());
+        box(level, x - 1, y + 2, z - 1, x + 1, y + 3, z + 1, Blocks.AIR.defaultBlockState());
         set(level, x, y, z, caramel());
         set(level, x, y + 1, z, suguardTeleporter());
     }
