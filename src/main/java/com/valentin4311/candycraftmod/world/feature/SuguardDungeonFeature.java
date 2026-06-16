@@ -126,6 +126,8 @@ public class SuguardDungeonFeature extends Feature<NoneFeatureConfiguration> {
     }
 
     private void clearEntry(WorldGenLevel level, int x, int y, int z) {
+        box(level, x - 3, y + 1, z - 3, x + 3, y + 3, z + 3, Blocks.AIR.defaultBlockState());
+        hollowBox(level, x - 4, y + 1, z - 4, x + 4, y + 3, z + 4, caramelBrick());
         set(level, x, y, z, caramel());
         set(level, x, y + 1, z, suguardTeleporter());
         box(level, x - 1, y + 2, z - 1, x + 1, y + 3, z + 1, Blocks.AIR.defaultBlockState());
@@ -140,13 +142,13 @@ public class SuguardDungeonFeature extends Feature<NoneFeatureConfiguration> {
         box(level, x + 1, y + 1, z - 8, x + 1, y + 3, z, stair(Direction.EAST, false));
         box(level, x - 1, y + 1, z - 4, x, y + 3, z - 4, caramel());
         box(level, x + 1, y + 1, z - 4, x + 1, y + 2, z - 4, Blocks.AIR.defaultBlockState());
+        set(level, x + 3, y, z - 4, chocolate());
+        set(level, x + 3, y + 1, z - 4, Blocks.REDSTONE_TORCH.defaultBlockState());
+        set(level, x + 3, y + 2, z - 4, chocolate());
         redstone(level, x + 1, y, z - 5);
         redstone(level, x + 1, y, z - 4);
         redstone(level, x + 1, y, z - 3);
         redstone(level, x + 2, y, z - 4);
-        set(level, x + 3, y, z - 4, chocolate());
-        set(level, x + 3, y + 1, z - 4, Blocks.REDSTONE_TORCH.defaultBlockState());
-        set(level, x + 3, y + 2, z - 4, chocolate());
         box(level, x + 2, y + 1, z - 4, x + 2, y + 2, z - 4, Blocks.STICKY_PISTON.defaultBlockState().setValue(BlockStateProperties.FACING, Direction.WEST));
         box(level, x + 1, y + 1, z - 3, x + 1, y + 3, z - 3, caramel());
         box(level, x + 1, y + 1, z - 5, x + 1, y + 3, z - 5, caramel());
@@ -165,13 +167,13 @@ public class SuguardDungeonFeature extends Feature<NoneFeatureConfiguration> {
         box(level, x - 8, y + 1, z + 1, x, y + 3, z + 1, stair(Direction.SOUTH, false));
         box(level, x - 4, y + 1, z - 1, x - 4, y + 3, z, caramel());
         box(level, x - 4, y + 1, z + 1, x - 4, y + 2, z + 1, Blocks.AIR.defaultBlockState());
+        set(level, x - 4, y, z + 3, chocolate());
+        set(level, x - 4, y + 1, z + 3, Blocks.REDSTONE_TORCH.defaultBlockState());
+        set(level, x - 4, y + 2, z + 3, chocolate());
         redstone(level, x - 5, y, z + 1);
         redstone(level, x - 4, y, z + 1);
         redstone(level, x - 3, y, z + 1);
         redstone(level, x - 4, y, z + 2);
-        set(level, x - 4, y, z + 3, chocolate());
-        set(level, x - 4, y + 1, z + 3, Blocks.REDSTONE_TORCH.defaultBlockState());
-        set(level, x - 4, y + 2, z + 3, chocolate());
         box(level, x - 4, y + 1, z + 2, x - 4, y + 2, z + 2, Blocks.STICKY_PISTON.defaultBlockState().setValue(BlockStateProperties.FACING, Direction.NORTH));
         box(level, x - 3, y + 1, z + 1, x - 3, y + 3, z + 1, caramel());
         box(level, x - 5, y + 1, z + 1, x - 5, y + 3, z + 1, caramel());
@@ -595,6 +597,7 @@ public class SuguardDungeonFeature extends Feature<NoneFeatureConfiguration> {
         return block == Blocks.REDSTONE_WIRE
             || block == Blocks.REDSTONE_TORCH
             || block == Blocks.REDSTONE_WALL_TORCH
+            || block == Blocks.REPEATER
             || block == Blocks.REDSTONE_LAMP
             || block == Blocks.STICKY_PISTON
             || block == Blocks.PISTON_HEAD

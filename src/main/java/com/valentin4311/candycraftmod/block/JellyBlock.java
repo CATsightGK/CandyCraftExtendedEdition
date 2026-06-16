@@ -14,9 +14,12 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import java.lang.reflect.Field;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class JellyBlock extends Block {
     private final double jump;
+    private static final ConcurrentHashMap<UUID, Integer> PURPLE_CHARGE_TICKS = new ConcurrentHashMap<>();
     private static Field jumpingField;
 
     public JellyBlock(double jump, BlockBehaviour.Properties properties) {
@@ -47,11 +50,23 @@ public class JellyBlock extends Block {
             Vec3 movement = entity.getDeltaMovement();
             if (jump == 2.1D) {
                 entity.resetFallDistance();
-                if (!(entity instanceof Player player) || !isPressingJump(player)) {
-                    entity.setDeltaMovement(movement.x * 0.82D, Math.min(movement.y, 0.0D), movement.z * 0.82D);
+                if (!(entity instanceof Player player)) {
+                    return;
+                }
+                UUID id = player.getUUID();
+                int charge = PURPLE_CHARGE_TICKS.merge(id, 1, Integer::sum);
+                boolean wantsJump = isPressingJump(player) || player.getDeltaMovement().y > 0.08D;
+                if (!wantsJump) {
+                    double bob = level.isClientSide ? Math.sin((player.tickCount + charge) * 0.7D) * 0.015D : 0.0D;
+                    entity.setDeltaMovement(movement.x * 0.70D, Math.min(movement.y, 0.0D) + bob, movement.z * 0.70D);
                     entity.hasImpulse = true;
                     return;
                 }
+                PURPLE_CHARGE_TICKS.remove(id);
+                entity.setDeltaMovement(movement.x * 1.15D, Math.max(1.15D, movement.y + 1.05D), movement.z * 1.15D);
+                entity.resetFallDistance();
+                entity.hasImpulse = true;
+                return;
             }
             if (movement.y <= 0.0D) {
                 entity.setDeltaMovement(movement.x, movement.y + jump, movement.z);

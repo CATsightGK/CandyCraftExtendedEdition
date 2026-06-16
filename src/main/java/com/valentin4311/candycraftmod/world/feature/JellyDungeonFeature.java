@@ -343,7 +343,7 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
             for (int j = 5; j < 23; j++) {
                 for (int k = 1; k < 23; k++) {
                     if (water && j < 21) {
-                        setStatic(level, x + i - 12, y + j, z - k - 1, Blocks.WATER.defaultBlockState());
+                        setStatic(level, x + i - 12, y + j, z - k - 1, Blocks.WATER.defaultBlockState().setValue(net.minecraft.world.level.block.LiquidBlock.LEVEL, 0));
                     } else {
                         setStatic(level, x + i - 12, y + j, z - k - 1, Blocks.AIR.defaultBlockState());
                     }
@@ -353,6 +353,9 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
                 }
                 water = !water;
             }
+        }
+        for (int n = 0; n < 6; n++) {
+            spawnEntity(level, CCEntityTypes.TORNADO_JELLY.get(), x - 8 + n * 3 + 0.5D, y + 6 + (n % 4) * 2 + 0.5D, z - 6 - n * 2 + 0.5D, random);
         }
         for (int i = 1; i < 23; i++) {
             for (int k = 1; k < 23; k++) {
@@ -405,8 +408,15 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
         clearDoor(level, x, y + 20, z - 24, 2, 3);
         for (int i = 1; i < 23; i++) {
             for (int j = 5; j < 21; j += 2) {
-                setStatic(level, x + i - 12, y + j, z - 2, Blocks.WATER.defaultBlockState());
-                setStatic(level, x + i - 12, y + j, z - 23, Blocks.WATER.defaultBlockState());
+                setStatic(level, x + i - 12, y + j, z - 2, Blocks.WATER.defaultBlockState().setValue(net.minecraft.world.level.block.LiquidBlock.LEVEL, 0));
+                setStatic(level, x + i - 12, y + j, z - 23, Blocks.WATER.defaultBlockState().setValue(net.minecraft.world.level.block.LiquidBlock.LEVEL, 0));
+            }
+        }
+        for (int i = 1; i < 23; i++) {
+            for (int j = 6; j < 21; j += 2) {
+                for (int k = 1; k < 23; k++) {
+                    setStatic(level, x + i - 12, y + j, z - k - 1, Blocks.AIR.defaultBlockState());
+                }
             }
         }
     }
@@ -444,8 +454,8 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
         clearDoor(level, x, y + 2, z - 1, 2, 3);
         ironDoor(level, x, y + 2, z - 55, Direction.WEST, false);
         ironDoor(level, x + 1, y + 2, z - 55, Direction.WEST, true);
-        set(level, x + 1, y, z - 53, Blocks.REPEATER.defaultBlockState().setValue(RepeaterBlock.FACING, Direction.EAST));
-        set(level, x - 2, y, z - 51, Blocks.REPEATER.defaultBlockState().setValue(RepeaterBlock.FACING, Direction.WEST));
+        set(level, x + 1, y, z - 53, Blocks.REPEATER.defaultBlockState().setValue(RepeaterBlock.FACING, Direction.EAST).setValue(RepeaterBlock.POWERED, true));
+        set(level, x - 2, y, z - 51, Blocks.REPEATER.defaultBlockState().setValue(RepeaterBlock.FACING, Direction.WEST).setValue(RepeaterBlock.POWERED, true));
         posX += 55;
     }
 
@@ -525,6 +535,7 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
         set(level, x, y + 2, z - 24, CCBlocks.JELLY_SENTRY_KEY_HOLE.get().defaultBlockState());
         set(level, x, y + 3, z - 24, CCBlocks.JELLY_SENTRY_KEY_HOLE.get().defaultBlockState());
         clearDoor(level, x, y + 2, z - 1, 2, 4);
+        clearDoor(level, x, y + 4, z - 1, 2, 2);
         set(level, x, y + 2, z - 24, CCBlocks.JELLY_SENTRY_KEY_HOLE.get().defaultBlockState());
         set(level, x, y + 3, z - 24, CCBlocks.JELLY_SENTRY_KEY_HOLE.get().defaultBlockState());
         spawnEntity(level, CCEntityTypes.PEZ_JELLY.get(), x + 1.0D, y + 2.0D, z - 12.0D, random);
@@ -677,52 +688,52 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
     }
 
     private void legacyDoorMechanism(WorldGenLevel level, int x, int y, int z, boolean useStairsCenter) {
-        set(level, x + 7, y + 2, z, CCBlocks.LICORICE_BRICK.get().defaultBlockState());
-        set(level, x + 10, y + 2, z, CCBlocks.LICORICE_BRICK.get().defaultBlockState());
+        set(level, x + 6, y + 2, z, CCBlocks.LICORICE_BRICK.get().defaultBlockState());
+        set(level, x + 9, y + 2, z, CCBlocks.LICORICE_BRICK.get().defaultBlockState());
+        set(level, x + 7, y + 5, z, CCBlocks.LICORICE_BRICK.get().defaultBlockState());
         set(level, x + 8, y + 5, z, CCBlocks.LICORICE_BRICK.get().defaultBlockState());
-        set(level, x + 9, y + 5, z, CCBlocks.LICORICE_BRICK.get().defaultBlockState());
-        set(level, x + 8, y + 3, z, licoriceDoorStair(Direction.WEST, false));
-        set(level, x + 9, y + 3, z, licoriceDoorStair(Direction.EAST, false));
-        set(level, x + 8, y + 4, z, licoriceDoorStair(Direction.NORTH, true));
-        set(level, x + 9, y + 4, z, licoriceDoorStair(Direction.SOUTH, true));
+        set(level, x + 7, y + 3, z, licoriceDoorStair(Direction.WEST, false));
+        set(level, x + 8, y + 3, z, licoriceDoorStair(Direction.EAST, false));
+        set(level, x + 7, y + 4, z, licoriceDoorStair(Direction.NORTH, true));
+        set(level, x + 8, y + 4, z, licoriceDoorStair(Direction.SOUTH, true));
+        set(level, x + 7, y + 2, z, useStairsCenter ? licoriceDoorStair(Direction.NORTH, false) : slab(CCBlocks.LICORICE_BRICK_SLAB.get(), false));
         set(level, x + 8, y + 2, z, useStairsCenter ? licoriceDoorStair(Direction.NORTH, false) : slab(CCBlocks.LICORICE_BRICK_SLAB.get(), false));
-        set(level, x + 9, y + 2, z, useStairsCenter ? licoriceDoorStair(Direction.NORTH, false) : slab(CCBlocks.LICORICE_BRICK_SLAB.get(), false));
-        set(level, x + 6, y + 3, z, Blocks.STICKY_PISTON.defaultBlockState().setValue(BlockStateProperties.FACING, Direction.EAST));
-        set(level, x + 6, y + 4, z, Blocks.STICKY_PISTON.defaultBlockState().setValue(BlockStateProperties.FACING, Direction.EAST));
-        set(level, x + 7, y + 3, z, Blocks.PISTON_HEAD.defaultBlockState().setValue(BlockStateProperties.FACING, Direction.EAST));
-        set(level, x + 7, y + 4, z, Blocks.PISTON_HEAD.defaultBlockState().setValue(BlockStateProperties.FACING, Direction.EAST));
-        set(level, x + 11, y + 3, z, Blocks.STICKY_PISTON.defaultBlockState().setValue(BlockStateProperties.FACING, Direction.WEST));
-        set(level, x + 11, y + 4, z, Blocks.STICKY_PISTON.defaultBlockState().setValue(BlockStateProperties.FACING, Direction.WEST));
-        set(level, x + 10, y + 3, z, Blocks.PISTON_HEAD.defaultBlockState().setValue(BlockStateProperties.FACING, Direction.WEST));
-        set(level, x + 10, y + 4, z, Blocks.PISTON_HEAD.defaultBlockState().setValue(BlockStateProperties.FACING, Direction.WEST));
         genRedstone189(level, x + 9, y, z);
         genRedstone189(level, x + 8, y, z);
-        genRedstone189(level, x + 11, y, z);
-        genRedstone189(level, x + 6, y, z);
-        genRedstone189(level, x + 11, y, z + 1);
-        genRedstone189(level, x + 6, y, z + 1);
+        genRedstone189(level, x + 10, y, z);
+        genRedstone189(level, x + 5, y, z);
+        genRedstone189(level, x + 10, y, z + 1);
+        genRedstone189(level, x + 5, y, z + 1);
         for (int step = 0; step <= 3; step++) {
-            genRedstone189(level, x + 12 + step, y + 1, z + 1);
-            genRedstone189(level, x + 5 - step, y + 1, z + 1);
+            genRedstone189(level, x + 11 + step, y + 1, z + 1);
+            genRedstone189(level, x + 4 - step, y + 1, z + 1);
         }
-        set(level, x + 10, y, z, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
-        set(level, x + 7, y, z, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
-        set(level, x + 10, y + 1, z, Blocks.REPEATER.defaultBlockState().setValue(RepeaterBlock.FACING, Direction.EAST));
-        set(level, x + 7, y + 1, z, Blocks.REPEATER.defaultBlockState().setValue(RepeaterBlock.FACING, Direction.WEST));
-        genRedstone189(level, x + 15, y + 2, z);
-        genRedstone189(level, x + 2, y + 2, z);
+        set(level, x + 9, y, z, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
+        set(level, x + 6, y, z, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
+        set(level, x + 9, y + 1, z, Blocks.REPEATER.defaultBlockState().setValue(RepeaterBlock.FACING, Direction.EAST));
+        set(level, x + 6, y + 1, z, Blocks.REPEATER.defaultBlockState().setValue(RepeaterBlock.FACING, Direction.WEST));
         genRedstone189(level, x + 14, y + 2, z);
-        genRedstone189(level, x + 3, y + 2, z);
-        set(level, x + 13, y + 3, z, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
-        set(level, x + 4, y + 3, z, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
-        set(level, x + 12, y + 4, z, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
-        set(level, x + 5, y + 4, z, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
-        set(level, x + 5, y + 3, z, Blocks.REDSTONE_WALL_TORCH.defaultBlockState().setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.WEST));
-        set(level, x + 12, y + 3, z, Blocks.REDSTONE_WALL_TORCH.defaultBlockState().setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.EAST));
-        set(level, x + 14, y + 3, z + 1, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
-        set(level, x + 3, y + 3, z + 1, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
+        genRedstone189(level, x + 1, y + 2, z);
+        genRedstone189(level, x + 13, y + 2, z);
+        genRedstone189(level, x + 2, y + 2, z);
+        set(level, x + 12, y + 3, z, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
+        set(level, x + 3, y + 3, z, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
+        set(level, x + 11, y + 4, z, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
+        set(level, x + 4, y + 4, z, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
+        set(level, x + 4, y + 3, z, Blocks.REDSTONE_WALL_TORCH.defaultBlockState().setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.WEST));
+        set(level, x + 11, y + 3, z, Blocks.REDSTONE_WALL_TORCH.defaultBlockState().setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.EAST));
+        set(level, x + 13, y + 3, z + 1, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
+        set(level, x + 2, y + 3, z + 1, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
+        set(level, x + 5, y + 3, z, Blocks.STICKY_PISTON.defaultBlockState().setValue(BlockStateProperties.FACING, Direction.EAST));
+        set(level, x + 5, y + 4, z, Blocks.STICKY_PISTON.defaultBlockState().setValue(BlockStateProperties.FACING, Direction.EAST));
+        set(level, x + 6, y + 3, z, Blocks.PISTON_HEAD.defaultBlockState().setValue(BlockStateProperties.FACING, Direction.EAST));
+        set(level, x + 6, y + 4, z, Blocks.PISTON_HEAD.defaultBlockState().setValue(BlockStateProperties.FACING, Direction.EAST));
+        set(level, x + 10, y + 3, z, Blocks.STICKY_PISTON.defaultBlockState().setValue(BlockStateProperties.FACING, Direction.WEST));
+        set(level, x + 10, y + 4, z, Blocks.STICKY_PISTON.defaultBlockState().setValue(BlockStateProperties.FACING, Direction.WEST));
+        set(level, x + 9, y + 3, z, Blocks.PISTON_HEAD.defaultBlockState().setValue(BlockStateProperties.FACING, Direction.WEST));
+        set(level, x + 9, y + 4, z, Blocks.PISTON_HEAD.defaultBlockState().setValue(BlockStateProperties.FACING, Direction.WEST));
+        set(level, x + 7, y + 2, z + 1, Blocks.STONE_PRESSURE_PLATE.defaultBlockState());
         set(level, x + 8, y + 2, z + 1, Blocks.STONE_PRESSURE_PLATE.defaultBlockState());
-        set(level, x + 9, y + 2, z + 1, Blocks.STONE_PRESSURE_PLATE.defaultBlockState());
     }
 
     private void genRedstone189(WorldGenLevel level, int x, int y, int z) {
