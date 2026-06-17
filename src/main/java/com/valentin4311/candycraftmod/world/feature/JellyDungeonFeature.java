@@ -349,13 +349,21 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
         set(level, x + 6, y + 8, z - 42, wallTorchFromLegacyMeta(1, false));
         set(level, x + 6, y + 6, z - 43, wallTorchFromLegacyMeta(4, true));
         for (int i = 0; i < 6; i++) {
-            set(level, x + i, y + 3, z - 41, CCBlocks.JELLY_SHOCK_ABSORBER.get().defaultBlockState());
-            set(level, x + i, y + 3, z - 42, stickyPiston(Direction.SOUTH));
+            setStatic(level, x + i, y + 3, z - 40, Blocks.AIR.defaultBlockState());
+            setStatic(level, x + i, y + 3, z - 41, CCBlocks.JELLY_SHOCK_ABSORBER.get().defaultBlockState());
+            setStatic(level, x + i, y + 3, z - 42, stickyPiston(Direction.SOUTH));
             genRedstone189(level, x + i, y + 3, z - 43);
         }
         set(level, x + 2, y + 5, z - 43, slab(CCBlocks.LICORICE_BRICK_SLAB.get(), false));
         set(level, x + 3, y + 5, z - 43, slab(CCBlocks.LICORICE_BRICK_SLAB.get(), false));
         clearDoor(level, x + 2, y + 4, z - 41, 2, 5);
+        set(level, x + 2, y + 4, z - 41, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
+        set(level, x + 3, y + 4, z - 41, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
+        for (int i = 0; i < 6; i++) {
+            setStatic(level, x + i, y + 3, z - 40, Blocks.AIR.defaultBlockState());
+            setStatic(level, x + i, y + 3, z - 41, CCBlocks.JELLY_SHOCK_ABSORBER.get().defaultBlockState());
+            setStatic(level, x + i, y + 3, z - 42, stickyPiston(Direction.SOUTH));
+        }
         posX += 44;
     }
 
@@ -602,6 +610,7 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
         set(level, x + 24, y + 48, z - 2, Blocks.GLASS.defaultBlockState());
         set(level, x - 23, y + 48, z - 48, Blocks.GLASS.defaultBlockState());
         set(level, x + 24, y + 48, z - 48, Blocks.GLASS.defaultBlockState());
+        clearDoor(level, x, y + 1, z - 1, 2, 1);
         clearDoor(level, x, y + 3, z - 1, 2, 2);
         set(level, x, y + 2, z - 49, CCBlocks.JELLY_BOSS_KEY_HOLE.get().defaultBlockState());
         set(level, x, y + 1, z - 49, CCBlocks.JELLY_BOSS_KEY_HOLE.get().defaultBlockState());
@@ -792,8 +801,8 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
     }
 
     private static void placeOpposingPistonRepeaters(WorldGenLevel level, int westDoorX, int eastDoorX, int y, int z) {
-        set(level, westDoorX, y, z, repeater(Direction.WEST));
-        set(level, eastDoorX, y, z, repeater(Direction.EAST));
+        set(level, westDoorX, y, z, repeater(Direction.EAST));
+        set(level, eastDoorX, y, z, repeater(Direction.WEST));
     }
 
     private static void ironDoor(WorldGenLevel level, int x, int y, int z, Direction facing, boolean rightHinge) {
