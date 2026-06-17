@@ -19,12 +19,15 @@ import net.minecraft.world.level.block.SlabBlock;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.DoorBlock;
 import net.minecraft.world.level.block.LeverBlock;
+import net.minecraft.world.level.block.LiquidBlock;
 import net.minecraft.world.level.block.RepeaterBlock;
+import net.minecraft.world.level.block.RedStoneWireBlock;
 import net.minecraft.world.level.block.piston.PistonHeadBlock;
 import net.minecraft.world.level.block.state.properties.AttachFace;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.level.block.state.properties.DoorHingeSide;
 import net.minecraft.world.level.block.state.properties.PistonType;
+import net.minecraft.world.level.block.state.properties.RedstoneSide;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.block.entity.SpawnerBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -159,7 +162,7 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
                 }
             }
         }
-        legacyDoorMechanism(level, x, y, z - 4, true);
+        savedPistonDoor(level, random, x, y, z - 4, true);
         set(level, x + 1, y + 1, z + 1, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
         set(level, x + 1, y + 2, z + 1, CCBlocks.BLOCK_TELEPORTER.get().defaultBlockState());
         set(level, x - 1, y + 3, z + 1, CCBlocks.TRAMPOJELLY.get().defaultBlockState());
@@ -210,7 +213,7 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
             }
             side = !side;
         }
-        legacyDoorMechanism(level, x - 8, y, z - 6, false);
+        savedPistonDoor(level, random, x - 8, y, z - 6, false);
         posX += 10;
     }
 
@@ -346,14 +349,17 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
         for (int i = 1; i < 23; i++) {
             for (int j = 5; j < 23; j++) {
                 for (int k = 1; k < 23; k++) {
-                    if (j < 21 && (j & 1) == 1) {
-                        setStatic(level, x + i - 12, y + j, z - k - 1, Blocks.WATER.defaultBlockState().setValue(net.minecraft.world.level.block.LiquidBlock.LEVEL, 0));
-                    } else {
-                        setStatic(level, x + i - 12, y + j, z - k - 1, Blocks.AIR.defaultBlockState());
-                    }
+                    setStatic(level, x + i - 12, y + j, z - k - 1, Blocks.AIR.defaultBlockState());
                     if (random.nextInt(100) == 0) {
                         spawnEntity(level, CCEntityTypes.TORNADO_JELLY.get(), x + i - 12 + 0.5D, y + j + 0.5D, z - k - 1 + 0.5D, random);
                     }
+                }
+            }
+        }
+        for (int j = 5; j < 21; j += 2) {
+            for (int i = 1; i < 23; i++) {
+                for (int k = 1; k < 23; k++) {
+                    setStatic(level, x + i - 12, y + j, z - k - 1, stillWater());
                 }
             }
         }
@@ -486,8 +492,7 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
             .setValue(LeverBlock.FACE, AttachFace.WALL)
             .setValue(LeverBlock.FACING, side ? Direction.WEST : Direction.EAST)
             .setValue(LeverBlock.POWERED, false));
-        set(level, x + (side ? 1 : -1), y + 1, z, Blocks.REDSTONE_WALL_TORCH.defaultBlockState()
-            .setValue(BlockStateProperties.HORIZONTAL_FACING, side ? Direction.EAST : Direction.WEST));
+        set(level, x + (side ? 1 : -1), y + 1, z, redstoneWallTorch(side ? Direction.EAST : Direction.WEST, false));
         genRedstone189(level, x + (side ? 1 : -1), y - 1, z);
         genRedstone189(level, x + (side ? 1 : -1), y - 2, z - 1);
         clearDoor(level, x + (side ? 1 : -1), y, z - 1, 1, 1);
@@ -522,8 +527,9 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
         set(level, x + 11, y + 23, z - 23, Blocks.GLASS.defaultBlockState());
         set(level, x, y + 2, z - 24, CCBlocks.JELLY_SENTRY_KEY_HOLE.get().defaultBlockState());
         set(level, x, y + 3, z - 24, CCBlocks.JELLY_SENTRY_KEY_HOLE.get().defaultBlockState());
-        clearDoor(level, x, y + 2, z - 1, 2, 4);
-        clearDoor(level, x, y + 4, z - 1, 2, 2);
+        set(level, x + 1, y + 4, z - 1, Blocks.AIR.defaultBlockState());
+        set(level, x, y + 4, z - 1, Blocks.AIR.defaultBlockState());
+        set(level, x, y + 5, z - 1, Blocks.AIR.defaultBlockState());
         set(level, x, y + 2, z - 24, CCBlocks.JELLY_SENTRY_KEY_HOLE.get().defaultBlockState());
         set(level, x, y + 3, z - 24, CCBlocks.JELLY_SENTRY_KEY_HOLE.get().defaultBlockState());
         spawnEntity(level, CCEntityTypes.PEZ_JELLY.get(), x + 1.0D, y + 2.0D, z - 12.0D, random);
@@ -675,43 +681,37 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
         lootChest(level, random, crownChestPos);
     }
 
-    private void legacyDoorMechanism(WorldGenLevel level, int x, int y, int z, boolean useStairsCenter) {
+    private void savedPistonDoor(WorldGenLevel level, RandomSource random, int x, int y, int z, boolean spawnEntrance) {
+        int[][] jaw = {
+            {6,0,0},{7,0,0},{8,0,0},{9,0,0},{10,0,0},{11,0,0},{6,0,1},{11,0,1},
+            {7,1,-1},{8,1,-1},{9,1,-1},{10,1,-1},{2,1,1},{3,1,1},{4,1,1},{5,1,1},{7,1,1},{8,1,1},{9,1,1},{10,1,1},{12,1,1},{13,1,1},{14,1,1},{15,1,1},{7,1,2},{8,1,2},{9,1,2},{10,1,2},
+            {7,2,-1},{10,2,-1},{2,2,0},{3,2,0},{6,2,0},{11,2,0},{13,2,0},{15,2,0},{7,2,1},{10,2,1},{6,2,2},{11,2,2},
+            {7,3,-1},{10,3,-1},{4,3,0},{13,3,0},{3,3,1},{7,3,1},{10,3,1},{14,3,1},{6,3,2},{11,3,2},
+            {7,4,-1},{10,4,-1},{5,4,0},{12,4,0},{7,4,1},{10,4,1},{6,4,2},{11,4,2},
+            {7,5,-1},{8,5,-1},{9,5,-1},{10,5,-1},{7,5,0},{10,5,0},{7,5,1},{8,5,1},{9,5,1},{10,5,1},{7,5,2},{8,5,2},{9,5,2},{10,5,2}
+        };
+        for (int[] p : jaw) {
+            set(level, x + p[0], y + p[1], z + p[2], jawBreaker(random));
+        }
+
         set(level, x + 7, y + 2, z, CCBlocks.LICORICE_BRICK.get().defaultBlockState());
         set(level, x + 10, y + 2, z, CCBlocks.LICORICE_BRICK.get().defaultBlockState());
         set(level, x + 8, y + 5, z, CCBlocks.LICORICE_BRICK.get().defaultBlockState());
         set(level, x + 9, y + 5, z, CCBlocks.LICORICE_BRICK.get().defaultBlockState());
-        set(level, x + 8, y + 3, z, licoriceDoorStair(Direction.WEST, false));
-        set(level, x + 9, y + 3, z, licoriceDoorStair(Direction.EAST, false));
+        if (spawnEntrance) {
+            set(level, x + 8, y + 2, z, licoriceDoorStair(Direction.NORTH, false));
+            set(level, x + 9, y + 2, z, licoriceDoorStair(Direction.NORTH, false));
+            set(level, x + 8, y + 3, z, licoriceDoorStair(Direction.WEST, false));
+            set(level, x + 9, y + 3, z, licoriceDoorStair(Direction.EAST, false));
+        } else {
+            set(level, x + 8, y + 2, z, slab(CCBlocks.LICORICE_BRICK_SLAB.get(), false));
+            set(level, x + 9, y + 2, z, slab(CCBlocks.LICORICE_BRICK_SLAB.get(), false));
+            set(level, x + 8, y + 3, z, Blocks.AIR.defaultBlockState());
+            set(level, x + 9, y + 3, z, Blocks.AIR.defaultBlockState());
+        }
         set(level, x + 8, y + 4, z, licoriceDoorStair(Direction.NORTH, true));
         set(level, x + 9, y + 4, z, licoriceDoorStair(Direction.SOUTH, true));
-        set(level, x + 8, y + 2, z, useStairsCenter ? licoriceDoorStair(Direction.NORTH, false) : slab(CCBlocks.LICORICE_BRICK_SLAB.get(), false));
-        set(level, x + 9, y + 2, z, useStairsCenter ? licoriceDoorStair(Direction.NORTH, false) : slab(CCBlocks.LICORICE_BRICK_SLAB.get(), false));
-        genRedstone189(level, x + 9, y, z);
-        genRedstone189(level, x + 8, y, z);
-        genRedstone189(level, x + 11, y, z);
-        genRedstone189(level, x + 6, y, z);
-        genRedstone189(level, x + 11, y, z + 1);
-        genRedstone189(level, x + 6, y, z + 1);
-        for (int step = 0; step <= 3; step++) {
-            genRedstone189(level, x + 12 + step, y + 1, z + 1);
-            genRedstone189(level, x + 5 - step, y + 1, z + 1);
-        }
-        set(level, x + 10, y, z, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
-        set(level, x + 7, y, z, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
-        set(level, x + 10, y + 1, z, repeater(Direction.EAST));
-        set(level, x + 7, y + 1, z, repeater(Direction.WEST));
-        genRedstone189(level, x + 15, y + 2, z);
-        genRedstone189(level, x + 2, y + 2, z);
-        genRedstone189(level, x + 13, y + 2, z);
-        genRedstone189(level, x + 3, y + 2, z);
-        set(level, x + 13, y + 3, z, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
-        set(level, x + 4, y + 3, z, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
-        set(level, x + 12, y + 4, z, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
-        set(level, x + 5, y + 4, z, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
-        set(level, x + 5, y + 3, z, Blocks.REDSTONE_WALL_TORCH.defaultBlockState().setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.WEST));
-        set(level, x + 12, y + 3, z, Blocks.REDSTONE_WALL_TORCH.defaultBlockState().setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.EAST));
-        set(level, x + 14, y + 3, z + 1, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
-        set(level, x + 3, y + 3, z + 1, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
+
         set(level, x + 6, y + 3, z, stickyPiston(Direction.EAST));
         set(level, x + 6, y + 4, z, stickyPiston(Direction.EAST));
         set(level, x + 7, y + 3, z, pistonHead(Direction.EAST));
@@ -720,17 +720,38 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
         set(level, x + 11, y + 4, z, stickyPiston(Direction.WEST));
         set(level, x + 10, y + 3, z, pistonHead(Direction.WEST));
         set(level, x + 10, y + 4, z, pistonHead(Direction.WEST));
-        set(level, x + 8, y + 3, z, licoriceDoorStair(Direction.WEST, false));
-        set(level, x + 9, y + 3, z, licoriceDoorStair(Direction.EAST, false));
-        set(level, x + 8, y + 4, z, licoriceDoorStair(Direction.NORTH, true));
-        set(level, x + 9, y + 4, z, licoriceDoorStair(Direction.SOUTH, true));
+        set(level, x + 5, y + 3, z, redstoneWallTorch(Direction.WEST, true));
+        set(level, x + 12, y + 3, z, redstoneWallTorch(Direction.EAST, true));
+
+        set(level, x + 7, y + 1, z, repeater(Direction.WEST));
+        set(level, x + 10, y + 1, z, repeater(Direction.EAST));
         set(level, x + 8, y + 2, z + 1, pressurePlate());
         set(level, x + 9, y + 2, z + 1, pressurePlate());
+
+        setDust(level, x + 6, y + 1, z, RedstoneSide.NONE, RedstoneSide.SIDE, RedstoneSide.SIDE, RedstoneSide.NONE);
+        setDust(level, x + 8, y + 1, z, RedstoneSide.NONE, RedstoneSide.SIDE, RedstoneSide.NONE, RedstoneSide.SIDE);
+        setDust(level, x + 9, y + 1, z, RedstoneSide.NONE, RedstoneSide.SIDE, RedstoneSide.NONE, RedstoneSide.SIDE);
+        setDust(level, x + 11, y + 1, z, RedstoneSide.NONE, RedstoneSide.NONE, RedstoneSide.SIDE, RedstoneSide.SIDE);
+        setDust(level, x + 6, y + 1, z + 1, RedstoneSide.SIDE, RedstoneSide.NONE, RedstoneSide.NONE, RedstoneSide.UP);
+        setDust(level, x + 11, y + 1, z + 1, RedstoneSide.SIDE, RedstoneSide.UP, RedstoneSide.NONE, RedstoneSide.NONE);
+        for (int dx = 2; dx <= 5; dx++) {
+            setDust(level, x + dx, y + 2, z + 1, dx == 2 ? RedstoneSide.UP : RedstoneSide.NONE, RedstoneSide.SIDE, RedstoneSide.NONE, dx == 2 ? RedstoneSide.NONE : RedstoneSide.SIDE);
+        }
+        for (int dx = 12; dx <= 15; dx++) {
+            setDust(level, x + dx, y + 2, z + 1, RedstoneSide.NONE, RedstoneSide.SIDE, RedstoneSide.NONE, RedstoneSide.SIDE);
+        }
+        setDust(level, x + 2, y + 3, z, RedstoneSide.NONE, RedstoneSide.SIDE, RedstoneSide.SIDE, RedstoneSide.NONE);
+        setDust(level, x + 3, y + 3, z, RedstoneSide.NONE, RedstoneSide.SIDE, RedstoneSide.NONE, RedstoneSide.SIDE);
+        setDust(level, x + 15, y + 3, z, RedstoneSide.NONE, RedstoneSide.NONE, RedstoneSide.NONE, RedstoneSide.NONE);
     }
 
     private void genRedstone189(WorldGenLevel level, int x, int y, int z) {
         set(level, x, y, z, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
         set(level, x, y + 1, z, redstoneWire());
+    }
+
+    private static void setDust(WorldGenLevel level, int x, int y, int z, RedstoneSide north, RedstoneSide east, RedstoneSide south, RedstoneSide west) {
+        set(level, x, y, z, redstoneWire(north, east, south, west));
     }
 
     private static void ironDoor(WorldGenLevel level, int x, int y, int z, Direction facing, boolean rightHinge) {
@@ -752,6 +773,25 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
 
     private static BlockState redstoneWire() {
         return Blocks.REDSTONE_WIRE.defaultBlockState().setValue(BlockStateProperties.POWER, 0);
+    }
+
+    private static BlockState redstoneWire(RedstoneSide north, RedstoneSide east, RedstoneSide south, RedstoneSide west) {
+        return Blocks.REDSTONE_WIRE.defaultBlockState()
+            .setValue(RedStoneWireBlock.NORTH, north)
+            .setValue(RedStoneWireBlock.EAST, east)
+            .setValue(RedStoneWireBlock.SOUTH, south)
+            .setValue(RedStoneWireBlock.WEST, west)
+            .setValue(BlockStateProperties.POWER, 0);
+    }
+
+    private static BlockState redstoneWallTorch(Direction facing, boolean lit) {
+        return Blocks.REDSTONE_WALL_TORCH.defaultBlockState()
+            .setValue(BlockStateProperties.HORIZONTAL_FACING, facing)
+            .setValue(BlockStateProperties.LIT, lit);
+    }
+
+    private static BlockState stillWater() {
+        return Blocks.WATER.defaultBlockState().setValue(LiquidBlock.LEVEL, 0);
     }
 
     private static BlockState repeater(Direction facing) {
