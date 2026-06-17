@@ -82,10 +82,10 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
         feature.genMiniBossRoom189(level, RandomSource.create(1006L), baseX + 7, baseY + 2, zCursor);
         zCursor -= 38;
         feature.posX = 0;
-        feature.genBossRoom189(level, RandomSource.create(1007L), baseX + 7, baseY - 2, zCursor);
+        feature.genBossRoom189(level, RandomSource.create(1007L), baseX + 7, baseY, zCursor);
         zCursor -= 62;
         feature.posX = 0;
-        feature.genReward189(level, RandomSource.create(1008L), baseX + 7, baseY - 3, zCursor);
+        feature.genReward189(level, RandomSource.create(1008L), baseX + 7, baseY, zCursor);
     }
 
     @Override
@@ -142,20 +142,21 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
         }
         genCoridor189(level, random, x + 7, y, z - posX);
         genMiniBossRoom189(level, random, x + 7, y + 2, z - posX);
-        genCoridor189(level, random, x + 7, y - 2, z - posX);
+        int postPezY = y;
+        genCoridor189(level, random, x + 7, postPezY, z - posX);
         if (random.nextBoolean()) {
-            genJumpCraft189(level, random, x + 5, y - 5, z - posX);
-            genCoridor189(level, random, x + 7, y - 2, z - posX);
-            genMob189(level, random, x + 7, y - 2, z - posX);
+            genJumpCraft189(level, random, x + 5, postPezY - 3, z - posX);
+            genCoridor189(level, random, x + 7, postPezY, z - posX);
+            genMob189(level, random, x + 7, postPezY, z - posX);
         } else {
-            genMob189(level, random, x + 7, y - 2, z - posX);
-            genCoridor189(level, random, x + 7, y - 2, z - posX);
-            genJumpCraft189(level, random, x + 5, y - 5, z - posX);
+            genMob189(level, random, x + 7, postPezY, z - posX);
+            genCoridor189(level, random, x + 7, postPezY, z - posX);
+            genJumpCraft189(level, random, x + 5, postPezY - 3, z - posX);
         }
-        genCoridor189(level, random, x + 7, y - 2, z - posX);
-        genBossRoom189(level, random, x + 7, y - 2, z - posX);
-        genCoridor189(level, random, x + 7, y - 3, z - posX);
-        genReward189(level, random, x + 7, y - 3, z - posX);
+        genCoridor189(level, random, x + 7, postPezY, z - posX);
+        genBossRoom189(level, random, x + 7, postPezY, z - posX);
+        genCoridor189(level, random, x + 7, postPezY, z - posX);
+        genReward189(level, random, x + 7, postPezY, z - posX);
     }
 
     private void spawnRoom189(WorldGenLevel level, RandomSource random, int x, int y, int z) {
@@ -335,24 +336,21 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
             }
         }
         clearDoor(level, x + 2, y + 4, z - 41, 2, 5);
-        set(level, x + 4, y + 11, z - 41, Blocks.REDSTONE_LAMP.defaultBlockState().setValue(BlockStateProperties.LIT, true));
+        set(level, x + 4, y + 11, z - 41, Blocks.REDSTONE_LAMP.defaultBlockState().setValue(BlockStateProperties.LIT, false));
         set(level, x + 4, y + 11, z - 40, Blocks.LEVER.defaultBlockState()
             .setValue(LeverBlock.FACE, AttachFace.WALL)
             .setValue(LeverBlock.FACING, Direction.SOUTH)
-            .setValue(LeverBlock.POWERED, true));
-        set(level, x + 3, y + 11, z - 40, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
-        set(level, x + 5, y + 11, z - 40, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
+            .setValue(LeverBlock.POWERED, false));
         genRedstone189(level, x + 4, y + 10, z - 42);
         genRedstone189(level, x + 5, y + 8, z - 42);
         genRedstone189(level, x + 6, y + 6, z - 42);
         genRedstone189(level, x + 6, y + 4, z - 43);
-        set(level, x + 5, y + 10, z - 42, wallTorchFromLegacyMeta(1, false));
-        set(level, x + 6, y + 8, z - 42, wallTorchFromLegacyMeta(1, true));
-        set(level, x + 6, y + 6, z - 43, wallTorchFromLegacyMeta(4, false));
+        set(level, x + 5, y + 10, z - 42, wallTorchFromLegacyMeta(1, true));
+        set(level, x + 6, y + 8, z - 42, wallTorchFromLegacyMeta(1, false));
+        set(level, x + 6, y + 6, z - 43, wallTorchFromLegacyMeta(4, true));
         for (int i = 0; i < 6; i++) {
-            set(level, x + i, y + 3, z - 40, CCBlocks.JELLY_SHOCK_ABSORBER.get().defaultBlockState());
-            set(level, x + i, y + 3, z - 41, legacyPistonHead(11));
-            set(level, x + i, y + 3, z - 42, legacyStickyPiston(11));
+            set(level, x + i, y + 3, z - 41, CCBlocks.JELLY_SHOCK_ABSORBER.get().defaultBlockState());
+            set(level, x + i, y + 3, z - 42, stickyPiston(Direction.SOUTH));
             genRedstone189(level, x + i, y + 3, z - 43);
         }
         set(level, x + 2, y + 5, z - 43, slab(CCBlocks.LICORICE_BRICK_SLAB.get(), false));
@@ -604,7 +602,7 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
         set(level, x + 24, y + 48, z - 2, Blocks.GLASS.defaultBlockState());
         set(level, x - 23, y + 48, z - 48, Blocks.GLASS.defaultBlockState());
         set(level, x + 24, y + 48, z - 48, Blocks.GLASS.defaultBlockState());
-        clearDoor(level, x, y + 1, z - 1, 2, 4);
+        clearDoor(level, x, y + 3, z - 1, 2, 2);
         set(level, x, y + 2, z - 49, CCBlocks.JELLY_BOSS_KEY_HOLE.get().defaultBlockState());
         set(level, x, y + 1, z - 49, CCBlocks.JELLY_BOSS_KEY_HOLE.get().defaultBlockState());
         spawnEntity(level, CCEntityTypes.KING_SLIME.get(), x + 1.0D, y + 2.0D, z - 25.0D, random);
@@ -724,10 +722,10 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
         set(level, x + 10, y + 2, z, CCBlocks.LICORICE_BRICK.get().defaultBlockState());
         set(level, x + 8, y + 5, z, CCBlocks.LICORICE_BRICK.get().defaultBlockState());
         set(level, x + 9, y + 5, z, CCBlocks.LICORICE_BRICK.get().defaultBlockState());
-        set(level, x + 8, y + 3, z, legacyLicoriceStair(1));
-        set(level, x + 9, y + 3, z, legacyLicoriceStair(0));
-        set(level, x + 8, y + 4, z, legacyLicoriceStair(5));
-        set(level, x + 9, y + 4, z, legacyLicoriceStair(4));
+        set(level, x + 8, y + 3, z, legacyLicoriceStair(0));
+        set(level, x + 9, y + 3, z, legacyLicoriceStair(1));
+        set(level, x + 8, y + 4, z, legacyLicoriceStair(4));
+        set(level, x + 9, y + 4, z, legacyLicoriceStair(5));
         set(level, x + 8, y + 2, z, legacyLicoriceStair(3));
         set(level, x + 9, y + 2, z, legacyLicoriceStair(3));
         set(level, x + 8, y + 2, z + 1, pressurePlate());
@@ -738,10 +736,10 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
         placeLegacyDoorRedstone189(level, x, y, z);
         set(level, x + 7, y + 2, z, CCBlocks.LICORICE_BRICK.get().defaultBlockState());
         set(level, x + 10, y + 2, z, CCBlocks.LICORICE_BRICK.get().defaultBlockState());
-        set(level, x + 8, y + 3, z, legacyLicoriceStair(1));
-        set(level, x + 9, y + 3, z, legacyLicoriceStair(0));
-        set(level, x + 8, y + 4, z, legacyLicoriceStair(5));
-        set(level, x + 9, y + 4, z, legacyLicoriceStair(4));
+        set(level, x + 8, y + 3, z, legacyLicoriceStair(0));
+        set(level, x + 9, y + 3, z, legacyLicoriceStair(1));
+        set(level, x + 8, y + 4, z, legacyLicoriceStair(4));
+        set(level, x + 9, y + 4, z, legacyLicoriceStair(5));
         set(level, x + 8, y + 2, z, slab(CCBlocks.LICORICE_BRICK_SLAB.get(), false));
         set(level, x + 9, y + 2, z, slab(CCBlocks.LICORICE_BRICK_SLAB.get(), false));
         set(level, x + 8, y + 2, z + 1, pressurePlate());
@@ -773,7 +771,7 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
         genRedstone189(level, x + 2, y + 1, z + 1);
         set(level, x + 10, y, z, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
         set(level, x + 7, y, z, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
-        placeDungeonEndRepeaters(level, x + 7, x + 10, y + 1, z);
+        placeOpposingPistonRepeaters(level, x + 7, x + 10, y + 1, z);
         genRedstone189(level, x + 15, y + 2, z);
         genRedstone189(level, x + 2, y + 2, z);
         genRedstone189(level, x + 14, y + 2, z);
@@ -793,9 +791,9 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
         set(level, x, y + 1, z, redstoneWire());
     }
 
-    private static void placeDungeonEndRepeaters(WorldGenLevel level, int leftX, int rightX, int y, int z) {
-        set(level, leftX, y, z, repeater(Direction.WEST));
-        set(level, rightX, y, z, repeater(Direction.EAST));
+    private static void placeOpposingPistonRepeaters(WorldGenLevel level, int westDoorX, int eastDoorX, int y, int z) {
+        set(level, westDoorX, y, z, repeater(Direction.WEST));
+        set(level, eastDoorX, y, z, repeater(Direction.EAST));
     }
 
     private static void ironDoor(WorldGenLevel level, int x, int y, int z, Direction facing, boolean rightHinge) {
