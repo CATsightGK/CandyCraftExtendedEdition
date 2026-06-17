@@ -568,6 +568,21 @@ public final class CCClient {
                 }
                 minecraft.player.getPersistentData().putInt(CandyLiquidBlock.PINK_FIRE_TICKS_TAG, ticks - 1);
             }
+            applyPurpleJellyBob(minecraft);
+        }
+
+        private static void applyPurpleJellyBob(Minecraft minecraft) {
+            if (minecraft.level == null || minecraft.player == null || minecraft.player.isSpectator()) {
+                return;
+            }
+            net.minecraft.core.BlockPos feet = minecraft.player.blockPosition();
+            if (!minecraft.level.getBlockState(feet.below()).is(CCBlocks.PURPLE_TRAMPOJELLY.get())
+                && !minecraft.level.getBlockState(feet).is(CCBlocks.PURPLE_TRAMPOJELLY.get())) {
+                return;
+            }
+            float wobble = (float)Math.sin((minecraft.player.tickCount + minecraft.getFrameTime()) * 0.85F) * 0.035F;
+            minecraft.player.oBob = minecraft.player.bob;
+            minecraft.player.bob = Math.max(0.0F, minecraft.player.bob * 0.72F + wobble);
         }
 
         @SubscribeEvent

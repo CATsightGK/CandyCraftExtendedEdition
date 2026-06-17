@@ -122,18 +122,13 @@ public class SuguardDungeonFeature extends Feature<NoneFeatureConfiguration> {
         } else {
             box(level, x, y + 1, z - 4, x, y + 2, z - 4, Blocks.AIR.defaultBlockState());
         }
-        clearEntry(level, x, y, z);
+        clearSpawnFooting(level, x, y, z);
     }
 
-    private void clearEntry(WorldGenLevel level, int x, int y, int z) {
-        hollowBox(level, x - 4, y + 1, z - 4, x + 4, y + 3, z + 4, caramelBrick());
-        hollowBox(level, x - 3, y + 4, z - 3, x + 3, y + 4, z + 3, caramelBrick());
-        box(level, x - 3, y + 1, z - 3, x + 3, y + 6, z + 3, Blocks.AIR.defaultBlockState());
+    private void clearSpawnFooting(WorldGenLevel level, int x, int y, int z) {
         set(level, x, y, z, caramel());
         set(level, x, y + 1, z, suguardTeleporter());
-        box(level, x - 1, y + 2, z - 1, x + 1, y + 6, z + 1, Blocks.AIR.defaultBlockState());
-        set(level, x, y, z, caramel());
-        set(level, x, y + 1, z, suguardTeleporter());
+        box(level, x - 1, y + 2, z - 1, x + 1, y + 3, z + 1, Blocks.AIR.defaultBlockState());
     }
 
     private void zCorridor(WorldGenLevel level, int x, int y, int z) {
@@ -150,13 +145,13 @@ public class SuguardDungeonFeature extends Feature<NoneFeatureConfiguration> {
         redstone(level, x + 1, y, z - 4);
         redstone(level, x + 1, y, z - 3);
         redstone(level, x + 2, y, z - 4);
-        box(level, x + 2, y + 1, z - 4, x + 2, y + 2, z - 4, Blocks.STICKY_PISTON.defaultBlockState().setValue(BlockStateProperties.FACING, Direction.WEST));
+        box(level, x + 2, y + 1, z - 4, x + 2, y + 2, z - 4, stickyPiston(Direction.WEST));
         box(level, x + 1, y + 1, z - 3, x + 1, y + 3, z - 3, caramel());
         box(level, x + 1, y + 1, z - 5, x + 1, y + 3, z - 5, caramel());
         box(level, x - 1, y + 1, z - 3, x - 1, y + 3, z - 3, caramel());
         box(level, x - 1, y + 1, z - 5, x - 1, y + 3, z - 5, caramel());
-        set(level, x, y + 1, z - 3, Blocks.STONE_PRESSURE_PLATE.defaultBlockState());
-        set(level, x, y + 1, z - 5, Blocks.STONE_PRESSURE_PLATE.defaultBlockState());
+        set(level, x, y + 1, z - 3, pressurePlate());
+        set(level, x, y + 1, z - 5, pressurePlate());
         zDoor(level, x, y + 1, z);
         zDoor(level, x, y + 1, z - 8);
     }
@@ -175,13 +170,13 @@ public class SuguardDungeonFeature extends Feature<NoneFeatureConfiguration> {
         redstone(level, x - 4, y, z + 1);
         redstone(level, x - 3, y, z + 1);
         redstone(level, x - 4, y, z + 2);
-        box(level, x - 4, y + 1, z + 2, x - 4, y + 2, z + 2, Blocks.STICKY_PISTON.defaultBlockState().setValue(BlockStateProperties.FACING, Direction.NORTH));
+        box(level, x - 4, y + 1, z + 2, x - 4, y + 2, z + 2, stickyPiston(Direction.NORTH));
         box(level, x - 3, y + 1, z + 1, x - 3, y + 3, z + 1, caramel());
         box(level, x - 5, y + 1, z + 1, x - 5, y + 3, z + 1, caramel());
         box(level, x - 3, y + 1, z - 1, x - 3, y + 3, z - 1, caramel());
         box(level, x - 5, y + 1, z - 1, x - 5, y + 3, z - 1, caramel());
-        set(level, x - 3, y + 1, z, Blocks.STONE_PRESSURE_PLATE.defaultBlockState());
-        set(level, x - 5, y + 1, z, Blocks.STONE_PRESSURE_PLATE.defaultBlockState());
+        set(level, x - 3, y + 1, z, pressurePlate());
+        set(level, x - 5, y + 1, z, pressurePlate());
         xDoor(level, x, y + 1, z);
         xDoor(level, x - 8, y + 1, z);
     }
@@ -322,7 +317,7 @@ public class SuguardDungeonFeature extends Feature<NoneFeatureConfiguration> {
         }
 
         set(level, x - 25, 30 + yOffset, z, Blocks.AIR.defaultBlockState());
-        set(level, x - 24, 30 + yOffset, z, Blocks.STICKY_PISTON.defaultBlockState().setValue(BlockStateProperties.FACING, Direction.WEST));
+        set(level, x - 24, 30 + yOffset, z, stickyPiston(Direction.WEST));
         set(level, x - 26, 11 + yOffset, z, CCBlocks.GRENADINE.get().defaultBlockState());
         box(level, x - 26, 31 + yOffset, z, x - 26, 32 + yOffset, z, CCBlocks.GRENADINE.get().defaultBlockState());
         set(level, x - 24, 12 + yOffset, z, Blocks.REDSTONE_TORCH.defaultBlockState());
@@ -333,11 +328,11 @@ public class SuguardDungeonFeature extends Feature<NoneFeatureConfiguration> {
         box(level, x - 16, 13 + yOffset, z, x - 16, 29 + yOffset, z, Blocks.REDSTONE_LAMP.defaultBlockState());
         box(level, x - 20, 13 + yOffset, z - 4, x - 20, 29 + yOffset, z - 4, Blocks.REDSTONE_LAMP.defaultBlockState());
         box(level, x - 20, 13 + yOffset, z + 4, x - 20, 29 + yOffset, z + 4, Blocks.REDSTONE_LAMP.defaultBlockState());
-        set(level, x - 24, 30 + yOffset, z, Blocks.STICKY_PISTON.defaultBlockState().setValue(BlockStateProperties.FACING, Direction.WEST));
+        set(level, x - 24, 30 + yOffset, z, stickyPiston(Direction.WEST));
         box(level, x - 23, 28 + yOffset, z, x - 17, 28 + yOffset, z, caramel());
         box(level, x - 20, 28 + yOffset, z - 3, x - 20, 28 + yOffset, z + 3, caramel());
-        box(level, x - 23, 29 + yOffset, z, x - 17, 29 + yOffset, z, Blocks.REDSTONE_WIRE.defaultBlockState());
-        box(level, x - 20, 29 + yOffset, z - 3, x - 20, 29 + yOffset, z + 3, Blocks.REDSTONE_WIRE.defaultBlockState());
+        box(level, x - 23, 29 + yOffset, z, x - 17, 29 + yOffset, z, redstoneWire());
+        box(level, x - 20, 29 + yOffset, z - 3, x - 20, 29 + yOffset, z + 3, redstoneWire());
     }
 
     private void bossRoom(WorldGenLevel level, RandomSource random, int x, int y, int z, int doorX, int doorY, int doorZ, boolean boss) {
@@ -415,7 +410,7 @@ public class SuguardDungeonFeature extends Feature<NoneFeatureConfiguration> {
 
     private void redstone(WorldGenLevel level, int x, int y, int z) {
         set(level, x, y - 1, z, chocolate());
-        set(level, x, y, z, Blocks.REDSTONE_WIRE.defaultBlockState());
+        set(level, x, y, z, redstoneWire());
     }
 
     private void bossPillar(WorldGenLevel level, int x, int y, int z) {
@@ -502,6 +497,9 @@ public class SuguardDungeonFeature extends Feature<NoneFeatureConfiguration> {
     private BlockState honeyLamp() { return CCBlocks.HONEY_LAMP.get().defaultBlockState(); }
     private BlockState nougat() { return CCBlocks.NOUGAT_BLOCK.get().defaultBlockState(); }
     private BlockState suguardTeleporter() { return CCBlocks.BLOCK_TELEPORTER.get().defaultBlockState().setValue(DungeonTeleporterBlock.DUNGEON, DungeonTeleporterBlock.DungeonKind.SUGUARD); }
+    private BlockState redstoneWire() { return Blocks.REDSTONE_WIRE.defaultBlockState().setValue(BlockStateProperties.POWER, 0); }
+    private BlockState stickyPiston(Direction facing) { return Blocks.STICKY_PISTON.defaultBlockState().setValue(BlockStateProperties.FACING, facing).setValue(BlockStateProperties.EXTENDED, false); }
+    private BlockState pressurePlate() { return Blocks.STONE_PRESSURE_PLATE.defaultBlockState().setValue(BlockStateProperties.POWERED, false); }
 
     private void hollowBox(WorldGenLevel level, int x1, int y1, int z1, int x2, int y2, int z2, BlockState state) {
         int minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
