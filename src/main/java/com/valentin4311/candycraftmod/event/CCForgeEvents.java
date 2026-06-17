@@ -9,11 +9,12 @@ import com.valentin4311.candycraftmod.registry.CCFluids;
 import com.valentin4311.candycraftmod.item.JellyWandItem;
 import com.valentin4311.candycraftmod.registry.CCItems;
 import com.valentin4311.candycraftmod.registry.CCSweetscapeBlocks;
-import com.valentin4311.candycraftmod.world.CCDimensions;
 import com.valentin4311.candycraftmod.world.feature.CottonCandyTreeFeature;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.core.BlockPos;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
@@ -54,6 +55,9 @@ import net.minecraftforge.registries.ForgeRegistries;
 @Mod.EventBusSubscriber(modid = CandyCraft.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public final class CCForgeEvents {
     private static final String CRANBERRY_EMBLEM_DAY = CandyCraft.MODID + ".cranberry_emblem_day";
+    private static final ResourceKey<Level> CANDY_WORLD = dimensionKey("candy_world");
+    private static final ResourceKey<Level> JELLY_DUNGEON = dimensionKey("jelly_dungeon");
+    private static final ResourceKey<Level> SUGUARD_DUNGEON = dimensionKey("suguard_dungeon");
 
     private CCForgeEvents() {
     }
@@ -264,7 +268,7 @@ public final class CCForgeEvents {
     }
 
     private static boolean isCandyWorld(Level level) {
-        return level.dimension().equals(CCDimensions.CANDY_WORLD);
+        return level.dimension().equals(CANDY_WORLD);
     }
 
     private static boolean isProtectedDungeonInteraction(LevelAccessor level, Player player) {
@@ -274,7 +278,11 @@ public final class CCForgeEvents {
         if (!(level instanceof Level actualLevel)) {
             return false;
         }
-        return actualLevel.dimension().equals(CCDimensions.JELLY_DUNGEON) || actualLevel.dimension().equals(CCDimensions.SUGUARD_DUNGEON);
+        return actualLevel.dimension().equals(JELLY_DUNGEON) || actualLevel.dimension().equals(SUGUARD_DUNGEON);
+    }
+
+    private static ResourceKey<Level> dimensionKey(String path) {
+        return ResourceKey.create(Registries.DIMENSION, new ResourceLocation(CandyCraft.MODID, path));
     }
 
     private static boolean isBlockedCandyWorldMob(Entity entity) {
