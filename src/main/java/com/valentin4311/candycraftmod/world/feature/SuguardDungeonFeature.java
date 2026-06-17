@@ -13,6 +13,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.WorldGenLevel;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.LadderBlock;
 import net.minecraft.world.level.block.LeverBlock;
@@ -75,8 +76,6 @@ public class SuguardDungeonFeature extends Feature<NoneFeatureConfiguration> {
         fightRoom(level, random, x - 36, 11, z);
         xCorridor(level, x - 77, 55, z);
         bossRoom(level, random, x - 105, 52, z, 20, 3, 0, false);
-
-        repairSpawnRoomFromSavedTemplate(level, random, x, y, z);
     }
 
     private void spawnRoom(WorldGenLevel level, RandomSource random, BlockPos pos) {
@@ -92,7 +91,7 @@ public class SuguardDungeonFeature extends Feature<NoneFeatureConfiguration> {
         pillar(level, x - 3, y + 1, z + 3);
 
         hollowBox(level, x - 4, y + 1, z - 4, x + 4, y + 3, z + 4, caramelBrick());
-        hollowBox(level, x - 3, y + 4, z - 3, x + 3, y + 4, z + 3, chocolate());
+        hollowBox(level, x - 3, y + 4, z - 3, x + 3, y + 4, z + 3, caramelBrick());
         hollowBox(level, x - 2, y + 5, z - 2, x + 2, y + 5, z + 2, caramel());
         set(level, x - 2, y + 4, z - 2, chocolate());
         set(level, x + 2, y + 4, z - 2, chocolate());
@@ -115,59 +114,6 @@ public class SuguardDungeonFeature extends Feature<NoneFeatureConfiguration> {
         checkerBox(level, x + 5, y + 3, z - 1, x + 10, y + 3, z + 1, caramel(), chocolate());
         box(level, x + 5, y + 1, z + 1, x + 10, y + 2, z + 1, caramelBrick());
         box(level, x + 5, y + 1, z - 1, x + 10, y + 2, z - 1, caramelBrick());
-        int r = random.nextInt(3);
-        if (r == 0) {
-            box(level, x - 4, y + 1, z, x - 4, y + 2, z, Blocks.AIR.defaultBlockState());
-        } else if (r == 1) {
-            box(level, x, y + 1, z + 4, x, y + 2, z + 4, Blocks.AIR.defaultBlockState());
-        } else {
-            box(level, x, y + 1, z - 4, x, y + 2, z - 4, Blocks.AIR.defaultBlockState());
-        }
-        clearSpawnFooting(level, x, y, z);
-    }
-
-    private void repairSpawnRoomFromSavedTemplate(WorldGenLevel level, RandomSource random, int x, int y, int z) {
-        for (int dx = -4; dx <= 10; dx++) {
-            for (int dz = -4; dz <= 4; dz++) {
-                for (int dy = 1; dy <= 7; dy++) {
-                    set(level, x + dx, y + dy, z + dz, Blocks.AIR.defaultBlockState());
-                }
-            }
-        }
-
-        checkerBox(level, x - 4, y, z - 4, x + 4, y, z + 4, caramel(), honeyLamp());
-        set(level, x, y, z, caramel());
-        set(level, x, y + 1, z, suguardTeleporter());
-        pillar(level, x - 3, y + 1, z - 3);
-        pillar(level, x + 3, y + 1, z - 3);
-        pillar(level, x + 3, y + 1, z + 3);
-        pillar(level, x - 3, y + 1, z + 3);
-
-        hollowBox(level, x - 4, y + 1, z - 4, x + 4, y + 3, z + 4, caramelBrick());
-        hollowBox(level, x - 3, y + 4, z - 3, x + 3, y + 4, z + 3, chocolate());
-        hollowBox(level, x - 2, y + 5, z - 2, x + 2, y + 5, z + 2, caramel());
-        set(level, x - 2, y + 4, z - 2, chocolate());
-        set(level, x + 2, y + 4, z - 2, chocolate());
-        set(level, x + 2, y + 4, z + 2, chocolate());
-        set(level, x - 2, y + 4, z + 2, chocolate());
-        set(level, x - 1, y + 5, z - 1, caramel());
-        set(level, x + 1, y + 5, z - 1, caramel());
-        set(level, x + 1, y + 5, z + 1, caramel());
-        set(level, x - 1, y + 5, z + 1, caramel());
-        box(level, x - 1, y + 6, z - 1, x + 1, y + 6, z + 1, honeyLamp());
-
-        box(level, x - 4, y + 1, z, x - 4, y + 2, z, CCBlocks.SUGUARD_SENTRY_KEY_HOLE.get().defaultBlockState());
-        box(level, x, y + 1, z + 4, x, y + 2, z + 4, CCBlocks.SUGUARD_SENTRY_KEY_HOLE.get().defaultBlockState());
-        box(level, x, y + 1, z - 4, x, y + 2, z - 4, CCBlocks.SUGUARD_SENTRY_KEY_HOLE.get().defaultBlockState());
-        box(level, x + 4, y + 1, z, x + 4, y + 2, z, CCBlocks.SUGUARD_BOSS_KEY_HOLE.get().defaultBlockState());
-        box(level, x + 6, y + 1, z, x + 6, y + 2, z, CCBlocks.SUGUARD_BOSS_KEY_HOLE.get().defaultBlockState());
-        box(level, x + 8, y + 1, z, x + 8, y + 2, z, CCBlocks.SUGUARD_BOSS_KEY_HOLE.get().defaultBlockState());
-        box(level, x + 10, y + 1, z, x + 10, y + 2, z, CCBlocks.SUGUARD_SENTRY_KEY_HOLE.get().defaultBlockState());
-        checkerBox(level, x + 5, y, z, x + 10, y, z, caramel(), honeyLamp());
-        checkerBox(level, x + 5, y + 3, z - 1, x + 10, y + 3, z + 1, caramel(), chocolate());
-        box(level, x + 5, y + 1, z + 1, x + 10, y + 2, z + 1, caramelBrick());
-        box(level, x + 5, y + 1, z - 1, x + 10, y + 2, z - 1, caramelBrick());
-
         int r = random.nextInt(3);
         if (r == 0) {
             box(level, x - 4, y + 1, z, x - 4, y + 2, z, Blocks.AIR.defaultBlockState());
@@ -642,7 +588,20 @@ public class SuguardDungeonFeature extends Feature<NoneFeatureConfiguration> {
     }
 
     private static void set(WorldGenLevel level, BlockPos pos, BlockState state) {
-        level.setBlock(pos, state, 2);
+        level.setBlock(pos, state, updateNeighbors(state) ? 3 : 2);
+    }
+
+    private static boolean updateNeighbors(BlockState state) {
+        Block block = state.getBlock();
+        return block == Blocks.REDSTONE_WIRE
+            || block == Blocks.REDSTONE_TORCH
+            || block == Blocks.REDSTONE_WALL_TORCH
+            || block == Blocks.REPEATER
+            || block == Blocks.REDSTONE_LAMP
+            || block == Blocks.STICKY_PISTON
+            || block == Blocks.PISTON_HEAD
+            || block == Blocks.STONE_PRESSURE_PLATE
+            || block == Blocks.LEVER;
     }
 
     private static void clearArea(ServerLevel level, BlockPos origin, int minX, int maxX, int minY, int maxY, int minZ, int maxZ) {

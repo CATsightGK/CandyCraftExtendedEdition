@@ -20,11 +20,9 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.DoorBlock;
 import net.minecraft.world.level.block.LeverBlock;
 import net.minecraft.world.level.block.RepeaterBlock;
-import net.minecraft.world.level.block.piston.PistonHeadBlock;
 import net.minecraft.world.level.block.state.properties.AttachFace;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.level.block.state.properties.DoorHingeSide;
-import net.minecraft.world.level.block.state.properties.PistonType;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.block.entity.SpawnerBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -297,7 +295,7 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
                 }
             }
         }
-        clearDoor(level, x + 2, y + 5, z - 41, 2, 3);
+        clearDoor(level, x + 2, y + 4, z - 41, 2, 5);
         set(level, x + 4, y + 11, z - 41, Blocks.REDSTONE_LAMP.defaultBlockState());
         set(level, x + 4, y + 11, z - 40, Blocks.LEVER.defaultBlockState()
             .setValue(LeverBlock.FACE, AttachFace.WALL)
@@ -315,11 +313,9 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
             set(level, x + i, y + 3, z - 42, stickyPiston(Direction.SOUTH));
             genRedstone189(level, x + i, y + 3, z - 43);
         }
-        set(level, x + 2, y + 4, z - 42, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
-        set(level, x + 3, y + 4, z - 42, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
         set(level, x + 2, y + 5, z - 43, slab(CCBlocks.LICORICE_BRICK_SLAB.get(), false));
         set(level, x + 3, y + 5, z - 43, slab(CCBlocks.LICORICE_BRICK_SLAB.get(), false));
-        clearDoor(level, x + 2, y + 5, z - 41, 2, 3);
+        clearDoor(level, x + 2, y + 4, z - 41, 2, 5);
         posX += 44;
     }
 
@@ -714,18 +710,15 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
         set(level, x + 3, y + 3, z + 1, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
         set(level, x + 6, y + 3, z, stickyPiston(Direction.EAST));
         set(level, x + 6, y + 4, z, stickyPiston(Direction.EAST));
-        set(level, x + 7, y + 3, z, pistonHead(Direction.EAST));
-        set(level, x + 7, y + 4, z, pistonHead(Direction.EAST));
         set(level, x + 11, y + 3, z, stickyPiston(Direction.WEST));
         set(level, x + 11, y + 4, z, stickyPiston(Direction.WEST));
-        set(level, x + 10, y + 3, z, pistonHead(Direction.WEST));
-        set(level, x + 10, y + 4, z, pistonHead(Direction.WEST));
-        set(level, x + 8, y + 3, z, licoriceDoorStair(Direction.WEST, false));
-        set(level, x + 9, y + 3, z, licoriceDoorStair(Direction.EAST, false));
-        set(level, x + 8, y + 4, z, licoriceDoorStair(Direction.NORTH, true));
-        set(level, x + 9, y + 4, z, licoriceDoorStair(Direction.SOUTH, true));
+        set(level, x + 7, y + 3, z, licoriceDoorStair(Direction.WEST, false));
+        set(level, x + 7, y + 4, z, licoriceDoorStair(Direction.WEST, true));
+        set(level, x + 10, y + 3, z, licoriceDoorStair(Direction.EAST, false));
+        set(level, x + 10, y + 4, z, licoriceDoorStair(Direction.EAST, true));
         set(level, x + 8, y + 2, z + 1, pressurePlate());
         set(level, x + 9, y + 2, z + 1, pressurePlate());
+        clearDoor(level, x + 8, y + 3, z, 2, 2);
     }
 
     private void genRedstone189(WorldGenLevel level, int x, int y, int z) {
@@ -764,13 +757,6 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
         return Blocks.STICKY_PISTON.defaultBlockState()
             .setValue(BlockStateProperties.FACING, facing)
             .setValue(BlockStateProperties.EXTENDED, false);
-    }
-
-    private static BlockState pistonHead(Direction facing) {
-        return Blocks.PISTON_HEAD.defaultBlockState()
-            .setValue(BlockStateProperties.FACING, facing)
-            .setValue(BlockStateProperties.SHORT, false)
-            .setValue(PistonHeadBlock.TYPE, PistonType.STICKY);
     }
 
     private static BlockState pressurePlate() {
@@ -1040,7 +1026,21 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
     }
 
     private static void set(WorldGenLevel level, BlockPos pos, BlockState state) {
-        level.setBlock(pos, state, 2);
+        level.setBlock(pos, state, updateNeighbors(state) ? 3 : 2);
+    }
+
+    private static boolean updateNeighbors(BlockState state) {
+        net.minecraft.world.level.block.Block block = state.getBlock();
+        return block == Blocks.REDSTONE_WIRE
+            || block == Blocks.REDSTONE_TORCH
+            || block == Blocks.REDSTONE_WALL_TORCH
+            || block == Blocks.REPEATER
+            || block == Blocks.REDSTONE_LAMP
+            || block == Blocks.STICKY_PISTON
+            || block == Blocks.PISTON_HEAD
+            || block == Blocks.STONE_PRESSURE_PLATE
+            || block == Blocks.IRON_DOOR
+            || block == Blocks.LEVER;
     }
 
     private static void clearArea(ServerLevel level, BlockPos origin, int minX, int maxX, int minY, int maxY, int minZ, int maxZ) {
