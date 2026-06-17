@@ -41,6 +41,23 @@ public class SuguardDungeonFeature extends Feature<NoneFeatureConfiguration> {
         new SuguardDungeonFeature(NoneFeatureConfiguration.CODEC).legacyDungeon(level, random, origin);
     }
 
+    public static void generateDebugShowcase(ServerLevel level, BlockPos origin) {
+        RandomSource random = RandomSource.create(1122L);
+        clearArea(level, origin, -145, 75, -70, 200, -175, 175);
+        SuguardDungeonFeature feature = new SuguardDungeonFeature(NoneFeatureConfiguration.CODEC);
+        feature.legacyDungeon(level, random, origin);
+
+        int x = origin.getX() + 75;
+        int y = origin.getY();
+        int z = origin.getZ();
+        feature.spawnRoom(level, RandomSource.create(2001L), new BlockPos(x, y, z));
+        feature.zCorridor(level, x, y, z - 18);
+        feature.xCorridor(level, x, y, z + 18);
+        feature.waterRoom(level, RandomSource.create(2002L), x, y, z - 54);
+        feature.jumpRoom(level, RandomSource.create(2003L), x, y, z + 34);
+        feature.bossRoom(level, RandomSource.create(2004L), x + 45, y - 3, z + 45, -20, 3, 0, true);
+    }
+
     @Override
     public boolean place(FeaturePlaceContext<NoneFeatureConfiguration> context) {
         legacyDungeon(context.level(), context.random(), context.origin());
@@ -91,7 +108,7 @@ public class SuguardDungeonFeature extends Feature<NoneFeatureConfiguration> {
         pillar(level, x - 3, y + 1, z + 3);
 
         hollowBox(level, x - 4, y + 1, z - 4, x + 4, y + 3, z + 4, caramelBrick());
-        hollowBox(level, x - 3, y + 4, z - 3, x + 3, y + 4, z + 3, caramelBrick());
+        hollowBox(level, x - 3, y + 4, z - 3, x + 3, y + 4, z + 3, chocolate());
         hollowBox(level, x - 2, y + 5, z - 2, x + 2, y + 5, z + 2, caramel());
         set(level, x - 2, y + 4, z - 2, chocolate());
         set(level, x + 2, y + 4, z - 2, chocolate());
