@@ -187,7 +187,8 @@ public final class CCForgeEvents {
         EntityType<?> type = event.getEntity().getType();
         if (type != CCEntityTypes.CANDY_PIG.get() && type != CCEntityTypes.WAFFLE_SHEEP.get()
             && type != CCEntityTypes.SUGUARD.get() && type != CCEntityTypes.PINGOUIN.get()
-            && type != CCEntityTypes.GUMMY_BUNNY.get() && type != CCEntityTypes.CANDY_WOLF.get()) {
+            && type != CCEntityTypes.GUMMY_BUNNY.get() && type != CCEntityTypes.CANDY_WOLF.get()
+            && type != CCEntityTypes.JELLY_QUEEN.get()) {
             return false;
         }
         ResourceLocation biomeId = event.getLevel().getBiome(event.getEntity().blockPosition())
@@ -229,6 +230,9 @@ public final class CCForgeEvents {
                 case "sugar_cold_forest", "caramel_forest" -> true;
                 default -> false;
             };
+        }
+        if (type == CCEntityTypes.JELLY_QUEEN.get()) {
+            return "gummy_swamp".equals(path);
         }
         return switch (path) {
             case "sugar_plains", "sugar_forest", "sugar_cold_forest", "sugar_enchanted_forest", "sugar_mountains", "ice_cream_plains", "ice_cream_sky_mountains", "caramel_forest" -> true;
@@ -351,6 +355,7 @@ public final class CCForgeEvents {
             event.register(CCEntityTypes.GUMMY_BUNNY.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, CCForgeEvents::canSpawnOnCandySurface, SpawnPlacementRegisterEvent.Operation.REPLACE);
             event.register(CCEntityTypes.PINGOUIN.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, CCForgeEvents::canSpawnOnCandySurface, SpawnPlacementRegisterEvent.Operation.REPLACE);
             event.register(CCEntityTypes.SUGUARD.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, CCForgeEvents::canSpawnOnCandySurface, SpawnPlacementRegisterEvent.Operation.REPLACE);
+            event.register(CCEntityTypes.JELLY_QUEEN.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, CCForgeEvents::canSpawnOnCandySurface, SpawnPlacementRegisterEvent.Operation.REPLACE);
         }
     }
 

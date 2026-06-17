@@ -3,6 +3,7 @@ package com.valentin4311.candycraftmod.client;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import com.valentin4311.candycraftmod.CandyCraft;
+import com.valentin4311.candycraftmod.entity.BasicCandySlimeEntity;
 import com.valentin4311.candycraftmod.registry.CCEntityTypes;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.SlimeRenderer;
@@ -21,7 +22,7 @@ public class BasicCandySlimeRenderer extends SlimeRenderer {
         else if (entity.getType() == CCEntityTypes.TORNADO_JELLY.get()) texture = "tornadojelly.png";
         else if (entity.getType() == CCEntityTypes.PEZ_JELLY.get()) texture = "candyboss5.png";
         else if (entity.getType() == CCEntityTypes.KING_SLIME.get()) texture = "candyboss6.png";
-        else if (entity.getType() == CCEntityTypes.JELLY_QUEEN.get()) texture = "candyboss.png";
+        else if (entity instanceof BasicCandySlimeEntity candy && candy.isJellyQueen()) texture = getJellyQueenTexture(candy);
         return new ResourceLocation(CandyCraft.MODID, "textures/entity/" + texture);
     }
 
@@ -32,6 +33,36 @@ public class BasicCandySlimeRenderer extends SlimeRenderer {
             float flip = (entity.tickCount + partialTicks) * 28.0F;
             poseStack.mulPose(Axis.XP.rotationDegrees(flip));
             poseStack.mulPose(Axis.ZP.rotationDegrees((float) Math.sin((entity.tickCount + partialTicks) * 0.35F) * 14.0F));
+        }
+        if (entity instanceof BasicCandySlimeEntity candy && candy.isJellyQueen()) {
+            applyJellyQueenSlamPose(candy, poseStack, partialTicks);
+        }
+    }
+
+    private static String getJellyQueenTexture(BasicCandySlimeEntity queen) {
+        return switch (queen.getJellyQueenMode()) {
+            case BasicCandySlimeEntity.JELLY_QUEEN_SLEEP_MODE -> "candyboss4.png";
+            case BasicCandySlimeEntity.JELLY_QUEEN_BLUE_MODE -> "candyboss2.png";
+            case BasicCandySlimeEntity.JELLY_QUEEN_BROWN_MODE -> "candyboss3.png";
+            default -> "candyboss.png";
+        };
+    }
+
+    private static void applyJellyQueenSlamPose(BasicCandySlimeEntity queen, PoseStack poseStack, float partialTicks) {
+        float slam = queen.getJellyQueenSlamProgress(partialTicks);
+        if (slam <= 0.0F) {
+            return;
+        }
+        float pulse = (float) Math.sin((queen.tickCount + partialTicks) * 0.65F) * 0.5F + 0.5F;
+        float airborneBias = queen.onGround() ? 0.35F : 1.0F;
+        float squash = slam * (0.08F + 0.07F * pulse);
+        float stretch = slam * (0.14F + 0.08F * airborneBias);
+        poseStack.translate(0.0F, -0.08F * slam, 0.0F);
+        poseStack.scale(1.0F + squash, 1.0F - squash * 0.75F + stretch * 0.12F, 1.0F + squash);
+        if (!queen.onGround()) {
+            float pitch = queen.getDeltaMovement().y < 0.0D ? 14.0F + 14.0F * slam : -10.0F * slam;
+            poseStack.mulPose(Axis.XP.rotationDegrees(pitch));
+            poseStack.mulPose(Axis.ZP.rotationDegrees((float) Math.sin((queen.tickCount + partialTicks) * 0.28F) * 6.0F * slam));
         }
     }
 }
