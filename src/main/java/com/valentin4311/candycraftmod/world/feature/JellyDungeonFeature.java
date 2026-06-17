@@ -338,11 +338,10 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
                 }
             }
         }
-        boolean water = true;
         for (int i = 1; i < 23; i++) {
             for (int j = 5; j < 23; j++) {
                 for (int k = 1; k < 23; k++) {
-                    if (water && j < 21) {
+                    if (j < 21 && (j & 1) == 1) {
                         setStatic(level, x + i - 12, y + j, z - k - 1, Blocks.WATER.defaultBlockState().setValue(net.minecraft.world.level.block.LiquidBlock.LEVEL, 0));
                     } else {
                         setStatic(level, x + i - 12, y + j, z - k - 1, Blocks.AIR.defaultBlockState());
@@ -351,11 +350,7 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
                         spawnEntity(level, CCEntityTypes.TORNADO_JELLY.get(), x + i - 12 + 0.5D, y + j + 0.5D, z - k - 1 + 0.5D, random);
                     }
                 }
-                water = !water;
             }
-        }
-        for (int n = 0; n < 6; n++) {
-            spawnEntity(level, CCEntityTypes.TORNADO_JELLY.get(), x - 8 + n * 3 + 0.5D, y + 6 + (n % 4) * 2 + 0.5D, z - 6 - n * 2 + 0.5D, random);
         }
         for (int i = 1; i < 23; i++) {
             for (int k = 1; k < 23; k++) {
@@ -365,7 +360,7 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
         }
         clearDoor(level, x, y + 2, z - 1, 2, 3);
         clearDoor(level, x, y + 20, z - 24, 2, 3);
-        containLayeredWater(level, random, x, y, z);
+        sealLayeredWaterDoorways(level, random, x, y, z);
         for (int i = 0; i < 4; i++) {
             for (int j = 0; j < 19; j++) {
                 set(level, x + i - 1, y + j + 5, z - 27, jawBreaker(random));
@@ -389,7 +384,7 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
         posX += 27;
     }
 
-    private void containLayeredWater(WorldGenLevel level, RandomSource random, int x, int y, int z) {
+    private void sealLayeredWaterDoorways(WorldGenLevel level, RandomSource random, int x, int y, int z) {
         for (int dx = -1; dx <= 2; dx++) {
             set(level, x + dx, y + 1, z - 1, jawBreaker(random));
             set(level, x + dx, y + 5, z - 1, jawBreaker(random));
@@ -406,19 +401,6 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
         }
         clearDoor(level, x, y + 2, z - 1, 2, 3);
         clearDoor(level, x, y + 20, z - 24, 2, 3);
-        for (int i = 1; i < 23; i++) {
-            for (int j = 5; j < 21; j += 2) {
-                setStatic(level, x + i - 12, y + j, z - 2, Blocks.WATER.defaultBlockState().setValue(net.minecraft.world.level.block.LiquidBlock.LEVEL, 0));
-                setStatic(level, x + i - 12, y + j, z - 23, Blocks.WATER.defaultBlockState().setValue(net.minecraft.world.level.block.LiquidBlock.LEVEL, 0));
-            }
-        }
-        for (int i = 1; i < 23; i++) {
-            for (int j = 6; j < 21; j += 2) {
-                for (int k = 1; k < 23; k++) {
-                    setStatic(level, x + i - 12, y + j, z - k - 1, Blocks.AIR.defaultBlockState());
-                }
-            }
-        }
     }
 
     private void genMob189(WorldGenLevel level, RandomSource random, int x, int y, int z) {
