@@ -355,7 +355,7 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
         set(level, x + 6, y + 6, z - 43, wallTorchFromLegacyMeta(4, true));
         for (int i = 0; i < 6; i++) {
             setStatic(level, x + i, y + 3, z - 40, Blocks.AIR.defaultBlockState());
-            setStatic(level, x + i, y + 3, z - 41, CCBlocks.JELLY_SHOCK_ABSORBER.get().defaultBlockState());
+            setStatic(level, x + i, y + 3, z - 41, Blocks.AIR.defaultBlockState());
             setStatic(level, x + i, y + 3, z - 42, stickyPiston(Direction.SOUTH));
             genRedstone189(level, x + i, y + 3, z - 43);
         }
@@ -366,7 +366,7 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
         set(level, x + 3, y + 4, z - 41, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
         for (int i = 0; i < 6; i++) {
             setStatic(level, x + i, y + 3, z - 40, Blocks.AIR.defaultBlockState());
-            setStatic(level, x + i, y + 3, z - 41, CCBlocks.JELLY_SHOCK_ABSORBER.get().defaultBlockState());
+            setStatic(level, x + i, y + 3, z - 41, Blocks.AIR.defaultBlockState());
             setStatic(level, x + i, y + 3, z - 42, stickyPiston(Direction.SOUTH));
         }
         legacyCorridorDoor189(level, x - 6, y + 3, z + 4);
@@ -587,26 +587,21 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
         set(level, x, y + 2, z - 24, CCBlocks.JELLY_SENTRY_KEY_HOLE.get().defaultBlockState());
         set(level, x, y + 3, z - 24, CCBlocks.JELLY_SENTRY_KEY_HOLE.get().defaultBlockState());
         spawnEntity(level, CCEntityTypes.PEZ_JELLY.get(), x + 1.0D, y + 2.0D, z - 12.0D, random);
-        legacyCorridorDoor189(level, x - 8, y + 1, z + 4);
+        legacyCorridorDoor189(level, x - 8, y + 2, z + 4);
         posX += 24;
     }
 
     private void fillLoweredPezGap(WorldGenLevel level, int x, int y, int z) {
         BlockState wall = CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState();
-        for (int dz = -4; dz <= 0; dz++) {
-            set(level, x - 1, y, z + dz, wall);
-            set(level, x + 2, y, z + dz, wall);
-            set(level, x - 1, y + 1, z + dz, wall);
-            set(level, x + 2, y + 1, z + dz, wall);
-            for (int dx = 0; dx <= 1; dx++) {
-                set(level, x + dx, y, z + dz, wall);
-                set(level, x + dx, y + 1, z + dz, Blocks.AIR.defaultBlockState());
-                set(level, x + dx, y + 2, z + dz, Blocks.AIR.defaultBlockState());
-                set(level, x + dx, y + 3, z + dz, Blocks.AIR.defaultBlockState());
-            }
+        for (int dy = 0; dy <= 4; dy++) {
+            set(level, x - 1, y + dy, z - 1, wall);
+            set(level, x + 2, y + dy, z - 1, wall);
         }
         for (int dx = -1; dx <= 2; dx++) {
             set(level, x + dx, y + 4, z - 1, wall);
+        }
+        for (int dx = 0; dx <= 1; dx++) {
+            set(level, x + dx, y, z - 1, wall);
         }
         clearDoor(level, x, y + 1, z - 1, 2, 3);
     }
@@ -625,10 +620,8 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
 
     private void fillKingEntranceInsideGaps(WorldGenLevel level, int x, int y, int z) {
         BlockState wall = CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState();
-        set(level, x - 1, y + 2, z - 1, wall);
-        set(level, x + 2, y + 2, z - 1, wall);
-        set(level, x - 1, y + 3, z - 1, wall);
-        set(level, x + 2, y + 3, z - 1, wall);
+        set(level, x, y + 1, z - 1, wall);
+        set(level, x + 1, y + 1, z - 1, wall);
     }
 
     private void genBossRoom189(WorldGenLevel level, RandomSource random, int x, int y, int z) {

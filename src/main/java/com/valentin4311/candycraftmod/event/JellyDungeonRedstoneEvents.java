@@ -45,7 +45,8 @@ public final class JellyDungeonRedstoneEvents {
         BlockPos piston = leverPos.offset(-4, -8, -2);
         BlockPos headPos = piston.relative(Direction.SOUTH);
         return level.getBlockState(piston).is(Blocks.STICKY_PISTON)
-            && (level.getBlockState(headPos).is(CCBlocks.JELLY_SHOCK_ABSORBER.get())
+            && (level.getBlockState(headPos).isAir()
+                || level.getBlockState(headPos).is(CCBlocks.JELLY_SHOCK_ABSORBER.get())
                 || level.getBlockState(headPos).is(Blocks.PISTON_HEAD)
                 || level.getBlockState(headPos.relative(Direction.SOUTH)).is(CCBlocks.JELLY_SHOCK_ABSORBER.get()));
     }
@@ -70,7 +71,7 @@ public final class JellyDungeonRedstoneEvents {
                     .setValue(PistonHeadBlock.SHORT, false), 3);
                 level.setBlock(jellyOutPos, CCBlocks.JELLY_SHOCK_ABSORBER.get().defaultBlockState(), 3);
             } else {
-                level.setBlock(headPos, CCBlocks.JELLY_SHOCK_ABSORBER.get().defaultBlockState(), 3);
+                level.setBlock(headPos, Blocks.AIR.defaultBlockState(), 3);
                 level.setBlock(jellyOutPos, Blocks.AIR.defaultBlockState(), 3);
             }
         }
