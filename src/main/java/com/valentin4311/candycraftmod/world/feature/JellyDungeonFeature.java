@@ -355,7 +355,7 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
         set(level, x + 6, y + 6, z - 43, wallTorchFromLegacyMeta(4, true));
         for (int i = 0; i < 6; i++) {
             setStatic(level, x + i, y + 3, z - 40, Blocks.AIR.defaultBlockState());
-            setStatic(level, x + i, y + 3, z - 41, Blocks.AIR.defaultBlockState());
+            setStatic(level, x + i, y + 3, z - 41, CCBlocks.JELLY_SHOCK_ABSORBER.get().defaultBlockState());
             setStatic(level, x + i, y + 3, z - 42, stickyPiston(Direction.SOUTH));
             genRedstone189(level, x + i, y + 3, z - 43);
         }
@@ -366,7 +366,7 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
         set(level, x + 3, y + 4, z - 41, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
         for (int i = 0; i < 6; i++) {
             setStatic(level, x + i, y + 3, z - 40, Blocks.AIR.defaultBlockState());
-            setStatic(level, x + i, y + 3, z - 41, Blocks.AIR.defaultBlockState());
+            setStatic(level, x + i, y + 3, z - 41, CCBlocks.JELLY_SHOCK_ABSORBER.get().defaultBlockState());
             setStatic(level, x + i, y + 3, z - 42, stickyPiston(Direction.SOUTH));
         }
         legacyCorridorDoor189(level, x - 6, y + 3, z + 4);
@@ -602,8 +602,9 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
         }
         for (int dx = 0; dx <= 1; dx++) {
             set(level, x + dx, y, z - 1, wall);
+            set(level, x + dx, y + 1, z - 1, wall);
         }
-        clearDoor(level, x, y + 1, z - 1, 2, 3);
+        clearDoor(level, x, y + 2, z - 1, 2, 2);
     }
 
     private void fillLoweredKingGap(WorldGenLevel level, int x, int y, int z) {
@@ -620,6 +621,8 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
 
     private void fillKingEntranceInsideGaps(WorldGenLevel level, int x, int y, int z) {
         BlockState wall = CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState();
+        set(level, x, y, z - 1, wall);
+        set(level, x + 1, y, z - 1, wall);
         set(level, x, y + 1, z - 1, wall);
         set(level, x + 1, y + 1, z - 1, wall);
     }

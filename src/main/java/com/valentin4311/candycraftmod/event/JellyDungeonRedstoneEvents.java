@@ -71,7 +71,7 @@ public final class JellyDungeonRedstoneEvents {
                     .setValue(PistonHeadBlock.SHORT, false), 3);
                 level.setBlock(jellyOutPos, CCBlocks.JELLY_SHOCK_ABSORBER.get().defaultBlockState(), 3);
             } else {
-                level.setBlock(headPos, Blocks.AIR.defaultBlockState(), 3);
+                level.setBlock(headPos, CCBlocks.JELLY_SHOCK_ABSORBER.get().defaultBlockState(), 3);
                 level.setBlock(jellyOutPos, Blocks.AIR.defaultBlockState(), 3);
             }
         }
