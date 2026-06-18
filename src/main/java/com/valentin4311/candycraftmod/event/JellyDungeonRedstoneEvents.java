@@ -43,8 +43,11 @@ public final class JellyDungeonRedstoneEvents {
             return false;
         }
         BlockPos piston = leverPos.offset(-4, -8, -2);
+        BlockPos headPos = piston.relative(Direction.SOUTH);
         return level.getBlockState(piston).is(Blocks.STICKY_PISTON)
-            && level.getBlockState(piston.relative(Direction.SOUTH)).is(CCBlocks.JELLY_SHOCK_ABSORBER.get());
+            && (level.getBlockState(headPos).is(CCBlocks.JELLY_SHOCK_ABSORBER.get())
+                || level.getBlockState(headPos).is(Blocks.PISTON_HEAD)
+                || level.getBlockState(headPos.relative(Direction.SOUTH)).is(CCBlocks.JELLY_SHOCK_ABSORBER.get()));
     }
 
     private static void syncJumpRoomPistons(ServerLevel level, BlockPos leverPos, boolean leverPowered) {
