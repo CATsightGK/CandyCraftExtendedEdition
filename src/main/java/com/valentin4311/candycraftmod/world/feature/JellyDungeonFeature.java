@@ -79,13 +79,13 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
         feature.genMob189(level, RandomSource.create(1005L), baseX + 7, baseY, zCursor);
         zCursor -= 70;
         feature.posX = 0;
-        feature.genMiniBossRoom189(level, RandomSource.create(1006L), baseX + 7, baseY + 2, zCursor);
+        feature.genMiniBossRoom189(level, RandomSource.create(1006L), baseX + 7, baseY, zCursor);
         zCursor -= 38;
         feature.posX = 0;
-        feature.genBossRoom189(level, RandomSource.create(1007L), baseX + 7, baseY, zCursor);
+        feature.genBossRoom189(level, RandomSource.create(1007L), baseX + 7, baseY - 3, zCursor);
         zCursor -= 62;
         feature.posX = 0;
-        feature.genReward189(level, RandomSource.create(1008L), baseX + 7, baseY, zCursor);
+        feature.genReward189(level, RandomSource.create(1008L), baseX + 7, baseY - 3, zCursor);
     }
 
     @Override
@@ -141,8 +141,11 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
             genJumpCraft189(level, random, x + 5, y - 3, z - posX);
         }
         genCoridor189(level, random, x + 7, y, z - posX);
-        genMiniBossRoom189(level, random, x + 7, y + 2, z - posX);
-        int postPezY = y;
+        int pezZ = z - posX;
+        genMiniBossRoom189(level, random, x + 7, y, pezZ);
+        fillLoweredPezGap(level, x + 7, y, pezZ);
+        int postPezY = y - 2;
+        int kingY = postPezY - 1;
         genCoridor189(level, random, x + 7, postPezY, z - posX);
         if (random.nextBoolean()) {
             genJumpCraft189(level, random, x + 5, postPezY - 3, z - posX);
@@ -154,9 +157,11 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
             genJumpCraft189(level, random, x + 5, postPezY - 3, z - posX);
         }
         genCoridor189(level, random, x + 7, postPezY, z - posX);
-        genBossRoom189(level, random, x + 7, postPezY, z - posX);
-        genCoridor189(level, random, x + 7, postPezY - 1, z - posX);
-        genReward189(level, random, x + 7, postPezY - 1, z - posX);
+        int kingZ = z - posX;
+        genBossRoom189(level, random, x + 7, kingY, kingZ);
+        fillLoweredKingGap(level, x + 7, kingY, kingZ);
+        genCoridor189(level, random, x + 7, kingY, z - posX);
+        genReward189(level, random, x + 7, kingY, z - posX);
     }
 
     private void spawnRoom189(WorldGenLevel level, RandomSource random, int x, int y, int z) {
@@ -336,11 +341,11 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
             }
         }
         clearDoor(level, x + 2, y + 4, z - 41, 2, 5);
-        set(level, x + 4, y + 11, z - 41, Blocks.REDSTONE_LAMP.defaultBlockState().setValue(BlockStateProperties.LIT, false));
+        set(level, x + 4, y + 11, z - 41, Blocks.REDSTONE_LAMP.defaultBlockState().setValue(BlockStateProperties.LIT, true));
         set(level, x + 4, y + 11, z - 40, Blocks.LEVER.defaultBlockState()
             .setValue(LeverBlock.FACE, AttachFace.WALL)
             .setValue(LeverBlock.FACING, Direction.SOUTH)
-            .setValue(LeverBlock.POWERED, false));
+            .setValue(LeverBlock.POWERED, true));
         genRedstone189(level, x + 4, y + 10, z - 42);
         genRedstone189(level, x + 5, y + 8, z - 42);
         genRedstone189(level, x + 6, y + 6, z - 42);
@@ -584,6 +589,27 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
         spawnEntity(level, CCEntityTypes.PEZ_JELLY.get(), x + 1.0D, y + 2.0D, z - 12.0D, random);
         legacyCorridorDoor189(level, x - 8, y, z + 4);
         posX += 24;
+    }
+
+    private void fillLoweredPezGap(WorldGenLevel level, int x, int y, int z) {
+        for (int dx = -1; dx <= 2; dx++) {
+            for (int dz = -4; dz <= 0; dz++) {
+                set(level, x + dx, y + 1, z + dz, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
+                set(level, x + dx, y, z + dz, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
+            }
+        }
+        clearDoor(level, x, y + 2, z - 1, 2, 3);
+    }
+
+    private void fillLoweredKingGap(WorldGenLevel level, int x, int y, int z) {
+        for (int dy = 1; dy <= 5; dy++) {
+            set(level, x - 1, y + dy, z - 1, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
+            set(level, x + 2, y + dy, z - 1, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
+        }
+        for (int dx = 0; dx <= 1; dx++) {
+            set(level, x + dx, y + 5, z - 1, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
+        }
+        clearDoor(level, x, y + 2, z - 1, 2, 3);
     }
 
     private void genBossRoom189(WorldGenLevel level, RandomSource random, int x, int y, int z) {

@@ -33,8 +33,8 @@ public final class JellyDungeonRedstoneEvents {
             return;
         }
 
-        boolean powered = !lever.getValue(LeverBlock.POWERED);
-        serverLevel.getServer().execute(() -> syncJumpRoomPistons(serverLevel, leverPos, powered));
+        boolean leverWillBePowered = !lever.getValue(LeverBlock.POWERED);
+        serverLevel.getServer().execute(() -> syncJumpRoomPistons(serverLevel, leverPos, leverWillBePowered));
     }
 
     private static boolean isJumpRoomLever(Level level, BlockPos leverPos) {
@@ -47,8 +47,9 @@ public final class JellyDungeonRedstoneEvents {
             && level.getBlockState(piston.relative(Direction.SOUTH)).is(CCBlocks.JELLY_SHOCK_ABSORBER.get());
     }
 
-    private static void syncJumpRoomPistons(ServerLevel level, BlockPos leverPos, boolean powered) {
-        level.setBlock(leverPos.north(), Blocks.REDSTONE_LAMP.defaultBlockState().setValue(BlockStateProperties.LIT, powered), 3);
+    private static void syncJumpRoomPistons(ServerLevel level, BlockPos leverPos, boolean leverPowered) {
+        level.setBlock(leverPos.north(), Blocks.REDSTONE_LAMP.defaultBlockState().setValue(BlockStateProperties.LIT, leverPowered), 3);
+        boolean extended = !leverPowered;
         int baseX = leverPos.getX() - 4;
         int baseY = leverPos.getY() - 11;
         int baseZ = leverPos.getZ() + 40;
@@ -58,8 +59,8 @@ public final class JellyDungeonRedstoneEvents {
             BlockPos jellyOutPos = headPos.relative(Direction.SOUTH);
             level.setBlock(pistonPos, Blocks.STICKY_PISTON.defaultBlockState()
                 .setValue(BlockStateProperties.FACING, Direction.SOUTH)
-                .setValue(BlockStateProperties.EXTENDED, powered), 3);
-            if (powered) {
+                .setValue(BlockStateProperties.EXTENDED, extended), 3);
+            if (extended) {
                 level.setBlock(headPos, Blocks.PISTON_HEAD.defaultBlockState()
                     .setValue(PistonHeadBlock.FACING, Direction.SOUTH)
                     .setValue(PistonHeadBlock.TYPE, PistonType.STICKY)
