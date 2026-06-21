@@ -456,10 +456,11 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
 
     private void restoreLayeredWater(WorldGenLevel level, int x, int y, int z) {
         BlockState sourceWater = Blocks.WATER.defaultBlockState().setValue(net.minecraft.world.level.block.LiquidBlock.LEVEL, 0);
+        int topWaterY = 22;
         for (int i = 1; i < 23; i++) {
             for (int j = 5; j < 23; j++) {
                 for (int k = 1; k < 23; k++) {
-                    BlockState state = j < 21 && (j & 1) == 1 ? sourceWater : Blocks.AIR.defaultBlockState();
+                    BlockState state = ((topWaterY - j) & 1) == 0 ? sourceWater : Blocks.AIR.defaultBlockState();
                     setStatic(level, x + i - 12, y + j, z - k - 1, state);
                 }
             }
@@ -635,8 +636,8 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
                 set(level, x + dx, y + dy, z - 1, wall);
             }
         }
-        set(level, x, y + 1, z - 1, wall);
-        set(level, x + 1, y + 1, z - 1, wall);
+        set(level, x, y + 1, z, wall);
+        set(level, x + 1, y + 1, z, wall);
         clearDoor(level, x, y + 2, z - 1, 2, 2);
     }
 
