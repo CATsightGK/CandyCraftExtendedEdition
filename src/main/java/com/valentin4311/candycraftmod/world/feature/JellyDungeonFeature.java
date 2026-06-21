@@ -444,7 +444,6 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
         set(level, x + 1, y + 1, z - 27, jawBreaker(random));
         set(level, x, y + 1, z - 27, jawBreaker(random));
         restoreLayeredWater(level, x, y, z);
-        forceWaterRoomAirInterfaces(level, x, y, z);
         legacyCorridorDoor189(level, x - 8, y, z + 4);
         posX += 27;
     }
@@ -478,24 +477,6 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
         }
         clearDoor(level, x, y + 2, z - 1, 2, 3);
         clearDoor(level, x, y + 20, z - 24, 2, 3);
-    }
-
-    private void forceWaterRoomAirInterfaces(WorldGenLevel level, int x, int y, int z) {
-        for (int dx = -1; dx <= 2; dx++) {
-            for (int dy = 2; dy <= 5; dy++) {
-                setStatic(level, x + dx, y + dy, z, Blocks.AIR.defaultBlockState());
-                setStatic(level, x + dx, y + dy, z - 1, Blocks.AIR.defaultBlockState());
-                setStatic(level, x + dx, y + dy, z - 2, Blocks.AIR.defaultBlockState());
-                setStatic(level, x + dx, y + dy, z - 23, Blocks.AIR.defaultBlockState());
-                setStatic(level, x + dx, y + dy, z - 24, Blocks.AIR.defaultBlockState());
-                setStatic(level, x + dx, y + dy, z - 25, Blocks.AIR.defaultBlockState());
-            }
-            for (int dy = 20; dy <= 23; dy++) {
-                setStatic(level, x + dx, y + dy, z - 23, Blocks.AIR.defaultBlockState());
-                setStatic(level, x + dx, y + dy, z - 24, Blocks.AIR.defaultBlockState());
-                setStatic(level, x + dx, y + dy, z - 25, Blocks.AIR.defaultBlockState());
-            }
-        }
     }
 
     private void genMob189(WorldGenLevel level, RandomSource random, int x, int y, int z) {
@@ -648,8 +629,8 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
                 set(level, x + dx, y + dy, z - 1, wall);
             }
         }
-        set(level, x, y, z - 1, wall);
-        set(level, x + 1, y, z - 1, wall);
+        set(level, x, y - 2, z - 1, wall);
+        set(level, x + 1, y - 2, z - 1, wall);
         clearDoor(level, x, y + 2, z - 1, 2, 2);
     }
 
