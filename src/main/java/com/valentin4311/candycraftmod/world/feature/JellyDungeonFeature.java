@@ -36,14 +36,11 @@ import net.minecraft.world.level.block.state.properties.SlabType;
 import net.minecraft.world.level.levelgen.feature.Feature;
 import net.minecraft.world.level.levelgen.feature.FeaturePlaceContext;
 import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
-import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
-import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 import net.minecraft.core.Direction;
 import net.minecraft.world.phys.AABB;
 
 public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
     private static final ResourceLocation LOOT_TABLE = new ResourceLocation(CandyCraft.MODID, "chests/jelly_dungeon");
-    private static final ResourceLocation FIXED_WATER_ROOM = new ResourceLocation(CandyCraft.MODID, "jelly_water_room_fixed");
     private int cursorZ;
     private int posX;
     private int incrementer;
@@ -404,11 +401,6 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
     }
 
     private void genWaterRoom189(WorldGenLevel level, RandomSource random, int x, int y, int z) {
-        if (placeFixedWaterRoom(level, random, x, y, z)) {
-            legacyCorridorDoor189(level, x - 8, y, z + 4);
-            posX += 27;
-            return;
-        }
         for (int i = 0; i < 24; i++) {
             for (int j = 1; j < 24; j++) {
                 for (int k = 0; k < 24; k++) {
@@ -460,17 +452,6 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
         restoreLayeredWater(level, x, y, z);
         legacyCorridorDoor189(level, x - 8, y, z + 4);
         posX += 27;
-    }
-
-    private boolean placeFixedWaterRoom(WorldGenLevel level, RandomSource random, int x, int y, int z) {
-        if (!(level instanceof ServerLevel serverLevel)) {
-            return false;
-        }
-        return serverLevel.getStructureManager().get(FIXED_WATER_ROOM).map(template -> {
-            BlockPos placePos = new BlockPos(x - 12, y + 1, z - 32);
-            clearBox(level, x - 13, y, z - 33, x + 13, y + 29, z + 1);
-            return template.placeInWorld(serverLevel, placePos, placePos, new StructurePlaceSettings(), random, 18);
-        }).orElse(false);
     }
 
     private void restoreLayeredWater(WorldGenLevel level, int x, int y, int z) {
@@ -1024,22 +1005,6 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
         for (int dx = 0; dx < width; dx++) {
             for (int dy = 0; dy < height; dy++) {
                 set(level, new BlockPos(x + dx, y + dy, z), Blocks.AIR.defaultBlockState());
-            }
-        }
-    }
-
-    private static void clearBox(WorldGenLevel level, int x1, int y1, int z1, int x2, int y2, int z2) {
-        int minX = Math.min(x1, x2);
-        int maxX = Math.max(x1, x2);
-        int minY = Math.min(y1, y2);
-        int maxY = Math.max(y1, y2);
-        int minZ = Math.min(z1, z2);
-        int maxZ = Math.max(z1, z2);
-        for (int x = minX; x <= maxX; x++) {
-            for (int y = minY; y <= maxY; y++) {
-                for (int z = minZ; z <= maxZ; z++) {
-                    setStatic(level, x, y, z, Blocks.AIR.defaultBlockState());
-                }
             }
         }
     }
