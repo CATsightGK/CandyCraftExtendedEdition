@@ -3,6 +3,7 @@ package com.valentin4311.candycraftmod.registry;
 import com.valentin4311.candycraftmod.item.CaramelBowItem;
 import com.valentin4311.candycraftmod.item.CaramelCrossbowItem;
 import com.valentin4311.candycraftmod.item.CandiedCherryItem;
+import com.valentin4311.candycraftmod.item.CandycraftAmuletItem;
 import com.valentin4311.candycraftmod.item.CCArmorItem;
 import com.valentin4311.candycraftmod.item.DynamiteItem;
 import com.valentin4311.candycraftmod.item.EmblemItem;
@@ -97,6 +98,7 @@ public final class CCItems {
     public static final RegistryObject<Item> SUGUARD_BOSS_KEY = registerPortItem("suguard_boss_key");
     public static final RegistryObject<Item> SUGUARD_KEY = registerPortItem("suguard_key");
     public static final RegistryObject<Item> SKY_KEY = registerPortItem("sky_key");
+    public static final RegistryObject<Item> CANDYCRAFT_AMULET = registerPortItem("candycraft_amulet", () -> new CandycraftAmuletItem(new Item.Properties().stacksTo(64).rarity(Rarity.RARE)));
     public static final RegistryObject<Item> CHEWING_GUM_EMBLEM = registerEmblem("chewing_gum_emblem", "tooltip.candycraftmod.chewing_gum_emblem");
     public static final RegistryObject<Item> CRANBERRY_EMBLEM = registerEmblem("cranberry_emblem", "tooltip.candycraftmod.cranberry_emblem");
     public static final RegistryObject<Item> GINGERBREAD_EMBLEM = registerEmblem("gingerbread_emblem", "tooltip.candycraftmod.gingerbread_emblem");
