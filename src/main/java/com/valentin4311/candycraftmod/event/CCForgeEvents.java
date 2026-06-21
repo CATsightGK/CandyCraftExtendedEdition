@@ -9,6 +9,7 @@ import com.valentin4311.candycraftmod.registry.CCFluids;
 import com.valentin4311.candycraftmod.item.JellyWandItem;
 import com.valentin4311.candycraftmod.registry.CCItems;
 import com.valentin4311.candycraftmod.registry.CCSweetscapeBlocks;
+import com.valentin4311.candycraftmod.util.EmblemHelper;
 import com.valentin4311.candycraftmod.world.feature.CottonCandyTreeFeature;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
@@ -347,7 +348,7 @@ public final class CCForgeEvents {
     }
 
     private static boolean has(Player player, Item item) {
-        return player.getInventory().contains(item.getDefaultInstance());
+        return EmblemHelper.has(player, item);
     }
 
     @Mod.EventBusSubscriber(modid = CandyCraft.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)

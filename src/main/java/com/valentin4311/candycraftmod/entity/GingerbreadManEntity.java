@@ -2,6 +2,7 @@ package com.valentin4311.candycraftmod.entity;
 
 import com.valentin4311.candycraftmod.registry.CCBlocks;
 import com.valentin4311.candycraftmod.registry.CCItems;
+import com.valentin4311.candycraftmod.util.EmblemHelper;
 import javax.annotation.Nullable;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.RandomSource;
@@ -66,7 +67,7 @@ public class GingerbreadManEntity extends Villager {
 
     private boolean shouldAvoidPlayer(Player player) {
         return !isTrading() && !player.isCreative() && !player.isSpectator()
-            && !player.getInventory().contains(CCItems.GINGERBREAD_EMBLEM.get().getDefaultInstance());
+            && !EmblemHelper.has(player, CCItems.GINGERBREAD_EMBLEM.get());
     }
 
     @Override

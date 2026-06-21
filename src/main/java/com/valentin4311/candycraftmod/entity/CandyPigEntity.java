@@ -2,6 +2,7 @@ package com.valentin4311.candycraftmod.entity;
 
 import com.valentin4311.candycraftmod.registry.CCEntityTypes;
 import com.valentin4311.candycraftmod.registry.CCItems;
+import com.valentin4311.candycraftmod.util.EmblemHelper;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.AgeableMob;
 import net.minecraft.world.entity.EntityType;
@@ -31,7 +32,7 @@ public class CandyPigEntity extends Pig {
 
     private boolean shouldAvoidPlayer(Player player) {
         return !player.isCreative() && !player.isSpectator()
-            && !player.getInventory().contains(CCItems.GINGERBREAD_EMBLEM.get().getDefaultInstance());
+            && !EmblemHelper.has(player, CCItems.GINGERBREAD_EMBLEM.get());
     }
 
     @Nullable

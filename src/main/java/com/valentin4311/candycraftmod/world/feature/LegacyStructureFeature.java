@@ -8,6 +8,7 @@ import com.valentin4311.candycraftmod.entity.GingerbreadManEntity;
 import com.valentin4311.candycraftmod.registry.CCBlocks;
 import com.valentin4311.candycraftmod.registry.CCEntityTypes;
 import com.valentin4311.candycraftmod.registry.CCItems;
+import com.valentin4311.candycraftmod.util.EmblemHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.WorldGenRegion;
@@ -529,7 +530,7 @@ public class LegacyStructureFeature extends Feature<NoneFeatureConfiguration> {
             return;
         }
         region.getLevel().players().forEach(player -> {
-            if (player.getInventory().contains(CCItems.HONEY_EMBLEM.get().getDefaultInstance())) {
+            if (EmblemHelper.has(player, CCItems.HONEY_EMBLEM.get())) {
                 player.displayClientMessage(net.minecraft.network.chat.Component.translatable(
                     "message.candycraftmod.honey_emblem_found",
                     pos.getX(), pos.getY(), pos.getZ()

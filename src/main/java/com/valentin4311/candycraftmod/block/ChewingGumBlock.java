@@ -1,6 +1,7 @@
 package com.valentin4311.candycraftmod.block;
 
 import com.valentin4311.candycraftmod.registry.CCItems;
+import com.valentin4311.candycraftmod.util.EmblemHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
@@ -27,7 +28,7 @@ public class ChewingGumBlock extends Block {
 
     @Override
     public void entityInside(BlockState state, Level level, BlockPos pos, Entity entity) {
-        if (entity instanceof Player player && player.getInventory().contains(CCItems.CHEWING_GUM_EMBLEM.get().getDefaultInstance())) {
+        if (entity instanceof Player player && EmblemHelper.has(player, CCItems.CHEWING_GUM_EMBLEM.get())) {
             return;
         }
         Vec3 movement = entity.getDeltaMovement();
