@@ -11,6 +11,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.WorldGenLevel;
@@ -36,6 +37,7 @@ import net.minecraft.world.level.levelgen.feature.Feature;
 import net.minecraft.world.level.levelgen.feature.FeaturePlaceContext;
 import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
 import net.minecraft.core.Direction;
+import net.minecraft.world.phys.AABB;
 
 public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
     private static final ResourceLocation LOOT_TABLE = new ResourceLocation(CandyCraft.MODID, "chests/jelly_dungeon");
@@ -49,8 +51,10 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
 
     public static void generateInDungeonLevel(ServerLevel level, BlockPos origin) {
         RandomSource random = level.getRandom();
+        purgeDungeonItemEntities(level, origin, -36, 36, -7, 56, -430, 24);
         clearArea(level, origin, -36, 36, -7, 56, -430, 24);
         new JellyDungeonFeature(NoneFeatureConfiguration.CODEC).legacyDungeon(level, random, origin);
+        purgeDungeonItemEntities(level, origin, -36, 36, -7, 56, -430, 24);
     }
 
     public static void generateDebugShowcase(ServerLevel level, BlockPos origin) {
@@ -160,8 +164,9 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
         int kingZ = z - posX;
         genBossRoom189(level, random, x + 7, kingY, kingZ);
         fillLoweredKingGap(level, x + 7, kingY, kingZ);
-        genCoridor189(level, random, x + 7, kingY, z - posX);
-        genReward189(level, random, x + 7, kingY, z - posX);
+        int postKingY = kingY - 1;
+        genCoridor189(level, random, x + 7, postKingY, z - posX);
+        genReward189(level, random, x + 7, postKingY, z - posX);
     }
 
     private void spawnRoom189(WorldGenLevel level, RandomSource random, int x, int y, int z) {
@@ -614,23 +619,17 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
     }
 
     private void fillLoweredKingGap(WorldGenLevel level, int x, int y, int z) {
-        for (int dy = 1; dy <= 5; dy++) {
-            set(level, x - 1, y + dy, z - 1, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
-            set(level, x + 2, y + dy, z - 1, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
-        }
-        for (int dx = 0; dx <= 1; dx++) {
-            set(level, x + dx, y + 5, z - 1, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
-        }
-        clearDoor(level, x, y + 2, z - 1, 2, 3);
-        fillKingEntranceInsideGaps(level, x, y, z);
+        flattenKingEntranceWall(level, x, y, z);
     }
 
-    private void fillKingEntranceInsideGaps(WorldGenLevel level, int x, int y, int z) {
+    private void flattenKingEntranceWall(WorldGenLevel level, int x, int y, int z) {
         BlockState wall = CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState();
-        set(level, x, y, z - 1, wall);
-        set(level, x + 1, y, z - 1, wall);
-        set(level, x, y + 1, z - 1, wall);
-        set(level, x + 1, y + 1, z - 1, wall);
+        for (int dx = -1; dx <= 2; dx++) {
+            for (int dy = 0; dy <= 5; dy++) {
+                set(level, x + dx, y + dy, z - 1, wall);
+            }
+        }
+        clearDoor(level, x, y + 2, z - 1, 2, 2);
     }
 
     private void genBossRoom189(WorldGenLevel level, RandomSource random, int x, int y, int z) {
@@ -1273,9 +1272,19 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
         for (int x = minX; x <= maxX; x++) {
             for (int z = minZ; z <= maxZ; z++) {
                 for (int y = minY; y <= maxY; y++) {
-                    level.setBlock(origin.offset(x, y, z), Blocks.AIR.defaultBlockState(), 2);
+                    level.setBlock(origin.offset(x, y, z), Blocks.AIR.defaultBlockState(), 50);
                 }
             }
+        }
+    }
+
+    private static void purgeDungeonItemEntities(ServerLevel level, BlockPos origin, int minX, int maxX, int minY, int maxY, int minZ, int maxZ) {
+        AABB bounds = new AABB(
+            origin.getX() + minX, origin.getY() + minY, origin.getZ() + minZ,
+            origin.getX() + maxX + 1, origin.getY() + maxY + 1, origin.getZ() + maxZ + 1
+        );
+        for (ItemEntity item : level.getEntitiesOfClass(ItemEntity.class, bounds)) {
+            item.discard();
         }
     }
 

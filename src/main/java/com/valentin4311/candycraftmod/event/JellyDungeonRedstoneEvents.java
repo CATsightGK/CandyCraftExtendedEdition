@@ -61,18 +61,19 @@ public final class JellyDungeonRedstoneEvents {
             BlockPos pistonPos = new BlockPos(baseX + i, baseY + 3, baseZ - 42);
             BlockPos headPos = pistonPos.relative(Direction.SOUTH);
             BlockPos jellyOutPos = headPos.relative(Direction.SOUTH);
+            level.setBlock(jellyOutPos, Blocks.AIR.defaultBlockState(), 18);
+            level.setBlock(headPos, Blocks.AIR.defaultBlockState(), 18);
             level.setBlock(pistonPos, Blocks.STICKY_PISTON.defaultBlockState()
                 .setValue(BlockStateProperties.FACING, Direction.SOUTH)
-                .setValue(BlockStateProperties.EXTENDED, extended), 3);
+                .setValue(BlockStateProperties.EXTENDED, extended), 18);
             if (extended) {
                 level.setBlock(headPos, Blocks.PISTON_HEAD.defaultBlockState()
                     .setValue(PistonHeadBlock.FACING, Direction.SOUTH)
                     .setValue(PistonHeadBlock.TYPE, PistonType.STICKY)
-                    .setValue(PistonHeadBlock.SHORT, false), 3);
-                level.setBlock(jellyOutPos, CCBlocks.JELLY_SHOCK_ABSORBER.get().defaultBlockState(), 3);
+                    .setValue(PistonHeadBlock.SHORT, false), 18);
+                level.setBlock(jellyOutPos, CCBlocks.JELLY_SHOCK_ABSORBER.get().defaultBlockState(), 18);
             } else {
-                level.setBlock(headPos, CCBlocks.JELLY_SHOCK_ABSORBER.get().defaultBlockState(), 3);
-                level.setBlock(jellyOutPos, Blocks.AIR.defaultBlockState(), 3);
+                level.setBlock(headPos, CCBlocks.JELLY_SHOCK_ABSORBER.get().defaultBlockState(), 18);
             }
         }
     }
