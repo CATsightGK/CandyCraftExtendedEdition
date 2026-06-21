@@ -625,11 +625,11 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
     private void flattenKingEntranceWall(WorldGenLevel level, int x, int y, int z) {
         BlockState wall = CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState();
         for (int dx = -1; dx <= 2; dx++) {
-            for (int dy = 0; dy <= 5; dy++) {
+            for (int dy = -2; dy <= 3; dy++) {
                 set(level, x + dx, y + dy, z - 1, wall);
             }
         }
-        clearDoor(level, x, y + 2, z - 1, 2, 2);
+        clearDoor(level, x, y, z - 1, 2, 2);
     }
 
     private void genBossRoom189(WorldGenLevel level, RandomSource random, int x, int y, int z) {

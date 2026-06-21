@@ -11,10 +11,12 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.DoorBlock;
 import net.minecraft.world.level.block.LadderBlock;
 import net.minecraft.world.level.block.LeverBlock;
 import net.minecraft.world.level.block.StairBlock;
@@ -24,11 +26,14 @@ import net.minecraft.world.level.block.entity.SpawnerBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.AttachFace;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.DoorHingeSide;
+import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.level.block.state.properties.Half;
 import net.minecraft.world.level.block.state.properties.StairsShape;
 import net.minecraft.world.level.levelgen.feature.Feature;
 import net.minecraft.world.level.levelgen.feature.FeaturePlaceContext;
 import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
+import net.minecraft.world.phys.AABB;
 
 public class SuguardDungeonFeature extends Feature<NoneFeatureConfiguration> {
     public SuguardDungeonFeature(Codec<NoneFeatureConfiguration> codec) {
@@ -37,8 +42,10 @@ public class SuguardDungeonFeature extends Feature<NoneFeatureConfiguration> {
 
     public static void generateInDungeonLevel(ServerLevel level, BlockPos origin) {
         RandomSource random = level.getRandom();
+        purgeDungeonItemEntities(level, origin, -132, 64, -63, 190, -160, 160);
         clearArea(level, origin, -132, 64, -63, 190, -160, 160);
         new SuguardDungeonFeature(NoneFeatureConfiguration.CODEC).legacyDungeon(level, random, origin);
+        purgeDungeonItemEntities(level, origin, -132, 64, -63, 190, -160, 160);
     }
 
     public static void generateDebugShowcase(ServerLevel level, BlockPos origin) {
@@ -207,6 +214,12 @@ public class SuguardDungeonFeature extends Feature<NoneFeatureConfiguration> {
             set(level, x, floorY - 1, z + dz, caramel());
         }
         box(level, x, y, z - 49, x, y, z - 1, caramel());
+        for (int dz = 2; dz > -50; dz -= 2) {
+            int offset = (int) (Math.sin(dz / 4.0F) * 3.0F);
+            int offset2 = offset / 2;
+            archerTower(level, x + 5 + offset, y + offset2, z + dz);
+            archerTower(level, x - 8 + (3 - offset), y + offset2, z + dz);
+        }
         zDoor(level, x, y + 1, z);
         zDoor(level, x, y + 1, z - 50);
         box(level, x - 1, y - 18, z - 1, x - 1, y + 1, z - 1, CCBlocks.MARSHMALLOW_LADDER.get().defaultBlockState().setValue(LadderBlock.FACING, Direction.NORTH));
@@ -220,9 +233,11 @@ public class SuguardDungeonFeature extends Feature<NoneFeatureConfiguration> {
         zDoor(level, x, y + 1, z);
         box(level, x, y + 3, z, x, y + 4, z, chocolate());
         box(level, x, y, z, x, y - 1, z, chocolate());
+        placeMarshmallowDoor(level, x, y + 1, z, Direction.SOUTH);
         zDoor(level, x, y + 1, z - 30);
         box(level, x, y + 3, z - 30, x, y + 4, z - 30, chocolate());
         box(level, x, y, z - 30, x, y - 1, z - 30, chocolate());
+        placeMarshmallowDoor(level, x, y + 1, z - 30, Direction.NORTH);
         for (int dz = 0; dz >= -25; dz -= 5) {
             box(level, x - 4, y - 1, z + dz - 2, x + 4, y + 4, z + dz - 2, honeyLamp());
             int rx = x + random.nextInt(8) - 4;
@@ -237,24 +252,43 @@ public class SuguardDungeonFeature extends Feature<NoneFeatureConfiguration> {
 
     private void barrierRoom(WorldGenLevel level, RandomSource random, int x, int y, int z) {
         hollowBox(level, x - 11, y - 18, z, x + 11, y + 10, z + 52, checker(random, chocolate(), cobble()));
+        checkerBox(level, x - 11, y + 2, z, x + 11, y + 2, z + 52, chocolate(), honeyLamp());
         box(level, x - 10, y - 17, z + 1, x + 10, y - 7, z + 51, CCBlocks.GRENADINE.get().defaultBlockState());
+        for (int dx = -9; dx < 10; dx++) {
+            for (int dz = 1; dz < 52; dz++) {
+                if (random.nextFloat() < 0.2F) {
+                    spikesPillar(level, random, x + dx, y - 12, z + dz);
+                }
+                box(level, x + dx, y - 17, z + dz, x + dx, y - 17 + random.nextInt(3), z + dz, chocolate());
+            }
+        }
         box(level, x - 10, y, z + 1, x + 10, y, z + 1, caramel());
         box(level, x - 10, y, z + 51, x + 10, y, z + 51, caramel());
         box(level, x + 10, y - 6, z + 51, x + 10, y - 1, z + 51, ladder(Direction.NORTH));
         box(level, x + 10, y - 6, z + 1, x + 10, y, z + 1, ladder(Direction.SOUTH));
-        for (int dz = 2; dz < 51; dz += 4) {
-            int rx = x + random.nextInt(19) - 9;
-            box(level, rx, y, z + dz, rx, y + 10, z + dz, random.nextBoolean() ? Blocks.BARRIER.defaultBlockState() : cobble());
-            set(level, rx, y + 11, z + dz, honeyLamp());
-        }
+        set(level, x + 10, y, z + 52, Blocks.AIR.defaultBlockState());
+        set(level, x + 10, y, z + 53, stickyPiston(Direction.NORTH));
+        set(level, x + 10, y + 2, z + 51, Blocks.LEVER.defaultBlockState()
+            .setValue(LeverBlock.FACE, AttachFace.WALL)
+            .setValue(LeverBlock.FACING, Direction.NORTH)
+            .setValue(LeverBlock.POWERED, false));
+        set(level, x + 10, y + 2, z + 53, wallRedstoneTorch(Direction.SOUTH));
+        barrierPath(level, random, x, y, z);
         zDoor(level, x, y + 1, z);
         zDoor(level, x, y + 1, z + 52);
         keyChest(level, x - 8, y + 1, z + 49, CCItems.SUGUARD_SENTRY_KEY.get());
     }
 
     private void jumpRoom(WorldGenLevel level, RandomSource random, int x, int y, int z) {
-        hollowBox(level, x - 4, 10, z + 3, x + 4, 251, z + 19, caramelBrick());
-        box(level, x - 3, 11, z + 4, x + 3, 250, z + 18, checker(random, CCBlocks.YELLOW_TRAMPOJELLY.get().defaultBlockState(), CCBlocks.RED_TRAMPOJELLY.get().defaultBlockState()));
+        hollowBox(level, x - 1, 10, z, x + 1, y + 4, z + 2, checker(random, caramelBrick(), honeyLamp()));
+        box(level, x, y + 1, z, x, y + 3, z, Blocks.AIR.defaultBlockState());
+        hollowBox(level, x - 1, 11, z + 2, x + 1, 14, z + 4, caramelBrick());
+        hollowBox(level, x - 4, 10, z + 3, x + 4, 251, z + 11, caramelBrick());
+        hollowBox(level, x - 3, 11, z + 4, x + 3, 250, z + 10, jumpWall(random));
+        jellyColumn(level, x - 2, 11, z + 5, 250, 0);
+        jellyColumn(level, x + 2, 11, z + 5, 250, 1);
+        jellyColumn(level, x - 2, 11, z + 9, 250, 2);
+        jellyColumn(level, x + 2, 11, z + 9, 250, 7);
         box(level, x - 2, 11, z + 5, x + 2, 11, z + 9, CCBlocks.YELLOW_TRAMPOJELLY.get().defaultBlockState());
         box(level, x, 11, z + 1, x, 11, z + 4, CCBlocks.JELLY_SHOCK_ABSORBER.get().defaultBlockState());
         int yy = 15;
@@ -269,8 +303,17 @@ public class SuguardDungeonFeature extends Feature<NoneFeatureConfiguration> {
             }
             yy -= random.nextInt(3) + 3;
         }
+        hollowBox(level, x - 4, 10, z + 11, x + 4, 251, z + 19, caramelBrick());
+        hollowBox(level, x - 3, 11, z + 12, x + 3, 250, z + 18, jumpWall(random));
+        jellyColumn(level, x - 2, 11, z + 13, 250, 0);
+        jellyColumn(level, x + 2, 11, z + 13, 250, 1);
+        jellyColumn(level, x - 2, 11, z + 17, 250, 2);
+        jellyColumn(level, x + 2, 11, z + 17, 250, 7);
+        box(level, x - 2, 11, z + 13, x + 2, 11, z + 18, CCBlocks.JELLY_SHOCK_ABSORBER.get().defaultBlockState());
         box(level, x, 12, z + 2, x, 13, z + 4, Blocks.AIR.defaultBlockState());
         box(level, x - 1, 240, z + 9, x + 1, 249, z + 12, Blocks.AIR.defaultBlockState());
+        hollowBox(level, x - 1, 239, z + 11, x + 1, 249, z + 11, jumpWall(random));
+        box(level, x - 1, 239, z + 10, x + 1, 239, z + 12, CCBlocks.JELLY_SHOCK_ABSORBER.get().defaultBlockState());
         box(level, x, 12, z + 17, x, 14, z + 19, Blocks.AIR.defaultBlockState());
         keyChest(level, x + 3, 12, z + 17, CCItems.SUGUARD_SENTRY_KEY.get());
     }
@@ -281,10 +324,20 @@ public class SuguardDungeonFeature extends Feature<NoneFeatureConfiguration> {
         set(level, x - 1, y + 59, z, CCBlocks.RED_TRAMPOJELLY.get().defaultBlockState());
         set(level, x - 2, y + 116, z, CCBlocks.RED_TRAMPOJELLY.get().defaultBlockState());
         set(level, x - 1, y + 166, z, CCBlocks.TRAMPOJELLY.get().defaultBlockState());
+        set(level, x - 2, y - 1, z, chocolate());
+        set(level, x - 1, 246, z, Blocks.OAK_WALL_SIGN.defaultBlockState().setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.SOUTH));
+        set(level, x - 2, 246, z, Blocks.OAK_WALL_SIGN.defaultBlockState().setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.SOUTH));
+        set(level, x - 1, 247, z, CCBlocks.GRENADINE.get().defaultBlockState());
+        set(level, x - 2, 247, z, CCBlocks.GRENADINE.get().defaultBlockState());
         box(level, x, y + 1, z, x, y + 2, z, Blocks.AIR.defaultBlockState());
         int sx = x - 4;
         hollowBox(level, sx - 8, 10, z - 4, sx, 250, z + 4, checker(random, chocolate(), cobble()));
         box(level, sx - 7, 11, z - 3, sx - 1, 11, z + 3, CCBlocks.GRENADINE.get().defaultBlockState());
+        checkerBox(level, sx - 1, 10, z - 3, sx - 1, 249, z - 3, chocolate(), cobble());
+        checkerBox(level, sx - 1, 10, z + 3, sx - 1, 249, z + 3, chocolate(), cobble());
+        checkerBox(level, sx - 7, 10, z - 3, sx - 7, 249, z - 3, chocolate(), cobble());
+        checkerBox(level, sx - 7, 10, z + 3, sx - 7, 249, z + 3, chocolate(), cobble());
+        box(level, sx - 2, 248, z, sx + 1, 249, z, Blocks.AIR.defaultBlockState());
         for (int yy = 230; yy > 13; yy -= 8) {
             if (random.nextBoolean()) {
                 int ox = random.nextInt(6);
@@ -337,14 +390,14 @@ public class SuguardDungeonFeature extends Feature<NoneFeatureConfiguration> {
         set(level, x - 24, 30 + yOffset, z, stickyPiston(Direction.WEST));
         set(level, x - 26, 11 + yOffset, z, CCBlocks.GRENADINE.get().defaultBlockState());
         box(level, x - 26, 31 + yOffset, z, x - 26, 32 + yOffset, z, CCBlocks.GRENADINE.get().defaultBlockState());
-        set(level, x - 24, 12 + yOffset, z, Blocks.REDSTONE_TORCH.defaultBlockState());
-        set(level, x - 16, 12 + yOffset, z, Blocks.REDSTONE_TORCH.defaultBlockState());
-        set(level, x - 20, 12 + yOffset, z - 4, Blocks.REDSTONE_TORCH.defaultBlockState());
-        set(level, x - 20, 12 + yOffset, z + 4, Blocks.REDSTONE_TORCH.defaultBlockState());
-        box(level, x - 24, 13 + yOffset, z, x - 24, 29 + yOffset, z, Blocks.REDSTONE_LAMP.defaultBlockState());
-        box(level, x - 16, 13 + yOffset, z, x - 16, 29 + yOffset, z, Blocks.REDSTONE_LAMP.defaultBlockState());
-        box(level, x - 20, 13 + yOffset, z - 4, x - 20, 29 + yOffset, z - 4, Blocks.REDSTONE_LAMP.defaultBlockState());
-        box(level, x - 20, 13 + yOffset, z + 4, x - 20, 29 + yOffset, z + 4, Blocks.REDSTONE_LAMP.defaultBlockState());
+        set(level, x - 24, 12 + yOffset, z, wallRedstoneTorch(Direction.EAST));
+        set(level, x - 16, 12 + yOffset, z, wallRedstoneTorch(Direction.WEST));
+        set(level, x - 20, 12 + yOffset, z - 4, wallRedstoneTorch(Direction.SOUTH));
+        set(level, x - 20, 12 + yOffset, z + 4, wallRedstoneTorch(Direction.NORTH));
+        redstoneLampTorchColumn(level, x - 24, 13 + yOffset, z, 17, yOffset == 0 ? 1 : 0, Direction.EAST);
+        redstoneLampTorchColumn(level, x - 16, 13 + yOffset, z, 17, yOffset == 0 ? 1 : 0, Direction.WEST);
+        redstoneLampTorchColumn(level, x - 20, 13 + yOffset, z - 4, 17, yOffset == 0 ? 1 : 0, Direction.SOUTH);
+        redstoneLampTorchColumn(level, x - 20, 13 + yOffset, z + 4, 17, yOffset == 0 ? 1 : 0, Direction.NORTH);
         set(level, x - 24, 30 + yOffset, z, stickyPiston(Direction.WEST));
         box(level, x - 23, 28 + yOffset, z, x - 17, 28 + yOffset, z, caramel());
         box(level, x - 20, 28 + yOffset, z - 3, x - 20, 28 + yOffset, z + 3, caramel());
@@ -518,6 +571,103 @@ public class SuguardDungeonFeature extends Feature<NoneFeatureConfiguration> {
     private BlockState stickyPiston(Direction facing) { return Blocks.STICKY_PISTON.defaultBlockState().setValue(BlockStateProperties.FACING, facing).setValue(BlockStateProperties.EXTENDED, false); }
     private BlockState pressurePlate() { return Blocks.STONE_PRESSURE_PLATE.defaultBlockState().setValue(BlockStateProperties.POWERED, false); }
 
+    private void archerTower(WorldGenLevel level, int x, int y, int z) {
+        set(level, x, y, z, caramel());
+    }
+
+    private void placeMarshmallowDoor(WorldGenLevel level, int x, int y, int z, Direction facing) {
+        BlockState base = CCBlocks.MARSHMALLOW_DOOR.get().defaultBlockState()
+            .setValue(DoorBlock.FACING, facing)
+            .setValue(DoorBlock.HINGE, DoorHingeSide.LEFT)
+            .setValue(DoorBlock.OPEN, false)
+            .setValue(DoorBlock.POWERED, false);
+        set(level, x, y, z, base.setValue(DoorBlock.HALF, DoubleBlockHalf.LOWER));
+        set(level, x, y + 1, z, base.setValue(DoorBlock.HALF, DoubleBlockHalf.UPPER));
+    }
+
+    private void spikesPillar(WorldGenLevel level, RandomSource random, int x, int y, int z) {
+        int height = random.nextInt(3) + 5;
+        int baseY = y + random.nextInt(3);
+        box(level, x, baseY, z, x, y + height, z, caramel());
+        set(level, x, y + height, z, honeyLamp());
+        set(level, x, y + height + 1, z, CCBlocks.SUGAR_SPIKES.get().defaultBlockState());
+    }
+
+    private void barrierPath(WorldGenLevel level, RandomSource random, int x, int y, int z) {
+        int currentX = random.nextInt(18) - 9;
+        int currentZ = 2;
+        int direction = 0;
+        int lastDirection = 0;
+        int holesLeft = 0;
+        int length = random.nextInt(2) + 2;
+        while (currentZ <= 50) {
+            for (int i = 0; i < length && currentZ <= 50; i++) {
+                if (holesLeft > 0 && random.nextFloat() < 0.2F) {
+                    holesLeft--;
+                } else {
+                    set(level, x + currentX, y, z + currentZ, random.nextFloat() < 0.1F ? cobble() : Blocks.BARRIER.defaultBlockState());
+                    set(level, x + currentX, y + 10, z + currentZ, honeyLamp());
+                }
+                if (direction == 0) {
+                    currentZ++;
+                } else if (direction == 1) {
+                    currentX--;
+                } else {
+                    currentX++;
+                }
+            }
+            if (direction == 0) {
+                direction = lastDirection == 1 ? 2 : 1;
+                lastDirection = direction;
+                int wallX = direction == 1 ? -10 : 10;
+                length = Math.max(1, Math.abs(wallX - currentX) - (random.nextInt(6) + 1));
+            } else {
+                direction = 0;
+                length = Math.min(51 - currentZ, random.nextInt(4) + 4);
+            }
+            holesLeft = random.nextInt(2) + 2;
+        }
+    }
+
+    private void jellyColumn(WorldGenLevel level, int x, int y1, int z, int y2, int offset) {
+        BlockState[] states = new BlockState[] {
+            CCBlocks.JELLY_SHOCK_ABSORBER.get().defaultBlockState(),
+            CCBlocks.YELLOW_TRAMPOJELLY.get().defaultBlockState(),
+            CCBlocks.RED_TRAMPOJELLY.get().defaultBlockState(),
+            CCBlocks.TRAMPOJELLY.get().defaultBlockState(),
+            CCBlocks.PURPLE_TRAMPOJELLY.get().defaultBlockState()
+        };
+        for (int y = y1; y <= y2; y++) {
+            set(level, x, y, z, states[Math.floorMod(y + offset, states.length)]);
+        }
+    }
+
+    private BlockState jumpWall(RandomSource random) {
+        return switch (random.nextInt(5)) {
+            case 0 -> CCBlocks.YELLOW_TRAMPOJELLY.get().defaultBlockState();
+            case 1 -> CCBlocks.RED_TRAMPOJELLY.get().defaultBlockState();
+            case 2 -> CCBlocks.TRAMPOJELLY.get().defaultBlockState();
+            case 3 -> CCBlocks.PURPLE_TRAMPOJELLY.get().defaultBlockState();
+            default -> CCBlocks.JELLY_SHOCK_ABSORBER.get().defaultBlockState();
+        };
+    }
+
+    private BlockState wallRedstoneTorch(Direction facing) {
+        return Blocks.REDSTONE_WALL_TORCH.defaultBlockState()
+            .setValue(BlockStateProperties.HORIZONTAL_FACING, facing)
+            .setValue(BlockStateProperties.LIT, true);
+    }
+
+    private void redstoneLampTorchColumn(WorldGenLevel level, int x, int y, int z, int height, int offset, Direction torchFacing) {
+        for (int dy = 0; dy < height; dy++) {
+            if (((dy + offset) & 1) == 0) {
+                set(level, x, y + dy, z, Blocks.REDSTONE_LAMP.defaultBlockState());
+            } else {
+                set(level, x, y + dy, z, wallRedstoneTorch(torchFacing));
+            }
+        }
+    }
+
     private void hollowBox(WorldGenLevel level, int x1, int y1, int z1, int x2, int y2, int z2, BlockState state) {
         int minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
         int minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
@@ -625,9 +775,19 @@ public class SuguardDungeonFeature extends Feature<NoneFeatureConfiguration> {
         for (int x = minX; x <= maxX; x++) {
             for (int z = minZ; z <= maxZ; z++) {
                 for (int y = minY; y <= maxY; y++) {
-                    level.setBlock(origin.offset(x, y, z), Blocks.AIR.defaultBlockState(), 2);
+                    level.setBlock(origin.offset(x, y, z), Blocks.AIR.defaultBlockState(), 50);
                 }
             }
+        }
+    }
+
+    private static void purgeDungeonItemEntities(ServerLevel level, BlockPos origin, int minX, int maxX, int minY, int maxY, int minZ, int maxZ) {
+        AABB bounds = new AABB(
+            origin.getX() + minX, origin.getY() + minY, origin.getZ() + minZ,
+            origin.getX() + maxX + 1, origin.getY() + maxY + 1, origin.getZ() + maxZ + 1
+        );
+        for (ItemEntity item : level.getEntitiesOfClass(ItemEntity.class, bounds)) {
+            item.discard();
         }
     }
 }
