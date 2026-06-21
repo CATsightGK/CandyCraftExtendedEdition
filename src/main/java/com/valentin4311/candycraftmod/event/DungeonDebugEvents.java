@@ -30,5 +30,15 @@ public final class DungeonDebugEvents {
                         + " and " + base.offset(240, 0, 0).toShortString()), true);
                 return 1;
             }));
+        event.getDispatcher().register(Commands.literal("candycraft_debug_jelly_water_room")
+            .requires(source -> source.hasPermission(2))
+            .executes(context -> {
+                ServerLevel level = context.getSource().getLevel();
+                BlockPos base = BlockPos.containing(context.getSource().getPosition()).offset(0, 1, 0);
+                JellyDungeonFeature.generateDebugWaterRoom(level, base);
+                context.getSource().sendSuccess(() -> Component.literal(
+                    "Generated CandyCraft jelly water room at " + base.toShortString()), true);
+                return 1;
+            }));
     }
 }
