@@ -3,7 +3,6 @@
     "minecraft:player"
   ],
   "slots": [
-    "candycraft_amulet",
     "candycraft_emblem"
   ]
 }

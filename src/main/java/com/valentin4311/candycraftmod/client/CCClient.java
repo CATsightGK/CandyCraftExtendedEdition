@@ -100,6 +100,7 @@ public final class CCClient {
             ItemBlockRenderTypes.setRenderLayer(CCFluids.FLOWING_LIQUID_CANDY.get(), RenderType.translucent());
             MenuScreens.register(CCMenus.SUGAR_FACTORY.get(), SugarFactoryScreen::new);
             MenuScreens.register(CCMenus.LICORICE_FURNACE.get(), LicoriceFurnaceScreen::new);
+            MenuScreens.register(CCMenus.EMBLEM_BASKET.get(), EmblemBasketScreen::new);
             registerProjectileItemProperties();
         });
     }

@@ -2,6 +2,7 @@ package com.valentin4311.candycraftmod.registry;
 
 import com.valentin4311.candycraftmod.CandyCraft;
 import com.valentin4311.candycraftmod.block.SugarFactoryBlock;
+import com.valentin4311.candycraftmod.menu.EmblemBasketMenu;
 import com.valentin4311.candycraftmod.menu.LicoriceFurnaceMenu;
 import com.valentin4311.candycraftmod.menu.SugarFactoryMenu;
 import net.minecraft.core.BlockPos;
@@ -32,6 +33,11 @@ public final class CCMenus {
     public static final RegistryObject<MenuType<LicoriceFurnaceMenu>> LICORICE_FURNACE =
         MENU_TYPES.register("licorice_furnace", () -> IForgeMenuType.create((id, inventory, data) ->
             new LicoriceFurnaceMenu(id, inventory)
+        ));
+
+    public static final RegistryObject<MenuType<EmblemBasketMenu>> EMBLEM_BASKET =
+        MENU_TYPES.register("emblem_basket", () -> IForgeMenuType.create((id, inventory, data) ->
+            new EmblemBasketMenu(id, inventory)
         ));
 
     private CCMenus() {

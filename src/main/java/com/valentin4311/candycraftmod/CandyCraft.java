@@ -14,6 +14,7 @@ import com.valentin4311.candycraftmod.registry.CCParticleTypes;
 import com.valentin4311.candycraftmod.registry.CCRecipeTypes;
 import com.valentin4311.candycraftmod.registry.CCSoundEvents;
 import com.valentin4311.candycraftmod.registry.CCWorldgen;
+import com.valentin4311.candycraftmod.network.CCTasteNetwork;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.packs.PackType;
 import net.minecraft.server.packs.repository.Pack;
@@ -48,6 +49,7 @@ public class CandyCraft {
         CCSweetscapeItems.register(modBus);
         CCMenus.register(modBus);
         CCCreativeTabs.register(modBus);
+        CCTasteNetwork.register();
     }
 
     private static void addPackFinders(AddPackFindersEvent event) {

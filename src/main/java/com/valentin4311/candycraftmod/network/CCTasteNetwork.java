@@ -24,9 +24,18 @@ public final class CCTasteNetwork {
             .decoder(TasteModePacket::decode)
             .consumerMainThread(TasteModePacket::handle)
             .add();
+        CHANNEL.messageBuilder(OpenEmblemBasketPacket.class, 1)
+            .encoder(OpenEmblemBasketPacket::encode)
+            .decoder(OpenEmblemBasketPacket::decode)
+            .consumerMainThread(OpenEmblemBasketPacket::handle)
+            .add();
     }
 
     public static void setTasteMode(boolean enabled) {
         CHANNEL.sendToServer(new TasteModePacket(enabled));
+    }
+
+    public static void openEmblemBasket() {
+        CHANNEL.sendToServer(new OpenEmblemBasketPacket());
     }
 }
