@@ -139,7 +139,7 @@ public final class CCEntityTypes {
             .clientTrackingRange(10)
             .build(CandyCraft.MODID + ":pingouin")
     );
-    public static final RegistryObject<EntityType<BasicCandySpiderEntity>> BEETLE = basicSpider("beetle", 1.0F, 0.8F);
+    public static final RegistryObject<EntityType<BasicCandySpiderEntity>> BEETLE = basicSpider("beetle", 1.0F, 1.0F);
     public static final RegistryObject<EntityType<BasicCandyZombieEntity>> NESSIE = basicZombie("nessie", 1.6F, 1.1F);
     public static final RegistryObject<EntityType<BasicCandyZombieEntity>> DRAGON = basicZombie("dragon", 1.4F, 1.2F);
     public static final RegistryObject<EntityType<BasicCandyZombieEntity>> KING_BEETLE = basicZombie("king_beetle", 1.4F, 1.1F);

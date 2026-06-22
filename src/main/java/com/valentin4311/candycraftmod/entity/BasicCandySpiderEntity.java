@@ -37,6 +37,8 @@ import net.minecraft.world.entity.monster.Spider;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
+import net.minecraft.world.level.pathfinder.Node;
+import net.minecraft.world.level.pathfinder.Path;
 
 public class BasicCandySpiderEntity extends Spider {
     private static final EntityDataAccessor<Boolean> ANGRY = SynchedEntityData.defineId(BasicCandySpiderEntity.class, EntityDataSerializers.BOOLEAN);
@@ -224,6 +226,10 @@ public class BasicCandySpiderEntity extends Spider {
     }
 
     private void tickBeetleBehavior() {
+        if (!level().isClientSide && isBeetle() && !isChildBeetle()) {
+            stopNarrowPassageNavigation();
+        }
+
         if (level().isClientSide && isAngry() && random.nextInt(20) == 0) {
             for (int i = 0; i < 2; i++) {
                 level().addParticle(ParticleTypes.ANGRY_VILLAGER, getRandomX(1.0D), getRandomY(), getRandomZ(1.0D), 0.0D, 0.0D, 0.0D);
@@ -241,6 +247,32 @@ public class BasicCandySpiderEntity extends Spider {
                 }
             }
         }
+    }
+
+    private void stopNarrowPassageNavigation() {
+        Path path = getNavigation().getPath();
+        if (path == null || path.isDone()) {
+            return;
+        }
+        Node node = path.getNextNode();
+        BlockPos next = new BlockPos(node.x, node.y, node.z);
+        BlockPos current = blockPosition();
+        int dx = Integer.compare(next.getX(), current.getX());
+        int dz = Integer.compare(next.getZ(), current.getZ());
+        if (dx == 0 && dz == 0) {
+            return;
+        }
+        boolean wideEnough = dx != 0
+            ? hasAdultBeetleClearance(next.north()) && hasAdultBeetleClearance(next.south())
+            : hasAdultBeetleClearance(next.east()) && hasAdultBeetleClearance(next.west());
+        if (!wideEnough) {
+            getNavigation().stop();
+        }
+    }
+
+    private boolean hasAdultBeetleClearance(BlockPos pos) {
+        return level().getBlockState(pos).getCollisionShape(level(), pos).isEmpty()
+            && level().getBlockState(pos.above()).getCollisionShape(level(), pos.above()).isEmpty();
     }
 
     private boolean shouldPlaceChewingGumTrap() {
