@@ -53,8 +53,8 @@ public class JellyBlock extends Block {
                     return;
                 }
                 UUID id = player.getUUID();
-                int charge = PURPLE_CHARGE_TICKS.merge(id, 1, Integer::sum);
-                double bob = Math.sin((player.tickCount + charge) * 0.85D) * 0.035D;
+                PURPLE_CHARGE_TICKS.merge(id, 1, Integer::sum);
+                double bob = movement.y <= 0.0D ? Math.sin(player.tickCount * 0.6D) * 0.045D : movement.y;
                 entity.setDeltaMovement(movement.x * 0.55D, bob, movement.z * 0.55D);
                 entity.hasImpulse = true;
                 return;

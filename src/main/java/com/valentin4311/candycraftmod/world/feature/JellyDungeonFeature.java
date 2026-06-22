@@ -638,7 +638,9 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
         }
         set(level, x, y - 1, z, wall);
         set(level, x + 1, y - 1, z, wall);
-        clearDoor(level, x, y + 2, z - 1, 2, 2);
+        clearDoor(level, x, y + 2, z - 1, 2, 3);
+        set(level, x, y + 1, z - 1, wall);
+        set(level, x + 1, y + 1, z - 1, wall);
     }
 
     private void genBossRoom189(WorldGenLevel level, RandomSource random, int x, int y, int z) {
