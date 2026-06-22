@@ -122,8 +122,18 @@ public class SuguardDungeonFeature extends Feature<NoneFeatureConfiguration> {
         pillar(level, x + 3, y + 1, z + 3);
         pillar(level, x - 3, y + 1, z + 3);
 
-        hollowBox(level, x - 4, y + 1, z - 4, x + 4, y + 3, z + 4, caramelBrick());
-        spawnRoomCeiling(level, x, y, z);
+        wallBox(level, x - 4, y + 1, z - 4, x + 4, y + 3, z + 4, caramelBrick());
+        wallBox(level, x - 3, y + 4, z - 3, x + 3, y + 4, z + 3, chocolate());
+        wallBox(level, x - 2, y + 5, z - 2, x + 2, y + 5, z + 2, caramel());
+        set(level, x - 2, y + 4, z - 2, chocolate());
+        set(level, x + 2, y + 4, z - 2, chocolate());
+        set(level, x + 2, y + 4, z + 2, chocolate());
+        set(level, x - 2, y + 4, z + 2, chocolate());
+        set(level, x - 1, y + 5, z - 1, caramel());
+        set(level, x + 1, y + 5, z - 1, caramel());
+        set(level, x + 1, y + 5, z + 1, caramel());
+        set(level, x - 1, y + 5, z + 1, caramel());
+        box(level, x - 1, y + 6, z - 1, x + 1, y + 6, z + 1, honeyLamp());
 
         box(level, x - 4, y + 1, z, x - 4, y + 2, z, CCBlocks.SUGUARD_SENTRY_KEY_HOLE.get().defaultBlockState());
         box(level, x, y + 1, z + 4, x, y + 2, z + 4, CCBlocks.SUGUARD_SENTRY_KEY_HOLE.get().defaultBlockState());
@@ -144,18 +154,6 @@ public class SuguardDungeonFeature extends Feature<NoneFeatureConfiguration> {
         } else {
             box(level, x, y + 1, z - 4, x, y + 2, z - 4, Blocks.AIR.defaultBlockState());
         }
-        clearSpawnRoomStandingSpace(level, x, y, z);
-    }
-
-    private void spawnRoomCeiling(WorldGenLevel level, int x, int y, int z) {
-        box(level, x - 3, y + 4, z - 3, x + 3, y + 4, z + 3, caramelBrick());
-        box(level, x - 1, y + 4, z - 1, x + 1, y + 4, z + 1, honeyLamp());
-    }
-
-    private void clearSpawnRoomStandingSpace(WorldGenLevel level, int x, int y, int z) {
-        box(level, x - 1, y + 1, z - 1, x + 1, y + 3, z + 1, Blocks.AIR.defaultBlockState());
-        set(level, x, y, z, caramel());
-        set(level, x, y + 1, z, suguardTeleporter());
     }
 
     private void zCorridor(WorldGenLevel level, int x, int y, int z) {
@@ -666,6 +664,26 @@ public class SuguardDungeonFeature extends Feature<NoneFeatureConfiguration> {
                         set(level, x, y, z, pattern.get(x, y, z));
                     }
                 }
+            }
+        }
+    }
+
+    private void wallBox(WorldGenLevel level, int x1, int y1, int z1, int x2, int y2, int z2, BlockState state) {
+        wallBox(level, x1, y1, z1, x2, y2, z2, constantPattern(state));
+    }
+
+    private void wallBox(WorldGenLevel level, int x1, int y1, int z1, int x2, int y2, int z2, StatePattern pattern) {
+        int minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+        int minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
+        int minZ = Math.min(z1, z2), maxZ = Math.max(z1, z2);
+        for (int y = minY; y <= maxY; y++) {
+            for (int z = minZ; z <= maxZ; z++) {
+                set(level, minX, y, z, pattern.get(minX, y, z));
+                set(level, maxX, y, z, pattern.get(maxX, y, z));
+            }
+            for (int x = minX; x <= maxX; x++) {
+                set(level, x, y, minZ, pattern.get(x, y, minZ));
+                set(level, x, y, maxZ, pattern.get(x, y, maxZ));
             }
         }
     }
