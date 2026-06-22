@@ -39,6 +39,7 @@ public class DungeonTeleporterBlock extends Block {
     private static final String RETURN_Z = "CandyCraftDungeonReturnZ";
     private static final BlockPos JELLY_DUNGEON_ORIGIN = new BlockPos(0, 64, 0);
     private static final BlockPos JELLY_DUNGEON_ENTRY = JELLY_DUNGEON_ORIGIN.offset(1, 1, 1);
+    private static final float JELLY_DUNGEON_ENTRY_YAW = -90.0F;
     private static final BlockPos SUGUARD_DUNGEON_ORIGIN = new BlockPos(0, 64, 10000);
     private static final BlockPos SUGUARD_DUNGEON_ENTRY = SUGUARD_DUNGEON_ORIGIN.offset(0, 1, 0);
 
@@ -103,7 +104,7 @@ public class DungeonTeleporterBlock extends Block {
         prepareDungeon(target);
         player.setPortalCooldown(80);
         source.playSound(null, player.blockPosition(), SoundEvents.PORTAL_TRAVEL, SoundSource.PLAYERS, 0.8F, 1.0F);
-        player.teleportTo(target, JELLY_DUNGEON_ENTRY.getX() + 0.5D, JELLY_DUNGEON_ENTRY.getY(), JELLY_DUNGEON_ENTRY.getZ() + 0.5D, player.getYRot(), player.getXRot());
+        player.teleportTo(target, JELLY_DUNGEON_ENTRY.getX() + 0.5D, JELLY_DUNGEON_ENTRY.getY(), JELLY_DUNGEON_ENTRY.getZ() + 0.5D, JELLY_DUNGEON_ENTRY_YAW, 0.0F);
         target.playSound(null, JELLY_DUNGEON_ENTRY, SoundEvents.PORTAL_TRAVEL, SoundSource.PLAYERS, 0.8F, 1.0F);
     }
 
