@@ -14,10 +14,12 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.projectile.ThrowableItemProjectile;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 
@@ -105,6 +107,29 @@ public class GummyBallEntity extends ThrowableItemProjectile {
     @Override
     protected float getGravity() {
         return 0.03F;
+    }
+
+    @Override
+    public boolean isPickable() {
+        return true;
+    }
+
+    @Override
+    public float getPickRadius() {
+        return 1.0F;
+    }
+
+    @Override
+    public boolean hurt(DamageSource source, float amount) {
+        if (getPower() != 3 || source.getEntity() == null) {
+            return false;
+        }
+        Vec3 look = source.getEntity().getLookAngle();
+        setOwner(source.getEntity());
+        setDeltaMovement(look.x, look.y, look.z);
+        hasImpulse = true;
+        markHurt();
+        return true;
     }
 
     @Override

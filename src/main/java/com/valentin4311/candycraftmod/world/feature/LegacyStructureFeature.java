@@ -4,11 +4,14 @@ import com.mojang.serialization.Codec;
 import com.valentin4311.candycraftmod.CandyCraft;
 import com.valentin4311.candycraftmod.block.LegacyLeavesBlock;
 import com.valentin4311.candycraftmod.block.LegacyMetadataBlock;
+import com.valentin4311.candycraftmod.entity.BasicCandySpiderEntity;
 import com.valentin4311.candycraftmod.entity.GingerbreadManEntity;
 import com.valentin4311.candycraftmod.registry.CCBlocks;
 import com.valentin4311.candycraftmod.registry.CCEntityTypes;
 import com.valentin4311.candycraftmod.registry.CCItems;
 import com.valentin4311.candycraftmod.util.EmblemHelper;
+import java.util.ArrayList;
+import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.WorldGenRegion;
@@ -16,6 +19,7 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.CropBlock;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
@@ -203,6 +207,7 @@ public class LegacyStructureFeature extends Feature<NoneFeatureConfiguration> {
         BlockPos center = origin.offset(-8, 0, -8);
         int radius = 7 + random.nextInt(4);
         int height = 5 + random.nextInt(3);
+        List<BlockPos> top = new ArrayList<>();
         for (int dx = -radius; dx <= radius; dx++) {
             for (int dz = -radius; dz <= radius; dz++) {
                 double dist = Math.sqrt(dx * dx + dz * dz);
@@ -216,12 +221,72 @@ public class LegacyStructureFeature extends Feature<NoneFeatureConfiguration> {
                         : CCBlocks.CHOCOLATE_STONE.get().defaultBlockState();
                     set(level, center.offset(dx, y, dz), state);
                 }
+                top.add(center.offset(dx, 0, dz));
             }
         }
-        if (random.nextBoolean()) {
-            buildSmallHouse(level, center.offset(-2, 1, -2), random, true);
+
+        int type = random.nextInt(4);
+        if (type == 0) {
+            decoratePigFeedIsland(level, random, top);
+        } else if (type == 1) {
+            decoratePigFeedIsland(level, random, top);
+            BlockPos house = center.offset(-2 + random.nextInt(5), 1, -2 + random.nextInt(5));
+            buildVillageHouse(level, random, house, random.nextInt(4), true);
+            spawnGingerbread(level, house.offset(2, 1, 2), GingerbreadManEntity.ELDER);
+        } else if (type == 2) {
+            decorateChewingGumIsland(level, random, top);
+            spawnBossBeetle(level, center.above(2));
         }
         return true;
+    }
+
+    private static void decoratePigFeedIsland(WorldGenLevel level, RandomSource random, List<BlockPos> top) {
+        for (BlockPos pos : top) {
+            BlockPos above = pos.above();
+            if (random.nextInt(3) == 0) {
+                set(level, pos, CCBlocks.CANDY_FARMLAND.get().defaultBlockState());
+                set(level, above, CCBlocks.DRAGIBUS_CROPS.get().defaultBlockState().setValue(CropBlock.AGE, 7));
+            } else if (level.isEmptyBlock(above) && random.nextBoolean()) {
+                set(level, above, randomSweetGrass(random));
+            }
+        }
+    }
+
+    private static void decorateChewingGumIsland(WorldGenLevel level, RandomSource random, List<BlockPos> top) {
+        for (BlockPos pos : top) {
+            BlockPos above = pos.above();
+            if (!level.isEmptyBlock(above)) {
+                continue;
+            }
+            if (random.nextBoolean()) {
+                set(level, above, CCBlocks.CHEWING_GUM_PUDDLE.get().defaultBlockState()
+                    .setValue(LegacyMetadataBlock.METADATA, random.nextInt(3)));
+            } else if (random.nextInt(3) == 0) {
+                set(level, above, randomSweetGrass(random));
+            }
+        }
+    }
+
+    private static BlockState randomSweetGrass(RandomSource random) {
+        BlockState state = switch (random.nextInt(3)) {
+            case 0 -> CCBlocks.SWEET_GRASS_PINK.get().defaultBlockState();
+            case 1 -> CCBlocks.SWEET_GRASS_PALE.get().defaultBlockState();
+            default -> CCBlocks.SWEET_GRASS_YELLOW.get().defaultBlockState();
+        };
+        return state.setValue(LegacyMetadataBlock.Plant.METADATA, random.nextInt(4));
+    }
+
+    private static void spawnBossBeetle(WorldGenLevel level, BlockPos pos) {
+        if (!(level instanceof WorldGenRegion region)) {
+            return;
+        }
+        BasicCandySpiderEntity entity = CCEntityTypes.BOSS_BEETLE.get().create(region.getLevel());
+        if (entity == null) {
+            return;
+        }
+        entity.moveTo(pos.getX() + 0.5D, pos.getY(), pos.getZ() + 0.5D, 0.0F, 0.0F);
+        entity.finalizeSpawn(region, region.getCurrentDifficultyAt(pos), MobSpawnType.STRUCTURE, null, null);
+        region.addFreshEntity(entity);
     }
 
     private static boolean undergroundVillage(WorldGenLevel level, RandomSource random, BlockPos origin) {
