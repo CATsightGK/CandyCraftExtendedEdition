@@ -144,11 +144,18 @@ public class SuguardDungeonFeature extends Feature<NoneFeatureConfiguration> {
         } else {
             box(level, x, y + 1, z - 4, x, y + 2, z - 4, Blocks.AIR.defaultBlockState());
         }
+        clearSpawnRoomStandingSpace(level, x, y, z);
     }
 
     private void spawnRoomCeiling(WorldGenLevel level, int x, int y, int z) {
         box(level, x - 3, y + 4, z - 3, x + 3, y + 4, z + 3, caramelBrick());
         box(level, x - 1, y + 4, z - 1, x + 1, y + 4, z + 1, honeyLamp());
+    }
+
+    private void clearSpawnRoomStandingSpace(WorldGenLevel level, int x, int y, int z) {
+        box(level, x - 1, y + 1, z - 1, x + 1, y + 3, z + 1, Blocks.AIR.defaultBlockState());
+        set(level, x, y, z, caramel());
+        set(level, x, y + 1, z, suguardTeleporter());
     }
 
     private void zCorridor(WorldGenLevel level, int x, int y, int z) {
