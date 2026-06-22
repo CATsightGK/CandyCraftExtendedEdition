@@ -12,6 +12,9 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerBossEvent;
 import net.minecraft.server.level.ServerLevel;
@@ -58,6 +61,9 @@ public class BasicCandyZombieEntity extends Zombie {
     private static final String TAG_WAITING = "Waiting";
     private static final String TAG_SPAWNED = "Spawned";
     private static final String TAG_COUNTDOWN = "CountDown";
+    private static final EntityDataAccessor<Integer> LEGACY_VARIANT = SynchedEntityData.defineId(BasicCandyZombieEntity.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Boolean> SADDLED = SynchedEntityData.defineId(BasicCandyZombieEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Boolean> BABY_DRAGON = SynchedEntityData.defineId(BasicCandyZombieEntity.class, EntityDataSerializers.BOOLEAN);
     private boolean angry;
     private boolean waiting;
     private boolean spawnedMinions;
@@ -68,8 +74,7 @@ public class BasicCandyZombieEntity extends Zombie {
     private int bossSuguardCounter = 300;
     private int dragonShootTicks;
     private int kingBeetleExplosionCount;
-    private int variant;
-    private boolean saddled;
+    private int dragonAgeTicks;
     private final ServerBossEvent bossEvent = new ServerBossEvent(getDisplayName(), BossEvent.BossBarColor.WHITE, BossEvent.BossBarOverlay.PROGRESS);
 
     public BasicCandyZombieEntity(EntityType<? extends BasicCandyZombieEntity> type, Level level) {
@@ -84,6 +89,14 @@ public class BasicCandyZombieEntity extends Zombie {
             .add(Attributes.MAX_HEALTH, 30.0D)
             .add(Attributes.MOVEMENT_SPEED, 0.3D)
             .add(Attributes.ATTACK_DAMAGE, 6.0D);
+    }
+
+    @Override
+    protected void defineSynchedData() {
+        super.defineSynchedData();
+        entityData.define(LEGACY_VARIANT, 0);
+        entityData.define(SADDLED, false);
+        entityData.define(BABY_DRAGON, false);
     }
 
     @Override
@@ -113,6 +126,9 @@ public class BasicCandyZombieEntity extends Zombie {
             net.minecraft.world.entity.MobSpawnType reason, @Nullable SpawnGroupData spawnData, @Nullable CompoundTag dataTag) {
         SpawnGroupData data = super.finalizeSpawn(level, difficulty, reason, spawnData, dataTag);
         ensureDefaultEquipment();
+        if (isNessie() && getLegacyVariant() == 0) {
+            randomizeNessieVariant();
+        }
         if ((isSuguard() || isMageSuguard())
             && reason != net.minecraft.world.entity.MobSpawnType.MOB_SUMMONED
             && level instanceof ServerLevel serverLevel && random.nextInt(100) == 0) {
@@ -139,8 +155,10 @@ public class BasicCandyZombieEntity extends Zombie {
         tag.putInt("BossSuguardCounter", bossSuguardCounter);
         tag.putInt("DragonShootTicks", dragonShootTicks);
         tag.putInt("KingBeetleExplosionCount", kingBeetleExplosionCount);
-        tag.putInt("Variant", variant);
-        tag.putBoolean("Saddle", saddled);
+        tag.putInt("Variant", getLegacyVariant());
+        tag.putBoolean("Saddle", isNessieSaddled());
+        tag.putBoolean("BabyDragon", isBabyDragon());
+        tag.putInt("DragonAgeTicks", dragonAgeTicks);
     }
 
     @Override
@@ -155,8 +173,10 @@ public class BasicCandyZombieEntity extends Zombie {
         bossSuguardCounter = tag.contains("BossSuguardCounter") ? tag.getInt("BossSuguardCounter") : 300;
         dragonShootTicks = tag.getInt("DragonShootTicks");
         kingBeetleExplosionCount = tag.getInt("KingBeetleExplosionCount");
-        variant = tag.getInt("Variant");
-        saddled = tag.getBoolean("Saddle");
+        setLegacyVariant(tag.getInt("Variant"));
+        setNessieSaddled(tag.getBoolean("Saddle"));
+        setBabyDragon(tag.getBoolean("BabyDragon"));
+        dragonAgeTicks = tag.getInt("DragonAgeTicks");
         ensureDefaultEquipment();
     }
 
@@ -210,23 +230,23 @@ public class BasicCandyZombieEntity extends Zombie {
     public InteractionResult mobInteract(Player player, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
         if (isNessie()) {
-            if (!level().isClientSide && !saddled && stack.is(Items.SADDLE)) {
-                saddled = true;
+            if (!level().isClientSide && !isNessieSaddled() && stack.is(Items.SADDLE)) {
+                setNessieSaddled(true);
                 if (!player.getAbilities().instabuild) {
                     stack.shrink(1);
                 }
                 return InteractionResult.SUCCESS;
             }
-            if (!level().isClientSide && saddled && player.isShiftKeyDown()) {
-                saddled = false;
+            if (!level().isClientSide && isNessieSaddled() && player.isShiftKeyDown()) {
+                setNessieSaddled(false);
                 spawnAtLocation(Items.SADDLE);
                 return InteractionResult.SUCCESS;
             }
-            if (!level().isClientSide && saddled && getControllingPassenger() == null) {
+            if (!level().isClientSide && isNessieSaddled() && getControllingPassenger() == null) {
                 player.startRiding(this);
                 return InteractionResult.SUCCESS;
             }
-        } else if (isDragon() && !level().isClientSide && getControllingPassenger() == null) {
+        } else if (isDragon() && !isBabyDragon() && !level().isClientSide && getControllingPassenger() == null) {
             player.startRiding(this);
             dragonShootTicks = 0;
             return InteractionResult.SUCCESS;
@@ -414,6 +434,7 @@ public class BasicCandyZombieEntity extends Zombie {
                 setDeltaMovement((random.nextDouble() - 0.5D) * 0.5D, 0.34D, (random.nextDouble() - 0.5D) * 0.5D);
             }
         } else if (isDragon()) {
+            tickDragonGrowth();
             if (power < getMountMaxPower()) {
                 power++;
             }
@@ -536,6 +557,10 @@ public class BasicCandyZombieEntity extends Zombie {
     }
 
     private void tickDragonPower() {
+        if (isBabyDragon()) {
+            dragonShootTicks = 0;
+            return;
+        }
         LivingEntity controller = getControllingPassenger();
         if (controller == null) {
             dragonShootTicks = 0;
@@ -583,6 +608,17 @@ public class BasicCandyZombieEntity extends Zombie {
                 }
             }
             kingBeetleExplosionCount--;
+        }
+    }
+
+    private void tickDragonGrowth() {
+        if (!isBabyDragon() || level().isClientSide) {
+            return;
+        }
+        dragonAgeTicks++;
+        if (dragonAgeTicks >= 24000) {
+            setBabyDragon(false);
+            dragonAgeTicks = 0;
         }
     }
 
@@ -712,6 +748,47 @@ public class BasicCandyZombieEntity extends Zombie {
 
     private boolean isDragon() {
         return getType() == CCEntityTypes.DRAGON.get();
+    }
+
+    public boolean isBabyDragon() {
+        return entityData.get(BABY_DRAGON);
+    }
+
+    public void setBabyDragon(boolean babyDragon) {
+        entityData.set(BABY_DRAGON, babyDragon);
+    }
+
+    public int getLegacyVariant() {
+        return entityData.get(LEGACY_VARIANT);
+    }
+
+    private void setLegacyVariant(int variant) {
+        entityData.set(LEGACY_VARIANT, Math.max(0, variant));
+    }
+
+    public boolean isNessieSaddled() {
+        return entityData.get(SADDLED);
+    }
+
+    private void setNessieSaddled(boolean saddled) {
+        entityData.set(SADDLED, saddled);
+    }
+
+    private void randomizeNessieVariant() {
+        int selected = random.nextInt(4);
+        if (random.nextInt(20) == 0) {
+            selected = 4;
+        }
+        if (random.nextInt(20) == 0) {
+            selected = 5;
+        }
+        if (random.nextInt(20) == 0) {
+            selected = 6;
+        }
+        if (random.nextInt(40) == 0) {
+            selected = 6;
+        }
+        setLegacyVariant(selected);
     }
 
     private boolean isMermaid() {

@@ -2,6 +2,7 @@ package com.valentin4311.candycraftmod.registry;
 
 import com.valentin4311.candycraftmod.block.entity.AlchemyTableBlockEntity;
 import com.valentin4311.candycraftmod.CandyCraft;
+import com.valentin4311.candycraftmod.block.entity.DragonEggBlockEntity;
 import com.valentin4311.candycraftmod.block.entity.LicoriceFurnaceBlockEntity;
 import com.valentin4311.candycraftmod.block.entity.SugarFactoryBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -32,6 +33,13 @@ public final class CCBlockEntities {
         BLOCK_ENTITY_TYPES.register("alchemy_table", () -> new BlockEntityType<>(
             AlchemyTableBlockEntity::new,
             java.util.Set.of(CCBlocks.ALCHEMY_TABLE.get()),
+            null
+        ));
+
+    public static final RegistryObject<BlockEntityType<DragonEggBlockEntity>> DRAGON_EGG =
+        BLOCK_ENTITY_TYPES.register("dragon_egg", () -> new BlockEntityType<>(
+            DragonEggBlockEntity::new,
+            java.util.Set.of(CCBlocks.DRAGON_EGG_BLOCK.get()),
             null
         ));
 

@@ -76,7 +76,12 @@ public final class CCEntityAttributes {
             .add(Attributes.MOVEMENT_SPEED, 0.25D)
             .add(Attributes.ATTACK_DAMAGE, 3.0D)
             .build();
-        putZombie(event, zombie);
+        event.put(CCEntityTypes.MERMAID.get(), zombie);
+        event.put(CCEntityTypes.NESSIE.get(), Zombie.createAttributes()
+            .add(Attributes.MAX_HEALTH, 60.0D)
+            .add(Attributes.MOVEMENT_SPEED, 0.4D)
+            .add(Attributes.ATTACK_DAMAGE, 3.0D)
+            .build());
         event.put(CCEntityTypes.DRAGON.get(), Zombie.createAttributes()
             .add(Attributes.MAX_HEALTH, 80.0D)
             .add(Attributes.MOVEMENT_SPEED, 0.4D)
@@ -132,11 +137,6 @@ public final class CCEntityAttributes {
             .add(Attributes.ATTACK_DAMAGE, 12.0D)
             .build());
         event.put(CCEntityTypes.NOUGAT_GOLEM.get(), NougatGolemEntity.createAttributes().build());
-    }
-
-    private static void putZombie(EntityAttributeCreationEvent event, AttributeSupplier attributes) {
-        event.put(CCEntityTypes.NESSIE.get(), attributes);
-        event.put(CCEntityTypes.MERMAID.get(), attributes);
     }
 
     private static void putSpider(EntityAttributeCreationEvent event, AttributeSupplier attributes) {
