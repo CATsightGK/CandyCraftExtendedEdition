@@ -465,7 +465,7 @@ public class BasicCandySlimeEntity extends Slime {
 
     private BossEvent.BossBarColor getBossBarColor() {
         if (isKingSlime()) {
-            return BossEvent.BossBarColor.GREEN;
+            return BossEvent.BossBarColor.YELLOW;
         }
         if (isJellyQueen()) {
             return switch (getJellyQueenMode()) {
