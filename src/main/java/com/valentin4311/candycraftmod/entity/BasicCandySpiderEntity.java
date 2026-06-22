@@ -20,8 +20,10 @@ import net.minecraft.world.BossEvent;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobSpawnType;
+import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.SpawnGroupData;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
@@ -39,6 +41,7 @@ import net.minecraft.world.level.ServerLevelAccessor;
 public class BasicCandySpiderEntity extends Spider {
     private static final EntityDataAccessor<Boolean> ANGRY = SynchedEntityData.defineId(BasicCandySpiderEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Boolean> CHILD = SynchedEntityData.defineId(BasicCandySpiderEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDimensions CHILD_BEETLE_DIMENSIONS = EntityDimensions.scalable(0.5F, 0.5F);
     private boolean bossAwake;
     private int bossCooldown = 100;
     private int bossVolleyTicks;
@@ -75,7 +78,7 @@ public class BasicCandySpiderEntity extends Spider {
         entityData.set(ANGRY, angry);
         if (angry && getAttribute(Attributes.MOVEMENT_SPEED) != null && getAttribute(Attributes.ATTACK_DAMAGE) != null) {
             getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(isBeetle() ? 1.5D : 0.5D);
-            getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(isChildBeetle() ? 7.0D : isBeetle() ? 15.0D : 2.0D);
+            getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(isBeetle() ? 15.0D : 2.0D);
         }
     }
 
@@ -85,7 +88,15 @@ public class BasicCandySpiderEntity extends Spider {
 
     public void setChildBeetle(boolean child) {
         entityData.set(CHILD, child);
+        if (isBeetle() && getAttribute(Attributes.ATTACK_DAMAGE) != null && !isAngry()) {
+            getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(child ? 1.5D : 3.0D);
+        }
         refreshDimensions();
+    }
+
+    @Override
+    public EntityDimensions getDimensions(Pose pose) {
+        return isBeetle() && isChildBeetle() ? CHILD_BEETLE_DIMENSIONS : super.getDimensions(pose);
     }
 
     @Override
@@ -175,7 +186,6 @@ public class BasicCandySpiderEntity extends Spider {
             spawnAtLocation(CCItems.BEETLE_KEY.get());
             spawnAtLocation(CCItems.CHEWING_GUM_EMBLEM.get());
         } else if (isBeetle()) {
-            spawnAtLocation(CCItems.CHEWING_GUM.get());
             if (!isChildBeetle() && random.nextInt(80) == 0) {
                 spawnAtLocation(CCBlocks.BEETLE_EGG_BLOCK.get());
             }
@@ -220,16 +230,35 @@ public class BasicCandySpiderEntity extends Spider {
             }
         }
 
-        if (!level().isClientSide && isBeetle() && !isChildBeetle() && getTarget() != null && random.nextInt(500) == 0) {
+        if (!level().isClientSide && shouldPlaceChewingGumTrap() && random.nextInt(60) == 0) {
+            BlockPos center = getTarget().blockPosition();
             for (int x = -1; x <= 1; x++) {
                 for (int z = -1; z <= 1; z++) {
-                    BlockPos pos = blockPosition().offset(x, 0, z);
-                    if (random.nextBoolean() && level().isEmptyBlock(pos) && CCBlocks.CHEWING_GUM_PUDDLE.get().defaultBlockState().canSurvive(level(), pos)) {
-                        level().setBlockAndUpdate(pos, CCBlocks.CHEWING_GUM_PUDDLE.get().defaultBlockState());
+                    BlockPos pos = center.offset(x, 0, z);
+                    if (random.nextBoolean() && canReplaceWithChewingGum(pos) && CCBlocks.CHEWING_GUM_PUDDLE.get().defaultBlockState().canSurvive(level(), pos)) {
+                        level().setBlock(pos, CCBlocks.CHEWING_GUM_PUDDLE.get().defaultBlockState(), 3);
                     }
                 }
             }
         }
+    }
+
+    private boolean shouldPlaceChewingGumTrap() {
+        if (!isBeetle() || isChildBeetle() || getTarget() == null) {
+            return false;
+        }
+        Entity target = getTarget();
+        return target instanceof Player
+            && (distanceToSqr(target) > 4.0D || !hasLineOfSight(target));
+    }
+
+    private boolean canReplaceWithChewingGum(BlockPos pos) {
+        return level().isEmptyBlock(pos)
+            || level().getBlockState(pos).is(CCBlocks.SWEET_GRASS.get())
+            || level().getBlockState(pos).is(CCBlocks.SWEET_GRASS_PINK.get())
+            || level().getBlockState(pos).is(CCBlocks.SWEET_GRASS_PALE.get())
+            || level().getBlockState(pos).is(CCBlocks.SWEET_GRASS_YELLOW.get())
+            || level().getBlockState(pos).is(CCBlocks.SWEET_GRASS_RED.get());
     }
 
     private void tickBossBeetleBehavior() {

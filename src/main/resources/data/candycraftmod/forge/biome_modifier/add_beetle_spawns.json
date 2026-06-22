@@ -1,0 +1,13 @@
+{
+  "type": "forge:add_spawns",
+  "biomes": [
+    "candycraftmod:sugar_plains",
+    "candycraftmod:gummy_swamp"
+  ],
+  "spawners": {
+    "type": "candycraftmod:beetle",
+    "weight": 35,
+    "minCount": 1,
+    "maxCount": 3
+  }
+}

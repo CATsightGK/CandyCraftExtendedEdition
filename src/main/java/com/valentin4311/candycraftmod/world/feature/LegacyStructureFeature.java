@@ -22,6 +22,7 @@ import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CropBlock;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
+import net.minecraft.world.level.block.entity.SpawnerBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.feature.Feature;
@@ -245,6 +246,11 @@ public class LegacyStructureFeature extends Feature<NoneFeatureConfiguration> {
                     gumPillar(level, center.offset(dx, -1, dz), gum);
                 }
             }
+        }
+        BlockPos spawnerPos = center.below(3);
+        set(level, spawnerPos, Blocks.SPAWNER.defaultBlockState());
+        if (level.getBlockEntity(spawnerPos) instanceof SpawnerBlockEntity spawner) {
+            spawner.setEntityId(CCEntityTypes.BEETLE.get(), random);
         }
         return true;
     }

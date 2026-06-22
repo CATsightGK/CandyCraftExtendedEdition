@@ -182,7 +182,7 @@ public final class CCForgeEvents {
             && type != CCEntityTypes.SUGUARD.get() && type != CCEntityTypes.PINGOUIN.get()
             && type != CCEntityTypes.GUMMY_BUNNY.get() && type != CCEntityTypes.CANDY_WOLF.get()
             && type != CCEntityTypes.JELLY_QUEEN.get() && type != CCEntityTypes.CARAMEL_BEE.get()
-            && type != CCEntityTypes.NOUGAT_GOLEM.get()) {
+            && type != CCEntityTypes.NOUGAT_GOLEM.get() && type != CCEntityTypes.BEETLE.get()) {
             return false;
         }
         ResourceLocation biomeId = event.getLevel().getBiome(event.getEntity().blockPosition())
@@ -210,6 +210,12 @@ public final class CCForgeEvents {
         }
         if (type == CCEntityTypes.NOUGAT_GOLEM.get()) {
             return "sugar_plains".equals(path);
+        }
+        if (type == CCEntityTypes.BEETLE.get()) {
+            return switch (path) {
+                case "sugar_plains", "gummy_swamp" -> true;
+                default -> false;
+            };
         }
         if (type == CCEntityTypes.CANDY_PIG.get()) {
             return switch (path) {
@@ -362,6 +368,7 @@ public final class CCForgeEvents {
             event.register(CCEntityTypes.SUGUARD.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, CCForgeEvents::canSpawnOnCandySurface, SpawnPlacementRegisterEvent.Operation.REPLACE);
             event.register(CCEntityTypes.JELLY_QUEEN.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, CCForgeEvents::canSpawnOnCandySurface, SpawnPlacementRegisterEvent.Operation.REPLACE);
             event.register(CCEntityTypes.NOUGAT_GOLEM.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, CCForgeEvents::canSpawnOnCandySurface, SpawnPlacementRegisterEvent.Operation.REPLACE);
+            event.register(CCEntityTypes.BEETLE.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, CCForgeEvents::canSpawnOnCandySurface, SpawnPlacementRegisterEvent.Operation.REPLACE);
             event.register(CCEntityTypes.CARAMEL_BEE.get(), SpawnPlacements.Type.NO_RESTRICTIONS, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, CCForgeEvents::canCaramelBeeSpawn, SpawnPlacementRegisterEvent.Operation.REPLACE);
         }
     }
@@ -382,6 +389,8 @@ public final class CCForgeEvents {
 
     private static boolean isCandySpawnSurface(BlockState state) {
         return state.is(CCBlocks.CANDY_LEAVE.get())
+            || state.is(CCBlocks.PUDDING.get())
+            || state.is(CCBlocks.FLOUR.get())
             || state.is(CCBlocks.CANDY_LEAVE2.get())
             || state.is(CCBlocks.CANDY_LEAVES.get())
             || state.is(CCBlocks.CANDY_LEAVES_DARK.get())

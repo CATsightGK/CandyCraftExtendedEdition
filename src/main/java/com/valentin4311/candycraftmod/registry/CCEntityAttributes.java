@@ -106,7 +106,7 @@ public final class CCEntityAttributes {
         event.put(CCEntityTypes.CARAMEL_BEE.get(), CaramelBeeEntity.createAttributes().build());
         event.put(CCEntityTypes.BEETLE.get(), Spider.createAttributes()
             .add(Attributes.MAX_HEALTH, 25.0D)
-            .add(Attributes.MOVEMENT_SPEED, 0.35D)
+            .add(Attributes.MOVEMENT_SPEED, 1.2D)
             .add(Attributes.ATTACK_DAMAGE, 3.0D)
             .build());
         event.put(CCEntityTypes.BOSS_BEETLE.get(), Spider.createAttributes()
