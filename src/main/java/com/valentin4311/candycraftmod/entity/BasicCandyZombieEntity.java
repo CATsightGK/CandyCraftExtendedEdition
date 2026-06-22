@@ -113,10 +113,10 @@ public class BasicCandyZombieEntity extends Zombie {
             net.minecraft.world.entity.MobSpawnType reason, @Nullable SpawnGroupData spawnData, @Nullable CompoundTag dataTag) {
         SpawnGroupData data = super.finalizeSpawn(level, difficulty, reason, spawnData, dataTag);
         ensureDefaultEquipment();
-        if (isSuguard() && getMainHandItem().is(CCItems.LICORICE_SPEAR.get())
+        if ((isSuguard() || isMageSuguard())
             && reason != net.minecraft.world.entity.MobSpawnType.MOB_SUMMONED
             && level instanceof ServerLevel serverLevel && random.nextInt(100) == 0) {
-            BasicCandySpiderEntity bee = CCEntityTypes.CARAMEL_BEE.get().create(serverLevel);
+            CaramelBeeEntity bee = CCEntityTypes.CARAMEL_BEE.get().create(serverLevel);
             if (bee != null) {
                 bee.moveTo(getX(), getY(), getZ(), getYRot(), 0.0F);
                 bee.setAngry(true);
@@ -289,14 +289,6 @@ public class BasicCandyZombieEntity extends Zombie {
             }
             return success;
         }
-        if (isNougatGolem()) {
-            boolean success = super.doHurtTarget(target);
-            if (success && !level().isClientSide) {
-                level().explode(this, getX(), getY(), getZ(), 2.0F, Level.ExplosionInteraction.NONE);
-            }
-            return success;
-        }
-
         if (held.is(CCItems.DYNAMITE.get())) {
             if (target.getBoundingBox().maxY > getBoundingBox().minY && target.getBoundingBox().minY < getBoundingBox().maxY) {
                 boolean mobGriefing = level().getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING);
@@ -342,10 +334,6 @@ public class BasicCandyZombieEntity extends Zombie {
         }
         if (isMermaid()) {
             spawnAtLocation(CCItems.CARAMEL_BOW.get());
-            return;
-        }
-        if (isNougatGolem()) {
-            spawnAtLocation(CCItems.NOUGAT_POWDER.get(), 2 + random.nextInt(3 + looting));
             return;
         }
         if (isBossSuguard()) {
@@ -728,10 +716,6 @@ public class BasicCandyZombieEntity extends Zombie {
 
     private boolean isMermaid() {
         return getType() == CCEntityTypes.MERMAID.get();
-    }
-
-    private boolean isNougatGolem() {
-        return getType() == CCEntityTypes.NOUGAT_GOLEM.get();
     }
 
     private boolean isKingBeetle() {

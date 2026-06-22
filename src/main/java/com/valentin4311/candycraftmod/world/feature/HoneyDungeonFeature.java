@@ -3,12 +3,14 @@ package com.valentin4311.candycraftmod.world.feature;
 import com.mojang.serialization.Codec;
 import com.valentin4311.candycraftmod.CandyCraft;
 import com.valentin4311.candycraftmod.registry.CCBlocks;
+import com.valentin4311.candycraftmod.registry.CCEntityTypes;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
+import net.minecraft.world.level.block.entity.SpawnerBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.feature.Feature;
 import net.minecraft.world.level.levelgen.feature.FeaturePlaceContext;
@@ -79,6 +81,9 @@ public class HoneyDungeonFeature extends Feature<NoneFeatureConfiguration> {
 
         placeChests(level, random, origin, xRadius, zRadius);
         level.setBlock(origin, Blocks.SPAWNER.defaultBlockState(), 2);
+        if (level.getBlockEntity(origin) instanceof SpawnerBlockEntity spawner) {
+            spawner.setEntityId(CCEntityTypes.CARAMEL_BEE.get(), random);
+        }
         return true;
     }
 

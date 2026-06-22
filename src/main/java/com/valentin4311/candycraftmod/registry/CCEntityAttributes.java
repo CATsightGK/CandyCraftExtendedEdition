@@ -4,12 +4,14 @@ import com.valentin4311.candycraftmod.CandyCraft;
 import com.valentin4311.candycraftmod.entity.BasicCandySlimeEntity;
 import com.valentin4311.candycraftmod.entity.BasicCandySpiderEntity;
 import com.valentin4311.candycraftmod.entity.BasicCandyZombieEntity;
+import com.valentin4311.candycraftmod.entity.CaramelBeeEntity;
 import com.valentin4311.candycraftmod.entity.CandyCreeperEntity;
 import com.valentin4311.candycraftmod.entity.CandyFishEntity;
 import com.valentin4311.candycraftmod.entity.CandyPigEntity;
 import com.valentin4311.candycraftmod.entity.CandyWolfEntity;
 import com.valentin4311.candycraftmod.entity.CottonCandySpiderEntity;
 import com.valentin4311.candycraftmod.entity.GummyBunnyEntity;
+import com.valentin4311.candycraftmod.entity.NougatGolemEntity;
 import com.valentin4311.candycraftmod.entity.PingouinEntity;
 import com.valentin4311.candycraftmod.entity.WaffleSheepEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
@@ -101,11 +103,7 @@ public final class CCEntityAttributes {
             .build();
         putSlime(event, slime);
 
-        event.put(CCEntityTypes.CARAMEL_BEE.get(), Spider.createAttributes()
-            .add(Attributes.MAX_HEALTH, 15.0D)
-            .add(Attributes.MOVEMENT_SPEED, 0.5D)
-            .add(Attributes.ATTACK_DAMAGE, 2.0D)
-            .build());
+        event.put(CCEntityTypes.CARAMEL_BEE.get(), CaramelBeeEntity.createAttributes().build());
         event.put(CCEntityTypes.BEETLE.get(), Spider.createAttributes()
             .add(Attributes.MAX_HEALTH, 25.0D)
             .add(Attributes.MOVEMENT_SPEED, 0.35D)
@@ -133,12 +131,12 @@ public final class CCEntityAttributes {
             .add(Attributes.FOLLOW_RANGE, 32.0D)
             .add(Attributes.ATTACK_DAMAGE, 12.0D)
             .build());
+        event.put(CCEntityTypes.NOUGAT_GOLEM.get(), NougatGolemEntity.createAttributes().build());
     }
 
     private static void putZombie(EntityAttributeCreationEvent event, AttributeSupplier attributes) {
         event.put(CCEntityTypes.NESSIE.get(), attributes);
         event.put(CCEntityTypes.MERMAID.get(), attributes);
-        event.put(CCEntityTypes.NOUGAT_GOLEM.get(), attributes);
     }
 
     private static void putSpider(EntityAttributeCreationEvent event, AttributeSupplier attributes) {

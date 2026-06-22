@@ -3,7 +3,7 @@ package com.valentin4311.candycraftmod.client.model;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.valentin4311.candycraftmod.CandyCraft;
-import com.valentin4311.candycraftmod.entity.BasicCandyZombieEntity;
+import com.valentin4311.candycraftmod.entity.NougatGolemEntity;
 import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
@@ -13,7 +13,7 @@ import net.minecraft.client.model.geom.builders.LayerDefinition;
 import net.minecraft.client.model.geom.builders.MeshDefinition;
 import net.minecraft.resources.ResourceLocation;
 
-public class NougatGolemModel<T extends BasicCandyZombieEntity> extends EntityModel<T> {
+public class NougatGolemModel<T extends NougatGolemEntity> extends EntityModel<T> {
     public static final ModelLayerLocation LAYER = new ModelLayerLocation(new ResourceLocation(CandyCraft.MODID, "nougat_golem"), "main");
     private final ModelPart cube;
 

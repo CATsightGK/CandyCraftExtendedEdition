@@ -15,8 +15,7 @@ public class BasicCandySpiderRenderer extends SpiderRenderer<BasicCandySpiderEnt
     @Override
     public ResourceLocation getTextureLocation(BasicCandySpiderEntity entity) {
         String texture = "beetle.png";
-        if (entity.getType() == CCEntityTypes.CARAMEL_BEE.get()) texture = "bee.png";
-        else if (entity.getType() == CCEntityTypes.BOSS_BEETLE.get()) texture = "bossbeetle.png";
+        if (entity.getType() == CCEntityTypes.BOSS_BEETLE.get()) texture = "bossbeetle.png";
         return new ResourceLocation(CandyCraft.MODID, "textures/entity/" + texture);
     }
 }

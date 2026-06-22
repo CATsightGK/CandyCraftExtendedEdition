@@ -17,11 +17,8 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.BossEvent;
-import net.minecraft.world.Difficulty;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobSpawnType;
@@ -38,14 +35,10 @@ import net.minecraft.world.entity.monster.Spider;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.phys.Vec3;
 
 public class BasicCandySpiderEntity extends Spider {
     private static final EntityDataAccessor<Boolean> ANGRY = SynchedEntityData.defineId(BasicCandySpiderEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Boolean> CHILD = SynchedEntityData.defineId(BasicCandySpiderEntity.class, EntityDataSerializers.BOOLEAN);
-    private BlockPos flightTarget;
-    private int stingCooldown;
     private boolean bossAwake;
     private int bossCooldown = 100;
     private int bossVolleyTicks;
@@ -66,12 +59,6 @@ public class BasicCandySpiderEntity extends Spider {
     @Override
     protected void registerGoals() {
         goalSelector.addGoal(1, new FloatGoal(this));
-        if (isCaramelBee()) {
-            targetSelector.addGoal(1, new NearestAttackableTargetGoal<>(this, Player.class, true));
-            targetSelector.addGoal(2, new HurtByTargetGoal(this));
-            return;
-        }
-
         goalSelector.addGoal(2, new MeleeAttackGoal(this, 0.3D, false));
         goalSelector.addGoal(3, new RandomStrollGoal(this, 0.3D));
         goalSelector.addGoal(4, new LookAtPlayerGoal(this, Player.class, 8.0F));
@@ -104,10 +91,7 @@ public class BasicCandySpiderEntity extends Spider {
     @Override
     public void aiStep() {
         updateBossBar();
-        if (isCaramelBee()) {
-            setNoGravity(true);
-            tickBeeMovement();
-        } else if (isBossBeetle()) {
+        if (isBossBeetle()) {
             setNoGravity(false);
             tickBossBeetleBehavior();
         } else {
@@ -119,7 +103,7 @@ public class BasicCandySpiderEntity extends Spider {
 
     @Override
     public boolean hurt(DamageSource source, float amount) {
-        if (isCaramelBee() || isBeetle()) {
+        if (isBeetle()) {
             setAngry(true);
         }
         if (isBossBeetle()) {
@@ -152,23 +136,7 @@ public class BasicCandySpiderEntity extends Spider {
 
     @Override
     public boolean doHurtTarget(Entity target) {
-        boolean success = super.doHurtTarget(target);
-        if (success && isCaramelBee() && target instanceof net.minecraft.world.entity.LivingEntity living && random.nextInt(15) == 0) {
-            living.addEffect(new MobEffectInstance(MobEffects.POISON, 400, 0), this);
-        }
-        return success;
-    }
-
-    @Override
-    public boolean causeFallDamage(float distance, float damageMultiplier, DamageSource source) {
-        return !isCaramelBee() && super.causeFallDamage(distance, damageMultiplier, source);
-    }
-
-    @Override
-    protected void checkFallDamage(double y, boolean onGround, BlockState state, BlockPos pos) {
-        if (!isCaramelBee()) {
-            super.checkFallDamage(y, onGround, state, pos);
-        }
+        return super.doHurtTarget(target);
     }
 
     @Override
@@ -206,8 +174,6 @@ public class BasicCandySpiderEntity extends Spider {
             spawnAtLocation(CCItems.RECORD_4.get());
             spawnAtLocation(CCItems.BEETLE_KEY.get());
             spawnAtLocation(CCItems.CHEWING_GUM_EMBLEM.get());
-        } else if (isCaramelBee()) {
-            spawnAtLocation(CCItems.HONEY_SHARD.get());
         } else if (isBeetle()) {
             spawnAtLocation(CCItems.CHEWING_GUM.get());
             if (!isChildBeetle() && random.nextInt(80) == 0) {
@@ -239,55 +205,12 @@ public class BasicCandySpiderEntity extends Spider {
 
     @Override
     protected SoundEvent getHurtSound(DamageSource source) {
-        return (isCaramelBee() || isBeetle() || isBossBeetle()) ? null : super.getHurtSound(source);
+        return (isBeetle() || isBossBeetle()) ? null : super.getHurtSound(source);
     }
 
     @Override
     protected SoundEvent getDeathSound() {
-        return (isCaramelBee() || isBeetle() || isBossBeetle()) ? null : super.getDeathSound();
-    }
-
-    private void tickBeeMovement() {
-        Player player = level().getNearestPlayer(this, 8.0D);
-        if (stingCooldown > 0) {
-            stingCooldown--;
-        }
-        if (player != null) {
-            setAngry(true);
-            setTarget(player);
-            flightTarget = player.blockPosition();
-            if (distanceToSqr(player) <= getBbWidth() * 2.0F * getBbWidth() * 2.0F + player.getBbWidth() && stingCooldown <= 0) {
-                stingCooldown = 20;
-                doHurtTarget(player);
-            }
-        } else if (!isAngry()) {
-            setTarget(null);
-        }
-
-        if (flightTarget == null || !level().isEmptyBlock(flightTarget) || flightTarget.getY() < level().getMinBuildHeight()
-            || random.nextInt(100) == 0 || flightTarget.closerToCenterThan(position(), 2.0D)) {
-            flightTarget = blockPosition().offset(random.nextInt(14) - random.nextInt(14), random.nextInt(6) - 2, random.nextInt(14) - random.nextInt(14));
-        }
-
-        double dx = flightTarget.getX() + 0.5D - getX();
-        double dy = flightTarget.getY() + 0.1D - getY();
-        double dz = flightTarget.getZ() + 0.5D - getZ();
-        if (player != null && isAngry()) {
-            dx = player.getX() - getX();
-            dy = player.getY() + 1.1D - getY();
-            dz = player.getZ() - getZ();
-        }
-
-        Vec3 movement = getDeltaMovement();
-        setDeltaMovement(
-            movement.x + (Math.signum(dx) * 0.5D - movement.x) * 0.10000000149011612D,
-            (movement.y + (Math.signum(dy) * 0.699999988079071D - movement.y) * 0.10000000149011612D) * 0.6000000238418579D,
-            movement.z + (Math.signum(dz) * 0.5D - movement.z) * 0.10000000149011612D
-        );
-
-        float targetYaw = (float)(Math.atan2(getDeltaMovement().z, getDeltaMovement().x) * 180.0D / Math.PI) - 90.0F;
-        setYRot(getYRot() + net.minecraft.util.Mth.wrapDegrees(targetYaw - getYRot()));
-        yBodyRot = getYRot();
+        return (isBeetle() || isBossBeetle()) ? null : super.getDeathSound();
     }
 
     private void tickBeetleBehavior() {
@@ -393,10 +316,6 @@ public class BasicCandySpiderEntity extends Spider {
         }
         serverLevel.addFreshEntity(ball);
         playSound(net.minecraft.sounds.SoundEvents.ARROW_SHOOT, 1.0F, 0.8F + random.nextFloat() * 0.4F);
-    }
-
-    private boolean isCaramelBee() {
-        return getType() == CCEntityTypes.CARAMEL_BEE.get();
     }
 
     private boolean isBeetle() {

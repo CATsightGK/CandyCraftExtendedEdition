@@ -22,6 +22,7 @@ import com.valentin4311.candycraftmod.block.LegacyMetadataBlock;
 import com.valentin4311.candycraftmod.block.LegacySaplingBlock;
 import com.valentin4311.candycraftmod.block.LegacyTypeBlock;
 import com.valentin4311.candycraftmod.block.LicoriceFurnaceBlock;
+import com.valentin4311.candycraftmod.block.NougatHeadBlock;
 import com.valentin4311.candycraftmod.block.PuddingBlock;
 import com.valentin4311.candycraftmod.block.SeaweedBlock;
 import com.valentin4311.candycraftmod.block.SpikesBlock;
@@ -150,7 +151,7 @@ public final class CCBlocks {
     public static final RegistryObject<Block> ADVANCED_SUGAR_FACTORY = register("advanced_sugar_factory", () -> new SugarFactoryBlock(true, metal(MapColor.METAL).strength(2.0F, 5.0F)));
     public static final RegistryObject<Block> ACID_MINT_FLOWER = cutout(register("acid_mint_flower", () -> new AcidMintFlowerBlock(plant())));
     public static final RegistryObject<Block> NOUGAT_BLOCK = register("nougat_block", () -> new Block(metal(MapColor.COLOR_BROWN).strength(1.0F)));
-    public static final RegistryObject<Block> NOUGAT_HEAD = register("nougat_head", () -> new FacingModelBlock(metal(MapColor.COLOR_BROWN).strength(1.0F)));
+    public static final RegistryObject<Block> NOUGAT_HEAD = register("nougat_head", () -> new NougatHeadBlock(metal(MapColor.COLOR_BROWN).strength(1.0F)));
     public static final RegistryObject<Block> BANANA_BLOCK = register("banana_block", () -> new Block(wool(MapColor.COLOR_YELLOW).strength(1.0F).sound(SoundType.GRASS)));
     public static final RegistryObject<Block> CHEWING_GUM_BLOCK = register("chewing_gum_block", () -> new ChewingGumBlock(jelly().mapColor(MapColor.COLOR_PINK).strength(1.0F).noOcclusion()));
     public static final RegistryObject<Block> CHEWING_GUM_PUDDLE = cutout(register("chewing_gum_puddle", () -> new ChewingGumPuddleBlock(jelly().mapColor(MapColor.COLOR_PINK).strength(1.0F).noCollission().noOcclusion())));

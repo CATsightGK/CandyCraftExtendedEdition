@@ -27,7 +27,6 @@ public class BasicCandyZombieRenderer extends ZombieRenderer {
         else if (entity.getType() == CCEntityTypes.DRAGON.get()) texture = "dragons.png";
         else if (entity.getType() == CCEntityTypes.KING_BEETLE.get()) texture = "tamedbeetle.png";
         else if (entity.getType() == CCEntityTypes.MERMAID.get()) texture = "mermaid.png";
-        else if (entity.getType() == CCEntityTypes.NOUGAT_GOLEM.get()) texture = "nougatgolem2.png";
         else if (entity.getType() == CCEntityTypes.BOSS_SUGUARD.get()) texture = "sugardeboss.png";
         return new ResourceLocation(CandyCraft.MODID, "textures/entity/" + texture);
     }

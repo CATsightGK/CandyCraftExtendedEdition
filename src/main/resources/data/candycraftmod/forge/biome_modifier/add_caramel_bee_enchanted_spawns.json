@@ -1,0 +1,10 @@
+{
+  "type": "forge:add_spawns",
+  "biomes": "candycraftmod:sugar_enchanted_forest",
+  "spawners": {
+    "type": "candycraftmod:caramel_bee",
+    "weight": 60,
+    "minCount": 1,
+    "maxCount": 3
+  }
+}

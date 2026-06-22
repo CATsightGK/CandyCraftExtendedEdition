@@ -3,7 +3,7 @@ package com.valentin4311.candycraftmod.client.model;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.valentin4311.candycraftmod.CandyCraft;
-import com.valentin4311.candycraftmod.entity.BasicCandySpiderEntity;
+import com.valentin4311.candycraftmod.entity.CaramelBeeEntity;
 import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
@@ -15,7 +15,7 @@ import net.minecraft.client.model.geom.builders.PartDefinition;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 
-public class BeeModel<T extends BasicCandySpiderEntity> extends EntityModel<T> {
+public class BeeModel<T extends CaramelBeeEntity> extends EntityModel<T> {
     public static final ModelLayerLocation LAYER = new ModelLayerLocation(new ResourceLocation(CandyCraft.MODID, "caramel_bee"), "main");
     private final ModelPart stinger;
     private final ModelPart tail;
