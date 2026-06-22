@@ -1,3 +1,7 @@
 {
-    "parent": "candycraftmod:block/beetle_egg_block"
+  "parent": "minecraft:block/dragon_egg",
+  "textures": {
+    "particle": "candycraftmod:block/beetle_egg",
+    "all": "candycraftmod:block/beetle_egg"
+  }
 }

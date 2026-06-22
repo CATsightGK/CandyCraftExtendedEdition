@@ -1,8 +1,16 @@
-﻿{
+{
   "variants": {
-    "": {
+    "axis=y": {
       "model": "candycraftmod:block/wafer_stick_block"
+    },
+    "axis=x": {
+      "model": "candycraftmod:block/wafer_stick_block",
+      "x": 90,
+      "y": 90
+    },
+    "axis=z": {
+      "model": "candycraftmod:block/wafer_stick_block",
+      "x": 90
     }
   }
 }
-

@@ -15,9 +15,11 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.FallingBlock;
 import net.minecraft.world.level.block.LiquidBlock;
+import net.minecraft.world.level.block.RotatedPillarBlock;
 import net.minecraft.world.level.block.SlabBlock;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.StairBlock;
+import net.minecraft.world.level.block.WallBlock;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.MapColor;
@@ -49,6 +51,15 @@ public final class CCSweetscapeBlocks {
     public static final RegistryObject<Block> MILK_CHOCOLATE_BRICK = register("milk_chocolate_brick", () -> new Block(chocolate(MapColor.COLOR_BROWN)));
     public static final RegistryObject<Block> WHITE_CHOCOLATE_BRICK = register("white_chocolate_brick", () -> new Block(chocolate(MapColor.SAND)));
     public static final RegistryObject<Block> DARK_CHOCOLATE_BRICK = register("dark_chocolate_brick", () -> new Block(chocolate(MapColor.TERRACOTTA_BROWN)));
+    public static final RegistryObject<Block> MILK_CHOCOLATE_BRICK_STAIRS = register("milk_chocolate_brick_stairs", () -> stairs(MILK_CHOCOLATE_BRICK.get().defaultBlockState(), chocolate(MapColor.COLOR_BROWN)));
+    public static final RegistryObject<Block> MILK_CHOCOLATE_BRICK_SLAB = register("milk_chocolate_brick_slab", () -> new SlabBlock(chocolate(MapColor.COLOR_BROWN)));
+    public static final RegistryObject<Block> MILK_CHOCOLATE_BRICK_WALL = register("milk_chocolate_brick_wall", () -> new WallBlock(chocolate(MapColor.COLOR_BROWN)));
+    public static final RegistryObject<Block> WHITE_CHOCOLATE_BRICK_STAIRS = register("white_chocolate_brick_stairs", () -> stairs(WHITE_CHOCOLATE_BRICK.get().defaultBlockState(), chocolate(MapColor.SAND)));
+    public static final RegistryObject<Block> WHITE_CHOCOLATE_BRICK_SLAB = register("white_chocolate_brick_slab", () -> new SlabBlock(chocolate(MapColor.SAND)));
+    public static final RegistryObject<Block> WHITE_CHOCOLATE_BRICK_WALL = register("white_chocolate_brick_wall", () -> new WallBlock(chocolate(MapColor.SAND)));
+    public static final RegistryObject<Block> DARK_CHOCOLATE_BRICK_STAIRS = register("dark_chocolate_brick_stairs", () -> stairs(DARK_CHOCOLATE_BRICK.get().defaultBlockState(), chocolate(MapColor.TERRACOTTA_BROWN)));
+    public static final RegistryObject<Block> DARK_CHOCOLATE_BRICK_SLAB = register("dark_chocolate_brick_slab", () -> new SlabBlock(chocolate(MapColor.TERRACOTTA_BROWN)));
+    public static final RegistryObject<Block> DARK_CHOCOLATE_BRICK_WALL = register("dark_chocolate_brick_wall", () -> new WallBlock(chocolate(MapColor.TERRACOTTA_BROWN)));
 
     public static final RegistryObject<Block> MILK_CHOCOLATE_WORKBENCH = register("milk_chocolate_workbench", () -> new Block(wood(MapColor.COLOR_BROWN).strength(0.9F)));
     public static final RegistryObject<Block> WHITE_CHOCOLATE_WORKBENCH = register("white_chocolate_workbench", () -> new Block(wood(MapColor.SAND).strength(0.9F)));
@@ -62,13 +73,13 @@ public final class CCSweetscapeBlocks {
     public static final RegistryObject<Block> COTTON_CANDY_PLANT = cutout(register("cotton_candy_plant", () -> new CCPlantBlock(candyPlant(MapColor.COLOR_PINK).sound(SoundType.WOOL))));
     public static final RegistryObject<Block> COTTON_CANDY_BUSH = cutout(register("cotton_candy_bush", () -> new CCPlantBlock(candyPlant(MapColor.COLOR_PINK).sound(SoundType.WOOL))));
 
-    public static final RegistryObject<Block> WHITE_CANDY_CANE_BLOCK = register("white_candy_cane_block", () -> new Block(candyCane(MapColor.TERRACOTTA_WHITE)));
-    public static final RegistryObject<Block> RED_CANDY_CANE_BLOCK = register("red_candy_cane_block", () -> new Block(candyCane(MapColor.COLOR_RED)));
-    public static final RegistryObject<Block> GREEN_CANDY_CANE_BLOCK = register("green_candy_cane_block", () -> new Block(candyCane(MapColor.COLOR_GREEN)));
-    public static final RegistryObject<Block> WHITE_RED_CANDY_CANE_BLOCK = register("white_red_candy_cane_block", () -> new Block(candyCane(MapColor.COLOR_RED)));
-    public static final RegistryObject<Block> WHITE_GREEN_CANDY_CANE_BLOCK = register("white_green_candy_cane_block", () -> new Block(candyCane(MapColor.COLOR_GREEN)));
-    public static final RegistryObject<Block> RED_GREEN_CANDY_CANE_BLOCK = register("red_green_candy_cane_block", () -> new Block(candyCane(MapColor.COLOR_RED)));
-    public static final RegistryObject<Block> PINK_CANDY_CANE_BLOCK = register("pink_candy_cane_block", () -> new Block(candyCane(MapColor.COLOR_PINK)));
+    public static final RegistryObject<Block> WHITE_CANDY_CANE_BLOCK = register("white_candy_cane_block", () -> new RotatedPillarBlock(candyCane(MapColor.TERRACOTTA_WHITE)));
+    public static final RegistryObject<Block> RED_CANDY_CANE_BLOCK = register("red_candy_cane_block", () -> new RotatedPillarBlock(candyCane(MapColor.COLOR_RED)));
+    public static final RegistryObject<Block> GREEN_CANDY_CANE_BLOCK = register("green_candy_cane_block", () -> new RotatedPillarBlock(candyCane(MapColor.COLOR_GREEN)));
+    public static final RegistryObject<Block> WHITE_RED_CANDY_CANE_BLOCK = register("white_red_candy_cane_block", () -> new RotatedPillarBlock(candyCane(MapColor.COLOR_RED)));
+    public static final RegistryObject<Block> WHITE_GREEN_CANDY_CANE_BLOCK = register("white_green_candy_cane_block", () -> new RotatedPillarBlock(candyCane(MapColor.COLOR_GREEN)));
+    public static final RegistryObject<Block> RED_GREEN_CANDY_CANE_BLOCK = register("red_green_candy_cane_block", () -> new RotatedPillarBlock(candyCane(MapColor.COLOR_RED)));
+    public static final RegistryObject<Block> PINK_CANDY_CANE_BLOCK = register("pink_candy_cane_block", () -> new RotatedPillarBlock(candyCane(MapColor.COLOR_PINK)));
 
     public static final RegistryObject<Block> WHITE_CANDY_CANE_WORKBENCH = register("white_candy_cane_workbench", () -> new Block(candyCane(MapColor.TERRACOTTA_WHITE)));
     public static final RegistryObject<Block> RED_CANDY_CANE_WORKBENCH = register("red_candy_cane_workbench", () -> new Block(candyCane(MapColor.COLOR_RED)));

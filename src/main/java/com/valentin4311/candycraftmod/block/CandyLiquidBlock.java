@@ -1,11 +1,12 @@
 package com.valentin4311.candycraftmod.block;
 
 import com.valentin4311.candycraftmod.registry.CCBlocks;
-import com.valentin4311.candycraftmod.registry.CCParticleTypes;
 import com.valentin4311.candycraftmod.registry.CCSweetscapeBlocks;
 import java.util.function.Supplier;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.particles.BlockParticleOption;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -205,7 +206,8 @@ public class CandyLiquidBlock extends LiquidBlock {
             double vx = Math.cos(angle) * spread;
             double vz = Math.sin(angle) * spread;
             double vy = 0.035D + level.random.nextDouble() * 0.035D;
-            level.addParticle(CCParticleTypes.CHOCOLATE_SPLASH.get(), x, fluidSurface + 0.01D, z, vx, vy, vz);
+            level.addParticle(new BlockParticleOption(ParticleTypes.BLOCK, CCSweetscapeBlocks.LIQUID_CHOCOLATE.get().defaultBlockState()),
+                x, fluidSurface + 0.01D, z, vx, vy, vz);
         }
     }
 }

@@ -27,7 +27,7 @@ public class LegacyStructureFeature extends Feature<NoneFeatureConfiguration> {
     private static final ResourceLocation CANDY_HOUSE_LOOT = new ResourceLocation(CandyCraft.MODID, "chests/candy_house");
     private static final ResourceLocation ICE_TOWER_LOOT = new ResourceLocation(CandyCraft.MODID, "chests/ice_tower");
     private static final ResourceLocation WATER_TEMPLE_LOOT = new ResourceLocation(CandyCraft.MODID, "chests/water_temple");
-    private static final boolean ENABLE_STRUCTURE_GINGERBREAD = false;
+    private static final boolean ENABLE_STRUCTURE_GINGERBREAD = true;
     private final Kind kind;
 
     public LegacyStructureFeature(Codec<NoneFeatureConfiguration> codec, Kind kind) {
@@ -314,8 +314,20 @@ public class LegacyStructureFeature extends Feature<NoneFeatureConfiguration> {
         buildVillageCenter(level, random, base);
         decorateVillageLeaves(level, random, base);
         scatterVillageSweetGrass(level, random, base);
+        spawnUndergroundVillageGingerbread(level, random, base);
         callHoneyEmblemPlayers(level, origin);
         return true;
+    }
+
+    private static void spawnUndergroundVillageGingerbread(WorldGenLevel level, RandomSource random, BlockPos base) {
+        int count = 12 + random.nextInt(9);
+        for (int i = 0; i < count; i++) {
+            BlockPos pos = base.offset(8 + random.nextInt(48), 2, 8 + random.nextInt(48));
+            if (!level.getBlockState(pos).isAir()) {
+                pos = pos.above();
+            }
+            spawnGingerbread(level, pos, random.nextInt(3));
+        }
     }
 
     private static boolean isVillageGate(int x, int z) {
@@ -510,6 +522,10 @@ public class LegacyStructureFeature extends Feature<NoneFeatureConfiguration> {
     }
 
     private static void spawnGingerbread(WorldGenLevel level, BlockPos pos) {
+        spawnGingerbread(level, pos, -1);
+    }
+
+    private static void spawnGingerbread(WorldGenLevel level, BlockPos pos, int profession) {
         if (!ENABLE_STRUCTURE_GINGERBREAD) {
             return;
         }
@@ -522,6 +538,9 @@ public class LegacyStructureFeature extends Feature<NoneFeatureConfiguration> {
         }
         entity.moveTo(pos.getX() + 0.5D, pos.getY(), pos.getZ() + 0.5D, 0.0F, 0.0F);
         entity.finalizeSpawn(region, region.getCurrentDifficultyAt(pos), MobSpawnType.STRUCTURE, null, null);
+        if (profession >= 0) {
+            entity.setGingerProfession(profession);
+        }
         region.addFreshEntity(entity);
     }
 

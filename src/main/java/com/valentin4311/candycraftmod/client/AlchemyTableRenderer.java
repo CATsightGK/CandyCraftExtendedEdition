@@ -53,15 +53,15 @@ public class AlchemyTableRenderer implements BlockEntityRenderer<AlchemyTableBlo
     public void render(AlchemyTableBlockEntity blockEntity, float partialTick, PoseStack poseStack, MultiBufferSource buffer, int packedLight, int packedOverlay) {
         float time = renderTime(blockEntity, partialTick);
         boolean mixing = blockEntity.isMixing();
-        renderMixer(blockEntity, time, mixing, poseStack, buffer, packedLight, packedOverlay);
+        renderMixer(blockEntity, time, poseStack, buffer, packedLight, packedOverlay);
         if (blockEntity.isTopFilled() || blockEntity.getLiquidAmount() > 0) {
             renderSyrup(blockEntity, time, mixing, poseStack, buffer, packedLight);
         }
-        renderIngredients(blockEntity, time, mixing, poseStack, buffer, packedLight);
+        renderIngredients(blockEntity, time, poseStack, buffer, packedLight);
     }
 
-    private void renderMixer(AlchemyTableBlockEntity blockEntity, float time, boolean mixing, PoseStack poseStack, MultiBufferSource buffer, int packedLight, int packedOverlay) {
-        float angle = mixing ? time * (blockEntity.isFastMixing() ? 36.0F : 18.0F) : 0.0F;
+    private void renderMixer(AlchemyTableBlockEntity blockEntity, float time, PoseStack poseStack, MultiBufferSource buffer, int packedLight, int packedOverlay) {
+        float angle = blockEntity.getClientMixerAngle(time);
         Minecraft minecraft = Minecraft.getInstance();
         ItemStack stack = new ItemStack(CCItems.ALCHEMY_MIXER_BLADE.get());
         BakedModel model = minecraft.getItemRenderer().getModel(stack, blockEntity.getLevel(), null, 0);
@@ -95,18 +95,19 @@ public class AlchemyTableRenderer implements BlockEntityRenderer<AlchemyTableBlo
         poseStack.pushPose();
         VertexConsumer consumer = buffer.getBuffer(style.renderType());
         poseStack.translate(0.0D, 0.003D, 0.0D);
-        drawSyrupSurface(poseStack, consumer, SYRUP_BOTTOM_Y, topY, style.packedLight(packedLight), time, mixing, blockEntity.isFastMixing(), style);
+        drawSyrupSurface(blockEntity, poseStack, consumer, SYRUP_BOTTOM_Y, topY, style.packedLight(packedLight), time, mixing, blockEntity.isFastMixing(), style);
         poseStack.popPose();
     }
 
-    private void drawSyrupSurface(PoseStack poseStack, VertexConsumer consumer, float bottomY, float topY, int packedLight, float time, boolean mixing, boolean fast, LiquidStyle style) {
+    private void drawSyrupSurface(AlchemyTableBlockEntity blockEntity, PoseStack poseStack, VertexConsumer consumer, float bottomY, float topY, int packedLight, float time, boolean mixing, boolean fast, LiquidStyle style) {
         PoseStack.Pose pose = poseStack.last();
         float min = INNER_MIN;
         float max = INNER_MAX;
         int topAlpha = style.topAlpha();
         int sideAlpha = style.sideAlpha();
         int tint = 255;
-        float speed = mixing ? 0.08F * (fast ? 1.7F : 1.0F) : 0.035F;
+        float speedFactor = Mth.clamp(blockEntity.getClientMixerSpeed(time) / 30.0F, 0.0F, 1.75F);
+        float speed = 0.035F + 0.065F * speedFactor;
         float topScroll = -(time * speed) % 1.0F;
         float sideScroll = -(time * speed * 1.6F) % 1.0F;
 
@@ -148,15 +149,18 @@ public class AlchemyTableRenderer implements BlockEntityRenderer<AlchemyTableBlo
         consumer.vertex(pose.pose(), max, topY, min).color(tint, tint, tint, sideAlpha).uv(0.0F, 0.0F + sideScroll).overlayCoords(OverlayTexture.NO_OVERLAY).uv2(packedLight).normal(pose.normal(), 1.0F, 0.0F, 0.0F).endVertex();
     }
 
-    private void renderIngredients(AlchemyTableBlockEntity blockEntity, float time, boolean mixing, PoseStack poseStack, MultiBufferSource buffer, int packedLight) {
+    private void renderIngredients(AlchemyTableBlockEntity blockEntity, float time, PoseStack poseStack, MultiBufferSource buffer, int packedLight) {
         List<ItemStack> ingredients = blockEntity.getIngredientsForRender();
         if (ingredients.isEmpty()) {
             return;
         }
 
         var itemRenderer = Minecraft.getInstance().getItemRenderer();
-        float stirAngle = mixing ? -time * 18.0F : 0.0F;
-        float surfaceY = syrupTopY(blockEntity, time, mixing);
+        float mixerSpeed = blockEntity.getClientMixerSpeed(time);
+        float stirAngle = -blockEntity.getClientMixerAngle(time);
+        boolean visuallyMixing = mixerSpeed > 0.2F;
+        float speedFactor = Mth.clamp(mixerSpeed / 30.0F, 0.0F, 1.75F);
+        float surfaceY = syrupTopY(blockEntity, time, visuallyMixing);
         float itemY = Mth.clamp(surfaceY - 0.015F, 0.32F, 0.70F);
 
         for (int i = 0; i < Math.min(4, ingredients.size()); i++) {
@@ -168,14 +172,14 @@ public class AlchemyTableRenderer implements BlockEntityRenderer<AlchemyTableBlo
             Vec3 base = ITEM_POSITIONS[i];
             double x = base.x;
             double z = base.z;
-            if (mixing) {
+            if (visuallyMixing) {
                 float orbit = (stirAngle + i * 90.0F) * Mth.DEG_TO_RAD;
-                float radius = (blockEntity.isFastMixing() ? 0.23F : 0.19F) + (i % 2) * 0.025F + (blockEntity.isFastMixing() ? Mth.sin(time * 0.7F + i) * 0.025F : 0.0F);
+                float radius = (0.18F + 0.05F * speedFactor) + (i % 2) * 0.025F + Mth.sin(time * 0.7F + i) * 0.018F * speedFactor;
                 x = 0.5D + Mth.cos(orbit) * radius;
-                z = 0.5D + Mth.sin(orbit + (blockEntity.isFastMixing() ? Mth.sin(time * 0.3F + i) * 0.35F : 0.0F)) * radius;
+                z = 0.5D + Mth.sin(orbit + Mth.sin(time * 0.3F + i) * 0.25F * speedFactor) * radius;
             }
-            float bob = Mth.sin(time * (mixing ? (blockEntity.isFastMixing() ? 0.9F : 0.45F) : 0.1F) + i * 1.7F) * (mixing ? (blockEntity.isFastMixing() ? 0.035F : 0.018F) : 0.03F);
-            float spin = (mixing ? stirAngle * (blockEntity.isFastMixing() ? 1.8F : 1.0F) : -time * 2.0F) + i * 37.0F;
+            float bob = Mth.sin(time * (0.1F + 0.45F * speedFactor) + i * 1.7F) * (0.018F + 0.017F * speedFactor);
+            float spin = (visuallyMixing ? stirAngle * (1.0F + 0.55F * speedFactor) : -time * 2.0F) + i * 37.0F;
 
             poseStack.pushPose();
             poseStack.translate(x, itemY + bob, z);
@@ -193,7 +197,8 @@ public class AlchemyTableRenderer implements BlockEntityRenderer<AlchemyTableBlo
         }
         float topY = Mth.lerp(amount / 6.0F, MIN_SYRUP_TOP_Y, MAX_SYRUP_TOP_Y);
         if (mixing) {
-            topY += Mth.sin(time * 0.45F) * 0.006F;
+            float speedFactor = Mth.clamp(blockEntity.getClientMixerSpeed(time) / 30.0F, 0.0F, 1.75F);
+            topY += Mth.sin(time * (0.35F + 0.25F * speedFactor)) * (0.004F + 0.006F * speedFactor);
         }
         return Mth.clamp(topY, MIN_SYRUP_TOP_Y, MAX_SYRUP_TOP_Y);
     }

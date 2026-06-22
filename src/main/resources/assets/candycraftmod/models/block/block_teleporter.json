@@ -1,6 +1,3 @@
 {
-    "parent": "minecraft:block/cube_all",
-    "textures": {
-        "all": "candycraftmod:block/block_teleporter_0"
-    }
+  "parent": "candycraftmod:block/block_teleporter_0"
 }

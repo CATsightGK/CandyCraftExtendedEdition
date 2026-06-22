@@ -3,6 +3,7 @@ package com.valentin4311.candycraftmod.entity;
 import com.valentin4311.candycraftmod.registry.CCBlocks;
 import com.valentin4311.candycraftmod.registry.CCItems;
 import com.valentin4311.candycraftmod.util.EmblemHelper;
+import net.minecraft.network.chat.Component;
 import javax.annotation.Nullable;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.RandomSource;
@@ -19,6 +20,7 @@ import net.minecraft.world.entity.npc.VillagerData;
 import net.minecraft.world.entity.npc.VillagerProfession;
 import net.minecraft.world.entity.npc.VillagerType;
 import net.minecraft.world.entity.ai.goal.AvoidEntityGoal;
+import net.minecraft.world.entity.ai.goal.PanicGoal;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.trading.MerchantOffer;
@@ -27,7 +29,12 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
 
 public class GingerbreadManEntity extends Villager {
-    private static final EntityDataAccessor<Integer> SKIN_VARIANT = SynchedEntityData.defineId(GingerbreadManEntity.class, EntityDataSerializers.INT);
+    public static final int BLACKSMITH = 0;
+    public static final int FARMER = 1;
+    public static final int CITIZEN = 2;
+    public static final int ELDER = 3;
+    private static final int MAX_TRADE_USES = 999999;
+    private static final EntityDataAccessor<Integer> PROFESSION_VARIANT = SynchedEntityData.defineId(GingerbreadManEntity.class, EntityDataSerializers.INT);
 
     public GingerbreadManEntity(EntityType<? extends GingerbreadManEntity> type, Level level) {
         super(type, level);
@@ -37,6 +44,7 @@ public class GingerbreadManEntity extends Villager {
     @Override
     protected void registerGoals() {
         super.registerGoals();
+        goalSelector.removeAllGoals(goal -> goal instanceof PanicGoal || goal.getClass().getName().contains("VillagerMakeLove"));
         goalSelector.addGoal(1, new AvoidEntityGoal<Player>(this, Player.class,
             entity -> entity instanceof Player player && shouldAvoidPlayer(player), 10.0F, 1.65D, 2.1D, entity -> true));
     }
@@ -44,7 +52,7 @@ public class GingerbreadManEntity extends Villager {
     @Override
     protected void defineSynchedData() {
         super.defineSynchedData();
-        entityData.define(SKIN_VARIANT, 0);
+        entityData.define(PROFESSION_VARIANT, CITIZEN);
     }
 
     @Override
@@ -52,21 +60,34 @@ public class GingerbreadManEntity extends Villager {
     public SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty, MobSpawnType reason,
             @Nullable SpawnGroupData spawnData, @Nullable CompoundTag tag) {
         SpawnGroupData data = super.finalizeSpawn(level, difficulty, reason, spawnData, tag);
-        setSkinVariant(getRandom().nextInt(4));
+        if (getGingerProfession() != ELDER) {
+            setGingerProfession(getRandom().nextInt(3));
+        }
         updateTrades();
         return data;
     }
 
     public int getSkinVariant() {
-        return entityData.get(SKIN_VARIANT);
+        return getGingerProfession();
     }
 
     public void setSkinVariant(int variant) {
-        entityData.set(SKIN_VARIANT, Math.max(0, Math.min(3, variant)));
+        setGingerProfession(variant);
+    }
+
+    public int getGingerProfession() {
+        return entityData.get(PROFESSION_VARIANT);
+    }
+
+    public void setGingerProfession(int profession) {
+        int clamped = Math.max(BLACKSMITH, Math.min(ELDER, profession));
+        entityData.set(PROFESSION_VARIANT, clamped);
+        getOffers().clear();
+        updateTrades();
     }
 
     private boolean shouldAvoidPlayer(Player player) {
-        return !isTrading() && !player.isCreative() && !player.isSpectator()
+        return getGingerProfession() != ELDER && !isTrading() && !player.isSpectator()
             && !EmblemHelper.has(player, CCItems.GINGERBREAD_EMBLEM.get());
     }
 
@@ -77,9 +98,12 @@ public class GingerbreadManEntity extends Villager {
             return;
         }
         RandomSource random = getRandom();
-        addBlacksmithTrades(offers, random);
-        addFarmerTrades(offers, random);
-        addCitizenTrades(offers, random);
+        switch (getGingerProfession()) {
+            case BLACKSMITH -> addBlacksmithTrades(offers, random);
+            case FARMER -> addFarmerTrades(offers, random);
+            case ELDER -> addElderTrades(offers);
+            default -> addCitizenTrades(offers, random);
+        }
     }
 
     private static void addBlacksmithTrades(MerchantOffers offers, RandomSource random) {
@@ -100,6 +124,14 @@ public class GingerbreadManEntity extends Villager {
         addChance(offers, random, 2, 3, cost(CCItems.CHOCOLATE_COIN.get(), random, 40, 49), result(CCItems.FORK.get(), random, 1, 2));
         addChance(offers, random, 2, 3, cost(CCItems.CHOCOLATE_COIN.get(), random, 24, 33), result(CCItems.LOLLIPOP_SEEDS.get(), random, 1, 2));
         addTrade(offers, cost(CCItems.CHOCOLATE_COIN.get(), random, 2, 11), result(CCItems.DRAGIBUS.get(), random, 1, 2));
+        addChance(offers, random, 1, 3, cost(CCItems.CHOCOLATE_COIN.get(), random, 4, 13), result(CCBlocks.FRAISE_TAGADA_FLOWER.get(), random, 1, 4));
+        if (random.nextInt(5) < 2) {
+            if (random.nextBoolean()) {
+                addTrade(offers, cost(CCItems.CHOCOLATE_COIN.get(), random, 4, 15), result(CCBlocks.MINT.get(), random, 1, 6));
+            } else {
+                addTrade(offers, cost(CCItems.CHOCOLATE_COIN.get(), random, 4, 15), result(CCBlocks.BANANA_SEAWEED.get(), random, 1, 6));
+            }
+        }
         addChance(offers, random, 2, 3, cost(CCItems.CHOCOLATE_COIN.get(), random, 8, 17), result(CCItems.LOLLIPOP.get(), random, 3, 10));
         addChance(offers, random, 1, 8, cost(CCItems.CHOCOLATE_COIN.get(), random, 15, 34), new ItemStack(CCBlocks.LOLLIPOP_BLOCK.get()));
         ensureTrade(offers, cost(CCItems.CHOCOLATE_COIN.get(), 28), new ItemStack(CCItems.LOLLIPOP_SEEDS.get()));
@@ -110,9 +142,23 @@ public class GingerbreadManEntity extends Villager {
         addChance(offers, random, 2, 3, cost(CCItems.CANDY_CANE.get(), random, 5, 10), result(CCItems.CHOCOLATE_COIN.get(), random, 5, 19));
         addChance(offers, random, 1, 3, cost(CCItems.LICORICE.get(), random, 5, 10), result(CCItems.CHOCOLATE_COIN.get(), random, 5, 24));
         addChance(offers, random, 2, 5, cost(CCItems.HONEY_SHARD.get(), random, 30, 44), result(CCItems.CHOCOLATE_COIN.get(), random, 5, 24));
+        if (random.nextInt(5) < 1) {
+            if (random.nextBoolean()) {
+                addTrade(offers, cost(CCBlocks.CARAMEL_BLOCK.get(), random, 10, 14), result(CCItems.CHOCOLATE_COIN.get(), random, 5, 24));
+            } else {
+                addTrade(offers, cost(CCBlocks.TRAMPOJELLY.get(), random, 10, 14), result(CCItems.CHOCOLATE_COIN.get(), random, 5, 24));
+            }
+        }
         addChance(offers, random, 3, 5, cost(CCItems.HONEY_ARROW.get(), random, 20, 24), result(CCItems.CHOCOLATE_COIN.get(), random, 5, 24));
+        addChance(offers, random, 2, 5, cost(CCBlocks.MARSHMALLOW_LOG.get(), random, 20, 24), result(CCItems.CHOCOLATE_COIN.get(), random, 5, 24));
         addChance(offers, random, 2, 10, cost(CCItems.CHOCOLATE_COIN.get(), 64), cost(CCItems.CHOCOLATE_COIN.get(), 64), new ItemStack(CCItems.GINGERBREAD_EMBLEM.get()));
         ensureTrade(offers, cost(CCItems.CANDY_CANE.get(), 8), new ItemStack(CCItems.CHOCOLATE_COIN.get(), 8));
+    }
+
+    private static void addElderTrades(MerchantOffers offers) {
+        addTrade(offers, cost(CCItems.PEZ.get(), 5), new ItemStack(CCItems.SKY_KEY.get()));
+        addTrade(offers, cost(CCItems.PEZ.get(), 10), new ItemStack(CCItems.SKY_EMBLEM.get()));
+        addTrade(offers, cost(CCItems.PEZ.get(), 20), new ItemStack(CCItems.RECORD_3.get()));
     }
 
     private static ItemStack cost(ItemLike item, int count) {
@@ -135,12 +181,12 @@ public class GingerbreadManEntity extends Villager {
 
     private static void addChance(MerchantOffers offers, RandomSource random, int pass, int outOf, ItemStack firstCost, ItemStack secondCost, ItemStack result) {
         if (random.nextInt(outOf) < pass) {
-            offers.add(new MerchantOffer(firstCost, secondCost, result, 12, 2, 0.05F));
+            offers.add(new MerchantOffer(firstCost, secondCost, result, MAX_TRADE_USES, 2, 0.05F));
         }
     }
 
     private static void addTrade(MerchantOffers offers, ItemStack cost, ItemStack result) {
-        offers.add(new MerchantOffer(cost, result, 12, 2, 0.05F));
+        offers.add(new MerchantOffer(cost, result, MAX_TRADE_USES, 2, 0.05F));
     }
 
     private static void ensureTrade(MerchantOffers offers, ItemStack cost, ItemStack result) {
@@ -152,14 +198,37 @@ public class GingerbreadManEntity extends Villager {
     @Override
     public void addAdditionalSaveData(CompoundTag tag) {
         super.addAdditionalSaveData(tag);
-        tag.putInt("SkinVariant", getSkinVariant());
+        tag.putInt("GingerProfession", getGingerProfession());
     }
 
     @Override
     public void readAdditionalSaveData(CompoundTag tag) {
         super.readAdditionalSaveData(tag);
-        if (tag.contains("SkinVariant")) {
-            setSkinVariant(tag.getInt("SkinVariant"));
+        if (tag.contains("GingerProfession")) {
+            setGingerProfession(tag.getInt("GingerProfession"));
+        } else if (tag.contains("SkinVariant")) {
+            setGingerProfession(tag.getInt("SkinVariant"));
         }
+    }
+
+    @Override
+    public boolean canBreed() {
+        return false;
+    }
+
+    @Override
+    public void setBaby(boolean baby) {
+        super.setBaby(false);
+    }
+
+    @Override
+    public Component getDisplayName() {
+        String key = switch (getGingerProfession()) {
+            case BLACKSMITH -> "gingerbread.job.blacksmith";
+            case FARMER -> "gingerbread.job.farmer";
+            case ELDER -> "gingerbread.job.elder";
+            default -> "gingerbread.job.citizen";
+        };
+        return Component.translatable(key);
     }
 }

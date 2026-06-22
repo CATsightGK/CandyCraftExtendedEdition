@@ -10,7 +10,16 @@
     "grass_color": 16777215,
     "foliage_color": 16777215
   },
-  "spawners": {},
+  "spawners": {
+    "monster": [
+      {
+        "type": "candycraftmod:suguard",
+        "weight": 100,
+        "minCount": 8,
+        "maxCount": 12
+      }
+    ]
+  },
   "spawn_costs": {},
   "carvers": {},
   "features": [

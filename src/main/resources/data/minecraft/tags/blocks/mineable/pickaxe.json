@@ -39,6 +39,18 @@
     "candycraftmod:caramel_pane",
     "candycraftmod:caramel_pane_round",
     "candycraftmod:caramel_pane_diamond",
-    "candycraftmod:pink_candy_cane_block"
+    "candycraftmod:pink_candy_cane_block",
+    "candycraftmod:milk_chocolate_brick",
+    "candycraftmod:milk_chocolate_brick_stairs",
+    "candycraftmod:milk_chocolate_brick_slab",
+    "candycraftmod:milk_chocolate_brick_wall",
+    "candycraftmod:white_chocolate_brick",
+    "candycraftmod:white_chocolate_brick_stairs",
+    "candycraftmod:white_chocolate_brick_slab",
+    "candycraftmod:white_chocolate_brick_wall",
+    "candycraftmod:dark_chocolate_brick",
+    "candycraftmod:dark_chocolate_brick_stairs",
+    "candycraftmod:dark_chocolate_brick_slab",
+    "candycraftmod:dark_chocolate_brick_wall"
   ]
 }

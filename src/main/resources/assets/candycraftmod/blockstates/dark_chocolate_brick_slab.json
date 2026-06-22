@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "type=bottom,waterlogged=false": {
+      "model": "candycraftmod:block/chocolate/dark_chocolate_brick_slab"
+    },
+    "type=bottom,waterlogged=true": {
+      "model": "candycraftmod:block/chocolate/dark_chocolate_brick_slab"
+    },
+    "type=top,waterlogged=false": {
+      "model": "candycraftmod:block/chocolate/dark_chocolate_brick_slab_top"
+    },
+    "type=top,waterlogged=true": {
+      "model": "candycraftmod:block/chocolate/dark_chocolate_brick_slab_top"
+    },
+    "type=double,waterlogged=false": {
+      "model": "candycraftmod:block/chocolate/dark_chocolate_brick"
+    }
+  }
+}

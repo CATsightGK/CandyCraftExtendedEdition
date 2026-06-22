@@ -13,21 +13,27 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.AbstractFurnaceBlock;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraftforge.network.NetworkHooks;
 
 public class LicoriceFurnaceBlock extends FacingModelBlock implements EntityBlock {
+    public static final BooleanProperty LIT = AbstractFurnaceBlock.LIT;
     private final boolean lit;
 
     public LicoriceFurnaceBlock(boolean lit, BlockBehaviour.Properties properties) {
         super(properties);
         this.lit = lit;
+        registerDefaultState(defaultBlockState().setValue(FACING, Direction.NORTH).setValue(LIT, lit));
     }
 
     public boolean isLit() {
@@ -37,7 +43,8 @@ public class LicoriceFurnaceBlock extends FacingModelBlock implements EntityBloc
     public static void setLit(Level level, BlockPos pos, BlockState state, boolean lit) {
         BlockState newState = (lit ? CCBlocks.LICORICE_FURNACE_ON.get() : CCBlocks.LICORICE_FURNACE.get())
             .defaultBlockState()
-            .setValue(FACING, state.getValue(FACING));
+            .setValue(FACING, state.getValue(FACING))
+            .setValue(LIT, lit);
         level.setBlock(pos, newState, 3);
     }
 
@@ -104,6 +111,12 @@ public class LicoriceFurnaceBlock extends FacingModelBlock implements EntityBloc
             y,
             z + direction.getStepZ() * side + (direction.getAxis() == Direction.Axis.X ? spread : 0.0D),
             0.0D, 0.0D, 0.0D);
+    }
+
+    @Override
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
+        super.createBlockStateDefinition(builder);
+        builder.add(LIT);
     }
 
     private static <E extends BlockEntity, A extends BlockEntity> BlockEntityTicker<A> createTicker(

@@ -6,7 +6,6 @@ import com.valentin4311.candycraftmod.block.LegacySaplingBlock;
 import com.valentin4311.candycraftmod.registry.CCBlocks;
 import com.valentin4311.candycraftmod.registry.CCEntityTypes;
 import com.valentin4311.candycraftmod.registry.CCFluids;
-import com.valentin4311.candycraftmod.item.JellyWandItem;
 import com.valentin4311.candycraftmod.registry.CCItems;
 import com.valentin4311.candycraftmod.registry.CCSweetscapeBlocks;
 import com.valentin4311.candycraftmod.util.EmblemHelper;
@@ -43,7 +42,6 @@ import net.minecraftforge.common.ForgeSpawnEggItem;
 import net.minecraftforge.event.entity.SpawnPlacementRegisterEvent;
 import net.minecraftforge.event.entity.EntityJoinLevelEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
-import net.minecraftforge.event.entity.player.AttackEntityEvent;
 import net.minecraftforge.event.level.BlockEvent;
 import net.minecraftforge.event.entity.living.MobSpawnEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
@@ -126,11 +124,6 @@ public final class CCForgeEvents {
     }
 
     @SubscribeEvent
-    public static void onLeftClickBlock(PlayerInteractEvent.LeftClickBlock event) {
-        JellyWandItem.accelerateCharge(event.getEntity());
-    }
-
-    @SubscribeEvent
     public static void onRightClickBlock(PlayerInteractEvent.RightClickBlock event) {
         if (isProtectedDungeonInteraction(event.getLevel(), event.getEntity())) {
             return;
@@ -161,11 +154,6 @@ public final class CCForgeEvents {
             event.setCancellationResult(net.minecraft.world.InteractionResult.sidedSuccess(event.getLevel().isClientSide));
             event.setCanceled(true);
         }
-    }
-
-    @SubscribeEvent
-    public static void onAttackEntity(AttackEntityEvent event) {
-        JellyWandItem.accelerateCharge(event.getEntity());
     }
 
     @SubscribeEvent

@@ -2,6 +2,9 @@
   "replace": false,
   "values": [
     "candycraftmod:candy_cane_wall",
-    "candycraftmod:chocolate_cobblestone_wall"
+    "candycraftmod:chocolate_cobblestone_wall",
+    "candycraftmod:milk_chocolate_brick_wall",
+    "candycraftmod:white_chocolate_brick_wall",
+    "candycraftmod:dark_chocolate_brick_wall"
   ]
 }

@@ -1,7 +1,16 @@
 {
-    "multipart": [
-        { "when": { "axis": "y" }, "apply": { "model": "candycraftmod:block/marshmallow_log.1" } },
-        { "when": { "axis": "z" }, "apply": { "model": "candycraftmod:block/marshmallow_log_side.1" } },
-        { "when": { "axis": "x" }, "apply": { "model": "candycraftmod:block/marshmallow_log_side.1", "y": 90 } }
-    ]
+  "variants": {
+    "axis=y": {
+      "model": "candycraftmod:block/marshmallow_log.1"
+    },
+    "axis=z": {
+      "model": "candycraftmod:block/marshmallow_log_side.1",
+      "x": 90
+    },
+    "axis=x": {
+      "model": "candycraftmod:block/marshmallow_log_side.1",
+      "x": 90,
+      "y": 90
+    }
+  }
 }

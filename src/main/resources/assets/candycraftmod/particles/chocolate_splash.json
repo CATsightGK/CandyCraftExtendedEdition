@@ -1,5 +1,6 @@
-{
+﻿{
   "textures": [
+    "candycraftmod:chocolate_splash",
     "candycraftmod:particle/chocolate_splash"
   ]
 }

@@ -171,8 +171,8 @@ public final class CCBlocks {
     public static final RegistryObject<Block> ICE_CREAM_DOUBLE_SLAB_2 = register("ice_cream_double_slab.2", () -> new SlabBlock(BlockBehaviour.Properties.copy(Blocks.SNOW_BLOCK).strength(1.0F)));
     public static final RegistryObject<Block> ICE_CREAM_SLAB_3 = register("ice_cream_slab.3", () -> new SlabBlock(BlockBehaviour.Properties.copy(Blocks.SNOW_BLOCK).strength(1.0F)));
     public static final RegistryObject<Block> ICE_CREAM_DOUBLE_SLAB_3 = register("ice_cream_double_slab.3", () -> new SlabBlock(BlockBehaviour.Properties.copy(Blocks.SNOW_BLOCK).strength(1.0F)));
-    public static final RegistryObject<Block> DRAGON_EGG_BLOCK = register("dragon_egg_block", () -> new Block(stone().strength(3.0F, 15.0F)));
-    public static final RegistryObject<Block> BEETLE_EGG_BLOCK = register("beetle_egg_block", () -> new Block(stone().strength(3.0F, 15.0F)));
+    public static final RegistryObject<Block> DRAGON_EGG_BLOCK = register("dragon_egg_block", () -> new Block(stone().mapColor(MapColor.COLOR_BLUE).strength(3.0F, 15.0F).noOcclusion()));
+    public static final RegistryObject<Block> BEETLE_EGG_BLOCK = register("beetle_egg_block", () -> new Block(stone().mapColor(MapColor.COLOR_PURPLE).strength(3.0F, 15.0F).noOcclusion()));
     public static final RegistryObject<Block> SUGAR_ESSENCE_FLOWER = cutout(register("sugar_essence_flower", () -> new LegacyMetadataBlock.Plant(plant())));
     public static final RegistryObject<Block> MARSHMALLOW_PLANKS_DARK = register("marshmallow_planks_dark", () -> new Block(wood(MapColor.COLOR_BROWN).strength(3.0F, 5.0F)));
     public static final RegistryObject<Block> MARSHMALLOW_PLANKS_LIGHT = register("marshmallow_planks_light", () -> new Block(wood(MapColor.TERRACOTTA_WHITE).strength(3.0F, 5.0F)));

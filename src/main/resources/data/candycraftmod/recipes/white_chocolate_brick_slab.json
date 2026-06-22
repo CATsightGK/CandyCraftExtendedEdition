@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "###"
+  ],
+  "key": {
+    "#": {
+      "item": "candycraftmod:white_chocolate_brick"
+    }
+  },
+  "result": {
+    "item": "candycraftmod:white_chocolate_brick_slab",
+    "count": 6
+  }
+}

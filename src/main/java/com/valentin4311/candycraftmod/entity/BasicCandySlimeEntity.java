@@ -138,7 +138,7 @@ public class BasicCandySlimeEntity extends Slime {
             }
         } else if (isPezJelly() || isKingSlime() || isJellyQueen()) {
             specialAttackCooldown = 15;
-            player.hurt(damageSources().mobAttack(this), isJellyQueen() ? getSize() * 2.0F : isKingSlime() ? 12.0F : 8.0F);
+            player.hurt(damageSources().mobAttack(this), isJellyQueen() ? getSize() * 2.0F : isKingSlime() ? getSize() * 2.5F : getSize());
         }
         super.playerTouch(player);
     }
@@ -275,7 +275,7 @@ public class BasicCandySlimeEntity extends Slime {
                 getAttribute(Attributes.MAX_HEALTH).setBaseValue(300.0D);
                 setHealth(getMaxHealth());
             } else if (isPezJelly()) {
-                getAttribute(Attributes.MAX_HEALTH).setBaseValue(80.0D);
+                getAttribute(Attributes.MAX_HEALTH).setBaseValue(size * 20.0D);
                 setHealth(getMaxHealth());
             }
         }
@@ -437,6 +437,21 @@ public class BasicCandySlimeEntity extends Slime {
         }
         float ticks = Math.max(0.0F, getJellyQueenSlamTicks() - partialTicks);
         return Mth.clamp(ticks / 24.0F, 0.0F, 1.0F);
+    }
+
+    public boolean isBossAwake() {
+        return bossAwake;
+    }
+
+    public void prepareDungeonBossSpawn() {
+        applyLegacySpawnSize();
+        bossAwake = false;
+        bossJumpCooldown = 0;
+        setDeltaMovement(0.0D, 0.0D, 0.0D);
+        if (isJellyQueen()) {
+            setJellyQueenMode(JELLY_QUEEN_SLEEP_MODE);
+            setJellyQueenSlamTicks(0);
+        }
     }
 
     private void updateBossBar() {

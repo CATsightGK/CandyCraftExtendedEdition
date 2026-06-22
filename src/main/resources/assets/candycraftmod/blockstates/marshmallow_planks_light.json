@@ -1,7 +1,7 @@
 {
-    "variants":  {
-                     " ":  {
-                               "model":  "candycraftmod:block/marshmallow_planks_light"
-                           }
-                 }
+  "variants": {
+    "": {
+      "model": "candycraftmod:block/marshmallow_planks_light"
+    }
+  }
 }

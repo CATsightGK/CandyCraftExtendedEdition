@@ -38,6 +38,9 @@ public class AlchemyTableBlockEntity extends BlockEntity {
     private int brewTicks;
     private int sugarScanTicks;
     private NonNullList<ItemStack> ingredients = NonNullList.withSize(4, ItemStack.EMPTY);
+    private float clientMixerAngle;
+    private float clientMixerSpeed;
+    private float clientLastAnimationTime = Float.NaN;
 
     public AlchemyTableBlockEntity(BlockPos pos, BlockState state) {
         super(CCBlockEntities.ALCHEMY_TABLE.get(), pos, state);
@@ -182,6 +185,66 @@ public class AlchemyTableBlockEntity extends BlockEntity {
 
     public boolean isFastMixing() {
         return isMixing() && mixerSugarCharges > 0;
+    }
+
+    public boolean isSugarBoostedMixing() {
+        return isMixing() && hasMixerSugar;
+    }
+
+    public boolean isAdvancedSugarBoostedMixing() {
+        return isSugarBoostedMixing() && hasAdvancedMixerSugar;
+    }
+
+    public float getClientMixerAngle(float renderTime) {
+        updateClientMixerAnimation(renderTime);
+        return clientMixerAngle;
+    }
+
+    public float getClientMixerSpeed(float renderTime) {
+        updateClientMixerAnimation(renderTime);
+        return clientMixerSpeed;
+    }
+
+    private void updateClientMixerAnimation(float renderTime) {
+        if (level == null || !level.isClientSide) {
+            return;
+        }
+
+        if (Float.isNaN(clientLastAnimationTime)) {
+            clientLastAnimationTime = renderTime;
+            clientMixerSpeed = targetClientMixerSpeed();
+            return;
+        }
+
+        float deltaTicks = Math.max(0.0F, Math.min(4.0F, renderTime - clientLastAnimationTime));
+        clientLastAnimationTime = renderTime;
+        float targetSpeed = targetClientMixerSpeed();
+        float acceleration = targetSpeed > clientMixerSpeed ? 2.6F : 1.7F;
+        if (targetSpeed > 24.0F || clientMixerSpeed > 24.0F) {
+            acceleration = targetSpeed > clientMixerSpeed ? 3.8F : 2.4F;
+        }
+        clientMixerSpeed = approach(clientMixerSpeed, targetSpeed, acceleration * deltaTicks);
+        clientMixerAngle = (clientMixerAngle + clientMixerSpeed * deltaTicks) % 360.0F;
+    }
+
+    private float targetClientMixerSpeed() {
+        if (!isMixing()) {
+            return 0.0F;
+        }
+        if (isAdvancedSugarBoostedMixing()) {
+            return 42.0F;
+        }
+        if (isSugarBoostedMixing()) {
+            return 30.0F;
+        }
+        return 16.0F;
+    }
+
+    private static float approach(float value, float target, float step) {
+        if (value < target) {
+            return Math.min(target, value + step);
+        }
+        return Math.max(target, value - step);
     }
 
     private boolean isRedstonePaused() {

@@ -2,6 +2,7 @@ package com.valentin4311.candycraftmod.world.feature;
 
 import com.mojang.serialization.Codec;
 import com.valentin4311.candycraftmod.CandyCraft;
+import com.valentin4311.candycraftmod.entity.BasicCandySlimeEntity;
 import com.valentin4311.candycraftmod.registry.CCBlocks;
 import com.valentin4311.candycraftmod.registry.CCEntityTypes;
 import com.valentin4311.candycraftmod.registry.CCItems;
@@ -1016,6 +1017,9 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
         Entity entity = type.create(serverLevel);
         if (entity != null) {
             entity.moveTo(x, y, z, random.nextFloat() * 360.0F, 0.0F);
+            if (entity instanceof BasicCandySlimeEntity slime) {
+                slime.prepareDungeonBossSpawn();
+            }
             serverLevel.addFreshEntity(entity);
         }
     }

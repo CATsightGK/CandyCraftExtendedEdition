@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/wall_inventory",
+  "textures": {
+    "wall": "candycraftmod:block/chocolate_brick_dark"
+  }
+}

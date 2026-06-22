@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:stonecutting",
+  "ingredient": {
+    "item": "candycraftmod:dark_chocolate_brick"
+  },
+  "result": "candycraftmod:dark_chocolate_brick_stairs",
+  "count": 1
+}

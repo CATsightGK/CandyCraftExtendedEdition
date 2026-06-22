@@ -2,6 +2,7 @@ package com.valentin4311.candycraftmod.entity;
 
 import com.valentin4311.candycraftmod.registry.CCEntityTypes;
 import com.valentin4311.candycraftmod.registry.CCItems;
+import com.valentin4311.candycraftmod.registry.CCSweetscapeItems;
 import net.minecraft.core.particles.ItemParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
@@ -21,8 +22,10 @@ import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 
 public class GummyBallEntity extends ThrowableItemProjectile {
+    public static final int RED_JELLY_VISUAL = 100;
     private static final EntityDataAccessor<Integer> POWER = SynchedEntityData.defineId(GummyBallEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Integer> VISUAL_VARIANT = SynchedEntityData.defineId(GummyBallEntity.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Float> BONUS_DAMAGE = SynchedEntityData.defineId(GummyBallEntity.class, EntityDataSerializers.FLOAT);
 
     public GummyBallEntity(EntityType<? extends GummyBallEntity> entityType, Level level) {
         super(entityType, level);
@@ -46,11 +49,19 @@ public class GummyBallEntity extends ThrowableItemProjectile {
     }
 
     public void setVisualVariant(int variant) {
-        entityData.set(VISUAL_VARIANT, Math.max(0, Math.min(2, variant)));
+        entityData.set(VISUAL_VARIANT, variant == RED_JELLY_VISUAL ? RED_JELLY_VISUAL : Math.max(0, Math.min(2, variant)));
     }
 
     public int getVisualVariant() {
         return entityData.get(VISUAL_VARIANT);
+    }
+
+    public void setBonusDamage(float damage) {
+        entityData.set(BONUS_DAMAGE, Math.max(0.0F, damage));
+    }
+
+    public float getBonusDamage() {
+        return entityData.get(BONUS_DAMAGE);
     }
 
     @Override
@@ -58,6 +69,7 @@ public class GummyBallEntity extends ThrowableItemProjectile {
         super.defineSynchedData();
         entityData.define(POWER, 0);
         entityData.define(VISUAL_VARIANT, 0);
+        entityData.define(BONUS_DAMAGE, 0.0F);
     }
 
     @Override
@@ -67,8 +79,11 @@ public class GummyBallEntity extends ThrowableItemProjectile {
 
     @Override
     public ItemStack getItem() {
-        ItemStack stack = new ItemStack(getDefaultItem());
         int variant = getVisualVariant();
+        if (variant == RED_JELLY_VISUAL) {
+            return new ItemStack(CCSweetscapeItems.RED_GUMMY.get());
+        }
+        ItemStack stack = new ItemStack(getDefaultItem());
         if (variant > 0) {
             stack.getOrCreateTag().putInt("CustomModelData", variant);
         }
@@ -82,7 +97,7 @@ public class GummyBallEntity extends ThrowableItemProjectile {
             spawnBreakParticle();
         } else if (level().isClientSide && getPower() == 2) {
             level().addParticle(ParticleTypes.FLAME, getX(), getY(), getZ(), 0.0D, 0.0D, 0.0D);
-        } else if (level().isClientSide && getPower() == 3 && tickCount % 2 == 0) {
+        } else if (level().isClientSide && getPower() >= 3 && tickCount % 2 == 0) {
             spawnBreakParticle();
         }
     }
@@ -118,9 +133,9 @@ public class GummyBallEntity extends ThrowableItemProjectile {
         }
         Entity entity = result.getEntity();
         int power = getPower();
-        float damage = power == 1 ? 6.0F : power == 2 ? 4.0F : power == 3 ? 3.0F : 0.1F;
+        float damage = getBonusDamage() > 0.0F ? getBonusDamage() : power == 1 ? 6.0F : power == 2 ? 4.0F : power == 3 ? 3.0F : power == 4 ? 8.0F : 0.1F;
         entity.hurt(damageSources().thrown(this, getOwner()), damage);
-        if (entity instanceof LivingEntity living && power == 3) {
+        if (entity instanceof LivingEntity living && (power == 3 || power == 4)) {
             living.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 5 * 20, 0));
         } else if (entity instanceof LivingEntity living && power < 2) {
             living.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 5 * 20, 2));
@@ -156,6 +171,7 @@ public class GummyBallEntity extends ThrowableItemProjectile {
         super.addAdditionalSaveData(tag);
         tag.putInt("Power", getPower());
         tag.putInt("VisualVariant", getVisualVariant());
+        tag.putFloat("BonusDamage", getBonusDamage());
     }
 
     @Override
@@ -163,5 +179,6 @@ public class GummyBallEntity extends ThrowableItemProjectile {
         super.readAdditionalSaveData(tag);
         setPower(tag.getInt("Power"));
         setVisualVariant(tag.getInt("VisualVariant"));
+        setBonusDamage(tag.getFloat("BonusDamage"));
     }
 }

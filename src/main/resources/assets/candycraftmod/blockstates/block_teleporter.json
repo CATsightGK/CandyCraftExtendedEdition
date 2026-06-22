@@ -1,5 +1,6 @@
 {
     "variants": {
-        "": { "model": "candycraftmod:block/block_teleporter" }
+        "dungeon=jelly": { "model": "candycraftmod:block/block_teleporter_0" },
+        "dungeon=suguard": { "model": "candycraftmod:block/block_teleporter_1" }
     }
 }

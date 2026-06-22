@@ -20,9 +20,7 @@ public class BasicCandySlimeRenderer extends SlimeRenderer {
         String texture = "sprinterjelly.png";
         if (entity.getType() == CCEntityTypes.RED_JELLY.get()) texture = "kamikazejelly.png";
         else if (entity.getType() == CCEntityTypes.TORNADO_JELLY.get()) texture = "tornadojelly.png";
-        else if (entity.getType() == CCEntityTypes.PEZ_JELLY.get()) texture = "candyboss5.png";
-        else if (entity.getType() == CCEntityTypes.KING_SLIME.get()) texture = "candyboss6.png";
-        else if (entity instanceof BasicCandySlimeEntity candy && candy.isJellyQueen()) texture = getJellyQueenTexture(candy);
+        else if (entity instanceof BasicCandySlimeEntity candy) texture = getCandySlimeTexture(candy);
         return new ResourceLocation(CandyCraft.MODID, "textures/entity/" + texture);
     }
 
@@ -46,6 +44,19 @@ public class BasicCandySlimeRenderer extends SlimeRenderer {
             case BasicCandySlimeEntity.JELLY_QUEEN_BROWN_MODE -> "candyboss3.png";
             default -> "candyboss.png";
         };
+    }
+
+    private static String getCandySlimeTexture(BasicCandySlimeEntity candy) {
+        if (candy.isPezJelly()) {
+            return candy.isBossAwake() ? "candyboss5.png" : "candyboss4.png";
+        }
+        if (candy.isKingSlime()) {
+            return candy.isBossAwake() ? "candyboss6.png" : "candyboss4.png";
+        }
+        if (candy.isJellyQueen()) {
+            return getJellyQueenTexture(candy);
+        }
+        return "sprinterjelly.png";
     }
 
     private static void applyJellyQueenSlamPose(BasicCandySlimeEntity queen, PoseStack poseStack, float partialTicks) {

@@ -25,6 +25,7 @@ import com.valentin4311.candycraftmod.registry.CCParticleTypes;
 import com.valentin4311.candycraftmod.registry.CCSweetscapeBlocks;
 import com.valentin4311.candycraftmod.item.CaramelCrossbowItem;
 import com.valentin4311.candycraftmod.item.DynamiteItem;
+import com.valentin4311.candycraftmod.item.JellyWandItem;
 import com.valentin4311.candycraftmod.item.RawGummyItem;
 import com.valentin4311.candycraftmod.item.SugarPillItem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
@@ -78,6 +79,7 @@ import org.joml.Matrix4f;
 @Mod.EventBusSubscriber(modid = CandyCraft.MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public final class CCClient {
     private static final ResourceLocation PINK_FIRE_TEXTURE = new ResourceLocation("minecraft", "textures/block/fire_1.png");
+    private static final ResourceLocation SUGAR_FACTORY_GUI = new ResourceLocation(CandyCraft.MODID, "textures/gui/gui_sugar.png");
     private static final ResourceLocation CANDY_WORLD_EFFECTS = new ResourceLocation(CandyCraft.MODID, "candy_world_effects");
     private static final int CANDY_WORLD_FOG_FALLBACK = 0xEEAABB;
     private static final int CANDY_WORLD_SKY_FALLBACK = 0xFFD6E6;
@@ -123,6 +125,7 @@ public final class CCClient {
     @SubscribeEvent
     public static void registerGuiOverlays(RegisterGuiOverlaysEvent event) {
         event.registerBelowAll("pink_fire", CCClient::renderPinkFireOverlay);
+        event.registerAboveAll("jelly_wand_charge", CCClient::renderJellyWandChargeOverlay);
     }
 
     private static void renderPinkFireOverlay(net.minecraftforge.client.gui.overlay.ForgeGui gui, GuiGraphics graphics,
@@ -145,6 +148,57 @@ public final class CCClient {
 
     private static int pinkFireTicks(net.minecraft.world.entity.player.Player player) {
         return player.getPersistentData().getInt(CandyLiquidBlock.PINK_FIRE_TICKS_TAG);
+    }
+
+    private static void renderJellyWandChargeOverlay(net.minecraftforge.client.gui.overlay.ForgeGui gui, GuiGraphics graphics,
+            float partialTick, int screenWidth, int screenHeight) {
+        Minecraft minecraft = gui.getMinecraft();
+        if (minecraft.player == null || minecraft.options.hideGui || minecraft.player.isSpectator()) {
+            return;
+        }
+        net.minecraft.world.item.ItemStack stack = minecraft.player.getMainHandItem();
+        if (!stack.is(CCItems.JELLY_WAND.get())) {
+            stack = minecraft.player.getOffhandItem();
+        }
+        if (!stack.is(CCItems.JELLY_WAND.get())) {
+            return;
+        }
+
+        float tapProgress = JellyWandItem.getTapChargeProgress(stack);
+        float aimProgress = JellyWandItem.getAimProgress(minecraft.player);
+        if (tapProgress <= 0.0F && aimProgress <= 0.0F) {
+            return;
+        }
+
+        int width = 64;
+        int height = 8;
+        int x = screenWidth / 2 - width / 2;
+        int y = screenHeight - 49;
+        float progress = Math.max(tapProgress, aimProgress);
+        int fillWidth = Math.round((width - 4) * progress);
+
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
+        graphics.fill(x, y, x + width, y + height, 0xAA211323);
+        graphics.blit(SUGAR_FACTORY_GUI, x + 2, y + 1, 0, 114, width - 4, height - 2, 256, 256);
+        int fillColor = Mth.hsvToRgb(0.92F - progress * 0.22F + (minecraft.player.tickCount % 20) * 0.002F, 0.78F, 1.0F) | 0xFF000000;
+        graphics.fill(x + 2, y + 2, x + 2 + fillWidth, y + height - 2, fillColor);
+        graphics.fill(x + 2, y + 2, x + 2 + fillWidth, y + 3, 0x88FFFFFF);
+        graphics.fill(x, y, x + width, y + 1, 0xCCF4C2DA);
+        graphics.fill(x, y + height - 1, x + width, y + height, 0xCC6D3456);
+        graphics.fill(x, y, x + 1, y + height, 0xCCF4C2DA);
+        graphics.fill(x + width - 1, y, x + width, y + height, 0xCC6D3456);
+        RenderSystem.disableBlend();
+
+        if (aimProgress > 0.0F) {
+            int centerX = screenWidth / 2;
+            int centerY = screenHeight / 2;
+            int color = Mth.hsvToRgb((minecraft.player.tickCount % 40) / 40.0F, 0.8F, 1.0F) | 0xFF000000;
+            graphics.fill(centerX - 7, centerY, centerX - 2, centerY + 1, color);
+            graphics.fill(centerX + 3, centerY, centerX + 8, centerY + 1, color);
+            graphics.fill(centerX, centerY - 7, centerX + 1, centerY - 2, color);
+            graphics.fill(centerX, centerY + 3, centerX + 1, centerY + 8, color);
+        }
     }
 
     private static void registerProjectileItemProperties() {

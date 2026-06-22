@@ -18,13 +18,13 @@ public class CCArmorItem extends ArmorItem {
         ArmorMaterial material = getMaterial();
         String texture;
         if (material == CCArmorMaterials.JELLY) {
-            texture = getType() == Type.HELMET ? "jelly_crown" : "jelly_layer_1";
+            texture = getType() == Type.HELMET ? "jelly_crown" : "armor_boots";
         } else if (material == CCArmorMaterials.MASK) {
             texture = "armor_mask";
         } else {
             boolean leggings = slot == EquipmentSlot.LEGS;
             String materialName = material.getName().substring((CandyCraft.MODID + ":").length());
-            texture = materialName + "_layer_" + (leggings ? "2" : "1");
+            texture = "armor_" + materialName + "_" + (leggings ? "1" : "2");
         }
         return CandyCraft.MODID + ":textures/models/armor/" + texture + ".png";
     }

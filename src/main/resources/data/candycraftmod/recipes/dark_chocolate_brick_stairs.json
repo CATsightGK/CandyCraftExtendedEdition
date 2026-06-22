@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "#  ",
+    "## ",
+    "###"
+  ],
+  "key": {
+    "#": {
+      "item": "candycraftmod:dark_chocolate_brick"
+    }
+  },
+  "result": {
+    "item": "candycraftmod:dark_chocolate_brick_stairs",
+    "count": 4
+  }
+}

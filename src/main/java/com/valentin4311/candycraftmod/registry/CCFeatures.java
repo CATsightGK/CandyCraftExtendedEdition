@@ -10,6 +10,7 @@ import com.valentin4311.candycraftmod.world.feature.JellyDungeonFeature;
 import com.valentin4311.candycraftmod.world.feature.LegacyStructureFeature;
 import com.valentin4311.candycraftmod.world.feature.LegacyCandyTreeFeature;
 import com.valentin4311.candycraftmod.world.feature.SweetscapeChocolateTreeFeature;
+import com.valentin4311.candycraftmod.world.feature.SuguardDungeonFeature;
 import com.valentin4311.candycraftmod.world.tree.CherryTreeDecorator;
 import net.minecraft.world.level.levelgen.feature.Feature;
 import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
@@ -31,6 +32,10 @@ public final class CCFeatures {
     public static final RegistryObject<Feature<NoneFeatureConfiguration>> JELLY_DUNGEON = FEATURES.register(
         "jelly_dungeon",
         () -> new JellyDungeonFeature(NoneFeatureConfiguration.CODEC)
+    );
+    public static final RegistryObject<Feature<NoneFeatureConfiguration>> SUGUARD_DUNGEON = FEATURES.register(
+        "suguard_dungeon",
+        () -> new SuguardDungeonFeature(NoneFeatureConfiguration.CODEC)
     );
     public static final RegistryObject<Feature<NoneFeatureConfiguration>> CANDY_GRASS = FEATURES.register(
         "candy_grass",

@@ -111,8 +111,8 @@ public final class CCEntityTypes {
             .build(CandyCraft.MODID + ":gummy_bunny")
     );
 
-    public static final RegistryObject<EntityType<BasicCandyZombieEntity>> SUGUARD = basicZombie("suguard", 0.6F, 1.95F);
-    public static final RegistryObject<EntityType<BasicCandyZombieEntity>> MAGE_SUGUARD = basicZombie("mage_suguard", 0.6F, 1.95F);
+    public static final RegistryObject<EntityType<BasicCandyZombieEntity>> SUGUARD = basicZombie("suguard", 0.5F, 0.9F);
+    public static final RegistryObject<EntityType<BasicCandyZombieEntity>> MAGE_SUGUARD = basicZombie("mage_suguard", 0.5F, 0.9F);
     public static final RegistryObject<EntityType<BasicCandySpiderEntity>> CARAMEL_BEE = basicSpider("caramel_bee", 0.8F, 1.0F);
     public static final RegistryObject<EntityType<GingerbreadManEntity>> GINGERBREAD_MAN = ENTITY_TYPES.register("gingerbread_man", () ->
         EntityType.Builder.of(GingerbreadManEntity::new, MobCategory.CREATURE)

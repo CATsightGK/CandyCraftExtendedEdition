@@ -1,7 +1,7 @@
 {
     "parent": "item/generated",
     "textures": {
-        "layer0": "candycraftmod:item/sugar_crystal"
+        "layer0": "candycraftmod:item/gummy/gummy_red"
     },
     "display": {
         "thirdperson": {

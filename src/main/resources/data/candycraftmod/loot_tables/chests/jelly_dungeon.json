@@ -57,7 +57,7 @@
         },
         {
           "type": "minecraft:item",
-          "name": "candycraftmod:sugar_crystal",
+          "name": "candycraftmod:pure_rock_candy",
           "weight": 8,
           "functions": [
             {
