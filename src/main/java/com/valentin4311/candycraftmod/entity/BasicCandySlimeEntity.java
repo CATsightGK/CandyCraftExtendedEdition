@@ -25,9 +25,12 @@ import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.monster.Slime;
+import net.minecraft.world.entity.projectile.AbstractArrow;
+import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -44,6 +47,9 @@ public class BasicCandySlimeEntity extends Slime {
     private static final EntityDataAccessor<Integer> JELLY_QUEEN_SLAM_TICKS = SynchedEntityData.defineId(BasicCandySlimeEntity.class, EntityDataSerializers.INT);
     private int specialAttackCooldown;
     private boolean bossAwake;
+    private boolean dormantRotationInitialized;
+    private float dormantYRot;
+    private float dormantYHeadRot;
     private int bossJumpCooldown;
     private boolean jellyQueenWasOnGround = true;
     private final ServerBossEvent bossEvent = new ServerBossEvent(getDisplayName(), BossEvent.BossBarColor.PURPLE, BossEvent.BossBarOverlay.PROGRESS);
@@ -69,6 +75,9 @@ public class BasicCandySlimeEntity extends Slime {
 
     @Override
     public void aiStep() {
+        if (isCandyBoss() && !bossAwake) {
+            freezeSleepingBoss();
+        }
         super.aiStep();
         updateBossBar();
         if (specialAttackCooldown > 0) {
@@ -81,6 +90,9 @@ public class BasicCandySlimeEntity extends Slime {
         }
         tickJellyQueenLandingAndAnimation();
         tickBossAwakeBehavior();
+        if (isCandyBoss() && !bossAwake) {
+            freezeSleepingBoss();
+        }
     }
 
     @Override
@@ -118,6 +130,9 @@ public class BasicCandySlimeEntity extends Slime {
             super.playerTouch(player);
             return;
         }
+        if (isCandyBoss() && !bossAwake) {
+            return;
+        }
         if (isYellowJelly()) {
             specialAttackCooldown = 10;
             player.hurt(damageSources().mobAttack(this), 6.0F);
@@ -148,10 +163,11 @@ public class BasicCandySlimeEntity extends Slime {
         if (source.getEntity() instanceof BasicCandySlimeEntity) {
             return false;
         }
-        if (isJellyQueen() && source.is(DamageTypeTags.IS_FALL)) {
+        if (isCandyBoss() && source.is(DamageTypeTags.IS_FALL)) {
             return false;
         }
         if (isCandyBoss() && source.is(DamageTypeTags.IS_PROJECTILE)) {
+            reflectProjectile(source);
             return false;
         }
         if (isJellyQueen()) {
@@ -160,6 +176,7 @@ public class BasicCandySlimeEntity extends Slime {
                     setDeltaMovement(getDeltaMovement().x, 2.0D, getDeltaMovement().z);
                 }
                 bossAwake = true;
+                dormantRotationInitialized = false;
                 updateJellyQueenMode();
                 if (source.getEntity() instanceof Player player && amount > 1.0F && !player.getAbilities().instabuild) {
                     double dx = getX() - player.getX();
@@ -175,6 +192,7 @@ public class BasicCandySlimeEntity extends Slime {
         }
         if (isCandyBoss() && !level().isClientSide && source.getEntity() != null) {
             bossAwake = true;
+            dormantRotationInitialized = false;
             setDeltaMovement(getDeltaMovement().add(0.0D, 0.9D, 0.0D));
         }
         return super.hurt(source, amount);
@@ -292,7 +310,7 @@ public class BasicCandySlimeEntity extends Slime {
         Player player = level().getNearestPlayer(this, 48.0D);
         AttributeInstance speed = getAttribute(Attributes.MOVEMENT_SPEED);
         if (player == null) {
-            bossAwake = false;
+            putBossToSleep();
             if (speed != null) {
                 speed.setBaseValue(0.0D);
             }
@@ -322,7 +340,7 @@ public class BasicCandySlimeEntity extends Slime {
         Player player = findNearestSurvivalPlayer(48.0D);
         AttributeInstance speed = getAttribute(Attributes.MOVEMENT_SPEED);
         if (player == null) {
-            bossAwake = false;
+            putBossToSleep();
             setJellyQueenMode(JELLY_QUEEN_SLEEP_MODE);
             setJellyQueenSlamTicks(0);
             if (speed != null) {
@@ -445,12 +463,68 @@ public class BasicCandySlimeEntity extends Slime {
 
     public void prepareDungeonBossSpawn() {
         applyLegacySpawnSize();
-        bossAwake = false;
+        putBossToSleep();
         bossJumpCooldown = 0;
         setDeltaMovement(0.0D, 0.0D, 0.0D);
         if (isJellyQueen()) {
             setJellyQueenMode(JELLY_QUEEN_SLEEP_MODE);
             setJellyQueenSlamTicks(0);
+        }
+    }
+
+    private void putBossToSleep() {
+        if (bossAwake) {
+            dormantRotationInitialized = false;
+        }
+        bossAwake = false;
+    }
+
+    private void freezeSleepingBoss() {
+        if (!dormantRotationInitialized) {
+            dormantYRot = getYRot();
+            dormantYHeadRot = getYHeadRot();
+            dormantRotationInitialized = true;
+        }
+        setTarget(null);
+        getNavigation().stop();
+        setJumping(false);
+        setYRot(dormantYRot);
+        yRotO = dormantYRot;
+        yBodyRot = dormantYRot;
+        yBodyRotO = dormantYRot;
+        yHeadRot = dormantYHeadRot;
+        yHeadRotO = dormantYHeadRot;
+        setDeltaMovement(0.0D, Math.min(0.0D, getDeltaMovement().y), 0.0D);
+        AttributeInstance speed = getAttribute(Attributes.MOVEMENT_SPEED);
+        if (speed != null) {
+            speed.setBaseValue(0.0D);
+        }
+    }
+
+    private void reflectProjectile(DamageSource source) {
+        if (level().isClientSide || !(source.getDirectEntity() instanceof Projectile projectile)) {
+            return;
+        }
+        Vec3 direction = projectile.getDeltaMovement().scale(-1.0D);
+        Entity attacker = source.getEntity();
+        if (attacker != null) {
+            direction = attacker.getEyePosition().subtract(projectile.position());
+        }
+        if (direction.lengthSqr() < 1.0E-4D) {
+            direction = projectile.position().subtract(position());
+        }
+        if (direction.lengthSqr() < 1.0E-4D) {
+            direction = new Vec3(0.0D, 0.15D, 1.0D);
+        }
+        double speed = Math.max(1.2D, projectile.getDeltaMovement().length());
+        Vec3 reflected = direction.normalize().scale(speed * 1.25D);
+        projectile.setDeltaMovement(reflected);
+        projectile.setYRot((float)(Mth.atan2(reflected.x, reflected.z) * (180.0D / Math.PI)));
+        projectile.setXRot((float)(Mth.atan2(reflected.y, reflected.horizontalDistance()) * (180.0D / Math.PI)));
+        projectile.hasImpulse = true;
+        if (projectile instanceof AbstractArrow arrow) {
+            arrow.setOwner(this);
+            arrow.pickup = AbstractArrow.Pickup.DISALLOWED;
         }
     }
 

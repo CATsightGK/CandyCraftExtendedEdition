@@ -130,6 +130,9 @@ public class NougatGolemEntity extends AbstractGolem {
         if (attackCooldown > 0) {
             attackCooldown--;
         }
+        if (isTop() && getLength() != TOP_LENGTH) {
+            setLength(TOP_LENGTH);
+        }
         if (!level().isClientSide && !isBase()) {
             setTarget(null);
             getNavigation().stop();
@@ -139,7 +142,7 @@ public class NougatGolemEntity extends AbstractGolem {
 
     @Override
     public EntityDimensions getDimensions(Pose pose) {
-        return EntityDimensions.fixed(0.65F, getLength());
+        return EntityDimensions.fixed(0.65F, isBase() ? getStackHeight() : getLength());
     }
 
     @Override
@@ -237,6 +240,16 @@ public class NougatGolemEntity extends AbstractGolem {
 
     private boolean canExplosionDamage(LivingEntity target) {
         return target.isAlive() && target instanceof Enemy && !(target instanceof NougatGolemEntity);
+    }
+
+    private float getStackHeight() {
+        float height = 0.0F;
+        NougatGolemEntity segment = this;
+        while (segment != null) {
+            height += segment.getLength();
+            segment = segment.getTopPassenger();
+        }
+        return Math.max(getLength(), height);
     }
 
     private void discardStack() {
