@@ -4,6 +4,7 @@ import com.mojang.serialization.Codec;
 import com.valentin4311.candycraftmod.CandyCraft;
 import com.valentin4311.candycraftmod.block.LegacyLeavesBlock;
 import com.valentin4311.candycraftmod.block.LegacyMetadataBlock;
+import com.valentin4311.candycraftmod.block.LegacyTypeBlock;
 import com.valentin4311.candycraftmod.entity.BasicCandySpiderEntity;
 import com.valentin4311.candycraftmod.entity.GingerbreadManEntity;
 import com.valentin4311.candycraftmod.registry.CCBlocks;
@@ -84,28 +85,79 @@ public class LegacyStructureFeature extends Feature<NoneFeatureConfiguration> {
     }
 
     private static boolean iceTower(WorldGenLevel level, RandomSource random, BlockPos pos) {
-        if (!level.getBlockState(pos.below()).is(CCBlocks.PUDDING.get()) && !level.getBlockState(pos.below()).is(CCBlocks.FLOUR.get())) {
-            return false;
-        }
-        BlockState ice = CCBlocks.ICE_CREAM.get().defaultBlockState();
-        for (int y = 0; y <= 8; y++) {
-            int radius = y < 2 ? 3 : y < 6 ? 2 : 1;
-            for (int dx = -radius; dx <= radius; dx++) {
-                for (int dz = -radius; dz <= radius; dz++) {
-                    if (Math.abs(dx) == radius || Math.abs(dz) == radius || y == 0 || y == 7) {
-                        set(level, pos.offset(dx, y, dz), ice);
-                    } else {
-                        set(level, pos.offset(dx, y, dz), Blocks.AIR.defaultBlockState());
-                    }
+        BlockPos ground = pos.below();
+        for (int dx = 0; dx <= 6; dx++) {
+            for (int dz = 0; dz <= 6; dz++) {
+                if (!level.getBlockState(ground.offset(dx, 0, dz)).is(CCBlocks.PUDDING.get())) {
+                    return false;
                 }
             }
         }
-        if (random.nextInt(12) == 0) {
-            set(level, pos.above(5), Blocks.CHEST.defaultBlockState());
-            loot(level, random, pos.above(5), ICE_TOWER_LOOT);
-            set(level, pos.above(4), CCBlocks.HONEY_LAMP.get().defaultBlockState());
+
+        BlockState vanilla = iceCream(3);
+        for (int y = 0; y < 2; y++) {
+            set(level, pos.offset(2, y, 0), vanilla);
+            set(level, pos.offset(4, y, 0), vanilla);
+            set(level, pos.offset(1, y, 1), vanilla);
+            set(level, pos.offset(5, y, 1), vanilla);
+            set(level, pos.offset(0, y, 2), vanilla);
+            set(level, pos.offset(6, y, 2), vanilla);
+            set(level, pos.offset(0, y, 4), vanilla);
+            set(level, pos.offset(6, y, 4), vanilla);
+            set(level, pos.offset(1, y, 5), vanilla);
+            set(level, pos.offset(5, y, 5), vanilla);
+            set(level, pos.offset(2, y, 6), vanilla);
+            set(level, pos.offset(4, y, 6), vanilla);
         }
+
+        set(level, pos.offset(1, 0, 0), vanilla);
+        set(level, pos.offset(0, 0, 1), vanilla);
+        set(level, pos.offset(5, 0, 0), vanilla);
+        set(level, pos.offset(6, 0, 1), vanilla);
+        set(level, pos.offset(0, 0, 5), vanilla);
+        set(level, pos.offset(1, 0, 6), vanilla);
+        set(level, pos.offset(5, 0, 6), vanilla);
+        set(level, pos.offset(6, 0, 5), vanilla);
+        set(level, pos.offset(3, 2, 0), vanilla);
+        set(level, pos.offset(3, 2, 6), vanilla);
+        set(level, pos.offset(0, 2, 3), vanilla);
+        set(level, pos.offset(6, 2, 3), vanilla);
+
+        for (int y = 0; y < 4; y++) {
+            int metadata = y == 0 || y == 2 ? 1 : y == 3 ? 0 : 2;
+            BlockState layer = iceCream(metadata);
+            set(level, pos.offset(2, 2 + y, 1), layer);
+            set(level, pos.offset(1, 2 + y, 2), layer);
+            set(level, pos.offset(4, 2 + y, 1), layer);
+            set(level, pos.offset(5, 2 + y, 2), layer);
+            set(level, pos.offset(2, 2 + y, 5), layer);
+            set(level, pos.offset(1, 2 + y, 4), layer);
+            set(level, pos.offset(5, 2 + y, 4), layer);
+            set(level, pos.offset(4, 2 + y, 5), layer);
+
+            if (y != 0 && y != 3) {
+                BlockState innerLayer = iceCream(y - 1);
+                set(level, pos.offset(3, 2 + y, 1), innerLayer);
+                set(level, pos.offset(3, 2 + y, 5), innerLayer);
+                set(level, pos.offset(1, 2 + y, 3), innerLayer);
+                set(level, pos.offset(5, 2 + y, 3), innerLayer);
+            }
+        }
+
+        for (int dx = 0; dx < 3; dx++) {
+            for (int dz = 0; dz < 3; dz++) {
+                set(level, pos.offset(2 + dx, 3, 2 + dz), vanilla);
+            }
+        }
+
+        BlockPos chest = pos.offset(3, 3, 3);
+        set(level, chest, Blocks.CHEST.defaultBlockState());
+        loot(level, random, chest, ICE_TOWER_LOOT);
         return true;
+    }
+
+    private static BlockState iceCream(int metadata) {
+        return CCBlocks.ICE_CREAM.get().defaultBlockState().setValue(LegacyTypeBlock.TYPE, metadata & 3);
     }
 
     private static boolean waterTemple(WorldGenLevel level, RandomSource random, BlockPos origin) {
