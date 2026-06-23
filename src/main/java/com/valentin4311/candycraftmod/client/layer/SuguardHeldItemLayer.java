@@ -30,50 +30,36 @@ public class SuguardHeldItemLayer extends RenderLayer<BasicCandyZombieEntity, Su
         }
 
         poseStack.pushPose();
-        getParentModel().translateToRightArm(poseStack);
-        poseStack.translate(0.0275F, 0.1225F, 0.1425F);
-        applyLegacyHeldItemTransform(poseStack, stack);
+        translateToLegacySuguardHand(poseStack);
+        applyLegacyItemTransform(poseStack, stack);
 
         itemInHandRenderer.renderItem(entity, stack, ItemDisplayContext.THIRD_PERSON_RIGHT_HAND, false,
             poseStack, buffer, packedLight);
         poseStack.popPose();
     }
 
-    private static void applyLegacyHeldItemTransform(PoseStack poseStack, ItemStack stack) {
+    private void translateToLegacySuguardHand(PoseStack poseStack) {
+        getParentModel().translateToRightArm(poseStack);
+        poseStack.translate(0.0275F, 0.1225F, 0.1425F);
+    }
+
+    private static void applyLegacyItemTransform(PoseStack poseStack, ItemStack stack) {
         if (stack.is(CCItems.CARAMEL_BOW.get())) {
-            float scale = 0.625F;
             poseStack.translate(-0.05F, 0.12F, -0.12F);
-            poseStack.scale(scale, scale, scale);
-            poseStack.mulPose(Axis.XP.rotationDegrees(-90.0F));
-            poseStack.mulPose(Axis.YP.rotationDegrees(180.0F));
+            poseStack.scale(0.625F, 0.625F, 0.625F);
         } else if (stack.is(CCItems.LICORICE_SPEAR.get())) {
-            float scale = 0.825F;
-            poseStack.translate(0.0F, 0.1875F, 0.0F);
-            poseStack.scale(scale, -scale, scale);
-            poseStack.mulPose(Axis.XP.rotationDegrees(-12.0F));
-            poseStack.mulPose(Axis.XP.rotationDegrees(-90.0F));
-            poseStack.mulPose(Axis.YP.rotationDegrees(180.0F));
-        } else if (stack.is(CCItems.JUMP_WAND.get())) {
-            float scale = 0.825F;
-            poseStack.translate(0.0F, 0.1575F, 0.10F);
-            poseStack.scale(scale, -scale, scale);
-            poseStack.mulPose(Axis.XP.rotationDegrees(-12.0F));
-            poseStack.mulPose(Axis.XP.rotationDegrees(-90.0F));
-            poseStack.mulPose(Axis.YP.rotationDegrees(180.0F));
-        } else if (stack.is(CCItems.DYNAMITE.get())) {
-            float scale = 0.825F;
-            poseStack.translate(0.1F, -0.125F, -0.075F);
-            poseStack.scale(scale, -scale, scale);
-            poseStack.mulPose(Axis.XP.rotationDegrees(-44.0F));
-            poseStack.mulPose(Axis.ZP.rotationDegrees(93.0F));
-            poseStack.mulPose(Axis.XP.rotationDegrees(-90.0F));
-            poseStack.mulPose(Axis.YP.rotationDegrees(180.0F));
-        } else {
             poseStack.translate(0.0F, 0.1875F, 0.0F);
             poseStack.scale(0.825F, -0.825F, 0.825F);
             poseStack.mulPose(Axis.XP.rotationDegrees(-12.0F));
-            poseStack.mulPose(Axis.XP.rotationDegrees(-90.0F));
-            poseStack.mulPose(Axis.YP.rotationDegrees(180.0F));
+        } else if (stack.is(CCItems.JUMP_WAND.get())) {
+            poseStack.translate(0.0F, 0.1575F, 0.10F);
+            poseStack.scale(0.825F, -0.825F, 0.825F);
+            poseStack.mulPose(Axis.XP.rotationDegrees(-12.0F));
+        } else if (stack.is(CCItems.DYNAMITE.get())) {
+            poseStack.translate(0.1F, -0.125F, -0.075F);
+            poseStack.scale(0.825F, -0.825F, 0.825F);
+            poseStack.mulPose(Axis.XP.rotationDegrees(-44.0F));
+            poseStack.mulPose(Axis.ZP.rotationDegrees(93.0F));
         }
     }
 }
