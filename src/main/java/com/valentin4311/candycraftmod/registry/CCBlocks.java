@@ -144,7 +144,7 @@ public final class CCBlocks {
     public static final RegistryObject<Block> JELLY_SENTRY_KEY_HOLE = register("jelly_sentry_key_hole", () -> new DungeonLockBlock(DungeonLockBlock.Kind.JELLY_SENTRY, stone().strength(-1.0F, 6000000.0F)));
     public static final RegistryObject<Block> JELLY_BOSS_KEY_HOLE = register("jelly_boss_key_hole", () -> new DungeonLockBlock(DungeonLockBlock.Kind.JELLY_BOSS, stone().strength(-1.0F, 6000000.0F)));
     public static final RegistryObject<Block> SUGAR_SPIKES = cutout(register("sugar_spikes", () -> new SpikesBlock(4, plant())));
-    public static final RegistryObject<Block> BLOCK_TELEPORTER = register("block_teleporter", () -> new DungeonTeleporterBlock(stone().strength(3.0F, 2000.0F).noOcclusion()));
+    public static final RegistryObject<Block> BLOCK_TELEPORTER = register("block_teleporter", () -> new DungeonTeleporterBlock(stone().strength(3.0F, 2000.0F).lightLevel(state -> 15).noOcclusion()));
     public static final RegistryObject<Block> COTTON_CANDY_WEB = cutout(register("cotton_candy_web", () -> new CandyWebBlock(BlockBehaviour.Properties.copy(Blocks.COBWEB).mapColor(MapColor.COLOR_PINK))));
     public static final RegistryObject<Block> CHERRY_BLOCK = cutout(registerNoItem("cherry_block", () -> new CherryBlock(wood(MapColor.COLOR_RED).strength(0.2F).noOcclusion())));
     public static final RegistryObject<Block> BANANA_SEAWEED = cutout(register("banana_seaweed", () -> new SeaweedBlock(false, plant())));
