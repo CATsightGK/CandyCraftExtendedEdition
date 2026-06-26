@@ -97,6 +97,7 @@ public class BasicCandySlimeEntity extends Slime {
         if (isCandyBoss() && !isBossAwake()) {
             freezeSleepingBoss();
         }
+        tickRetaliationTarget();
     }
 
     @Override
@@ -167,6 +168,9 @@ public class BasicCandySlimeEntity extends Slime {
         if (source.getEntity() instanceof BasicCandySlimeEntity) {
             return false;
         }
+        if (!level().isClientSide && source.getEntity() instanceof LivingEntity attacker) {
+            setRetaliationTarget(attacker);
+        }
         if (isCandyBoss() && source.is(DamageTypeTags.IS_FALL)) {
             return false;
         }
@@ -198,6 +202,47 @@ public class BasicCandySlimeEntity extends Slime {
             }
         }
         return super.hurt(source, amount);
+    }
+
+    @Override
+    public boolean doHurtTarget(Entity target) {
+        if (!canRetaliateAgainst(target)) {
+            setTarget(null);
+            return false;
+        }
+        if (!isAlive() || specialAttackCooldown > 0) {
+            return false;
+        }
+        if (isCandyBoss() && !isBossAwake()) {
+            return false;
+        }
+        if (isYellowJelly()) {
+            specialAttackCooldown = 10;
+            return hurtCandyTarget(target, 6.0F);
+        }
+        if (isRedJelly()) {
+            specialAttackCooldown = 20;
+            if (!level().isClientSide) {
+                hurtCandyTarget(target, 6.0F);
+                level().explode(this, getX(), getY(), getZ(), 3.0F, Level.ExplosionInteraction.NONE);
+                discard();
+            }
+            return true;
+        }
+        if (isTornadoJelly()) {
+            specialAttackCooldown = 20;
+            if (!level().isClientSide) {
+                hurtCandyTarget(target, 6.0F);
+                level().explode(this, getX(), getY(), getZ(), 1.0F, Level.ExplosionInteraction.NONE);
+                discard();
+            }
+            return true;
+        }
+        if (isPezJelly() || isKingSlime() || isJellyQueen()) {
+            specialAttackCooldown = 15;
+            return hurtLegacyBossTarget(target);
+        }
+        return super.doHurtTarget(target);
     }
 
     @Override
@@ -306,9 +351,9 @@ public class BasicCandySlimeEntity extends Slime {
             tickJellyQueenBossBehavior();
             return;
         }
-        Player player = CandyTargeting.nearestAttackablePlayer(level(), this, 48.0D);
+        LivingEntity target = findBossAttackTarget(48.0D);
         AttributeInstance speed = getAttribute(Attributes.MOVEMENT_SPEED);
-        if (player == null) {
+        if (target == null) {
             putBossToSleep();
             if (speed != null) {
                 speed.setBaseValue(0.0D);
@@ -327,19 +372,19 @@ public class BasicCandySlimeEntity extends Slime {
         }
         if (isBossAwake() && onGround() && bossJumpCooldown <= 0) {
             bossJumpCooldown = isJellyQueen() ? 20 + random.nextInt(25) : 15 + random.nextInt(30);
-            getLookControl().setLookAt(player);
+            getLookControl().setLookAt(target);
             setDeltaMovement(getDeltaMovement().add(
-                (player.getX() - getX()) * 0.04D,
+                (target.getX() - getX()) * 0.04D,
                 isKingSlime() ? 0.9D : 0.7D,
-                (player.getZ() - getZ()) * 0.04D));
+                (target.getZ() - getZ()) * 0.04D));
         }
     }
 
     private void tickJellyQueenBossBehavior() {
-        Player player = findNearestSurvivalPlayer(48.0D);
-        Player visiblePlayer = player == null ? CandyTargeting.nearestVisiblePlayer(level(), this, 48.0D) : player;
+        LivingEntity target = findBossAttackTarget(48.0D);
+        Player visiblePlayer = target == null ? CandyTargeting.nearestVisiblePlayer(level(), this, 48.0D) : target instanceof Player player ? player : null;
         AttributeInstance speed = getAttribute(Attributes.MOVEMENT_SPEED);
-        if (player == null) {
+        if (target == null) {
             if (isBossAwake() && visiblePlayer != null) {
                 updateJellyQueenMode();
                 setJellyQueenSlamTicks(0);
@@ -384,7 +429,7 @@ public class BasicCandySlimeEntity extends Slime {
         }
         if (onGround() && bossJumpCooldown <= 0) {
             bossJumpCooldown = Math.max(2, nextJellyQueenJumpDelay() / 3);
-            launchJellyQueenAt(player);
+            launchJellyQueenAt(target);
         }
     }
 
@@ -408,10 +453,10 @@ public class BasicCandySlimeEntity extends Slime {
         jellyQueenWasOnGround = grounded;
     }
 
-    private void launchJellyQueenAt(Player player) {
-        getLookControl().setLookAt(player);
-        double dx = player.getX() - getX();
-        double dz = player.getZ() - getZ();
+    private void launchJellyQueenAt(LivingEntity target) {
+        getLookControl().setLookAt(target);
+        double dx = target.getX() - getX();
+        double dz = target.getZ() - getZ();
         double distance = Math.max(0.1D, Math.sqrt(dx * dx + dz * dz));
         int mode = getJellyQueenMode();
         double horizontalPower = mode == JELLY_QUEEN_BLUE_MODE ? 0.82D : 0.58D;
@@ -439,6 +484,10 @@ public class BasicCandySlimeEntity extends Slime {
                 hitAny = true;
             }
         }
+        LivingEntity target = getTarget();
+        if (target != null && !(target instanceof Player) && hurtLegacyBossTarget(target)) {
+            hitAny = true;
+        }
         if (hitAny) {
             jellyQueenSlamDamageReady = false;
         }
@@ -458,8 +507,70 @@ public class BasicCandySlimeEntity extends Slime {
         return false;
     }
 
-    private Player findNearestSurvivalPlayer(double range) {
-        return CandyTargeting.nearestAttackablePlayer(level(), this, range);
+    private void tickRetaliationTarget() {
+        if (level().isClientSide) {
+            return;
+        }
+        LivingEntity target = getTarget();
+        if (target == null) {
+            return;
+        }
+        if (!canRetaliateAgainst(target)) {
+            setTarget(null);
+            return;
+        }
+        if (getBoundingBox().inflate(0.15D).intersects(target.getBoundingBox())) {
+            doHurtTarget(target);
+        }
+    }
+
+    private boolean hurtLegacyBossTarget(Entity target) {
+        int size = getSize();
+        double range = 0.6D * size;
+        if (!canRetaliateAgainst(target) || !hasLineOfSight(target) || distanceToSqr(target) >= range * range) {
+            return false;
+        }
+        float damage = isJellyQueen() ? size * 2.0F : isKingSlime() ? size * 2.5F : size;
+        return hurtCandyTarget(target, damage);
+    }
+
+    private boolean hurtCandyTarget(Entity target, float damage) {
+        if (!canRetaliateAgainst(target)) {
+            return false;
+        }
+        if (target.hurt(damageSources().mobAttack(this), damage)) {
+            playSound(SoundEvents.SLIME_ATTACK, 1.0F, (random.nextFloat() - random.nextFloat()) * 0.2F + 1.0F);
+            return true;
+        }
+        return false;
+    }
+
+    private void setRetaliationTarget(LivingEntity attacker) {
+        if (canRetaliateAgainst(attacker)) {
+            setTarget(attacker);
+            if (isCandyBoss()) {
+                setBossAwake(true);
+            }
+        }
+    }
+
+    private boolean canRetaliateAgainst(Entity target) {
+        return target instanceof LivingEntity
+            && target.isAlive()
+            && !(target instanceof BasicCandySlimeEntity)
+            && CandyTargeting.canAttackEntity(target);
+    }
+
+    private LivingEntity findBossAttackTarget(double range) {
+        LivingEntity target = getTarget();
+        if (target != null && canRetaliateAgainst(target) && distanceToSqr(target) <= range * range) {
+            return target;
+        }
+        Player player = CandyTargeting.nearestAttackablePlayer(level(), this, range);
+        if (player != null) {
+            setTarget(player);
+        }
+        return player;
     }
 
     private void updateJellyQueenMode() {
