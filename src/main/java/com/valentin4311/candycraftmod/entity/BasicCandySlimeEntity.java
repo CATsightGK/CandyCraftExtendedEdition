@@ -43,15 +43,16 @@ public class BasicCandySlimeEntity extends Slime {
     public static final int JELLY_QUEEN_PINK_MODE = 1;
     public static final int JELLY_QUEEN_BLUE_MODE = 2;
     public static final int JELLY_QUEEN_BROWN_MODE = 3;
+    private static final EntityDataAccessor<Boolean> BOSS_AWAKE = SynchedEntityData.defineId(BasicCandySlimeEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Integer> JELLY_QUEEN_MODE = SynchedEntityData.defineId(BasicCandySlimeEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Integer> JELLY_QUEEN_SLAM_TICKS = SynchedEntityData.defineId(BasicCandySlimeEntity.class, EntityDataSerializers.INT);
     private int specialAttackCooldown;
-    private boolean bossAwake;
     private boolean dormantRotationInitialized;
     private float dormantYRot;
     private float dormantYHeadRot;
     private int bossJumpCooldown;
     private boolean jellyQueenWasOnGround = true;
+    private boolean pezDeathSplitSpawned;
     private final ServerBossEvent bossEvent = new ServerBossEvent(getDisplayName(), BossEvent.BossBarColor.PURPLE, BossEvent.BossBarOverlay.PROGRESS);
 
     public BasicCandySlimeEntity(EntityType<? extends BasicCandySlimeEntity> type, Level level) {
@@ -61,6 +62,7 @@ public class BasicCandySlimeEntity extends Slime {
     @Override
     protected void defineSynchedData() {
         super.defineSynchedData();
+        entityData.define(BOSS_AWAKE, false);
         entityData.define(JELLY_QUEEN_MODE, JELLY_QUEEN_SLEEP_MODE);
         entityData.define(JELLY_QUEEN_SLAM_TICKS, 0);
     }
@@ -75,7 +77,7 @@ public class BasicCandySlimeEntity extends Slime {
 
     @Override
     public void aiStep() {
-        if (isCandyBoss() && !bossAwake) {
+        if (isCandyBoss() && !isBossAwake()) {
             freezeSleepingBoss();
         }
         super.aiStep();
@@ -90,7 +92,7 @@ public class BasicCandySlimeEntity extends Slime {
         }
         tickJellyQueenLandingAndAnimation();
         tickBossAwakeBehavior();
-        if (isCandyBoss() && !bossAwake) {
+        if (isCandyBoss() && !isBossAwake()) {
             freezeSleepingBoss();
         }
     }
@@ -111,7 +113,7 @@ public class BasicCandySlimeEntity extends Slime {
 
     @Override
     protected void jumpFromGround() {
-        if (isCandyBoss() && !bossAwake) {
+        if (isCandyBoss() && !isBossAwake()) {
             return;
         }
         super.jumpFromGround();
@@ -130,7 +132,7 @@ public class BasicCandySlimeEntity extends Slime {
             super.playerTouch(player);
             return;
         }
-        if (isCandyBoss() && !bossAwake) {
+        if (isCandyBoss() && !isBossAwake()) {
             return;
         }
         if (isYellowJelly()) {
@@ -172,28 +174,26 @@ public class BasicCandySlimeEntity extends Slime {
         }
         if (isJellyQueen()) {
             if (!level().isClientSide && source.getEntity() != null) {
-                if (!bossAwake) {
+                if (!isBossAwake()) {
                     setDeltaMovement(getDeltaMovement().x, 2.0D, getDeltaMovement().z);
                 }
-                bossAwake = true;
-                dormantRotationInitialized = false;
+                setBossAwake(true);
                 updateJellyQueenMode();
                 if (source.getEntity() instanceof Player player && amount > 1.0F && !player.getAbilities().instabuild) {
-                    double dx = getX() - player.getX();
-                    double dz = getZ() - player.getZ();
-                    while (dx * dx + dz * dz < 1.0E-4D) {
-                        dx = (random.nextDouble() - random.nextDouble()) * 0.01D;
-                        dz = (random.nextDouble() - random.nextDouble()) * 0.01D;
-                    }
-                    player.knockback(2.0D, dx, dz);
+                    knockbackAttackingPlayer(player);
                 }
             }
             return super.hurt(source, amount);
         }
+        if (isKingSlime() && !level().isClientSide && getSize() > 1) {
+            shrinkKingSlimeFromHealth();
+        }
         if (isCandyBoss() && !level().isClientSide && source.getEntity() != null) {
-            bossAwake = true;
-            dormantRotationInitialized = false;
+            setBossAwake(true);
             setDeltaMovement(getDeltaMovement().add(0.0D, 0.9D, 0.0D));
+            if (source.getEntity() instanceof Player player && amount > 1.0F && !player.getAbilities().instabuild) {
+                knockbackAttackingPlayer(player);
+            }
         }
         return super.hurt(source, amount);
     }
@@ -215,6 +215,7 @@ public class BasicCandySlimeEntity extends Slime {
     @Override
     public void remove(RemovalReason reason) {
         if (!level().isClientSide && reason == RemovalReason.KILLED && getSize() > 1) {
+            splitPezJellyOnDeath();
             setSize(1, false);
         }
         super.remove(reason);
@@ -242,7 +243,7 @@ public class BasicCandySlimeEntity extends Slime {
     @Override
     public void addAdditionalSaveData(CompoundTag tag) {
         super.addAdditionalSaveData(tag);
-        tag.putBoolean("BossAwake", bossAwake);
+        tag.putBoolean("BossAwake", isBossAwake());
         if (isJellyQueen()) {
             tag.putInt("JellyQueenMode", getJellyQueenMode());
         }
@@ -251,9 +252,9 @@ public class BasicCandySlimeEntity extends Slime {
     @Override
     public void readAdditionalSaveData(CompoundTag tag) {
         super.readAdditionalSaveData(tag);
-        bossAwake = tag.getBoolean("BossAwake");
+        setBossAwake(tag.getBoolean("BossAwake"));
         if (isJellyQueen()) {
-            setJellyQueenMode(tag.contains("JellyQueenMode") ? tag.getInt("JellyQueenMode") : bossAwake ? JELLY_QUEEN_PINK_MODE : JELLY_QUEEN_SLEEP_MODE);
+            setJellyQueenMode(tag.contains("JellyQueenMode") ? tag.getInt("JellyQueenMode") : isBossAwake() ? JELLY_QUEEN_PINK_MODE : JELLY_QUEEN_SLEEP_MODE);
         }
     }
 
@@ -288,13 +289,19 @@ public class BasicCandySlimeEntity extends Slime {
         if (getAttribute(Attributes.MAX_HEALTH) != null) {
             if (isKingSlime()) {
                 getAttribute(Attributes.MAX_HEALTH).setBaseValue(800.0D);
-                setHealth(getMaxHealth());
+                if (resetHealth) {
+                    setHealth(getMaxHealth());
+                }
             } else if (isJellyQueen()) {
                 getAttribute(Attributes.MAX_HEALTH).setBaseValue(300.0D);
-                setHealth(getMaxHealth());
+                if (resetHealth) {
+                    setHealth(getMaxHealth());
+                }
             } else if (isPezJelly()) {
                 getAttribute(Attributes.MAX_HEALTH).setBaseValue(size * 20.0D);
-                setHealth(getMaxHealth());
+                if (resetHealth) {
+                    setHealth(getMaxHealth());
+                }
             }
         }
     }
@@ -320,13 +327,13 @@ public class BasicCandySlimeEntity extends Slime {
             }
             return;
         }
-        if (bossAwake && speed != null) {
+        if (isBossAwake() && speed != null) {
             speed.setBaseValue(isJellyQueen() ? 0.7D : isKingSlime() ? 0.45D : 0.38D);
         }
         if (bossJumpCooldown > 0) {
             bossJumpCooldown--;
         }
-        if (bossAwake && onGround() && bossJumpCooldown <= 0) {
+        if (isBossAwake() && onGround() && bossJumpCooldown <= 0) {
             bossJumpCooldown = isJellyQueen() ? 20 + random.nextInt(25) : 15 + random.nextInt(30);
             getLookControl().setLookAt(player);
             setDeltaMovement(getDeltaMovement().add(
@@ -351,7 +358,7 @@ public class BasicCandySlimeEntity extends Slime {
             return;
         }
 
-        if (!bossAwake) {
+        if (!isBossAwake()) {
             setJellyQueenMode(JELLY_QUEEN_SLEEP_MODE);
             if (speed != null) {
                 speed.setBaseValue(0.0D);
@@ -383,13 +390,9 @@ public class BasicCandySlimeEntity extends Slime {
             setJellyQueenSlamTicks(slamTicks - 1);
         }
         boolean grounded = onGround();
-        if (bossAwake && !jellyQueenWasOnGround && grounded) {
+        if (isBossAwake() && !jellyQueenWasOnGround && grounded) {
             setJellyQueenSlamTicks(12);
-            if (getJellyQueenMode() == JELLY_QUEEN_BROWN_MODE && level() instanceof ServerLevel serverLevel) {
-                serverLevel.explode(this, getX(), getY(), getZ(), 3.0F, Level.ExplosionInteraction.NONE);
-                serverLevel.explode(this, getX(), getY() + 2.0D, getZ(), 3.0F, Level.ExplosionInteraction.NONE);
-            }
-        } else if (bossAwake && !grounded && getDeltaMovement().y < -0.05D) {
+        } else if (isBossAwake() && !grounded && getDeltaMovement().y < -0.05D) {
             setJellyQueenSlamTicks(Math.max(getJellyQueenSlamTicks(), 8));
         }
         jellyQueenWasOnGround = grounded;
@@ -407,6 +410,10 @@ public class BasicCandySlimeEntity extends Slime {
         setDeltaMovement(dx / distance * horizontalPower, yPower, dz / distance * horizontalPower);
         hasImpulse = true;
         setJellyQueenSlamTicks(24);
+        if (mode == JELLY_QUEEN_BROWN_MODE && level() instanceof ServerLevel serverLevel) {
+            serverLevel.explode(this, getX(), getY(), getZ(), 3.0F, Level.ExplosionInteraction.NONE);
+            serverLevel.explode(this, getX(), getY() + 2.0D, getZ(), 3.0F, Level.ExplosionInteraction.NONE);
+        }
         playSound(getJumpSound(), getSoundVolume(), ((random.nextFloat() - random.nextFloat()) * 0.2F + 1.0F) * 0.8F);
     }
 
@@ -418,7 +425,7 @@ public class BasicCandySlimeEntity extends Slime {
     }
 
     private void updateJellyQueenMode() {
-        if (!bossAwake) {
+        if (!isBossAwake()) {
             setJellyQueenMode(JELLY_QUEEN_SLEEP_MODE);
         } else if (getHealth() <= getMaxHealth() * 0.25F) {
             setJellyQueenMode(JELLY_QUEEN_BROWN_MODE);
@@ -458,7 +465,17 @@ public class BasicCandySlimeEntity extends Slime {
     }
 
     public boolean isBossAwake() {
-        return bossAwake;
+        return entityData.get(BOSS_AWAKE);
+    }
+
+    private void setBossAwake(boolean awake) {
+        if (isBossAwake() != awake) {
+            dormantRotationInitialized = false;
+        }
+        entityData.set(BOSS_AWAKE, awake);
+        if (isJellyQueen()) {
+            setJellyQueenMode(awake ? getJellyQueenMode() == JELLY_QUEEN_SLEEP_MODE ? JELLY_QUEEN_PINK_MODE : getJellyQueenMode() : JELLY_QUEEN_SLEEP_MODE);
+        }
     }
 
     public void prepareDungeonBossSpawn() {
@@ -473,10 +490,40 @@ public class BasicCandySlimeEntity extends Slime {
     }
 
     private void putBossToSleep() {
-        if (bossAwake) {
-            dormantRotationInitialized = false;
+        setBossAwake(false);
+    }
+
+    private void shrinkKingSlimeFromHealth() {
+        double percent = (double) (getHealth() / getMaxHealth()) * 12.0D;
+        int targetSize = Math.max(1, (int) percent + 1);
+        if (getSize() > targetSize) {
+            setSize(targetSize, false);
         }
-        bossAwake = false;
+    }
+
+    private void splitPezJellyOnDeath() {
+        if (pezDeathSplitSpawned || !isPezJelly() || getHealth() > 0.0F || !(level() instanceof ServerLevel serverLevel)) {
+            return;
+        }
+        pezDeathSplitSpawned = true;
+        serverLevel.explode(this, getX(), getY(), getZ(), 3.0F, Level.ExplosionInteraction.NONE);
+        BasicCandySlimeEntity slime = CCEntityTypes.PEZ_JELLY.get().create(serverLevel);
+        if (slime != null) {
+            slime.setSize(getSize() - 1, true);
+            slime.setBossAwake(false);
+            slime.moveTo(getX(), getY() + 0.5D, getZ(), random.nextFloat() * 360.0F, 0.0F);
+            serverLevel.addFreshEntity(slime);
+        }
+    }
+
+    private void knockbackAttackingPlayer(Player player) {
+        double dx = getX() - player.getX();
+        double dz = getZ() - player.getZ();
+        while (dx * dx + dz * dz < 1.0E-4D) {
+            dx = (random.nextDouble() - random.nextDouble()) * 0.01D;
+            dz = (random.nextDouble() - random.nextDouble()) * 0.01D;
+        }
+        player.knockback(2.0D, dx, dz);
     }
 
     private void freezeSleepingBoss() {
