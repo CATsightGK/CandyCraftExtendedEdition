@@ -43,7 +43,7 @@ public class BasicCandySlimeEntity extends Slime {
     public static final int JELLY_QUEEN_PINK_MODE = 1;
     public static final int JELLY_QUEEN_BLUE_MODE = 2;
     public static final int JELLY_QUEEN_BROWN_MODE = 3;
-    private static final int JELLY_QUEEN_SLAM_POSE_TICKS = 60;
+    private static final int JELLY_QUEEN_SLAM_POSE_TICKS = 40;
     private static final int BOSS_LOST_TARGET_TICKS = 200;
     private static final double BOSS_TARGET_RANGE = 64.0D;
     private static final EntityDataAccessor<Boolean> BOSS_AWAKE = SynchedEntityData.defineId(BasicCandySlimeEntity.class, EntityDataSerializers.BOOLEAN);

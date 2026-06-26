@@ -73,24 +73,26 @@ public class BasicCandySlimeRenderer extends SlimeRenderer {
         if (!queen.onGround()) {
             boolean falling = queen.getDeltaMovement().y < -0.03D;
             float hang = smootherStep(1.0F - Math.abs(t * 2.0F - 1.0F));
-            float stretchCurve = falling ? smootherStep(t) : hang;
-            float stretch = (falling ? 0.18F : 0.08F) * stretchCurve;
-            float squash = 0.028F * stretchCurve;
-            float bob = (float) Math.sin(motionTime * 0.18F) * 0.008F * settle;
-            poseStack.translate(0.0F, -0.035F * stretchCurve + 0.018F * hang + bob, 0.0F);
+            float fallCurve = smootherStep(Math.min(1.0F, t * 1.25F));
+            float stretchCurve = falling ? fallCurve : hang;
+            float stretch = (falling ? 0.16F : 0.07F) * stretchCurve;
+            float squash = 0.024F * stretchCurve;
+            float bob = (float) Math.sin(motionTime * 0.13F) * 0.006F * settle;
+            poseStack.translate(0.0F, -0.03F * stretchCurve + 0.014F * hang + bob, 0.0F);
             poseStack.scale(1.0F - squash, 1.0F + stretch, 1.0F - squash);
-            float pitch = falling ? lerp(smootherStep(t), 3.0F, 13.0F) : -5.0F * hang;
+            float pitch = falling ? lerp(fallCurve, 2.0F, 10.0F) : -4.0F * hang;
             poseStack.mulPose(Axis.XP.rotationDegrees(pitch));
-            poseStack.mulPose(Axis.ZP.rotationDegrees((float) Math.sin(motionTime * 0.11F) * 2.0F * settle));
+            poseStack.mulPose(Axis.ZP.rotationDegrees((float) Math.sin(motionTime * 0.08F) * 1.7F * settle));
         } else {
-            float impact = 1.0F - smootherStep(Math.min(1.0F, t * 2.15F));
-            float rebound = (float) Math.sin(Math.min(1.0F, t) * Math.PI * 2.0F) * (1.0F - smootherStep(t));
-            float squash = 0.13F * impact + 0.025F * Math.max(0.0F, rebound);
+            float impact = 1.0F - smootherStep(Math.min(1.0F, t * 3.2F));
+            float recover = 1.0F - smootherStep(t);
+            float rebound = (float) Math.sin(Math.min(1.0F, t) * Math.PI * 3.0F) * recover;
+            float squash = 0.12F * impact + 0.022F * Math.max(0.0F, rebound);
             float yScale = 1.0F - squash * 0.76F;
             float xzScale = 1.0F + squash;
-            poseStack.translate(0.0F, -0.058F * impact + 0.014F * rebound, 0.0F);
+            poseStack.translate(0.0F, -0.052F * impact + 0.012F * rebound, 0.0F);
             poseStack.scale(xzScale, yScale, xzScale);
-            poseStack.mulPose(Axis.XP.rotationDegrees(rebound * 2.0F));
+            poseStack.mulPose(Axis.XP.rotationDegrees(rebound * 1.6F));
         }
     }
 
