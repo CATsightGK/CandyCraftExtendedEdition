@@ -1,8 +1,10 @@
 package com.valentin4311.candycraftmod.entity;
 
 import com.valentin4311.candycraftmod.registry.CCEntityTypes;
+import com.valentin4311.candycraftmod.registry.CCItems;
 import com.valentin4311.candycraftmod.registry.CCSoundEvents;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ItemParticleOption;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
@@ -27,6 +29,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.monster.Slime;
 import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.entity.projectile.Projectile;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
@@ -317,11 +320,23 @@ public class BasicCandySlimeEntity extends Slime {
 
     @Override
     protected ParticleOptions getParticleType() {
-        return ParticleTypes.ITEM_SLIME;
+        return jellyLandingParticle();
     }
 
     @Override
     protected boolean spawnCustomParticles() {
+        if (!level().isClientSide) {
+            return true;
+        }
+        int size = getSize();
+        ParticleOptions particle = getParticleType();
+        for (int i = 0; i < size * 8; i++) {
+            float angle = random.nextFloat() * ((float) Math.PI * 2.0F);
+            float radius = random.nextFloat() * 0.5F + 0.5F;
+            double dx = Mth.sin(angle) * size * 0.5F * radius;
+            double dz = Mth.cos(angle) * size * 0.5F * radius;
+            level().addParticle(particle, getX() + dx, getY(), getZ() + dz, 0.0D, 0.0D, 0.0D);
+        }
         return true;
     }
 
@@ -635,6 +650,35 @@ public class BasicCandySlimeEntity extends Slime {
 
     public int getJellyQueenSlamTicks() {
         return entityData.get(JELLY_QUEEN_SLAM_TICKS);
+    }
+
+    private ParticleOptions jellyLandingParticle() {
+        return new ItemParticleOption(ParticleTypes.ITEM, jellyLandingParticleStack());
+    }
+
+    private ItemStack jellyLandingParticleStack() {
+        ItemStack stack = new ItemStack(CCItems.GUMMY_BALL.get());
+        int variant = jellyLandingParticleVariant();
+        if (variant > 0) {
+            stack.getOrCreateTag().putInt("CustomModelData", variant);
+        }
+        return stack;
+    }
+
+    private int jellyLandingParticleVariant() {
+        if (isRedJelly()) {
+            return 1;
+        }
+        if (isTornadoJelly() || isKingSlime()) {
+            return 2;
+        }
+        if (isJellyQueen()) {
+            return switch (getJellyQueenMode()) {
+                case JELLY_QUEEN_BLUE_MODE, JELLY_QUEEN_BROWN_MODE -> 2;
+                default -> 0;
+            };
+        }
+        return 0;
     }
 
     public float getJellyQueenSlamProgress(float partialTicks) {
