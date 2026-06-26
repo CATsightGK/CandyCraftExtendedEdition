@@ -175,6 +175,10 @@ public class CandyWolfEntity extends Wolf {
 
     @Override
     public boolean doHurtTarget(net.minecraft.world.entity.Entity target) {
+        if (!CandyTargeting.canAttackEntity(target)) {
+            setTarget(null);
+            return false;
+        }
         double damage = level().getDifficulty() == Difficulty.HARD ? 3.0D : 2.0D;
         if (getAttribute(Attributes.ATTACK_DAMAGE) != null) {
             getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(damage);

@@ -68,7 +68,8 @@ public class BasicCandySpiderEntity extends Spider {
         goalSelector.addGoal(3, new RandomStrollGoal(this, 0.3D));
         goalSelector.addGoal(4, new LookAtPlayerGoal(this, Player.class, 8.0F));
         goalSelector.addGoal(4, new RandomLookAroundGoal(this));
-        targetSelector.addGoal(1, new NearestAttackableTargetGoal<>(this, Player.class, true));
+        targetSelector.addGoal(1, new NearestAttackableTargetGoal<>(this, Player.class, 10, true, false,
+            entity -> entity instanceof Player player && CandyTargeting.canAttackPlayer(player)));
         targetSelector.addGoal(2, new HurtByTargetGoal(this));
     }
 
@@ -103,6 +104,9 @@ public class BasicCandySpiderEntity extends Spider {
 
     @Override
     public void aiStep() {
+        if (!CandyTargeting.canAttackEntity(getTarget())) {
+            setTarget(null);
+        }
         updateBossBar();
         if (isBossBeetle()) {
             setNoGravity(false);
@@ -149,6 +153,10 @@ public class BasicCandySpiderEntity extends Spider {
 
     @Override
     public boolean doHurtTarget(Entity target) {
+        if (!CandyTargeting.canAttackEntity(target)) {
+            setTarget(null);
+            return false;
+        }
         return super.doHurtTarget(target);
     }
 
@@ -304,7 +312,7 @@ public class BasicCandySpiderEntity extends Spider {
             return;
         }
 
-        Player close = level().getNearestPlayer(this, 10.0D);
+        Player close = CandyTargeting.nearestAttackablePlayer(level(), this, 10.0D);
         if (close != null) {
             bossAwake = true;
         }
@@ -320,7 +328,7 @@ public class BasicCandySpiderEntity extends Spider {
             getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(0.35D);
         }
 
-        Player target = level().getNearestPlayer(this, 48.0D);
+        Player target = CandyTargeting.nearestAttackablePlayer(level(), this, 48.0D);
         if (target == null) {
             bossAwake = false;
             bossVolleyTicks = 0;

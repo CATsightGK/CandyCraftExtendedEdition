@@ -183,6 +183,9 @@ public class BasicCandyZombieEntity extends Zombie {
     @Override
     public void aiStep() {
         ensureDefaultEquipment();
+        if (!CandyTargeting.canAttackEntity(getTarget())) {
+            setTarget(null);
+        }
         updateBossBar();
         if (!isAquatic() && !isDragon() && (isInWaterRainOrBubble() || isInGrenadine())) {
             hurt(damageSources().drown(), 1.0F);
@@ -294,6 +297,10 @@ public class BasicCandyZombieEntity extends Zombie {
 
     @Override
     public boolean doHurtTarget(Entity target) {
+        if (!CandyTargeting.canAttackEntity(target)) {
+            setTarget(null);
+            return false;
+        }
         ItemStack held = getItemBySlot(EquipmentSlot.MAINHAND);
         if (isMageSuguard()) {
             boolean success = super.doHurtTarget(target);
@@ -450,7 +457,7 @@ public class BasicCandyZombieEntity extends Zombie {
         } else if (isMermaid()) {
             setAirSupply(getMaxAirSupply());
             if (isInWater()) {
-                Player target = level().getNearestPlayer(this, 16.0D);
+                Player target = CandyTargeting.nearestAttackablePlayer(level(), this, 16.0D);
                 if (target != null) {
                     getLookControl().setLookAt(target);
                     Vec3 to = target.position().subtract(position()).normalize();
@@ -470,7 +477,11 @@ public class BasicCandyZombieEntity extends Zombie {
         if (isMermaid() && rangedCooldown <= 0) {
             LivingEntity target = getTarget();
             if (target == null && getControllingPassenger() != null) {
-                target = level.getNearestPlayer(this, 18.0D);
+                target = CandyTargeting.nearestAttackablePlayer(level, this, 18.0D);
+            }
+            if (target != null && !CandyTargeting.canAttackEntity(target)) {
+                setTarget(null);
+                target = null;
             }
             if (target != null) {
                 rangedCooldown = 30;
@@ -504,7 +515,7 @@ public class BasicCandyZombieEntity extends Zombie {
             bossSuguardCounter = 300;
             bossSuguardStat = random.nextInt(3) + 1;
         }
-        Player target = level.getNearestPlayer(this, 48.0D);
+        Player target = CandyTargeting.nearestAttackablePlayer(level, this, 48.0D);
         if (target == null) {
             angry = false;
             bossSuguardStat = 0;
@@ -654,7 +665,7 @@ public class BasicCandyZombieEntity extends Zombie {
             return;
         }
 
-        Player nearby = level.getNearestPlayer(this, 8.0D);
+        Player nearby = CandyTargeting.nearestAttackablePlayer(level, this, 8.0D);
         if (waiting) {
             getNavigation().stop();
             setDeltaMovement(0.0D, getDeltaMovement().y, 0.0D);
@@ -836,7 +847,8 @@ public class BasicCandyZombieEntity extends Zombie {
         private final BasicCandyZombieEntity suguard;
 
         private SuguardTargetGoal(BasicCandyZombieEntity suguard) {
-            super(suguard, Player.class, true);
+            super(suguard, Player.class, 10, true, false,
+                entity -> entity instanceof Player player && CandyTargeting.canAttackPlayer(player));
             this.suguard = suguard;
         }
 

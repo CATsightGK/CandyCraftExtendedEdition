@@ -323,7 +323,7 @@ public class BasicCandySlimeEntity extends Slime {
             tickJellyQueenBossBehavior();
             return;
         }
-        Player player = level().getNearestPlayer(this, 48.0D);
+        Player player = CandyTargeting.nearestAttackablePlayer(level(), this, 48.0D);
         AttributeInstance speed = getAttribute(Attributes.MOVEMENT_SPEED);
         if (player == null) {
             putBossToSleep();
@@ -353,7 +353,7 @@ public class BasicCandySlimeEntity extends Slime {
     }
 
     private void tickJellyQueenBossBehavior() {
-        Player player = isBossAwake() ? findNearestNonSpectatorPlayer(48.0D) : findNearestSurvivalPlayer(48.0D);
+        Player player = findNearestSurvivalPlayer(48.0D);
         AttributeInstance speed = getAttribute(Attributes.MOVEMENT_SPEED);
         if (player == null) {
             putBossToSleep();
@@ -461,17 +461,7 @@ public class BasicCandySlimeEntity extends Slime {
     }
 
     private Player findNearestSurvivalPlayer(double range) {
-        return level().getEntitiesOfClass(Player.class, getBoundingBox().inflate(range), BasicCandySlimeEntity::isSurvivalLike)
-            .stream()
-            .min(Comparator.comparingDouble(this::distanceToSqr))
-            .orElse(null);
-    }
-
-    private Player findNearestNonSpectatorPlayer(double range) {
-        return level().getEntitiesOfClass(Player.class, getBoundingBox().inflate(range), player -> !player.isSpectator())
-            .stream()
-            .min(Comparator.comparingDouble(this::distanceToSqr))
-            .orElse(null);
+        return CandyTargeting.nearestAttackablePlayer(level(), this, range);
     }
 
     private void updateJellyQueenMode() {
@@ -681,7 +671,7 @@ public class BasicCandySlimeEntity extends Slime {
         if (!(level() instanceof ServerLevel serverLevel)) {
             return;
         }
-        Player player = serverLevel.getNearestPlayer(this, 48.0D);
+        Player player = CandyTargeting.nearestAttackablePlayer(serverLevel, this, 48.0D);
         if (player == null) {
             return;
         }
@@ -737,7 +727,7 @@ public class BasicCandySlimeEntity extends Slime {
     }
 
     private static boolean isSurvivalLike(Player player) {
-        return !player.getAbilities().instabuild && !player.isSpectator();
+        return CandyTargeting.canAttackPlayer(player);
     }
 
     private void applyLegacySpawnSize() {

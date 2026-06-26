@@ -91,6 +91,9 @@ public class CaramelBeeEntity extends Monster {
             super.aiStep();
             return;
         }
+        if (!CandyTargeting.canAttackEntity(getTarget())) {
+            setTarget(null);
+        }
         setNoGravity(true);
         tickFlight();
         super.aiStep();
@@ -107,7 +110,7 @@ public class CaramelBeeEntity extends Monster {
     }
 
     private void tickFlight() {
-        Player player = level().getNearestPlayer(this, 8.0D);
+        Player player = CandyTargeting.nearestAttackablePlayer(level(), this, 8.0D);
         attackTick = Math.max(attackTick - 1, 0);
         if (isAngry() && player != null) {
             setTarget(player);
@@ -151,11 +154,15 @@ public class CaramelBeeEntity extends Monster {
     }
 
     private boolean canAttackPlayer(Player player) {
-        return isAngry() && !player.isCreative() && !player.isSpectator();
+        return isAngry() && CandyTargeting.canAttackPlayer(player);
     }
 
     @Override
     public boolean doHurtTarget(Entity target) {
+        if (!CandyTargeting.canAttackEntity(target)) {
+            setTarget(null);
+            return false;
+        }
         float damage = level().getDifficulty() == Difficulty.HARD ? 3.0F : 2.0F;
         boolean success = target.hurt(damageSources().mobAttack(this), damage);
         if (success && target instanceof net.minecraft.world.entity.LivingEntity living && random.nextInt(15) == 0) {
@@ -246,7 +253,8 @@ public class CaramelBeeEntity extends Monster {
         private final CaramelBeeEntity bee;
 
         private AngryPlayerTargetGoal(CaramelBeeEntity bee) {
-            super(bee, Player.class, true);
+            super(bee, Player.class, 10, true, false,
+                entity -> entity instanceof Player player && CandyTargeting.canAttackPlayer(player));
             this.bee = bee;
         }
 

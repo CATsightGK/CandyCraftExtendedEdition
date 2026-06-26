@@ -16,6 +16,10 @@ public class CottonCandySpiderEntity extends Spider {
 
     @Override
     public boolean doHurtTarget(Entity target) {
+        if (!CandyTargeting.canAttackEntity(target)) {
+            setTarget(null);
+            return false;
+        }
         if (super.doHurtTarget(target)) {
             if (target instanceof LivingEntity living) {
                 int seconds = level().getDifficulty() == Difficulty.HARD ? 15 : level().getDifficulty() == Difficulty.NORMAL ? 7 : 0;
