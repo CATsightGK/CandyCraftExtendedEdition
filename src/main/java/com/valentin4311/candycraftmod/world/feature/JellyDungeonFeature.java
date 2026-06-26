@@ -42,6 +42,7 @@ import net.minecraft.world.phys.AABB;
 
 public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
     private static final ResourceLocation LOOT_TABLE = new ResourceLocation(CandyCraft.MODID, "chests/jelly_dungeon");
+    private static final int LEGACY_WATER_ROOM_MINT_JELLY_COUNT = 87;
     private int cursorZ;
     private int posX;
     private int incrementer;
@@ -412,15 +413,7 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
             }
         }
         restoreLayeredWater(level, x, y, z);
-        for (int i = 1; i < 23; i++) {
-            for (int j = 5; j < 23; j++) {
-                for (int k = 1; k < 23; k++) {
-                    if (random.nextInt(100) == 0) {
-                        spawnEntity(level, CCEntityTypes.TORNADO_JELLY.get(), x + i - 12 + 0.5D, y + j + 0.5D, z - k - 1 + 0.5D, random);
-                    }
-                }
-            }
-        }
+        spawnWaterRoomMintJellies(level, random, x, y, z);
         for (int i = 1; i < 23; i++) {
             for (int k = 1; k < 23; k++) {
                 BlockState floor = random.nextBoolean() ? slab(CCBlocks.LICORICE_BRICK_SLAB.get(), false) : random.nextBoolean() ? CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState() : random.nextBoolean() ? CCBlocks.LICORICE_BLOCK.get().defaultBlockState() : CCBlocks.JAW_BREAKER_LIGHT.get().defaultBlockState();
@@ -464,6 +457,20 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
                     setStatic(level, x + i - 12, y + j, z - k - 1, state);
                 }
             }
+        }
+    }
+
+    private void spawnWaterRoomMintJellies(WorldGenLevel level, RandomSource random, int x, int y, int z) {
+        int placed = 0;
+        int cursor = random.nextInt(22 * 18 * 22);
+        while (placed < LEGACY_WATER_ROOM_MINT_JELLY_COUNT) {
+            int local = Math.floorMod(cursor, 22 * 18 * 22);
+            int i = 1 + local % 22;
+            int j = 5 + (local / 22) % 18;
+            int k = 1 + (local / (22 * 18)) % 22;
+            spawnEntity(level, CCEntityTypes.TORNADO_JELLY.get(), x + i - 12 + 0.5D, y + j + 0.5D, z - k - 1 + 0.5D, random);
+            cursor += 101;
+            placed++;
         }
     }
 

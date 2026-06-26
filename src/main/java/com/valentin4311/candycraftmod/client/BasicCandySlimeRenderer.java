@@ -66,22 +66,31 @@ public class BasicCandySlimeRenderer extends SlimeRenderer {
         if (slam <= 0.0F) {
             return;
         }
-        float eased = slam * slam * (3.0F - 2.0F * slam);
-        float pulse = (float) Math.sin((queen.tickCount + partialTicks) * 0.45F) * 0.5F + 0.5F;
+        float eased = easeOutBack(slam);
+        float pulse = (float) Math.sin((queen.tickCount + partialTicks) * 0.34F) * 0.5F + 0.5F;
         if (!queen.onGround()) {
             boolean falling = queen.getDeltaMovement().y < -0.03D;
-            float stretch = eased * (falling ? 0.18F : 0.10F);
-            float squash = eased * 0.045F;
-            poseStack.translate(0.0F, -0.035F * eased, 0.0F);
+            float anticipation = (float) Math.sin(slam * Math.PI);
+            float stretch = eased * (falling ? 0.25F : 0.13F);
+            float squash = eased * 0.055F;
+            poseStack.translate(0.0F, -0.045F * eased + 0.025F * anticipation, 0.0F);
             poseStack.scale(1.0F - squash, 1.0F + stretch, 1.0F - squash);
-            float pitch = falling ? 10.0F + 12.0F * eased : -7.0F * eased;
+            float pitch = falling ? 9.0F + 18.0F * eased : -9.0F * anticipation;
             poseStack.mulPose(Axis.XP.rotationDegrees(pitch));
-            poseStack.mulPose(Axis.ZP.rotationDegrees((float) Math.sin((queen.tickCount + partialTicks) * 0.22F) * 4.0F * eased));
+            poseStack.mulPose(Axis.ZP.rotationDegrees((float) Math.sin((queen.tickCount + partialTicks) * 0.18F) * 5.5F * eased));
         } else {
-            float impact = eased * (0.75F + 0.25F * pulse);
-            float squash = 0.16F * impact;
-            poseStack.translate(0.0F, -0.075F * impact, 0.0F);
-            poseStack.scale(1.0F + squash, 1.0F - squash * 0.85F, 1.0F + squash);
+            float rebound = (float) Math.sin(slam * Math.PI * 2.0F) * (1.0F - slam);
+            float impact = eased * (0.8F + 0.2F * pulse);
+            float squash = 0.2F * impact;
+            poseStack.translate(0.0F, -0.09F * impact + 0.035F * rebound, 0.0F);
+            poseStack.scale(1.0F + squash, 1.0F - squash * 0.9F, 1.0F + squash);
         }
+    }
+
+    private static float easeOutBack(float value) {
+        float c1 = 1.70158F;
+        float c3 = c1 + 1.0F;
+        float t = value - 1.0F;
+        return 1.0F + c3 * t * t * t + c1 * t * t;
     }
 }

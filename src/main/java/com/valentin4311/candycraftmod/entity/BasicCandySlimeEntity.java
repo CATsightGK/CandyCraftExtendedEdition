@@ -1,10 +1,8 @@
 package com.valentin4311.candycraftmod.entity;
 
 import com.valentin4311.candycraftmod.registry.CCEntityTypes;
-import com.valentin4311.candycraftmod.registry.CCItems;
 import com.valentin4311.candycraftmod.registry.CCSoundEvents;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.particles.ItemParticleOption;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
@@ -29,7 +27,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.monster.Slime;
 import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.entity.projectile.Projectile;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
@@ -44,6 +41,9 @@ public class BasicCandySlimeEntity extends Slime {
     public static final int JELLY_QUEEN_PINK_MODE = 1;
     public static final int JELLY_QUEEN_BLUE_MODE = 2;
     public static final int JELLY_QUEEN_BROWN_MODE = 3;
+    private static final int JELLY_QUEEN_SLAM_POSE_TICKS = 30;
+    private static final int BOSS_LOST_TARGET_TICKS = 200;
+    private static final double BOSS_TARGET_RANGE = 64.0D;
     private static final EntityDataAccessor<Boolean> BOSS_AWAKE = SynchedEntityData.defineId(BasicCandySlimeEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Integer> JELLY_QUEEN_MODE = SynchedEntityData.defineId(BasicCandySlimeEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Integer> JELLY_QUEEN_SLAM_TICKS = SynchedEntityData.defineId(BasicCandySlimeEntity.class, EntityDataSerializers.INT);
@@ -52,6 +52,7 @@ public class BasicCandySlimeEntity extends Slime {
     private float dormantYRot;
     private float dormantYHeadRot;
     private int bossJumpCooldown;
+    private int bossLostTargetTicks;
     private boolean jellyQueenWasOnGround = true;
     private boolean jellyQueenSlamDamageReady;
     private boolean pezDeathSplitSpawned;
@@ -87,10 +88,8 @@ public class BasicCandySlimeEntity extends Slime {
         if (specialAttackCooldown > 0) {
             specialAttackCooldown--;
         }
-        if (isTornadoJelly() && !onGround() && level().isClientSide) {
-            for (int i = 0; i < 2; i++) {
-                level().addParticle(ParticleTypes.CLOUD, getRandomX(0.8D), getRandomY(), getRandomZ(0.8D), 0.0D, 0.02D, 0.0D);
-            }
+        if (isTornadoJelly() && !onGround() && level().isClientSide && tickCount % 4 == 0) {
+            level().addParticle(ParticleTypes.CLOUD, getRandomX(0.8D), getRandomY(), getRandomZ(0.8D), 0.0D, 0.02D, 0.0D);
         }
         tickJellyQueenLandingAndAnimation();
         tickBossAwakeBehavior();
@@ -169,7 +168,11 @@ public class BasicCandySlimeEntity extends Slime {
             return false;
         }
         if (!level().isClientSide && source.getEntity() instanceof LivingEntity attacker) {
-            setRetaliationTarget(attacker);
+            if (isCandyBoss()) {
+                activateBossFromDamage(attacker);
+            } else {
+                setRetaliationTarget(attacker);
+            }
         }
         if (isCandyBoss() && source.is(DamageTypeTags.IS_FALL)) {
             return false;
@@ -206,7 +209,7 @@ public class BasicCandySlimeEntity extends Slime {
 
     @Override
     public boolean doHurtTarget(Entity target) {
-        if (!canRetaliateAgainst(target)) {
+        if (!canAttackTarget(target)) {
             setTarget(null);
             return false;
         }
@@ -276,6 +279,7 @@ public class BasicCandySlimeEntity extends Slime {
     public void addAdditionalSaveData(CompoundTag tag) {
         super.addAdditionalSaveData(tag);
         tag.putBoolean("BossAwake", isBossAwake());
+        tag.putInt("BossLostTargetTicks", bossLostTargetTicks);
         if (isJellyQueen()) {
             tag.putInt("JellyQueenMode", getJellyQueenMode());
         }
@@ -285,6 +289,7 @@ public class BasicCandySlimeEntity extends Slime {
     public void readAdditionalSaveData(CompoundTag tag) {
         super.readAdditionalSaveData(tag);
         setBossAwake(tag.getBoolean("BossAwake"));
+        bossLostTargetTicks = tag.getInt("BossLostTargetTicks");
         if (isJellyQueen()) {
             setJellyQueenMode(tag.contains("JellyQueenMode") ? tag.getInt("JellyQueenMode") : isBossAwake() ? JELLY_QUEEN_PINK_MODE : JELLY_QUEEN_SLEEP_MODE);
         }
@@ -312,7 +317,12 @@ public class BasicCandySlimeEntity extends Slime {
 
     @Override
     protected ParticleOptions getParticleType() {
-        return new ItemParticleOption(ParticleTypes.ITEM, jellyParticleStack());
+        return ParticleTypes.ITEM_SLIME;
+    }
+
+    @Override
+    protected boolean spawnCustomParticles() {
+        return true;
     }
 
     @Override
@@ -351,19 +361,13 @@ public class BasicCandySlimeEntity extends Slime {
             tickJellyQueenBossBehavior();
             return;
         }
-        LivingEntity target = findBossAttackTarget(48.0D);
+        LivingEntity target = findBossAttackTarget();
         AttributeInstance speed = getAttribute(Attributes.MOVEMENT_SPEED);
         if (target == null) {
-            putBossToSleep();
-            if (speed != null) {
-                speed.setBaseValue(0.0D);
-            }
-            setDeltaMovement(0.0D, getDeltaMovement().y, 0.0D);
-            if (tickCount % 20 == 0) {
-                heal(5.0F);
-            }
+            tickBossLostTarget(speed);
             return;
         }
+        bossLostTargetTicks = BOSS_LOST_TARGET_TICKS;
         if (isBossAwake() && speed != null) {
             speed.setBaseValue(isJellyQueen() ? 0.7D : isKingSlime() ? 0.45D : 0.38D);
         }
@@ -381,34 +385,13 @@ public class BasicCandySlimeEntity extends Slime {
     }
 
     private void tickJellyQueenBossBehavior() {
-        LivingEntity target = findBossAttackTarget(48.0D);
-        Player visiblePlayer = target == null ? CandyTargeting.nearestVisiblePlayer(level(), this, 48.0D) : target instanceof Player player ? player : null;
+        LivingEntity target = findBossAttackTarget();
         AttributeInstance speed = getAttribute(Attributes.MOVEMENT_SPEED);
         if (target == null) {
-            if (isBossAwake() && visiblePlayer != null) {
-                updateJellyQueenMode();
-                setJellyQueenSlamTicks(0);
-                jellyQueenSlamDamageReady = false;
-                if (speed != null) {
-                    speed.setBaseValue(0.0D);
-                }
-                setTarget(null);
-                getNavigation().stop();
-                setJumping(false);
-                getLookControl().setLookAt(visiblePlayer, 10.0F, getMaxHeadXRot());
-                setDeltaMovement(0.0D, getDeltaMovement().y, 0.0D);
-                return;
-            }
-            putBossToSleep();
-            setJellyQueenMode(JELLY_QUEEN_SLEEP_MODE);
-            setJellyQueenSlamTicks(0);
-            if (speed != null) {
-                speed.setBaseValue(0.0D);
-            }
-            setDeltaMovement(0.0D, getDeltaMovement().y, 0.0D);
-            heal(5.0F);
+            tickBossLostTarget(speed);
             return;
         }
+        bossLostTargetTicks = BOSS_LOST_TARGET_TICKS;
 
         if (!isBossAwake()) {
             setJellyQueenMode(JELLY_QUEEN_SLEEP_MODE);
@@ -443,11 +426,11 @@ public class BasicCandySlimeEntity extends Slime {
         }
         boolean grounded = onGround();
         if (isBossAwake() && !jellyQueenWasOnGround && grounded) {
-            setJellyQueenSlamTicks(14);
+            setJellyQueenSlamTicks(JELLY_QUEEN_SLAM_POSE_TICKS);
             damageJellyQueenSlamTargets();
             jellyQueenSlamDamageReady = false;
         } else if (isBossAwake() && !grounded && getDeltaMovement().y < -0.05D) {
-            setJellyQueenSlamTicks(Math.max(getJellyQueenSlamTicks(), 18));
+            setJellyQueenSlamTicks(Math.max(getJellyQueenSlamTicks(), JELLY_QUEEN_SLAM_POSE_TICKS));
             damageJellyQueenSlamTargets();
         }
         jellyQueenWasOnGround = grounded;
@@ -465,7 +448,7 @@ public class BasicCandySlimeEntity extends Slime {
         setDeltaMovement(dx / distance * horizontalPower, yPower, dz / distance * horizontalPower);
         hasImpulse = true;
         jellyQueenSlamDamageReady = true;
-        setJellyQueenSlamTicks(10);
+        setJellyQueenSlamTicks(JELLY_QUEEN_SLAM_POSE_TICKS - 6);
         if (mode == JELLY_QUEEN_BROWN_MODE && level() instanceof ServerLevel serverLevel) {
             serverLevel.explode(this, getX(), getY(), getZ(), 3.0F, Level.ExplosionInteraction.NONE);
             serverLevel.explode(this, getX(), getY() + 2.0D, getZ(), 3.0F, Level.ExplosionInteraction.NONE);
@@ -515,7 +498,7 @@ public class BasicCandySlimeEntity extends Slime {
         if (target == null) {
             return;
         }
-        if (!canRetaliateAgainst(target)) {
+        if (!canAttackTarget(target)) {
             setTarget(null);
             return;
         }
@@ -527,7 +510,7 @@ public class BasicCandySlimeEntity extends Slime {
     private boolean hurtLegacyBossTarget(Entity target) {
         int size = getSize();
         double range = 0.6D * size;
-        if (!canRetaliateAgainst(target) || !hasLineOfSight(target) || distanceToSqr(target) >= range * range) {
+        if (!canAttackTarget(target) || !hasLineOfSight(target) || distanceToSqr(target) >= range * range) {
             return false;
         }
         float damage = isJellyQueen() ? size * 2.0F : isKingSlime() ? size * 2.5F : size;
@@ -535,7 +518,7 @@ public class BasicCandySlimeEntity extends Slime {
     }
 
     private boolean hurtCandyTarget(Entity target, float damage) {
-        if (!canRetaliateAgainst(target)) {
+        if (!canAttackTarget(target)) {
             return false;
         }
         if (target.hurt(damageSources().mobAttack(this), damage)) {
@@ -554,6 +537,25 @@ public class BasicCandySlimeEntity extends Slime {
         }
     }
 
+    private void activateBossFromDamage(LivingEntity attacker) {
+        if (canBossTarget(attacker)) {
+            setTarget(attacker);
+            bossLostTargetTicks = BOSS_LOST_TARGET_TICKS;
+            setBossAwake(true);
+            updateJellyQueenMode();
+        }
+    }
+
+    private boolean canAttackTarget(Entity target) {
+        return isCandyBoss() ? canBossTarget(target) : canRetaliateAgainst(target);
+    }
+
+    private boolean canBossTarget(Entity target) {
+        return target instanceof LivingEntity
+            && target.isAlive()
+            && !(target instanceof BasicCandySlimeEntity);
+    }
+
     private boolean canRetaliateAgainst(Entity target) {
         return target instanceof LivingEntity
             && target.isAlive()
@@ -561,16 +563,46 @@ public class BasicCandySlimeEntity extends Slime {
             && CandyTargeting.canAttackEntity(target);
     }
 
-    private LivingEntity findBossAttackTarget(double range) {
+    private LivingEntity findBossAttackTarget() {
         LivingEntity target = getTarget();
-        if (target != null && canRetaliateAgainst(target) && distanceToSqr(target) <= range * range) {
-            return target;
+        if (target != null) {
+            if (!canBossTarget(target)) {
+                setTarget(null);
+                return null;
+            }
+            if (distanceToSqr(target) <= BOSS_TARGET_RANGE * BOSS_TARGET_RANGE) {
+                return target;
+            }
         }
-        Player player = CandyTargeting.nearestAttackablePlayer(level(), this, range);
-        if (player != null) {
-            setTarget(player);
+        return null;
+    }
+
+    private void tickBossLostTarget(@Nullable AttributeInstance speed) {
+        if (speed != null) {
+            speed.setBaseValue(0.0D);
         }
-        return player;
+        setDeltaMovement(0.0D, getDeltaMovement().y, 0.0D);
+        getNavigation().stop();
+        setJumping(false);
+        if (tickCount % 20 == 0) {
+            heal(5.0F);
+        }
+        if (!isBossAwake()) {
+            if (isJellyQueen()) {
+                setJellyQueenMode(JELLY_QUEEN_SLEEP_MODE);
+            }
+            return;
+        }
+        if (bossLostTargetTicks > 0) {
+            bossLostTargetTicks--;
+            updateJellyQueenMode();
+            return;
+        }
+        putBossToSleep();
+        setJellyQueenSlamTicks(0);
+        if (isJellyQueen()) {
+            setJellyQueenMode(JELLY_QUEEN_SLEEP_MODE);
+        }
     }
 
     private void updateJellyQueenMode() {
@@ -594,7 +626,7 @@ public class BasicCandySlimeEntity extends Slime {
     }
 
     private void setJellyQueenSlamTicks(int ticks) {
-        entityData.set(JELLY_QUEEN_SLAM_TICKS, Mth.clamp(ticks, 0, 18));
+        entityData.set(JELLY_QUEEN_SLAM_TICKS, Mth.clamp(ticks, 0, JELLY_QUEEN_SLAM_POSE_TICKS));
     }
 
     public int getJellyQueenMode() {
@@ -605,41 +637,12 @@ public class BasicCandySlimeEntity extends Slime {
         return entityData.get(JELLY_QUEEN_SLAM_TICKS);
     }
 
-    private ItemStack jellyParticleStack() {
-        if (isYellowJelly()) {
-            return new ItemStack(CCItems.GUMMY.get());
-        }
-        if (isRedJelly()) {
-            return new ItemStack(CCItems.HOT_GUMMY.get());
-        }
-        if (isTornadoJelly()) {
-            return new ItemStack(CCItems.GUMMY_BALL.get());
-        }
-        if (isPezJelly()) {
-            return isBossAwake() ? new ItemStack(CCItems.PEZ.get()) : new ItemStack(CCItems.GUMMY_BALL.get());
-        }
-        if (isKingSlime()) {
-            return isBossAwake() ? new ItemStack(CCItems.JELLY_CROWN.get()) : new ItemStack(CCItems.GUMMY_BALL.get());
-        }
-        if (isJellyQueen()) {
-            if (!isBossAwake()) {
-                return new ItemStack(CCItems.GUMMY_BALL.get());
-            }
-            return switch (getJellyQueenMode()) {
-                case JELLY_QUEEN_BLUE_MODE -> new ItemStack(CCItems.PEZ.get());
-                case JELLY_QUEEN_BROWN_MODE -> new ItemStack(CCItems.JELLY_CROWN.get());
-                default -> new ItemStack(CCItems.GUMMY_BALL.get());
-            };
-        }
-        return new ItemStack(CCItems.GUMMY.get());
-    }
-
     public float getJellyQueenSlamProgress(float partialTicks) {
         if (!isJellyQueen()) {
             return 0.0F;
         }
         float ticks = Math.max(0.0F, getJellyQueenSlamTicks() - partialTicks);
-        return Mth.clamp(ticks / 18.0F, 0.0F, 1.0F);
+        return Mth.clamp(ticks / (float) JELLY_QUEEN_SLAM_POSE_TICKS, 0.0F, 1.0F);
     }
 
     public boolean isBossAwake() {
@@ -660,6 +663,7 @@ public class BasicCandySlimeEntity extends Slime {
         applyLegacySpawnSize();
         putBossToSleep();
         bossJumpCooldown = 0;
+        bossLostTargetTicks = 0;
         setDeltaMovement(0.0D, 0.0D, 0.0D);
         if (isJellyQueen()) {
             setJellyQueenMode(JELLY_QUEEN_SLEEP_MODE);
@@ -669,6 +673,8 @@ public class BasicCandySlimeEntity extends Slime {
 
     private void putBossToSleep() {
         setBossAwake(false);
+        bossLostTargetTicks = 0;
+        setTarget(null);
     }
 
     private void shrinkKingSlimeFromHealth() {
