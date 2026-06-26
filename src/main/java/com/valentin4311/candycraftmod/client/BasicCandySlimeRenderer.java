@@ -66,16 +66,22 @@ public class BasicCandySlimeRenderer extends SlimeRenderer {
         if (slam <= 0.0F) {
             return;
         }
-        float pulse = (float) Math.sin((queen.tickCount + partialTicks) * 0.65F) * 0.5F + 0.5F;
-        float airborneBias = queen.onGround() ? 0.35F : 1.0F;
-        float squash = slam * (0.08F + 0.07F * pulse);
-        float stretch = slam * (0.14F + 0.08F * airborneBias);
-        poseStack.translate(0.0F, -0.08F * slam, 0.0F);
-        poseStack.scale(1.0F + squash, 1.0F - squash * 0.75F + stretch * 0.12F, 1.0F + squash);
+        float eased = slam * slam * (3.0F - 2.0F * slam);
+        float pulse = (float) Math.sin((queen.tickCount + partialTicks) * 0.45F) * 0.5F + 0.5F;
         if (!queen.onGround()) {
-            float pitch = queen.getDeltaMovement().y < 0.0D ? 14.0F + 14.0F * slam : -10.0F * slam;
+            boolean falling = queen.getDeltaMovement().y < -0.03D;
+            float stretch = eased * (falling ? 0.18F : 0.10F);
+            float squash = eased * 0.045F;
+            poseStack.translate(0.0F, -0.035F * eased, 0.0F);
+            poseStack.scale(1.0F - squash, 1.0F + stretch, 1.0F - squash);
+            float pitch = falling ? 10.0F + 12.0F * eased : -7.0F * eased;
             poseStack.mulPose(Axis.XP.rotationDegrees(pitch));
-            poseStack.mulPose(Axis.ZP.rotationDegrees((float) Math.sin((queen.tickCount + partialTicks) * 0.28F) * 6.0F * slam));
+            poseStack.mulPose(Axis.ZP.rotationDegrees((float) Math.sin((queen.tickCount + partialTicks) * 0.22F) * 4.0F * eased));
+        } else {
+            float impact = eased * (0.75F + 0.25F * pulse);
+            float squash = 0.16F * impact;
+            poseStack.translate(0.0F, -0.075F * impact, 0.0F);
+            poseStack.scale(1.0F + squash, 1.0F - squash * 0.85F, 1.0F + squash);
         }
     }
 }
