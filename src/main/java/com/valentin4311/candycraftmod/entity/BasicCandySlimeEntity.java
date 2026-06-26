@@ -354,8 +354,23 @@ public class BasicCandySlimeEntity extends Slime {
 
     private void tickJellyQueenBossBehavior() {
         Player player = findNearestSurvivalPlayer(48.0D);
+        Player visiblePlayer = player == null ? CandyTargeting.nearestVisiblePlayer(level(), this, 48.0D) : player;
         AttributeInstance speed = getAttribute(Attributes.MOVEMENT_SPEED);
         if (player == null) {
+            if (isBossAwake() && visiblePlayer != null) {
+                updateJellyQueenMode();
+                setJellyQueenSlamTicks(0);
+                jellyQueenSlamDamageReady = false;
+                if (speed != null) {
+                    speed.setBaseValue(0.0D);
+                }
+                setTarget(null);
+                getNavigation().stop();
+                setJumping(false);
+                getLookControl().setLookAt(visiblePlayer, 10.0F, getMaxHeadXRot());
+                setDeltaMovement(0.0D, getDeltaMovement().y, 0.0D);
+                return;
+            }
             putBossToSleep();
             setJellyQueenMode(JELLY_QUEEN_SLEEP_MODE);
             setJellyQueenSlamTicks(0);

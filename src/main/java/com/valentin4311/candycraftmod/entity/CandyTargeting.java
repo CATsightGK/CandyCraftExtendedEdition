@@ -24,4 +24,11 @@ public final class CandyTargeting {
             .min(Comparator.comparingDouble(seeker::distanceToSqr))
             .orElse(null);
     }
+
+    public static Player nearestVisiblePlayer(Level level, Entity seeker, double range) {
+        return level.getEntitiesOfClass(Player.class, seeker.getBoundingBox().inflate(range), player -> !player.isSpectator())
+            .stream()
+            .min(Comparator.comparingDouble(seeker::distanceToSqr))
+            .orElse(null);
+    }
 }
