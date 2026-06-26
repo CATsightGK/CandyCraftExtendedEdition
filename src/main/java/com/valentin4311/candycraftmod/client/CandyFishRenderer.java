@@ -12,7 +12,7 @@ public class CandyFishRenderer extends MobRenderer<CandyFishEntity, CandyFishMod
     private static final ResourceLocation TEXTURE = new ResourceLocation(CandyCraft.MODID, "textures/entity/fish.png");
 
     public CandyFishRenderer(EntityRendererProvider.Context context) {
-        super(context, new CandyFishModel<>(context.bakeLayer(CandyFishModel.LAYER)), 0.3F);
+        super(context, new CandyFishModel<>(context.bakeLayer(CandyFishModel.LAYER)), 0.18F);
     }
 
     @Override

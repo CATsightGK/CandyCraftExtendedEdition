@@ -11,7 +11,7 @@ public class BeeRenderer extends MobRenderer<CaramelBeeEntity, BeeModel<CaramelB
     private static final ResourceLocation TEXTURE = new ResourceLocation(CandyCraft.MODID, "textures/entity/bee.png");
 
     public BeeRenderer(EntityRendererProvider.Context context) {
-        super(context, new BeeModel<>(context.bakeLayer(BeeModel.LAYER)), 0.35F);
+        super(context, new BeeModel<>(context.bakeLayer(BeeModel.LAYER)), 0.22F);
     }
 
     @Override

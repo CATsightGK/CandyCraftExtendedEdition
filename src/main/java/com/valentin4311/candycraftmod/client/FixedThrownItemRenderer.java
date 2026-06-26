@@ -23,6 +23,7 @@ public class FixedThrownItemRenderer<T extends Entity> extends EntityRenderer<T>
         this.itemRenderer = context.getItemRenderer();
         this.stack = stack;
         this.scale = scale;
+        this.shadowRadius = 0.0F;
     }
 
     @Override

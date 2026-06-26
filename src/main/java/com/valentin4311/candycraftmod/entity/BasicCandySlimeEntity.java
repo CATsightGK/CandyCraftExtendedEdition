@@ -4,6 +4,8 @@ import com.valentin4311.candycraftmod.registry.CCEntityTypes;
 import com.valentin4311.candycraftmod.registry.CCItems;
 import com.valentin4311.candycraftmod.registry.CCSoundEvents;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.DustParticleOptions;
+import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerBossEvent;
@@ -35,6 +37,7 @@ import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Vector3f;
 
 import java.util.Comparator;
 
@@ -279,6 +282,11 @@ public class BasicCandySlimeEntity extends Slime {
     }
 
     @Override
+    protected ParticleOptions getParticleType() {
+        return new DustParticleOptions(jellyParticleColor(), isCandyBoss() ? 1.25F : 0.95F);
+    }
+
+    @Override
     protected void playStepSound(BlockPos pos, BlockState state) {
         playSound(CCSoundEvents.STEP_JELLY.get(), 0.18F, 0.9F + random.nextFloat() * 0.2F);
     }
@@ -461,6 +469,35 @@ public class BasicCandySlimeEntity extends Slime {
 
     public int getJellyQueenSlamTicks() {
         return entityData.get(JELLY_QUEEN_SLAM_TICKS);
+    }
+
+    private Vector3f jellyParticleColor() {
+        if (isYellowJelly()) {
+            return new Vector3f(1.0F, 0.92F, 0.12F);
+        }
+        if (isRedJelly()) {
+            return new Vector3f(1.0F, 0.08F, 0.04F);
+        }
+        if (isTornadoJelly()) {
+            return new Vector3f(0.1F, 0.95F, 1.0F);
+        }
+        if (isPezJelly()) {
+            return isBossAwake() ? new Vector3f(0.78F, 0.92F, 1.0F) : new Vector3f(0.05F, 0.05F, 0.06F);
+        }
+        if (isKingSlime()) {
+            return isBossAwake() ? new Vector3f(0.9F, 0.5F, 0.0F) : new Vector3f(0.05F, 0.05F, 0.06F);
+        }
+        if (isJellyQueen()) {
+            if (!isBossAwake()) {
+                return new Vector3f(0.05F, 0.05F, 0.06F);
+            }
+            return switch (getJellyQueenMode()) {
+                case JELLY_QUEEN_BLUE_MODE -> new Vector3f(0.2F, 0.6F, 1.0F);
+                case JELLY_QUEEN_BROWN_MODE -> new Vector3f(0.92F, 0.55F, 0.22F);
+                default -> new Vector3f(1.0F, 0.35F, 0.85F);
+            };
+        }
+        return new Vector3f(1.0F, 0.92F, 0.12F);
     }
 
     public float getJellyQueenSlamProgress(float partialTicks) {

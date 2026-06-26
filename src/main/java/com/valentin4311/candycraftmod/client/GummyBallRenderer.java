@@ -19,6 +19,7 @@ public class GummyBallRenderer extends EntityRenderer<GummyBallEntity> {
     public GummyBallRenderer(EntityRendererProvider.Context context) {
         super(context);
         this.itemRenderer = context.getItemRenderer();
+        this.shadowRadius = 0.0F;
     }
 
     @Override

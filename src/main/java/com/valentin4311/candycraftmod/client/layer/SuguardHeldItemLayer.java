@@ -40,24 +40,24 @@ public class SuguardHeldItemLayer extends RenderLayer<BasicCandyZombieEntity, Su
 
     private void translateToLegacySuguardHand(PoseStack poseStack) {
         getParentModel().translateToRightArm(poseStack);
-        poseStack.translate(0.115F, 0.055F, 0.09F);
+        poseStack.translate(0.0275F, 0.1225F, 0.1425F);
     }
 
     private static void applyLegacyItemTransform(PoseStack poseStack, ItemStack stack) {
         if (stack.is(CCItems.CARAMEL_BOW.get())) {
-            poseStack.translate(-0.01F, 0.08F, -0.055F);
-            poseStack.scale(0.52F, 0.52F, 0.52F);
+            poseStack.translate(-0.05F, 0.12F, -0.12F);
+            poseStack.scale(0.625F, 0.625F, 0.625F);
         } else if (stack.is(CCItems.LICORICE_SPEAR.get())) {
-            poseStack.translate(-0.015F, 0.13F, -0.015F);
-            poseStack.scale(0.58F, -0.58F, 0.58F);
+            poseStack.translate(0.0F, 0.1875F, 0.0F);
+            poseStack.scale(0.825F, -0.825F, 0.825F);
             poseStack.mulPose(Axis.XP.rotationDegrees(-12.0F));
         } else if (stack.is(CCItems.JUMP_WAND.get())) {
-            poseStack.translate(-0.015F, 0.11F, 0.045F);
-            poseStack.scale(0.58F, -0.58F, 0.58F);
+            poseStack.translate(0.0F, 0.1575F, 0.10F);
+            poseStack.scale(0.825F, -0.825F, 0.825F);
             poseStack.mulPose(Axis.XP.rotationDegrees(-12.0F));
         } else if (stack.is(CCItems.DYNAMITE.get())) {
-            poseStack.translate(0.045F, -0.075F, -0.055F);
-            poseStack.scale(0.58F, -0.58F, 0.58F);
+            poseStack.translate(0.1F, -0.125F, -0.075F);
+            poseStack.scale(0.825F, -0.825F, 0.825F);
             poseStack.mulPose(Axis.XP.rotationDegrees(-44.0F));
             poseStack.mulPose(Axis.ZP.rotationDegrees(93.0F));
         }
