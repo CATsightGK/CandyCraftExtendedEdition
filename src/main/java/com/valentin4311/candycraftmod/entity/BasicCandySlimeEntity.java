@@ -29,7 +29,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.monster.Slime;
 import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.entity.projectile.Projectile;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
@@ -44,7 +43,7 @@ public class BasicCandySlimeEntity extends Slime {
     public static final int JELLY_QUEEN_PINK_MODE = 1;
     public static final int JELLY_QUEEN_BLUE_MODE = 2;
     public static final int JELLY_QUEEN_BROWN_MODE = 3;
-    private static final int JELLY_QUEEN_SLAM_POSE_TICKS = 30;
+    private static final int JELLY_QUEEN_SLAM_POSE_TICKS = 60;
     private static final int BOSS_LOST_TARGET_TICKS = 200;
     private static final double BOSS_TARGET_RANGE = 64.0D;
     private static final EntityDataAccessor<Boolean> BOSS_AWAKE = SynchedEntityData.defineId(BasicCandySlimeEntity.class, EntityDataSerializers.BOOLEAN);
@@ -553,7 +552,7 @@ public class BasicCandySlimeEntity extends Slime {
     }
 
     private void activateBossFromDamage(LivingEntity attacker) {
-        if (canBossTarget(attacker)) {
+        if (canBossWakeFrom(attacker)) {
             bossLostTargetTicks = BOSS_LOST_TARGET_TICKS;
             setBossAwake(true);
             updateJellyQueenMode();
@@ -570,7 +569,14 @@ public class BasicCandySlimeEntity extends Slime {
     private boolean canBossTarget(Entity target) {
         return target instanceof LivingEntity
             && target.isAlive()
-            && !(target instanceof BasicCandySlimeEntity);
+            && !(target instanceof BasicCandySlimeEntity)
+            && CandyTargeting.canAttackEntity(target);
+    }
+
+    private boolean canBossWakeFrom(Entity source) {
+        return source instanceof LivingEntity
+            && source.isAlive()
+            && !(source instanceof BasicCandySlimeEntity);
     }
 
     private boolean canRetaliateAgainst(Entity target) {
@@ -655,38 +661,29 @@ public class BasicCandySlimeEntity extends Slime {
     }
 
     private ParticleOptions jellyLandingParticle() {
-        return new ItemParticleOption(ParticleTypes.ITEM, jellyLandingParticleStack());
+        return new ItemParticleOption(ParticleTypes.ITEM, new net.minecraft.world.item.ItemStack(jellyLandingParticleItem()));
     }
 
-    private ItemStack jellyLandingParticleStack() {
-        ItemStack stack = new ItemStack(CCItems.GUMMY_BALL.get());
-        int variant = jellyLandingParticleVariant();
-        if (variant > 0) {
-            stack.getOrCreateTag().putInt("CustomModelData", variant);
-        }
-        return stack;
-    }
-
-    private int jellyLandingParticleVariant() {
+    private net.minecraft.world.item.Item jellyLandingParticleItem() {
         if (isYellowJelly()) {
-            return 1;
+            return CCItems.LEMON_JELLY_BALL.get();
         }
         if (isRedJelly()) {
-            return 2;
+            return CCItems.RASPBERRY_JELLY_BALL.get();
         }
         if (isTornadoJelly()) {
-            return 3;
+            return CCItems.MINT_JELLY_BALL.get();
         }
         if (isPezJelly()) {
-            return 4;
+            return CCItems.PEZ_JELLY_BALL.get();
         }
         if (isKingSlime()) {
-            return 5;
+            return CCItems.CARAMEL_KING_JELLY_BALL.get();
         }
         if (isJellyQueen()) {
-            return 6;
+            return CCItems.STRAWBERRY_QUEEN_JELLY_BALL.get();
         }
-        return 0;
+        return CCItems.GUMMY_BALL.get();
     }
 
     public float getJellyQueenSlamProgress(float partialTicks) {

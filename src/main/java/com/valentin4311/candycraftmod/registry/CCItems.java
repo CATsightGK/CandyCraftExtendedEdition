@@ -85,6 +85,12 @@ public final class CCItems {
     public static final RegistryObject<Item> FORK = registerPortItem("fork", () -> new HoeItem(CCItemTiers.MARSHMALLOW, -1, -1.0F, new Item.Properties().durability(64)));
     public static final RegistryObject<Item> LICORICE_SPEAR = registerPortItem("licorice_spear", () -> new SwordItem(CCItemTiers.LICORICE, 2, -2.2F, new Item.Properties()));
     public static final RegistryObject<Item> GUMMY_BALL = registerPortItem("gummy_ball", () -> new GummyBallItem(new Item.Properties().stacksTo(16)));
+    public static final RegistryObject<Item> LEMON_JELLY_BALL = registerPortItem("lemon_jelly_ball");
+    public static final RegistryObject<Item> RASPBERRY_JELLY_BALL = registerPortItem("raspberry_jelly_ball");
+    public static final RegistryObject<Item> MINT_JELLY_BALL = registerPortItem("mint_jelly_ball");
+    public static final RegistryObject<Item> PEZ_JELLY_BALL = registerPortItem("pez_jelly_ball");
+    public static final RegistryObject<Item> CARAMEL_KING_JELLY_BALL = registerPortItem("caramel_king_jelly_ball");
+    public static final RegistryObject<Item> STRAWBERRY_QUEEN_JELLY_BALL = registerPortItem("strawberry_queen_jelly_ball");
     public static final RegistryObject<Item> DYNAMITE = registerPortItem("dynamite", () -> new DynamiteItem(new Item.Properties(), false));
     public static final RegistryObject<Item> GLUE_DYNAMITE = registerPortItem("glue_dynamite", () -> new DynamiteItem(new Item.Properties(), true));
     public static final RegistryObject<Item> JELLY_WAND = registerPortItem("jelly_wand", () -> new JellyWandItem(new Item.Properties().stacksTo(1)));
