@@ -6,6 +6,8 @@ import com.valentin4311.candycraftmod.entity.BasicCandyZombieEntity;
 import com.valentin4311.candycraftmod.client.layer.SuguardHeldItemLayer;
 import com.valentin4311.candycraftmod.registry.CCEntityTypes;
 import com.valentin4311.candycraftmod.registry.CCItems;
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.resources.ResourceLocation;
@@ -19,6 +21,12 @@ public class SuguardRenderer extends MobRenderer<BasicCandyZombieEntity, Suguard
     public SuguardRenderer(EntityRendererProvider.Context context) {
         super(context, new SuguardModel<>(context.bakeLayer(SuguardModel.LAYER)), 0.5F);
         addLayer(new SuguardHeldItemLayer(this, context.getItemInHandRenderer()));
+    }
+
+    @Override
+    public void render(BasicCandyZombieEntity entity, float entityYaw, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int packedLight) {
+        shadowRadius = entity.getType() == CCEntityTypes.BOSS_SUGUARD.get() ? 0.65F : 0.26F;
+        super.render(entity, entityYaw, partialTicks, poseStack, buffer, packedLight);
     }
 
     @Override

@@ -55,6 +55,7 @@ public class BasicCandySlimeEntity extends Slime {
     private float dormantYHeadRot;
     private int bossJumpCooldown;
     private boolean jellyQueenWasOnGround = true;
+    private boolean jellyQueenSlamDamageReady;
     private boolean pezDeathSplitSpawned;
     private final ServerBossEvent bossEvent = new ServerBossEvent(getDisplayName(), BossEvent.BossBarColor.PURPLE, BossEvent.BossBarOverlay.PROGRESS);
 
@@ -158,7 +159,7 @@ public class BasicCandySlimeEntity extends Slime {
             }
         } else if (isPezJelly() || isKingSlime() || isJellyQueen()) {
             specialAttackCooldown = 15;
-            player.hurt(damageSources().mobAttack(this), isJellyQueen() ? getSize() * 2.0F : isKingSlime() ? getSize() * 2.5F : getSize());
+            hurtPlayerWithLegacyBossContact(player);
         }
         super.playerTouch(player);
     }
@@ -400,8 +401,11 @@ public class BasicCandySlimeEntity extends Slime {
         boolean grounded = onGround();
         if (isBossAwake() && !jellyQueenWasOnGround && grounded) {
             setJellyQueenSlamTicks(12);
+            damageJellyQueenSlamTargets();
+            jellyQueenSlamDamageReady = false;
         } else if (isBossAwake() && !grounded && getDeltaMovement().y < -0.05D) {
             setJellyQueenSlamTicks(Math.max(getJellyQueenSlamTicks(), 8));
+            damageJellyQueenSlamTargets();
         }
         jellyQueenWasOnGround = grounded;
     }
@@ -412,17 +416,48 @@ public class BasicCandySlimeEntity extends Slime {
         double dz = player.getZ() - getZ();
         double distance = Math.max(0.1D, Math.sqrt(dx * dx + dz * dz));
         int mode = getJellyQueenMode();
-        double horizontalPower = mode == JELLY_QUEEN_BLUE_MODE ? 1.35D : 1.05D;
+        double horizontalPower = mode == JELLY_QUEEN_BLUE_MODE ? 0.82D : 0.58D;
         double yPower = isInWater() ? 4.0D : 1.5D;
         setJumping(true);
         setDeltaMovement(dx / distance * horizontalPower, yPower, dz / distance * horizontalPower);
         hasImpulse = true;
+        jellyQueenSlamDamageReady = true;
         setJellyQueenSlamTicks(24);
         if (mode == JELLY_QUEEN_BROWN_MODE && level() instanceof ServerLevel serverLevel) {
             serverLevel.explode(this, getX(), getY(), getZ(), 3.0F, Level.ExplosionInteraction.NONE);
             serverLevel.explode(this, getX(), getY() + 2.0D, getZ(), 3.0F, Level.ExplosionInteraction.NONE);
         }
         playSound(getJumpSound(), getSoundVolume(), ((random.nextFloat() - random.nextFloat()) * 0.2F + 1.0F) * 0.8F);
+    }
+
+    private void damageJellyQueenSlamTargets() {
+        if (!jellyQueenSlamDamageReady || level().isClientSide) {
+            return;
+        }
+        double radius = 0.6D * getSize();
+        boolean hitAny = false;
+        for (Player player : level().getEntitiesOfClass(Player.class, getBoundingBox().inflate(radius, 1.25D, radius), BasicCandySlimeEntity::isSurvivalLike)) {
+            if (hurtPlayerWithLegacyBossContact(player)) {
+                hitAny = true;
+            }
+        }
+        if (hitAny) {
+            jellyQueenSlamDamageReady = false;
+        }
+    }
+
+    private boolean hurtPlayerWithLegacyBossContact(Player player) {
+        int size = getSize();
+        double range = 0.6D * size;
+        if (!hasLineOfSight(player) || distanceToSqr(player) >= range * range) {
+            return false;
+        }
+        float damage = isJellyQueen() ? size * 2.0F : isKingSlime() ? size * 2.5F : size;
+        if (player.hurt(damageSources().mobAttack(this), damage)) {
+            playSound(SoundEvents.SLIME_ATTACK, 1.0F, (random.nextFloat() - random.nextFloat()) * 0.2F + 1.0F);
+            return true;
+        }
+        return false;
     }
 
     private Player findNearestSurvivalPlayer(double range) {
