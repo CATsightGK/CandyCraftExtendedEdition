@@ -38,8 +38,10 @@ public class BasicCandySlimeRenderer extends SlimeRenderer {
     }
 
     private static String getJellyQueenTexture(BasicCandySlimeEntity queen) {
+        if (!queen.isBossAwake()) {
+            return "candyboss4.png";
+        }
         return switch (queen.getJellyQueenMode()) {
-            case BasicCandySlimeEntity.JELLY_QUEEN_SLEEP_MODE -> "candyboss4.png";
             case BasicCandySlimeEntity.JELLY_QUEEN_BLUE_MODE -> "candyboss2.png";
             case BasicCandySlimeEntity.JELLY_QUEEN_BROWN_MODE -> "candyboss3.png";
             default -> "candyboss.png";

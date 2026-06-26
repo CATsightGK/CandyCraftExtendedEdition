@@ -344,7 +344,7 @@ public class BasicCandySlimeEntity extends Slime {
     }
 
     private void tickJellyQueenBossBehavior() {
-        Player player = findNearestSurvivalPlayer(48.0D);
+        Player player = isBossAwake() ? findNearestNonSpectatorPlayer(48.0D) : findNearestSurvivalPlayer(48.0D);
         AttributeInstance speed = getAttribute(Attributes.MOVEMENT_SPEED);
         if (player == null) {
             putBossToSleep();
@@ -419,6 +419,13 @@ public class BasicCandySlimeEntity extends Slime {
 
     private Player findNearestSurvivalPlayer(double range) {
         return level().getEntitiesOfClass(Player.class, getBoundingBox().inflate(range), BasicCandySlimeEntity::isSurvivalLike)
+            .stream()
+            .min(Comparator.comparingDouble(this::distanceToSqr))
+            .orElse(null);
+    }
+
+    private Player findNearestNonSpectatorPlayer(double range) {
+        return level().getEntitiesOfClass(Player.class, getBoundingBox().inflate(range), player -> !player.isSpectator())
             .stream()
             .min(Comparator.comparingDouble(this::distanceToSqr))
             .orElse(null);
