@@ -225,21 +225,6 @@ public class BasicCandySlimeEntity extends Slime {
 
     @Override
     protected void dropCustomDeathLoot(DamageSource source, int looting, boolean recentlyHit) {
-        super.dropCustomDeathLoot(source, looting, recentlyHit);
-        if (isYellowJelly()) {
-            spawnAtLocation(CCItems.GUMMY.get());
-        } else if (isRedJelly() || isTornadoJelly()) {
-            spawnAtLocation(CCItems.HOT_GUMMY.get());
-        } else if (isPezJelly()) {
-            spawnAtLocation(CCItems.PEZ.get(), 2);
-        } else if (isKingSlime()) {
-            spawnAtLocation(CCItems.JELLY_CROWN.get());
-            spawnAtLocation(CCItems.JELLY_BOSS_KEY.get());
-        } else if (isJellyQueen()) {
-            spawnAtLocation(CCItems.RECORD_1.get());
-            spawnAtLocation(CCItems.JELLY_EMBLEM.get());
-            spawnAtLocation(CCItems.JELLY_KEY.get());
-        }
     }
 
     @Override
