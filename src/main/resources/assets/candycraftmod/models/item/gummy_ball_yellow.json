@@ -1,7 +1,7 @@
 ﻿{
     "parent": "item/generated",
     "textures": {
-        "layer0": "candycraftmod:item/red_jelly_ball"
+        "layer0": "candycraftmod:item/yellow_jelly_ball"
     },
     "display": {
         "thirdperson": {

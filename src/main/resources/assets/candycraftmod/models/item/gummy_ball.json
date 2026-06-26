@@ -1,11 +1,15 @@
-{
+﻿{
     "parent": "item/generated",
     "textures": {
         "layer0": "candycraftmod:item/gummy_ball"
     },
     "overrides": [
-        { "predicate": { "custom_model_data": 1 }, "model": "candycraftmod:item/gummy_ball_1" },
-        { "predicate": { "custom_model_data": 2 }, "model": "candycraftmod:item/gummy_ball_2" }
+        { "predicate": { "custom_model_data": 1 }, "model": "candycraftmod:item/gummy_ball_yellow" },
+        { "predicate": { "custom_model_data": 2 }, "model": "candycraftmod:item/gummy_ball_red" },
+        { "predicate": { "custom_model_data": 3 }, "model": "candycraftmod:item/gummy_ball_mint" },
+        { "predicate": { "custom_model_data": 4 }, "model": "candycraftmod:item/gummy_ball_pez" },
+        { "predicate": { "custom_model_data": 5 }, "model": "candycraftmod:item/gummy_ball_caramel" },
+        { "predicate": { "custom_model_data": 6 }, "model": "candycraftmod:item/gummy_ball_strawberry" }
     ],
     "display": {
         "thirdperson": {

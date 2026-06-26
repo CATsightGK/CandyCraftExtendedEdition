@@ -68,9 +68,11 @@ public final class CCCreativeTabs {
         .icon(() -> new ItemStack(CCItems.CHOCOLATE_COIN.get()))
         .displayItems((parameters, output) -> {
             if (acceptOrderedTab("misc", output)) {
+                acceptGummyBallVariants(output);
                 return;
             }
             CCItems.PORT_ITEMS.forEach(item -> output.accept(item.get()));
+            acceptGummyBallVariants(output);
         })
         .build());
 
@@ -118,6 +120,18 @@ public final class CCCreativeTabs {
             BuiltInRegistries.ITEM.getOptional(id).ifPresent(output::accept);
         }
         return true;
+    }
+
+    private static void acceptGummyBallVariants(CreativeModeTab.Output output) {
+        for (int customModelData = 1; customModelData <= 6; customModelData++) {
+            output.accept(gummyBallVariant(customModelData));
+        }
+    }
+
+    private static ItemStack gummyBallVariant(int customModelData) {
+        ItemStack stack = new ItemStack(CCItems.GUMMY_BALL.get());
+        stack.getOrCreateTag().putInt("CustomModelData", customModelData);
+        return stack;
     }
 
     private static JsonObject creativeTabOrder() {
