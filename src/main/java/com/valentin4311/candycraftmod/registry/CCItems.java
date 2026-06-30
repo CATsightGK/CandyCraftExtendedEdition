@@ -18,6 +18,7 @@ import com.valentin4311.candycraftmod.item.JumpWandItem;
 import com.valentin4311.candycraftmod.item.LollipopItem;
 import com.valentin4311.candycraftmod.item.RawGummyItem;
 import com.valentin4311.candycraftmod.item.SugarPillItem;
+import com.valentin4311.candycraftmod.item.WikiItem;
 import com.valentin4311.candycraftmod.CandyCraft;
 import java.util.ArrayList;
 import java.util.List;
@@ -106,7 +107,7 @@ public final class CCItems {
     public static final RegistryObject<Item> GLUE_DYNAMITE = registerPortItem("glue_dynamite", () -> new DynamiteItem(new Item.Properties(), true));
     public static final RegistryObject<Item> JELLY_WAND = registerPortItem("jelly_wand", () -> new JellyWandItem(new Item.Properties().stacksTo(1)));
     public static final RegistryObject<Item> JUMP_WAND = registerPortItem("jump_wand", () -> new JumpWandItem(new Item.Properties().stacksTo(1)));
-    public static final RegistryObject<Item> WIKI = registerPortItem("wiki", () -> new Item(new Item.Properties().stacksTo(1)));
+    public static final RegistryObject<Item> WIKI = registerPortItem("wiki", () -> new WikiItem(new Item.Properties().stacksTo(1)));
     public static final RegistryObject<Item> BEETLE_KEY = registerPortItem("beetle_key");
     public static final RegistryObject<Item> JELLY_KEY = registerPortItem("jelly_key", () -> new JellyDungeonKeyItem(new Item.Properties()));
     public static final RegistryObject<Item> JELLY_SENTRY_KEY = registerPortItem("jelly_sentry_key");
