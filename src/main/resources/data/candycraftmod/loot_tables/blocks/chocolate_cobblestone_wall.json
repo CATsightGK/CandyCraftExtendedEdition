@@ -6,7 +6,7 @@
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "candycraftmod:grenadine_block"
+          "name": "candycraftmod:chocolate_cobblestone_wall"
         }
       ],
       "conditions": [
