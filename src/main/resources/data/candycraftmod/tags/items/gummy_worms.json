@@ -1,10 +1,10 @@
-﻿{
-    "replace":  false,
-    "values":  [
-                   "candycraftmod:red_gummy_worm",
-                   "candycraftmod:orange_gummy_worm",
-                   "candycraftmod:yellow_gummy_worm",
-                   "candycraftmod:white_gummy_worm",
-                   "candycraftmod:green_gummy_worm"
-               ]
+{
+  "replace": false,
+  "values": [
+    "#candycraftmod:gummy_worms/green",
+    "#candycraftmod:gummy_worms/orange",
+    "#candycraftmod:gummy_worms/red",
+    "#candycraftmod:gummy_worms/white",
+    "#candycraftmod:gummy_worms/yellow"
+  ]
 }

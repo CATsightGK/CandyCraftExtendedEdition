@@ -1,0 +1,10 @@
+{
+  "replace": false,
+  "values": [
+    "candycraftmod:red_gummy_block",
+    "candycraftmod:orange_gummy_block",
+    "candycraftmod:yellow_gummy_block",
+    "candycraftmod:white_gummy_block",
+    "candycraftmod:green_gummy_block"
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "replace": false,
+  "values": [
+    "candycraftmod:milk_brownie_block",
+    "candycraftmod:white_brownie_block",
+    "candycraftmod:dark_brownie_block"
+  ]
+}

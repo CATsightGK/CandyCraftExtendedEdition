@@ -1,8 +1,8 @@
-﻿{
-    "replace":  false,
-    "values":  [
-                   "candycraftmod:milk_chocolate_bar",
-                   "candycraftmod:white_chocolate_bar",
-                   "candycraftmod:dark_chocolate_bar"
-               ]
+{
+  "replace": false,
+  "values": [
+    "#candycraftmod:chocolate_bars/milk",
+    "#candycraftmod:chocolate_bars/white",
+    "#candycraftmod:chocolate_bars/dark"
+  ]
 }

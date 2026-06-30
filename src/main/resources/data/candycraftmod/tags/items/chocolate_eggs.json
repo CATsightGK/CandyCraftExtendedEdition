@@ -1,0 +1,8 @@
+{
+  "replace": false,
+  "values": [
+    "#candycraftmod:chocolate_eggs/milk",
+    "#candycraftmod:chocolate_eggs/white",
+    "#candycraftmod:chocolate_eggs/dark"
+  ]
+}
