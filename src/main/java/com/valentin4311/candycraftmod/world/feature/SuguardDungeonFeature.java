@@ -447,7 +447,7 @@ public class SuguardDungeonFeature extends Feature<NoneFeatureConfiguration> {
         box(level, x + doorX, y + doorY + 1, z + doorZ, x + doorX, y + doorY + 3, z + doorZ, Blocks.AIR.defaultBlockState());
         hollowBox(level, x - 1, y - 2, z - 1, x + 1, y, z + 1, licorice);
         if (boss) {
-            setSpawner(level, x, y + 1, z, CCEntityTypes.BOSS_SUGUARD.get());
+            spawnEntity(level, CCEntityTypes.BOSS_SUGUARD.get(), x + 0.5D, y + 1.0D, z + 0.5D, random);
             keyChest(level, x + 2, y + 1, z, CCItems.SUGUARD_EMBLEM.get());
         } else {
             set(level, x, y, z, CCBlocks.MARSHMALLOW_TRAPDOOR.get().defaultBlockState().setValue(TrapDoorBlock.HALF, Half.BOTTOM));
@@ -521,6 +521,17 @@ public class SuguardDungeonFeature extends Feature<NoneFeatureConfiguration> {
         BlockPos pos = new BlockPos(x, y, z);
         if (level.getBlockEntity(pos) instanceof SpawnerBlockEntity spawner) {
             spawner.getSpawner().setEntityId(type, level.getLevel(), level.getRandom(), pos);
+        }
+    }
+
+    private static void spawnEntity(WorldGenLevel level, EntityType<?> type, double x, double y, double z, RandomSource random) {
+        if (!(level instanceof ServerLevel serverLevel)) {
+            return;
+        }
+        Entity entity = type.create(serverLevel);
+        if (entity != null) {
+            entity.moveTo(x, y, z, random.nextFloat() * 360.0F, 0.0F);
+            serverLevel.addFreshEntity(entity);
         }
     }
 

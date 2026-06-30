@@ -19,6 +19,7 @@ import com.valentin4311.candycraftmod.entity.HoneyArrowEntity;
 import com.valentin4311.candycraftmod.entity.HoneyBoltEntity;
 import com.valentin4311.candycraftmod.entity.NougatGolemEntity;
 import com.valentin4311.candycraftmod.entity.PingouinEntity;
+import com.valentin4311.candycraftmod.entity.ThrownForkEntity;
 import com.valentin4311.candycraftmod.entity.WaffleSheepEntity;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -69,6 +70,14 @@ public final class CCEntityTypes {
             .clientTrackingRange(4)
             .updateInterval(10)
             .build(CandyCraft.MODID + ":gummy_ball")
+    );
+
+    public static final RegistryObject<EntityType<ThrownForkEntity>> THROWN_FORK = ENTITY_TYPES.register("thrown_fork", () ->
+        EntityType.Builder.<ThrownForkEntity>of(ThrownForkEntity::new, MobCategory.MISC)
+            .sized(0.5F, 0.5F)
+            .clientTrackingRange(4)
+            .updateInterval(20)
+            .build(CandyCraft.MODID + ":thrown_fork")
     );
 
     public static final RegistryObject<EntityType<CandyPigEntity>> CANDY_PIG = ENTITY_TYPES.register("candy_pig", () ->
@@ -139,14 +148,14 @@ public final class CCEntityTypes {
             .clientTrackingRange(10)
             .build(CandyCraft.MODID + ":pingouin")
     );
-    public static final RegistryObject<EntityType<BasicCandySpiderEntity>> BEETLE = basicSpider("beetle", 1.0F, 1.0F);
-    public static final RegistryObject<EntityType<BasicCandyZombieEntity>> NESSIE = basicZombie("nessie", 1.6F, 1.1F);
+    public static final RegistryObject<EntityType<BasicCandySpiderEntity>> BEETLE = basicSpider("beetle", 1.0F, 0.8F);
+    public static final RegistryObject<EntityType<BasicCandyZombieEntity>> NESSIE = basicZombie("nessie", 1.2F, 1.6F);
     public static final RegistryObject<EntityType<BasicCandyZombieEntity>> DRAGON = basicZombie("dragon", 1.4F, 1.2F);
     public static final RegistryObject<EntityType<BasicCandyZombieEntity>> KING_BEETLE = basicZombie("king_beetle", 1.4F, 1.1F);
-    public static final RegistryObject<EntityType<BasicCandyZombieEntity>> MERMAID = basicZombie("mermaid", 0.6F, 1.8F);
+    public static final RegistryObject<EntityType<BasicCandyZombieEntity>> MERMAID = basicZombie("mermaid", 0.95F, 1.0F);
     public static final RegistryObject<EntityType<NougatGolemEntity>> NOUGAT_GOLEM = ENTITY_TYPES.register("nougat_golem", () ->
         EntityType.Builder.of(NougatGolemEntity::new, MobCategory.CREATURE)
-            .sized(0.65F, 0.8F)
+            .sized(1.0F, 1.0F)
             .clientTrackingRange(10)
             .build(CandyCraft.MODID + ":nougat_golem")
     );
@@ -156,7 +165,7 @@ public final class CCEntityTypes {
     public static final RegistryObject<EntityType<BasicCandySlimeEntity>> PEZ_JELLY = basicSlime("pez_jelly", 1.2F, 1.2F);
     public static final RegistryObject<EntityType<BasicCandySlimeEntity>> KING_SLIME = basicSlime("king_slime", 2.4F, 2.4F);
     public static final RegistryObject<EntityType<BasicCandySlimeEntity>> JELLY_QUEEN = basicSlime("jelly_queen", 2.2F, 2.2F);
-    public static final RegistryObject<EntityType<BasicCandyZombieEntity>> BOSS_SUGUARD = basicZombie("boss_suguard", 0.8F, 2.4F);
+    public static final RegistryObject<EntityType<BasicCandyZombieEntity>> BOSS_SUGUARD = basicZombie("boss_suguard", 0.8F, 1.5F);
     public static final RegistryObject<EntityType<BasicCandySpiderEntity>> BOSS_BEETLE = basicSpider("boss_beetle", 2.0F, 1.6F);
 
     private CCEntityTypes() {

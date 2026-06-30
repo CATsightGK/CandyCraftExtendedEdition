@@ -4,19 +4,26 @@ import com.valentin4311.candycraftmod.item.CaramelBowItem;
 import com.valentin4311.candycraftmod.item.CaramelCrossbowItem;
 import com.valentin4311.candycraftmod.item.CandiedCherryItem;
 import com.valentin4311.candycraftmod.item.CCArmorItem;
+import com.valentin4311.candycraftmod.item.DragibusSeedFoodItem;
+import com.valentin4311.candycraftmod.item.DragibusStickItem;
 import com.valentin4311.candycraftmod.item.DynamiteItem;
 import com.valentin4311.candycraftmod.item.EmblemItem;
+import com.valentin4311.candycraftmod.item.ForkItem;
 import com.valentin4311.candycraftmod.item.GummyBallItem;
 import com.valentin4311.candycraftmod.item.HoneyArrowItem;
 import com.valentin4311.candycraftmod.item.HoneyBoltItem;
 import com.valentin4311.candycraftmod.item.JellyDungeonKeyItem;
 import com.valentin4311.candycraftmod.item.JellyWandItem;
+import com.valentin4311.candycraftmod.item.JumpWandItem;
+import com.valentin4311.candycraftmod.item.LollipopItem;
 import com.valentin4311.candycraftmod.item.RawGummyItem;
 import com.valentin4311.candycraftmod.item.SugarPillItem;
 import com.valentin4311.candycraftmod.CandyCraft;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.core.Direction;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.AxeItem;
 import net.minecraft.world.item.BedItem;
@@ -56,11 +63,11 @@ public final class CCItems {
     public static final RegistryObject<Item> CHOCOLATE_COIN = registerPortItem("chocolate_coin");
     public static final RegistryObject<Item> CRANBERRY_SCALE = registerPortItem("cranberry_scale");
     public static final RegistryObject<Item> SUGAR_CRYSTAL = registerPortItem("pure_rock_candy", () -> new Item(new Item.Properties().rarity(Rarity.RARE)));
-    public static final RegistryObject<Item> WAFFLE_NUGGET = registerPortItem("waffle_nugget");
+    public static final RegistryObject<Item> WAFFLE_NUGGET = registerFood("waffle_nugget", 1, 0.6F, true);
     public static final RegistryObject<Item> MARSHMALLOW_STICK = registerPortItem("marshmallow_stick");
-    public static final RegistryObject<Item> LOLLIPOP = registerPortItem("lollipop");
+    public static final RegistryObject<Item> LOLLIPOP = registerPortItem("lollipop", () -> new LollipopItem(new Item.Properties()));
     public static final RegistryObject<Item> LOLLIPOP_SEEDS = registerSeedItem("lollipop_seeds", () -> CCBlocks.LOLLIPOP_PLANT.get());
-    public static final RegistryObject<Item> DRAGIBUS = registerSeedItem("dragibus", () -> CCBlocks.DRAGIBUS_CROPS.get());
+    public static final RegistryObject<Item> DRAGIBUS = registerPortItem("dragibus", () -> new DragibusSeedFoodItem(CCBlocks.DRAGIBUS_CROPS.get()));
     public static final RegistryObject<Item> MARSHMALLOW_FLOWER = registerPortItem("marshmallow_flower");
     public static final RegistryObject<Item> CANDIED_CHERRY = registerPortItem("candied_cherry", () -> new CandiedCherryItem(foodProperties(4, 0.3F)));
     public static final RegistryObject<Item> CANDY_CANE = registerFood("candy_cane", 2, 0.2F);
@@ -68,9 +75,13 @@ public final class CCItems {
     public static final RegistryObject<Item> COTTON_CANDY = registerFood("raspberry_cotton_candy", 3, 0.2F);
     public static final RegistryObject<Item> CRANBERRY_FISH = registerFood("cranberry_fish", 2, 0.1F);
     public static final RegistryObject<Item> CRANBERRY_FISH_COOKED = registerFood("cranberry_fish_cooked", 5, 0.6F);
-    public static final RegistryObject<Item> DRAGIBUS_STICK = registerFood("dragibus_stick", 5, 0.4F);
+    public static final RegistryObject<Item> DRAGIBUS_STICK = registerPortItem("dragibus_stick", () -> new DragibusStickItem(new Item.Properties().stacksTo(1).durability(25)));
     public static final RegistryObject<Item> GUMMY = registerPortItem("gummy", () -> new RawGummyItem(foodProperties(3, 0.25F)));
-    public static final RegistryObject<Item> HOT_GUMMY = registerFood("hot_gummy", 6, 0.6F);
+    public static final RegistryObject<Item> HOT_GUMMY = registerPortItem("hot_gummy", () -> new Item(new Item.Properties().food(new FoodProperties.Builder()
+        .nutrition(7)
+        .saturationMod(0.6F)
+        .effect(() -> new MobEffectInstance(MobEffects.JUMP, 60, 1), 0.9F)
+        .build())));
     public static final RegistryObject<Item> ALCHEMY_MIXER_BLADE = ITEMS.register("alchemy_mixer_blade", () -> new Item(new Item.Properties()));
     public static final RegistryObject<Item> SUGAR_PILL = registerPortItem("sugar_pill", () -> new SugarPillItem(new Item.Properties().food(new FoodProperties.Builder()
         .nutrition(0)
@@ -82,7 +93,7 @@ public final class CCItems {
     public static final RegistryObject<Item> HONEY_BOLT = registerPortItem("honey_bolt", () -> new HoneyBoltItem(new Item.Properties()));
     public static final RegistryObject<Item> CARAMEL_BOW = registerPortItem("caramel_bow", () -> new CaramelBowItem(new Item.Properties().durability(384)));
     public static final RegistryObject<Item> CARAMEL_CROSSBOW = registerPortItem("caramel_crossbow", () -> new CaramelCrossbowItem(new Item.Properties().durability(465)));
-    public static final RegistryObject<Item> FORK = registerPortItem("fork", () -> new HoeItem(CCItemTiers.MARSHMALLOW, -1, -1.0F, new Item.Properties().durability(64)));
+    public static final RegistryObject<Item> FORK = registerPortItem("fork", () -> new ForkItem(CCItemTiers.MARSHMALLOW, -1, -1.0F, new Item.Properties().durability(64)));
     public static final RegistryObject<Item> LICORICE_SPEAR = registerPortItem("licorice_spear", () -> new SwordItem(CCItemTiers.LICORICE, 2, -2.2F, new Item.Properties()));
     public static final RegistryObject<Item> GUMMY_BALL = registerPortItem("gummy_ball", () -> new GummyBallItem(new Item.Properties().stacksTo(16)));
     public static final RegistryObject<Item> LEMON_JELLY_BALL = registerPortItem("lemon_jelly_ball");
@@ -94,7 +105,7 @@ public final class CCItems {
     public static final RegistryObject<Item> DYNAMITE = registerPortItem("dynamite", () -> new DynamiteItem(new Item.Properties(), false));
     public static final RegistryObject<Item> GLUE_DYNAMITE = registerPortItem("glue_dynamite", () -> new DynamiteItem(new Item.Properties(), true));
     public static final RegistryObject<Item> JELLY_WAND = registerPortItem("jelly_wand", () -> new JellyWandItem(new Item.Properties().stacksTo(1)));
-    public static final RegistryObject<Item> JUMP_WAND = registerPortItem("jump_wand", () -> new Item(new Item.Properties().stacksTo(1).durability(128)));
+    public static final RegistryObject<Item> JUMP_WAND = registerPortItem("jump_wand", () -> new JumpWandItem(new Item.Properties().stacksTo(1)));
     public static final RegistryObject<Item> WIKI = registerPortItem("wiki", () -> new Item(new Item.Properties().stacksTo(1)));
     public static final RegistryObject<Item> BEETLE_KEY = registerPortItem("beetle_key");
     public static final RegistryObject<Item> JELLY_KEY = registerPortItem("jelly_key", () -> new JellyDungeonKeyItem(new Item.Properties()));
@@ -216,7 +227,11 @@ public final class CCItems {
     }
 
     private static RegistryObject<Item> registerFood(String name, int nutrition, float saturation) {
-        return registerPortItem(name, () -> new Item(foodProperties(nutrition, saturation)));
+        return registerFood(name, nutrition, saturation, false);
+    }
+
+    private static RegistryObject<Item> registerFood(String name, int nutrition, float saturation, boolean alwaysEat) {
+        return registerPortItem(name, () -> new Item(foodProperties(nutrition, saturation, alwaysEat)));
     }
 
     private static RegistryObject<Item> registerEmblem(String name, String descriptionKey) {
@@ -224,10 +239,17 @@ public final class CCItems {
     }
 
     private static Item.Properties foodProperties(int nutrition, float saturation) {
-        return new Item.Properties().food(new FoodProperties.Builder()
+        return foodProperties(nutrition, saturation, false);
+    }
+
+    private static Item.Properties foodProperties(int nutrition, float saturation, boolean alwaysEat) {
+        FoodProperties.Builder builder = new FoodProperties.Builder()
             .nutrition(nutrition)
-            .saturationMod(saturation)
-            .build());
+            .saturationMod(saturation);
+        if (alwaysEat) {
+            builder.alwaysEat();
+        }
+        return new Item.Properties().food(builder.build());
     }
 
     private static RegistryObject<Item> registerRecord(String name, RegistryObject<net.minecraft.sounds.SoundEvent> sound, int lengthInTicks) {

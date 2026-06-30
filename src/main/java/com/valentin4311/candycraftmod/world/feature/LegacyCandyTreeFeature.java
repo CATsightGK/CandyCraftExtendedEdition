@@ -1,12 +1,16 @@
 package com.valentin4311.candycraftmod.world.feature;
 
 import com.mojang.serialization.Codec;
+import com.valentin4311.candycraftmod.registry.CCEntityTypes;
 import com.valentin4311.candycraftmod.registry.CCBlocks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
@@ -79,6 +83,7 @@ public class LegacyCandyTreeFeature extends Feature<NoneFeatureConfiguration> {
     }
 
     private static boolean generateCaramelClassic(LevelAccessor level, RandomSource random, BlockPos base) {
+        trySpawnJellyQueenFromClassicTree(level, random, base);
         BlockState trunk = CCBlocks.MARSHMALLOW_LOG_DARK.get().defaultBlockState();
         BlockState leaves = CCBlocks.CANDY_LEAVES_DARK.get().defaultBlockState();
         int height = 3 + random.nextInt(5);
@@ -97,6 +102,20 @@ public class LegacyCandyTreeFeature extends Feature<NoneFeatureConfiguration> {
             placeLegacySmallCaramelLayer(level, base.above(y), leaves, radius, topOffset, random);
         }
         return true;
+    }
+
+    private static void trySpawnJellyQueenFromClassicTree(LevelAccessor level, RandomSource random, BlockPos base) {
+        if (!(level instanceof ServerLevelAccessor serverLevel) || random.nextInt(2000) != 100) {
+            return;
+        }
+        Mob queen = CCEntityTypes.JELLY_QUEEN.get().create(serverLevel.getLevel());
+        if (queen == null) {
+            return;
+        }
+        BlockPos spawnPos = base.above();
+        queen.moveTo(spawnPos, random.nextFloat() * 360.0F, 0.0F);
+        queen.finalizeSpawn(serverLevel, serverLevel.getCurrentDifficultyAt(spawnPos), MobSpawnType.CHUNK_GENERATION, null, null);
+        serverLevel.addFreshEntityWithPassengers(queen);
     }
 
     private static boolean generateEnchanted(LevelAccessor level, RandomSource random, BlockPos base) {

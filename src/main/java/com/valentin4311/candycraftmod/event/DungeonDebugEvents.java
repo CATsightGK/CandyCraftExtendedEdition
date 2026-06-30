@@ -1,7 +1,10 @@
 package com.valentin4311.candycraftmod.event;
 
 import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.valentin4311.candycraftmod.CandyCraft;
+import com.valentin4311.candycraftmod.entity.BasicCandySlimeEntity;
+import com.valentin4311.candycraftmod.registry.CCEntityTypes;
 import com.valentin4311.candycraftmod.world.feature.JellyDungeonFeature;
 import com.valentin4311.candycraftmod.world.feature.SuguardDungeonFeature;
 import java.io.IOException;
@@ -17,6 +20,8 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtUtils;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -65,6 +70,12 @@ public final class DungeonDebugEvents {
                     "Generated CandyCraft jelly water room at " + base.toShortString()), true);
                 return 1;
             }));
+        event.getDispatcher().register(Commands.literal("candycraft_debug_pez_roll")
+            .requires(source -> source.hasPermission(2))
+            .executes(context -> debugPezRoll(context.getSource().getLevel(), context.getSource().getPlayerOrException(), 32))
+            .then(Commands.argument("radius", IntegerArgumentType.integer(1, 128))
+                .executes(context -> debugPezRoll(context.getSource().getLevel(), context.getSource().getPlayerOrException(),
+                    IntegerArgumentType.getInteger(context, "radius")))));
         event.getDispatcher().register(Commands.literal("candycraft_export_suguard_room")
             .requires(source -> source.hasPermission(2))
             .then(Commands.argument("room", StringArgumentType.word())
@@ -89,6 +100,26 @@ public final class DungeonDebugEvents {
                             return 0;
                         }
                     }))));
+    }
+
+    private static int debugPezRoll(ServerLevel level, ServerPlayer player, int radius) {
+        BasicCandySlimeEntity pez = level.getEntitiesOfClass(BasicCandySlimeEntity.class,
+                player.getBoundingBox().inflate(radius),
+                entity -> entity.getType() == CCEntityTypes.PEZ_JELLY.get())
+            .stream()
+            .min((a, b) -> Double.compare(a.distanceToSqr(player), b.distanceToSqr(player)))
+            .orElse(null);
+        if (pez == null) {
+            player.sendSystemMessage(Component.literal("No PEZ jelly found within " + radius + " blocks."));
+            return 0;
+        }
+        LivingEntity target = pez.getTarget() != null ? pez.getTarget() : player;
+        if (!pez.debugStartPezRoll(target)) {
+            player.sendSystemMessage(Component.literal("Failed to start PEZ roll."));
+            return 0;
+        }
+        player.sendSystemMessage(Component.literal("Started PEZ roll for entity " + pez.getId() + "."));
+        return 1;
     }
 
     private static RoomBounds suguardRoomBounds(String room) {

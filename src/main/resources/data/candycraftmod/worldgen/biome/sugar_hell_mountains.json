@@ -17,6 +17,18 @@
         "weight": 100,
         "minCount": 8,
         "maxCount": 12
+      },
+      {
+        "type": "candycraftmod:cotton_candy_spider",
+        "weight": 100,
+        "minCount": 4,
+        "maxCount": 12
+      },
+      {
+        "type": "candycraftmod:candy_creeper",
+        "weight": 100,
+        "minCount": 8,
+        "maxCount": 15
       }
     ]
   },

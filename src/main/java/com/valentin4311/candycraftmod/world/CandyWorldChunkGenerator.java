@@ -74,7 +74,7 @@ public class CandyWorldChunkGenerator extends ChunkGenerator {
     private static final ResourceLocation ICE_CREAM_SKY_MOUNTAINS = new ResourceLocation(CandyCraft.MODID, "ice_cream_sky_mountains");
     private static final BlockState AIR = Blocks.AIR.defaultBlockState();
     private static final BlockState WATER = Blocks.WATER.defaultBlockState();
-    private static final BlockState BEDROCK = Blocks.BEDROCK.defaultBlockState();
+    private static final BlockState FLAT_BOTTOM = CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState();
 
     private static final float[] PARABOLIC_FIELD = makeParabolicField();
     private static final Map<Long, LegacyTerrainNoise> TERRAIN_NOISE = new ConcurrentHashMap<>();
@@ -269,7 +269,8 @@ public class CandyWorldChunkGenerator extends ChunkGenerator {
         int radiusX = 2 + (int)((bits >>> 6) & 1L);
         int radiusZ = 2 + (int)((bits >>> 7) & 1L);
         BlockPos.MutableBlockPos mutable = new BlockPos.MutableBlockPos();
-        int waterline = centerTop - 2;
+        int waterline = centerTop - 1;
+        int bottom = waterline - 3;
 
         for (int dx = -radiusX - 1; dx <= radiusX + 1; ++dx) {
             int worldX = centerX + dx;
@@ -298,23 +299,15 @@ public class CandyWorldChunkGenerator extends ChunkGenerator {
                     continue;
                 }
 
-                boolean inner = distance < 0.62D;
                 BlockState rim = surfaceMaterials(biomeId(worldX, worldZ, randomState), worldX, worldZ, randomState).under();
                 for (int y = top + 1; y > waterline; --y) {
                     chunk.setBlockState(mutable.set(worldX, y, worldZ), AIR, false);
                 }
-                if (inner) {
-                    for (int y = waterline; y >= waterline - 1; --y) {
-                        BlockState current = chunk.getBlockState(mutable.set(worldX, y, worldZ));
-                        if (current.isAir() || isBaseStone(current) || current.getFluidState().isEmpty()) {
-                            chunk.setBlockState(mutable, fluid, false);
-                        }
-                    }
-                } else {
-                    chunk.setBlockState(mutable.set(worldX, waterline, worldZ), AIR, false);
-                    chunk.setBlockState(mutable.set(worldX, waterline - 1, worldZ), rim, false);
+
+                for (int y = waterline; y >= bottom; --y) {
+                    chunk.setBlockState(mutable.set(worldX, y, worldZ), fluid, false);
                 }
-                chunk.setBlockState(mutable.set(worldX, waterline - 2, worldZ), rim, false);
+                chunk.setBlockState(mutable.set(worldX, bottom - 1, worldZ), rim, false);
             }
         }
     }
@@ -345,13 +338,13 @@ public class CandyWorldChunkGenerator extends ChunkGenerator {
             if (y <= SEA_LEVEL || y >= HEIGHT - 2) {
                 continue;
             }
-            if (tryPlaceMountainCandySpring(chunk, mutable, worldX, y, worldZ)) {
+            if (tryPlaceMountainCandySpring(chunk, mutable, worldX, y, worldZ, springFluidForMountain(biomeId))) {
                 return;
             }
         }
     }
 
-    private boolean tryPlaceMountainCandySpring(ChunkAccess chunk, BlockPos.MutableBlockPos mutable, int worldX, int y, int worldZ) {
+    private boolean tryPlaceMountainCandySpring(ChunkAccess chunk, BlockPos.MutableBlockPos mutable, int worldX, int y, int worldZ, BlockState fluid) {
         if (!isBaseStone(chunk.getBlockState(mutable.set(worldX, y, worldZ)))) {
             return false;
         }
@@ -376,8 +369,8 @@ public class CandyWorldChunkGenerator extends ChunkGenerator {
             return false;
         }
 
-        chunk.setBlockState(mutable.set(worldX, y, worldZ), liquidCandy(), false);
-        chunk.setBlockState(mutable.set(outX, y, outZ), liquidCandy(), false);
+        chunk.setBlockState(mutable.set(worldX, y, worldZ), fluid, false);
+        chunk.setBlockState(mutable.set(outX, y, outZ), fluid, false);
         return true;
     }
 
@@ -446,7 +439,7 @@ public class CandyWorldChunkGenerator extends ChunkGenerator {
             double noiseY = y / (double)CELL_HEIGHT;
             double density = sampleMajorReleaseDensity(noise, noiseX, noiseY, noiseZ, heightConfig);
             if (y <= MIN_Y) {
-                states[i] = BEDROCK;
+                states[i] = FLAT_BOTTOM;
             } else if (density > 0.0D) {
                 states[i] = baseStone();
             } else if (y < SEA_LEVEL) {
@@ -564,11 +557,7 @@ public class CandyWorldChunkGenerator extends ChunkGenerator {
             int worldX = pos.getBlockX(localX);
             for (int localZ = 0; localZ < 16; ++localZ) {
                 int worldZ = pos.getBlockZ(localZ);
-                for (int y = MIN_Y; y < MIN_Y + 5; ++y) {
-                    if (y == MIN_Y || Math.abs(hash(worldX, y, worldZ)) % 5 >= y - MIN_Y) {
-                        chunk.setBlockState(mutable.set(worldX, y, worldZ), BEDROCK, false);
-                    }
-                }
+                chunk.setBlockState(mutable.set(worldX, MIN_Y, worldZ), FLAT_BOTTOM, false);
             }
         }
     }
@@ -878,6 +867,12 @@ public class CandyWorldChunkGenerator extends ChunkGenerator {
 
     private static BlockState liquidCandy() {
         return CCSweetscapeBlocks.LIQUID_CANDY.get().defaultBlockState();
+    }
+
+    private static BlockState springFluidForMountain(ResourceLocation biomeId) {
+        return biomeId.equals(SUGAR_HELL_MOUNTAINS)
+            ? liquidCandy()
+            : CCBlocks.GRENADINE.get().defaultBlockState();
     }
 
     private static boolean isBaseStone(BlockState state) {

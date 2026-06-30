@@ -11,10 +11,74 @@
     "foliage_color": 16762596
   },
   "spawners": {
+    "creature": [
+      {
+        "type": "candycraftmod:candy_pig",
+        "weight": 12,
+        "minCount": 4,
+        "maxCount": 6
+      },
+      {
+        "type": "candycraftmod:gummy_bunny",
+        "weight": 12,
+        "minCount": 4,
+        "maxCount": 6
+      },
+      {
+        "type": "candycraftmod:waffle_sheep",
+        "weight": 12,
+        "minCount": 4,
+        "maxCount": 4
+      },
+      {
+        "type": "candycraftmod:gummy_bunny",
+        "weight": 12,
+        "minCount": 4,
+        "maxCount": 4
+      },
+      {
+        "type": "candycraftmod:caramel_bee",
+        "weight": 40,
+        "minCount": 2,
+        "maxCount": 3
+      },
+      {
+        "type": "candycraftmod:candy_pig",
+        "weight": 40,
+        "minCount": 4,
+        "maxCount": 6
+      },
+      {
+        "type": "candycraftmod:gummy_bunny",
+        "weight": 55,
+        "minCount": 4,
+        "maxCount": 6
+      }
+    ],
     "monster": [
       {
+        "type": "candycraftmod:cotton_candy_spider",
+        "weight": 100,
+        "minCount": 4,
+        "maxCount": 4
+      },
+      {
+        "type": "candycraftmod:candy_creeper",
+        "weight": 100,
+        "minCount": 8,
+        "maxCount": 15
+      },
+      {
         "type": "candycraftmod:suguard",
-        "weight": 60,
+        "weight": 100,
+        "minCount": 4,
+        "maxCount": 4
+      }
+    ],
+    "water_creature": [
+      {
+        "type": "candycraftmod:candy_fish",
+        "weight": 50,
         "minCount": 4,
         "maxCount": 4
       }

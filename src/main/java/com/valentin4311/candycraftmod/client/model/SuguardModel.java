@@ -4,6 +4,8 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.valentin4311.candycraftmod.CandyCraft;
 import com.valentin4311.candycraftmod.entity.BasicCandyZombieEntity;
+import com.valentin4311.candycraftmod.registry.CCEntityTypes;
+import com.valentin4311.candycraftmod.registry.CCItems;
 import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
@@ -65,19 +67,77 @@ public class SuguardModel<T extends BasicCandyZombieEntity> extends EntityModel<
 
     @Override
     public void setupAnim(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
+        if (entity.getType() == CCEntityTypes.BOSS_SUGUARD.get() && !entity.isBossSuguardAwake()) {
+            setDormantBossPose();
+            return;
+        }
         float yaw = netHeadYaw * ((float)Math.PI / 180.0F);
+        if (attackTime > 0.0F) {
+            float swing = Mth.sin(Mth.sqrt(attackTime) * ((float)Math.PI * 2.0F));
+            yaw += swing * ((float)Math.PI * 1.35F);
+        } else if (limbSwingAmount > 0.04F) {
+            yaw += limbSwing * 0.65F;
+        }
+        setHeadGroupYaw(yaw);
+        leg1.xRot = Mth.cos(limbSwing * 0.6662F) * 1.4F * limbSwingAmount;
+        leg2.xRot = Mth.cos(limbSwing * 0.6662F + (float)Math.PI) * 1.4F * limbSwingAmount;
+        leg1.yRot = 0.0F;
+        leg2.yRot = 0.0F;
+        rightArm.xRot = -1.050296F;
+        rightArm.yRot = 0.0F;
+        rightArm.zRot = 0.0F;
+        leftArm.xRot = -1.570796F;
+        leftArm.yRot = 0.0F;
+        leftArm.zRot = 0.0F;
+        if (entity.isBossSuguardAwake() && entity.getMainHandItem().is(CCItems.CARAMEL_BOW.get())) {
+            applyBossBowDraw(entity, ageInTicks);
+        }
+    }
+
+    private void setDormantBossPose() {
+        setHeadGroupYaw(0.0F);
+        head.xRot = 0.0F;
+        nose.xRot = 0.0F;
+        hatBrim.xRot = 0.0F;
+        hatTop.xRot = 0.0F;
+        earRight.xRot = 0.0F;
+        earLeft.xRot = 0.0F;
+        leg1.xRot = 0.0F;
+        leg1.yRot = 0.0F;
+        leg1.zRot = 0.0F;
+        leg2.xRot = 0.0F;
+        leg2.yRot = 0.0F;
+        leg2.zRot = 0.0F;
+        rightArm.xRot = -1.050296F;
+        rightArm.yRot = 0.0F;
+        rightArm.zRot = 0.0F;
+        leftArm.xRot = -1.570796F;
+        leftArm.yRot = 0.0F;
+        leftArm.zRot = 0.0F;
+    }
+
+    private void applyBossBowDraw(T entity, float ageInTicks) {
+        float draw = entity.getBossBowDrawProgress(0.0F);
+        float eased = draw * draw * (3.0F - 2.0F * draw);
+        float settle = Mth.sin(eased * (float)Math.PI) * 0.08F;
+        float idle = Mth.sin(ageInTicks * 0.34F) * 0.025F;
+        rightArm.xRot = -1.48F - 0.22F * eased + idle;
+        rightArm.yRot = -0.50F - 0.22F * eased;
+        rightArm.zRot = 0.34F + 0.12F * eased + settle;
+        leftArm.xRot = -1.52F + 0.10F * eased - idle;
+        leftArm.yRot = 0.44F + 0.48F * eased;
+        leftArm.zRot = -0.26F - 0.18F * eased - settle;
+        float headPull = eased * 0.10F;
+        setHeadGroupYaw(head.yRot - headPull);
+    }
+
+    private void setHeadGroupYaw(float yaw) {
         head.yRot = yaw;
         nose.yRot = yaw;
         hatBrim.yRot = yaw;
         hatTop.yRot = yaw;
         earRight.yRot = yaw;
         earLeft.yRot = yaw;
-        leg1.xRot = Mth.cos(limbSwing * 0.6662F) * 1.4F * limbSwingAmount;
-        leg2.xRot = Mth.cos(limbSwing * 0.6662F + (float)Math.PI) * 1.4F * limbSwingAmount;
-        leg1.yRot = 0.0F;
-        leg2.yRot = 0.0F;
-        rightArm.xRot = -1.050296F;
-        leftArm.xRot = -1.570796F;
     }
 
     public void translateToRightArm(PoseStack poseStack) {

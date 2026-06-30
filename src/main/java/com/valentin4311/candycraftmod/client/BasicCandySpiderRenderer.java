@@ -1,15 +1,16 @@
 package com.valentin4311.candycraftmod.client;
 
 import com.valentin4311.candycraftmod.CandyCraft;
+import com.valentin4311.candycraftmod.client.model.BeetleModel;
 import com.valentin4311.candycraftmod.entity.BasicCandySpiderEntity;
 import com.valentin4311.candycraftmod.registry.CCEntityTypes;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
-import net.minecraft.client.renderer.entity.SpiderRenderer;
+import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.resources.ResourceLocation;
 
-public class BasicCandySpiderRenderer extends SpiderRenderer<BasicCandySpiderEntity> {
+public class BasicCandySpiderRenderer extends MobRenderer<BasicCandySpiderEntity, BeetleModel<BasicCandySpiderEntity>> {
     public BasicCandySpiderRenderer(EntityRendererProvider.Context context) {
-        super(context);
+        super(context, new BeetleModel<>(context.bakeLayer(BeetleModel.LAYER)), 0.5F);
     }
 
     @Override

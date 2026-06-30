@@ -11,12 +11,18 @@
     "foliage_color": 11755263
   },
   "spawners": {
-    "monster": [
+    "water_creature": [
       {
-        "type": "candycraftmod:suguard",
-        "weight": 60,
+        "type": "candycraftmod:candy_fish",
+        "weight": 75,
         "minCount": 4,
         "maxCount": 4
+      },
+      {
+        "type": "candycraftmod:nessie",
+        "weight": 25,
+        "minCount": 1,
+        "maxCount": 3
       }
     ]
   },

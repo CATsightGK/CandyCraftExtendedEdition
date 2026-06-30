@@ -33,17 +33,18 @@ import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.ai.goal.RandomStrollGoal;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
-import net.minecraft.world.entity.monster.Spider;
+import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.pathfinder.Node;
 import net.minecraft.world.level.pathfinder.Path;
 
-public class BasicCandySpiderEntity extends Spider {
+public class BasicCandySpiderEntity extends Monster {
     private static final EntityDataAccessor<Boolean> ANGRY = SynchedEntityData.defineId(BasicCandySpiderEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Boolean> CHILD = SynchedEntityData.defineId(BasicCandySpiderEntity.class, EntityDataSerializers.BOOLEAN);
-    private static final EntityDimensions CHILD_BEETLE_DIMENSIONS = EntityDimensions.scalable(0.5F, 0.5F);
+    private static final EntityDimensions BEETLE_DIMENSIONS = EntityDimensions.scalable(1.0F, 0.8F);
+    private static final EntityDimensions CHILD_BEETLE_DIMENSIONS = EntityDimensions.scalable(0.5F, 0.4F);
     private boolean bossAwake;
     private int bossCooldown = 100;
     private int bossVolleyTicks;
@@ -89,6 +90,10 @@ public class BasicCandySpiderEntity extends Spider {
         return entityData.get(CHILD);
     }
 
+    public boolean isBossAwake() {
+        return bossAwake;
+    }
+
     public void setChildBeetle(boolean child) {
         entityData.set(CHILD, child);
         if (isBeetle() && getAttribute(Attributes.ATTACK_DAMAGE) != null && !isAngry()) {
@@ -99,7 +104,15 @@ public class BasicCandySpiderEntity extends Spider {
 
     @Override
     public EntityDimensions getDimensions(Pose pose) {
-        return isBeetle() && isChildBeetle() ? CHILD_BEETLE_DIMENSIONS : super.getDimensions(pose);
+        if (!isBeetle()) {
+            return super.getDimensions(pose);
+        }
+        return isChildBeetle() ? CHILD_BEETLE_DIMENSIONS : BEETLE_DIMENSIONS;
+    }
+
+    @Override
+    public double getPassengersRidingOffset() {
+        return isBeetle() ? 0.62D : super.getPassengersRidingOffset();
     }
 
     @Override
@@ -114,6 +127,14 @@ public class BasicCandySpiderEntity extends Spider {
         } else {
             setNoGravity(false);
             tickBeetleBehavior();
+        }
+        if (isBeetle() && getVehicle() instanceof BasicCandySpiderEntity beetle) {
+            setYRot(beetle.getYRot());
+            yRotO = beetle.yRotO;
+            yBodyRot = beetle.yBodyRot;
+            yHeadRot = beetle.yHeadRot;
+            setXRot(beetle.getXRot());
+            xRotO = beetle.xRotO;
         }
         super.aiStep();
     }
@@ -184,6 +205,9 @@ public class BasicCandySpiderEntity extends Spider {
                 child.startRiding(this);
                 serverLevel.addFreshEntity(child);
             }
+        }
+        if (isBeetle()) {
+            refreshDimensions();
         }
         return data;
     }

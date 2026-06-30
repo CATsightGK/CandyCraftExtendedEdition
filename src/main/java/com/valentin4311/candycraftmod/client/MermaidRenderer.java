@@ -11,7 +11,7 @@ public class MermaidRenderer extends MobRenderer<BasicCandyZombieEntity, Mermaid
     private static final ResourceLocation TEXTURE = new ResourceLocation(CandyCraft.MODID, "textures/entity/mermaid.png");
 
     public MermaidRenderer(EntityRendererProvider.Context context) {
-        super(context, new MermaidModel<>(context.bakeLayer(MermaidModel.LAYER)), 0.45F);
+        super(context, new MermaidModel<>(context.bakeLayer(MermaidModel.LAYER)), 0.5F);
     }
 
     @Override

@@ -3,6 +3,7 @@ build/
 run/
 out/
 bin/
+output/
 
 *.class
 *.log

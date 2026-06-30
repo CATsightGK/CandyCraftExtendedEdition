@@ -9,9 +9,12 @@ import com.valentin4311.candycraftmod.registry.CCItems;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.WorldGenRegion;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -53,6 +56,7 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
 
     public static void generateInDungeonLevel(ServerLevel level, BlockPos origin) {
         RandomSource random = level.getRandom();
+        loadDungeonChunks(level, origin, -36, 36, -430, 24);
         purgeDungeonItemEntities(level, origin, -36, 36, -7, 56, -430, 24);
         clearArea(level, origin, -36, 36, -7, 56, -430, 24);
         new JellyDungeonFeature(NoneFeatureConfiguration.CODEC).legacyDungeon(level, random, origin);
@@ -462,12 +466,12 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
 
     private void spawnWaterRoomMintJellies(WorldGenLevel level, RandomSource random, int x, int y, int z) {
         int placed = 0;
-        int cursor = random.nextInt(22 * 18 * 22);
+        int cursor = random.nextInt(22 * 8 * 22);
         while (placed < LEGACY_WATER_ROOM_MINT_JELLY_COUNT) {
-            int local = Math.floorMod(cursor, 22 * 18 * 22);
+            int local = Math.floorMod(cursor, 22 * 8 * 22);
             int i = 1 + local % 22;
-            int j = 5 + (local / 22) % 18;
-            int k = 1 + (local / (22 * 18)) % 22;
+            int j = 6 + ((local / 22) % 8) * 2;
+            int k = 1 + (local / (22 * 8)) % 22;
             spawnEntity(level, CCEntityTypes.TORNADO_JELLY.get(), x + i - 12 + 0.5D, y + j + 0.5D, z - k - 1 + 0.5D, random);
             cursor += 101;
             placed++;
@@ -534,9 +538,7 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
 
     private void genColumn189(WorldGenLevel level, RandomSource random, int x, int y, int z, boolean side, int id) {
         set(level, x, y, z, Blocks.SPAWNER.defaultBlockState());
-        if (level.getBlockEntity(new BlockPos(x, y, z)) instanceof SpawnerBlockEntity spawner) {
-            spawner.setEntityId(CCEntityTypes.TORNADO_JELLY.get(), level.getRandom());
-        }
+        configureRedstoneRoomJellySpawner(level, new BlockPos(x, y, z), random);
         set(level, x, y + 1, z, CCBlocks.LICORICE_BLOCK.get().defaultBlockState());
         set(level, x, y + 5, z, CCBlocks.LICORICE_BLOCK.get().defaultBlockState());
         set(level, x, y + 2, z, Blocks.REDSTONE_LAMP.defaultBlockState());
@@ -611,7 +613,9 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
         clearDoor(level, x, y + 4, z - 1, 2, 2);
         set(level, x, y + 2, z - 24, CCBlocks.JELLY_SENTRY_KEY_HOLE.get().defaultBlockState());
         set(level, x, y + 3, z - 24, CCBlocks.JELLY_SENTRY_KEY_HOLE.get().defaultBlockState());
+        purgeEntityType(level, CCEntityTypes.PEZ_JELLY.get(), x - 11, y, z - 24, x + 12, y + 24, z);
         spawnEntity(level, CCEntityTypes.PEZ_JELLY.get(), x + 1.0D, y + 2.0D, z - 12.0D, random);
+        ensureEntityPresent(level, CCEntityTypes.PEZ_JELLY.get(), x - 11, y, z - 24, x + 12, y + 24, z, x + 1.0D, y + 2.0D, z - 12.0D, random);
         legacyCorridorDoor189(level, x - 8, y + 2, z + 4);
         posX += 24;
     }
@@ -682,7 +686,9 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
         clearDoor(level, x, y + 3, z - 1, 2, 2);
         set(level, x, y + 2, z - 49, CCBlocks.JELLY_BOSS_KEY_HOLE.get().defaultBlockState());
         set(level, x, y + 1, z - 49, CCBlocks.JELLY_BOSS_KEY_HOLE.get().defaultBlockState());
+        purgeEntityType(level, CCEntityTypes.KING_SLIME.get(), x - 24, y - 1, z - 49, x + 25, y + 50, z);
         spawnEntity(level, CCEntityTypes.KING_SLIME.get(), x + 1.0D, y + 2.0D, z - 25.0D, random);
+        ensureEntityPresent(level, CCEntityTypes.KING_SLIME.get(), x - 24, y - 1, z - 49, x + 25, y + 50, z, x + 1.0D, y + 2.0D, z - 25.0D, random);
         legacyCorridorDoor189(level, x - 8, y + 1, z + 4);
         posX += 49;
     }
@@ -1020,16 +1026,52 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
     }
 
     private static void spawnEntity(WorldGenLevel level, EntityType<?> type, double x, double y, double z, RandomSource random) {
+        Entity entity = null;
+        if (level instanceof ServerLevel serverLevel) {
+            entity = type.create(serverLevel);
+        } else if (level instanceof WorldGenRegion region) {
+            entity = type.create(region.getLevel());
+        } else {
+            entity = type.create(level.getLevel());
+        }
+        if (entity != null) {
+            BlockPos pos = BlockPos.containing(x, y, z);
+            entity.moveTo(x, y, z, random.nextFloat() * 360.0F, 0.0F);
+            if (entity instanceof Mob mob) {
+                mob.finalizeSpawn(level, level.getCurrentDifficultyAt(pos), MobSpawnType.STRUCTURE, null, null);
+                mob.setPersistenceRequired();
+            }
+            if (entity instanceof BasicCandySlimeEntity slime) {
+                if (type == CCEntityTypes.PEZ_JELLY.get() || type == CCEntityTypes.KING_SLIME.get() || type == CCEntityTypes.JELLY_QUEEN.get()) {
+                    slime.prepareDungeonBossSpawn();
+                }
+            }
+            if (level instanceof ServerLevel serverLevel) {
+                serverLevel.addFreshEntity(entity);
+            } else if (level instanceof WorldGenRegion region) {
+                region.addFreshEntity(entity);
+            }
+        }
+    }
+
+    private static void ensureEntityPresent(WorldGenLevel level, EntityType<?> type, int minX, int minY, int minZ, int maxX, int maxY, int maxZ,
+            double x, double y, double z, RandomSource random) {
+        if (level instanceof ServerLevel serverLevel) {
+            AABB bounds = new AABB(minX, minY, minZ, maxX + 1, maxY + 1, maxZ + 1);
+            if (!serverLevel.getEntities(type, bounds, Entity::isAlive).isEmpty()) {
+                return;
+            }
+        }
+        spawnEntity(level, type, x, y, z, random);
+    }
+
+    private static void purgeEntityType(WorldGenLevel level, EntityType<?> type, int minX, int minY, int minZ, int maxX, int maxY, int maxZ) {
         if (!(level instanceof ServerLevel serverLevel)) {
             return;
         }
-        Entity entity = type.create(serverLevel);
-        if (entity != null) {
-            entity.moveTo(x, y, z, random.nextFloat() * 360.0F, 0.0F);
-            if (entity instanceof BasicCandySlimeEntity slime) {
-                slime.prepareDungeonBossSpawn();
-            }
-            serverLevel.addFreshEntity(entity);
+        AABB bounds = new AABB(minX, minY, minZ, maxX + 1, maxY + 1, maxZ + 1);
+        for (Entity entity : serverLevel.getEntities(type, bounds, Entity::isAlive)) {
+            entity.discard();
         }
     }
 
@@ -1271,6 +1313,47 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
         }
     }
 
+    private static void configureRedstoneRoomJellySpawner(WorldGenLevel level, BlockPos pos, RandomSource random) {
+        if (!(level.getBlockEntity(pos) instanceof SpawnerBlockEntity spawner)) {
+            return;
+        }
+        spawner.setEntityId(randomRedstoneRoomJelly(random), level.getRandom());
+        net.minecraft.nbt.CompoundTag tag = spawner.saveWithFullMetadata();
+        net.minecraft.nbt.ListTag potentials = new net.minecraft.nbt.ListTag();
+        addSpawnerPotential(potentials, CCEntityTypes.YELLOW_JELLY.get(), 1);
+        addSpawnerPotential(potentials, CCEntityTypes.RED_JELLY.get(), 1);
+        addSpawnerPotential(potentials, CCEntityTypes.TORNADO_JELLY.get(), 1);
+        tag.put("SpawnPotentials", potentials);
+        tag.putShort("MinSpawnDelay", (short) 200);
+        tag.putShort("MaxSpawnDelay", (short) 800);
+        tag.putShort("SpawnCount", (short) 4);
+        spawner.load(tag);
+        spawner.setChanged();
+    }
+
+    private static void addSpawnerPotential(net.minecraft.nbt.ListTag list, EntityType<?> type, int weight) {
+        ResourceLocation id = EntityType.getKey(type);
+        if (id == null) {
+            return;
+        }
+        net.minecraft.nbt.CompoundTag entry = new net.minecraft.nbt.CompoundTag();
+        net.minecraft.nbt.CompoundTag data = new net.minecraft.nbt.CompoundTag();
+        net.minecraft.nbt.CompoundTag entity = new net.minecraft.nbt.CompoundTag();
+        entity.putString("id", id.toString());
+        data.put("entity", entity);
+        entry.put("data", data);
+        entry.putInt("weight", weight);
+        list.add(entry);
+    }
+
+    private static EntityType<?> randomRedstoneRoomJelly(RandomSource random) {
+        return switch (random.nextInt(3)) {
+            case 0 -> CCEntityTypes.YELLOW_JELLY.get();
+            case 1 -> CCEntityTypes.RED_JELLY.get();
+            default -> CCEntityTypes.TORNADO_JELLY.get();
+        };
+    }
+
     private static void set(WorldGenLevel level, BlockPos pos, BlockState state) {
         level.setBlock(pos, state, 2);
     }
@@ -1306,6 +1389,18 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
         );
         for (ItemEntity item : level.getEntitiesOfClass(ItemEntity.class, bounds)) {
             item.discard();
+        }
+    }
+
+    private static void loadDungeonChunks(ServerLevel level, BlockPos origin, int minX, int maxX, int minZ, int maxZ) {
+        int minChunkX = Math.floorDiv(origin.getX() + minX, 16);
+        int maxChunkX = Math.floorDiv(origin.getX() + maxX, 16);
+        int minChunkZ = Math.floorDiv(origin.getZ() + minZ, 16);
+        int maxChunkZ = Math.floorDiv(origin.getZ() + maxZ, 16);
+        for (int cx = minChunkX; cx <= maxChunkX; cx++) {
+            for (int cz = minChunkZ; cz <= maxChunkZ; cz++) {
+                level.getChunk(cx, cz);
+            }
         }
     }
 

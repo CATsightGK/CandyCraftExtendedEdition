@@ -3,6 +3,7 @@ package com.valentin4311.candycraftmod.world.feature;
 import com.mojang.serialization.Codec;
 import com.valentin4311.candycraftmod.CandyCraft;
 import com.valentin4311.candycraftmod.block.LegacyLeavesBlock;
+import com.valentin4311.candycraftmod.block.LegacyLogBlock;
 import com.valentin4311.candycraftmod.block.LegacyMetadataBlock;
 import com.valentin4311.candycraftmod.block.LegacyTypeBlock;
 import com.valentin4311.candycraftmod.entity.BasicCandySpiderEntity;
@@ -20,6 +21,8 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.RotatedPillarBlock;
+import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.CropBlock;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.block.entity.SpawnerBlockEntity;
@@ -163,44 +166,85 @@ public class LegacyStructureFeature extends Feature<NoneFeatureConfiguration> {
 
     private static boolean waterTemple(WorldGenLevel level, RandomSource random, BlockPos origin) {
         BlockPos floor = oceanFloor(level, origin);
-        if (floor == null || !level.getFluidState(floor.above(4)).isSource()) {
+        if (floor == null || !level.getFluidState(floor.above(12)).isSource()) {
             return false;
         }
         BlockPos center = floor.above();
         BlockState stone = CCBlocks.CHOCOLATE_STONE.get().defaultBlockState();
         BlockState cobble = CCBlocks.CHOCOLATE_COBBLESTONE.get().defaultBlockState();
         BlockState glass = CCBlocks.CARAMEL_GLASS_ROUND.get().defaultBlockState();
+        BlockState topGlass = CCBlocks.CARAMEL_GLASS_DIAMOND.get().defaultBlockState();
         BlockState lamp = CCBlocks.HONEY_LAMP.get().defaultBlockState();
-        BlockState water = Blocks.WATER.defaultBlockState();
 
-        for (int dx = -4; dx <= 4; dx++) {
-            for (int dz = -4; dz <= 4; dz++) {
-                int dist = Math.abs(dx) + Math.abs(dz);
-                if (dist <= 5) {
-                    set(level, center.offset(dx, -1, dz), dist % 2 == 0 ? stone : cobble);
-                    for (int y = 0; y <= 3; y++) {
-                        boolean edge = dist == 5 || Math.abs(dx) == 4 || Math.abs(dz) == 4;
-                        if (edge) {
-                            boolean window = y == 1 && dist >= 4;
-                            set(level, center.offset(dx, y, dz), window ? glass : cobble);
-                        } else {
-                            set(level, center.offset(dx, y, dz), water);
-                        }
-                    }
-                    if (dist <= 4) {
-                        set(level, center.offset(dx, 4, dz), dist <= 1 ? glass : stone);
-                    }
-                }
+        int[][] footprint = {
+            {0, 0}, {-1, 0}, {1, 0}, {0, -1}, {0, 1}, {-1, -1}, {-1, 1}, {1, -1}, {1, 1},
+            {-2, 0}, {2, 0}, {0, 2}, {0, -2}, {-2, 1}, {-2, -1}, {2, -1}, {2, 1},
+            {-1, 2}, {-1, -2}, {1, 2}, {1, -2}, {0, -3}, {0, 3}, {3, 0}, {-3, 0},
+            {-3, 1}, {-3, -1}, {3, 1}, {3, -1}, {-1, -3}, {1, -3}, {-1, 3}, {1, 3},
+            {2, -2}, {2, 2}, {-2, -2}, {-2, 2}
+        };
+        for (int y = 0; y <= 3; y++) {
+            for (int[] p : footprint) {
+                set(level, center.offset(p[0], y, p[1]), Blocks.AIR.defaultBlockState());
             }
         }
-        for (int d = -4; d <= 4; d += 8) {
-            set(level, center.offset(d, 1, 0), lamp);
-            set(level, center.offset(0, 1, d), lamp);
+
+        place(level, center, stone, 0, -1, 0, -1, -1, -1, -1, -1, 1, 1, -1, -1, 1, -1, 1);
+        place(level, center, cobble, -1, -1, 0, 1, -1, 0, 0, -1, -1, 0, -1, 1,
+            -2, -1, 1, -2, -1, -1, 2, -1, -1, 2, -1, 1, -1, -1, 2, -1, -1, -2,
+            1, -1, 2, 1, -1, -2, 0, -1, -3, 0, -1, 3, 3, -1, 0, -3, -1, 0);
+        place(level, center, stone, -3, -1, 1, -3, -1, -1, 3, -1, 1, 3, -1, -1,
+            -1, -1, -3, 1, -1, -3, -1, -1, 3, 1, -1, 3,
+            2, -1, -2, 2, -1, 2, -2, -1, -2, -2, -1, 2);
+        place(level, center, lamp, -2, -1, 0, 2, -1, 0, 0, -1, 2, 0, -1, -2);
+        place(level, center, CCBlocks.FLOUR.get().defaultBlockState(),
+            0, -1, 4, 1, -1, 4, -1, -1, 4, 0, -1, -4, 1, -1, -4, -1, -1, -4,
+            4, -1, 0, 4, -1, 1, 4, -1, -1, -4, -1, 0, -4, -1, 1, -4, -1, -1,
+            2, -1, 3, -2, -1, 3, 2, -1, -3, -2, -1, -3,
+            3, -1, -2, 3, -1, 2, -3, -1, -2, -3, -1, 2);
+
+        for (int y = 0; y <= 1; y++) {
+            int yy = y * 2;
+            place(level, center, cobble,
+                0, yy, 4, 1, yy, 4, -1, yy, 4, 0, yy, -4, 1, yy, -4, -1, yy, -4,
+                4, yy, 0, 4, yy, 1, 4, yy, -1, -4, yy, 0, -4, yy, 1, -4, yy, -1);
         }
-        set(level, center.offset(0, 4, 0), lamp);
+        place(level, center, lamp, 0, 1, 4, 0, 1, -4, 4, 1, 0, -4, 1, 0);
+        place(level, center, glass,
+            1, 1, 4, -1, 1, 4, 1, 1, -4, -1, 1, -4,
+            4, 1, 1, 4, 1, -1, -4, 1, 1, -4, 1, -1);
+
+        place(level, center, cobble,
+            2, 0, 3, -2, 0, 3, 2, 0, -3, -2, 0, -3, 3, 0, -2, 3, 0, 2, -3, 0, -2, -3, 0, 2,
+            2, 3, 3, -2, 3, 3, 2, 3, -3, -2, 3, -3, 3, 3, -2, 3, 3, 2, -3, 3, -2, -3, 3, 2,
+            2, 3, -2, 2, 3, 2, -2, 3, -2, -2, 3, 2);
+        for (int y = 1; y <= 2; y++) {
+            place(level, center, glass,
+                2, y, 3, -2, y, 3, 2, y, -3, -2, y, -3,
+                3, y, -2, 3, y, 2, -3, y, -2, -3, y, 2);
+        }
+
+        place(level, center, lamp, 3, 3, 0, -3, 3, 0, 0, 3, 3, 0, 3, -3);
+        place(level, center, stone,
+            3, 3, 1, 3, 3, -1, -3, 3, 1, -3, 3, -1,
+            -1, 3, 3, 1, 3, 3, -1, 3, -3, 1, 3, -3);
+
+        place(level, center, topGlass, 0, 4, 0, 0, 4, 1, 0, 4, -1, -1, 4, 0, 1, 4, 0);
+        place(level, center, stone,
+            0, 4, 2, 0, 4, -2, -2, 4, 0, 2, 4, 0,
+            1, 4, 2, -1, 4, 2, 1, 4, -2, -1, 4, -2,
+            2, 4, -1, 2, 4, 1, -2, 4, -1, -2, 4, 1,
+            1, 4, 1, -1, 4, 1, 1, 4, -1, -1, 4, -1);
+
         set(level, center, Blocks.CHEST.defaultBlockState());
         loot(level, random, center, WATER_TEMPLE_LOOT);
         return true;
+    }
+
+    private static void place(WorldGenLevel level, BlockPos center, BlockState state, int... coordinates) {
+        for (int i = 0; i + 2 < coordinates.length; i += 3) {
+            set(level, center.offset(coordinates[i], coordinates[i + 1], coordinates[i + 2]), state);
+        }
     }
 
     private static BlockPos oceanFloor(WorldGenLevel level, BlockPos origin) {
@@ -317,8 +361,7 @@ public class LegacyStructureFeature extends Feature<NoneFeatureConfiguration> {
                 continue;
             }
             if (random.nextBoolean()) {
-                set(level, above, CCBlocks.CHEWING_GUM_PUDDLE.get().defaultBlockState()
-                    .setValue(LegacyMetadataBlock.METADATA, random.nextInt(3)));
+                set(level, above, CCBlocks.CHEWING_GUM_PUDDLE.get().defaultBlockState());
             } else if (random.nextInt(3) == 0) {
                 set(level, above, randomSweetGrass(random));
             }
@@ -443,7 +486,7 @@ public class LegacyStructureFeature extends Feature<NoneFeatureConfiguration> {
     }
 
     private static void spawnUndergroundVillageGingerbread(WorldGenLevel level, RandomSource random, BlockPos base) {
-        int count = 12 + random.nextInt(9);
+        int count = 3 + random.nextInt(4);
         for (int i = 0; i < count; i++) {
             BlockPos pos = base.offset(8 + random.nextInt(48), 2, 8 + random.nextInt(48));
             if (!level.getBlockState(pos).isAir()) {
@@ -556,8 +599,12 @@ public class LegacyStructureFeature extends Feature<NoneFeatureConfiguration> {
     }
 
     private static void buildVillageHouse(WorldGenLevel level, RandomSource random, BlockPos base, int side, boolean window) {
-        BlockState planks = CCBlocks.MARSHMALLOW_PLANKS.get().defaultBlockState();
-        BlockState logs = CCBlocks.MARSHMALLOW_LOG.get().defaultBlockState();
+        int metadata = random.nextInt(3);
+        BlockState planks = marshmallowPlanks(metadata);
+        BlockState logs = marshmallowLog(metadata, Direction.Axis.Y);
+        BlockState logX = marshmallowLog(metadata, Direction.Axis.X);
+        BlockState logZ = marshmallowLog(metadata, Direction.Axis.Z);
+        BlockState slab = marshmallowSlab(metadata);
         for (int dx = 0; dx < 5; dx++) {
             for (int dz = 0; dz < 5; dz++) {
                 set(level, base.offset(dx, 0, dz), CCBlocks.CHOCOLATE_STONE.get().defaultBlockState());
@@ -574,41 +621,75 @@ public class LegacyStructureFeature extends Feature<NoneFeatureConfiguration> {
             }
         }
         for (int dx = 1; dx <= 3; dx++) {
-            set(level, base.offset(dx, 3, 0), logs);
-            set(level, base.offset(dx, 3, 4), logs);
+            set(level, base.offset(dx, 3, 0), logX);
+            set(level, base.offset(dx, 3, 4), logX);
         }
         for (int dz = 1; dz <= 3; dz++) {
-            set(level, base.offset(0, 3, dz), logs);
-            set(level, base.offset(4, 3, dz), logs);
+            set(level, base.offset(0, 3, dz), logZ);
+            set(level, base.offset(4, 3, dz), logZ);
         }
 
         if (window) {
-            BlockPos glass = houseWallPos(base, side ^ 2, random.nextInt(3));
-            set(level, glass.above(), random.nextInt(3) == 0
+            BlockPos glass = houseWindowPos(base, side, random.nextInt(3));
+            set(level, glass, random.nextInt(3) == 0
                 ? CCBlocks.CARAMEL_PANE.get().defaultBlockState()
                 : random.nextBoolean() ? CCBlocks.CARAMEL_PANE_ROUND.get().defaultBlockState() : CCBlocks.CARAMEL_PANE_DIAMOND.get().defaultBlockState());
         }
         BlockPos door = houseWallPos(base, side, random.nextInt(3));
         set(level, door, Blocks.AIR.defaultBlockState());
-        set(level, door.above(), CCBlocks.MARSHMALLOW_SLAB.get().defaultBlockState());
+        set(level, door.above(), slab);
         set(level, base.offset(0, 3, 0), Blocks.AIR.defaultBlockState());
         set(level, base.offset(4, 3, 0), Blocks.AIR.defaultBlockState());
         set(level, base.offset(4, 3, 4), Blocks.AIR.defaultBlockState());
         set(level, base.offset(0, 3, 4), Blocks.AIR.defaultBlockState());
+        spawnGingerbread(level, base.offset(2, 2, 2), base.getY() > 100 ? GingerbreadManEntity.ELDER : -1);
     }
 
     private static BlockPos houseWallPos(BlockPos base, int side, int offset) {
         int direction = side & 3;
         if (direction == 0) {
-            return base.offset(4, 1, 1 + offset);
-        }
-        if (direction == 1) {
-            return base.offset(1 + offset, 1, 4);
-        }
-        if (direction == 2) {
             return base.offset(0, 1, 1 + offset);
         }
-        return base.offset(1 + offset, 1, 0);
+        if (direction == 1) {
+            return base.offset(1 + offset, 1, 0);
+        }
+        if (direction == 2) {
+            return base.offset(4, 1, 1 + offset);
+        }
+        return base.offset(1 + offset, 1, 4);
+    }
+
+    private static BlockPos houseWindowPos(BlockPos base, int side, int offset) {
+        int direction = side & 3;
+        if (direction == 0) {
+            return base.offset(4, 2, 1 + offset);
+        }
+        if (direction == 1) {
+            return base.offset(1 + offset, 2, 4);
+        }
+        if (direction == 2) {
+            return base.offset(0, 2, 1 + offset);
+        }
+        return base.offset(1 + offset, 2, 0);
+    }
+
+    private static BlockState marshmallowPlanks(int metadata) {
+        return CCBlocks.MARSHMALLOW_PLANKS.get().defaultBlockState()
+            .setValue(LegacyMetadataBlock.METADATA, metadata & 3);
+    }
+
+    private static BlockState marshmallowLog(int metadata, Direction.Axis axis) {
+        return CCBlocks.MARSHMALLOW_LOG.get().defaultBlockState()
+            .setValue(LegacyLogBlock.METADATA, metadata % 3)
+            .setValue(RotatedPillarBlock.AXIS, axis);
+    }
+
+    private static BlockState marshmallowSlab(int metadata) {
+        return switch (metadata % 3) {
+            case 1 -> CCBlocks.DARK_MARSHMALLOW_SLAB.get().defaultBlockState();
+            case 2 -> CCBlocks.LIGHT_MARSHMALLOW_SLAB.get().defaultBlockState();
+            default -> CCBlocks.MARSHMALLOW_SLAB.get().defaultBlockState();
+        };
     }
 
     private static void buildSmallHouse(WorldGenLevel level, BlockPos base, RandomSource random, boolean chest) {

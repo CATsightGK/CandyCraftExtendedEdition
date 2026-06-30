@@ -3,10 +3,7 @@
     "textures": {
         "layer0": "candycraftmod:item/gummy_ball"
     },
-    "overrides": [
-        { "predicate": { "custom_model_data": 1 }, "model": "candycraftmod:item/gummy_ball_1" },
-        { "predicate": { "custom_model_data": 2 }, "model": "candycraftmod:item/gummy_ball_red" }
-    ],
+    "overrides": [],
     "display": {
         "thirdperson": {
             "rotation": [ -90, 0, 0 ],

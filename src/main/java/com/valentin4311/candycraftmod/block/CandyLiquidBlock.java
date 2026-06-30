@@ -21,8 +21,6 @@ import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.Vec3;
 
 public class CandyLiquidBlock extends LiquidBlock {
-    public static final String PINK_FIRE_TICKS_TAG = "CandyCraftPinkFireTicks";
-
     public enum Kind {
         CARAMEL,
         GRENADINE,

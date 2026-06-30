@@ -20,7 +20,7 @@ public class NessieRenderer extends MobRenderer<BasicCandyZombieEntity, NessieMo
     };
 
     public NessieRenderer(EntityRendererProvider.Context context) {
-        super(context, new NessieModel<>(context.bakeLayer(NessieModel.LAYER)), 0.8F);
+        super(context, new NessieModel<>(context.bakeLayer(NessieModel.LAYER)), 0.5F);
         addLayer(new NessieSaddleLayer(this, context.getModelSet()));
     }
 

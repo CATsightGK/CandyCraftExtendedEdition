@@ -5,8 +5,10 @@ import com.valentin4311.candycraftmod.registry.CCItems;
 import com.valentin4311.candycraftmod.registry.CCSweetscapeItems;
 import com.valentin4311.candycraftmod.util.EmblemHelper;
 import java.util.List;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.AgeableMob;
 import net.minecraft.world.entity.Entity;
@@ -31,6 +33,8 @@ import org.jetbrains.annotations.Nullable;
 
 public class CandyPigEntity extends Pig {
     private static final double AVOID_DISTANCE = 7.0D;
+    private int boostTime;
+    private int boostTimeTotal;
     private static final List<java.util.function.Supplier<? extends net.minecraft.world.item.Item>> CANDY_CANE_DROPS = List.of(
         CCItems.CANDY_CANE,
         CCSweetscapeItems.WHITE_CANDY_CANE,
@@ -65,6 +69,10 @@ public class CandyPigEntity extends Pig {
     @Override
     public void aiStep() {
         super.aiStep();
+        if (boostTime > 0 && ++boostTime > boostTimeTotal) {
+            boostTime = 0;
+            boostTimeTotal = 0;
+        }
         Player threat = level().getNearestPlayer(this, AVOID_DISTANCE);
         boolean avoiding = threat != null && shouldAvoidPlayer(threat);
         setSprinting(avoiding);
@@ -95,7 +103,35 @@ public class CandyPigEntity extends Pig {
 
     @Override
     public boolean boost() {
-        return false;
+        if (boostTime > 0) {
+            return false;
+        }
+        boostTime = 1;
+        boostTimeTotal = random.nextInt(841) + 140;
+        return true;
+    }
+
+    @Override
+    protected float getRiddenSpeed(Player player) {
+        float speed = super.getRiddenSpeed(player);
+        if (boostTime > 0 && boostTimeTotal > 0) {
+            speed += speed * 1.15F * Mth.sin((float) boostTime / (float) boostTimeTotal * (float) Math.PI);
+        }
+        return speed;
+    }
+
+    @Override
+    public void addAdditionalSaveData(CompoundTag tag) {
+        super.addAdditionalSaveData(tag);
+        tag.putInt("BoostTime", boostTime);
+        tag.putInt("BoostTimeTotal", boostTimeTotal);
+    }
+
+    @Override
+    public void readAdditionalSaveData(CompoundTag tag) {
+        super.readAdditionalSaveData(tag);
+        boostTime = tag.getInt("BoostTime");
+        boostTimeTotal = tag.getInt("BoostTimeTotal");
     }
 
     @Override

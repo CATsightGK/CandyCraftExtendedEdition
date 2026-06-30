@@ -5,16 +5,86 @@
   "effects": {
     "sky_color": 15784376,
     "fog_color": 15784376,
-    "water_color": 5844262,
-    "water_fog_color": 3091468,
+    "water_color": 13473279,
+    "water_fog_color": 13473279,
     "grass_color": 15982504,
     "foliage_color": 15982504
   },
   "spawners": {
+    "creature": [
+      {
+        "type": "candycraftmod:candy_pig",
+        "weight": 12,
+        "minCount": 4,
+        "maxCount": 6
+      },
+      {
+        "type": "candycraftmod:gummy_bunny",
+        "weight": 12,
+        "minCount": 4,
+        "maxCount": 6
+      },
+      {
+        "type": "candycraftmod:waffle_sheep",
+        "weight": 12,
+        "minCount": 4,
+        "maxCount": 4
+      },
+      {
+        "type": "candycraftmod:gummy_bunny",
+        "weight": 12,
+        "minCount": 4,
+        "maxCount": 4
+      },
+      {
+        "type": "candycraftmod:candy_wolf",
+        "weight": 50,
+        "minCount": 4,
+        "maxCount": 4
+      },
+      {
+        "type": "candycraftmod:candy_pig",
+        "weight": 21,
+        "minCount": 4,
+        "maxCount": 6
+      },
+      {
+        "type": "candycraftmod:gummy_bunny",
+        "weight": 21,
+        "minCount": 4,
+        "maxCount": 6
+      }
+    ],
     "monster": [
+      {
+        "type": "candycraftmod:cotton_candy_spider",
+        "weight": 100,
+        "minCount": 4,
+        "maxCount": 4
+      },
+      {
+        "type": "candycraftmod:candy_creeper",
+        "weight": 100,
+        "minCount": 8,
+        "maxCount": 15
+      },
+      {
+        "type": "candycraftmod:suguard",
+        "weight": 100,
+        "minCount": 4,
+        "maxCount": 4
+      },
       {
         "type": "candycraftmod:suguard",
         "weight": 60,
+        "minCount": 4,
+        "maxCount": 4
+      }
+    ],
+    "water_creature": [
+      {
+        "type": "candycraftmod:candy_fish",
+        "weight": 50,
         "minCount": 4,
         "maxCount": 4
       }

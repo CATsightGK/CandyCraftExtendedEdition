@@ -21,6 +21,8 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.tags.FluidTags;
+import net.minecraft.util.Mth;
 import net.minecraft.world.BossEvent;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.DifficultyInstance;
@@ -64,6 +66,8 @@ public class BasicCandyZombieEntity extends Zombie {
     private static final EntityDataAccessor<Integer> LEGACY_VARIANT = SynchedEntityData.defineId(BasicCandyZombieEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Boolean> SADDLED = SynchedEntityData.defineId(BasicCandyZombieEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Boolean> BABY_DRAGON = SynchedEntityData.defineId(BasicCandyZombieEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Integer> BOSS_BOW_DRAW_TICKS = SynchedEntityData.defineId(BasicCandyZombieEntity.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Boolean> BOSS_SUGUARD_AWAKE = SynchedEntityData.defineId(BasicCandyZombieEntity.class, EntityDataSerializers.BOOLEAN);
     private boolean angry;
     private boolean waiting;
     private boolean spawnedMinions;
@@ -75,11 +79,13 @@ public class BasicCandyZombieEntity extends Zombie {
     private int dragonShootTicks;
     private int kingBeetleExplosionCount;
     private int dragonAgeTicks;
+    @Nullable
+    private BlockPos nessieSwimTarget;
     private final ServerBossEvent bossEvent = new ServerBossEvent(getDisplayName(), BossEvent.BossBarColor.WHITE, BossEvent.BossBarOverlay.PROGRESS);
 
     public BasicCandyZombieEntity(EntityType<? extends BasicCandyZombieEntity> type, Level level) {
         super(type, level);
-        setPathfindingMalus(BlockPathTypes.WATER, -1.0F);
+        setPathfindingMalus(BlockPathTypes.WATER, isNessie() ? 1.0F : -1.0F);
         this.waiting = isMageSuguard();
         this.angry = isMageSuguard();
     }
@@ -97,6 +103,8 @@ public class BasicCandyZombieEntity extends Zombie {
         entityData.define(LEGACY_VARIANT, 0);
         entityData.define(SADDLED, false);
         entityData.define(BABY_DRAGON, false);
+        entityData.define(BOSS_BOW_DRAW_TICKS, 0);
+        entityData.define(BOSS_SUGUARD_AWAKE, false);
     }
 
     @Override
@@ -165,6 +173,7 @@ public class BasicCandyZombieEntity extends Zombie {
     public void readAdditionalSaveData(CompoundTag tag) {
         super.readAdditionalSaveData(tag);
         angry = tag.getBoolean(TAG_ANGRY);
+        setBossSuguardAwake(angry);
         waiting = tag.getBoolean(TAG_WAITING);
         spawnedMinions = tag.getBoolean(TAG_SPAWNED);
         summonCooldown = tag.getInt(TAG_COUNTDOWN);
@@ -183,6 +192,11 @@ public class BasicCandyZombieEntity extends Zombie {
     @Override
     public void aiStep() {
         ensureDefaultEquipment();
+        if (isBossSuguard() && !isBossSuguardAwake()) {
+            tickDormantBossSuguard();
+            updateBossBar();
+            return;
+        }
         if (!CandyTargeting.canAttackEntity(getTarget())) {
             setTarget(null);
         }
@@ -224,6 +238,12 @@ public class BasicCandyZombieEntity extends Zombie {
             }
             setSpeed((float)speed);
             super.travel(new Vec3(strafe, travelVector.y, forward));
+            return;
+        }
+        if (isNessie() && isEffectiveAi() && isInWater()) {
+            moveRelative(0.03F, travelVector);
+            move(MoverType.SELF, getDeltaMovement());
+            setDeltaMovement(getDeltaMovement().multiply(0.8D, 0.8D, 0.8D).add(0.0D, -0.02D, 0.0D));
             return;
         }
         super.travel(travelVector);
@@ -269,8 +289,17 @@ public class BasicCandyZombieEntity extends Zombie {
         if (isBossSuguard() && source.is(net.minecraft.tags.DamageTypeTags.IS_PROJECTILE)) {
             return false;
         }
-        if (isBossSuguard() && !level().isClientSide && source.getEntity() instanceof Player) {
-            angry = true;
+        if (isBossSuguard()) {
+            LivingEntity attacker = source.getEntity() instanceof LivingEntity living && CandyTargeting.canAttackEntity(living) ? living : null;
+            boolean hurt = super.hurt(source, amount);
+            if (hurt && !level().isClientSide && attacker != null) {
+                setBossSuguardAwake(true);
+                setTarget(attacker);
+                if (level() instanceof ServerLevel serverLevel) {
+                    shootBossSuguardArrow(serverLevel, attacker);
+                }
+            }
+            return hurt;
         }
         if ((isDragon() || isKingBeetle()) && getControllingPassenger() != null && getControllingPassenger().equals(source.getEntity())) {
             return false;
@@ -426,7 +455,9 @@ public class BasicCandyZombieEntity extends Zombie {
             setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(CCItems.CARAMEL_BOW.get()));
         } else if (isMageSuguard()) {
             setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(CCItems.JUMP_WAND.get()));
-        } else if (isSuguard() || isBossSuguard()) {
+        } else if (isBossSuguard()) {
+            setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(CCItems.CARAMEL_BOW.get()));
+        } else if (isSuguard()) {
             setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(CCItems.LICORICE_SPEAR.get()));
         }
     }
@@ -435,9 +466,9 @@ public class BasicCandyZombieEntity extends Zombie {
         if (isNessie()) {
             setAirSupply(getMaxAirSupply());
             if (isInWater() && getControllingPassenger() == null && !level().isClientSide) {
-                Vec3 movement = getDeltaMovement();
-                setDeltaMovement(movement.x * 0.9D + (random.nextDouble() - 0.5D) * 0.015D, movement.y + 0.015D, movement.z * 0.9D + (random.nextDouble() - 0.5D) * 0.015D);
+                tickNessieSwimming();
             } else if (!isInWater() && onGround() && tickCount % 10 == 0) {
+                nessieSwimTarget = null;
                 setDeltaMovement((random.nextDouble() - 0.5D) * 0.5D, 0.34D, (random.nextDouble() - 0.5D) * 0.5D);
             }
         } else if (isDragon()) {
@@ -470,6 +501,61 @@ public class BasicCandyZombieEntity extends Zombie {
         }
     }
 
+    private void tickNessieSwimming() {
+        LivingEntity target = getTarget();
+        if (target != null && CandyTargeting.canAttackEntity(target) && target.isInWater()) {
+            swimToward(target.getX(), target.getY() + target.getBbHeight() * 0.4D, target.getZ(), 0.18D, 0.75D);
+            return;
+        }
+
+        if (!isValidNessieSwimTarget(nessieSwimTarget)
+                || random.nextInt(100) == 0
+                || nessieSwimTarget.distToCenterSqr(position()) < 4.0D) {
+            nessieSwimTarget = chooseNessieSwimTarget();
+        }
+
+        if (nessieSwimTarget != null) {
+            swimToward(nessieSwimTarget.getX() + 0.5D, nessieSwimTarget.getY() + 0.1D, nessieSwimTarget.getZ() + 0.5D, 0.15D, 0.7D);
+        }
+    }
+
+    private void swimToward(double x, double y, double z, double horizontalSpeed, double verticalSpeed) {
+        double dx = x - getX();
+        double dy = y - getY();
+        double dz = z - getZ();
+        Vec3 movement = getDeltaMovement();
+        setDeltaMovement(
+            movement.x + (Math.signum(dx) * horizontalSpeed - movement.x) * 0.1D,
+            movement.y + (Math.signum(dy) * verticalSpeed - movement.y) * 0.1D,
+            movement.z + (Math.signum(dz) * horizontalSpeed - movement.z) * 0.1D
+        );
+        float yaw = (float)(Mth.atan2(getDeltaMovement().z, getDeltaMovement().x) * Mth.RAD_TO_DEG) - 90.0F;
+        float yawDelta = Mth.wrapDegrees(yaw - getYRot());
+        setYRot(getYRot() + yawDelta);
+        yBodyRot = getYRot();
+        yHeadRot = getYRot();
+        zza = 0.5F;
+    }
+
+    @Nullable
+    private BlockPos chooseNessieSwimTarget() {
+        BlockPos origin = blockPosition();
+        for (int i = 0; i < 12; i++) {
+            BlockPos candidate = origin.offset(random.nextInt(17) - 8, random.nextInt(5) - 2, random.nextInt(17) - 8);
+            if (isValidNessieSwimTarget(candidate)) {
+                return candidate;
+            }
+        }
+        return isValidNessieSwimTarget(origin) ? origin : null;
+    }
+
+    private boolean isValidNessieSwimTarget(@Nullable BlockPos pos) {
+        return pos != null
+            && pos.getY() > level().getMinBuildHeight()
+            && level().getFluidState(pos).is(FluidTags.WATER)
+            && level().getFluidState(pos.above()).is(FluidTags.WATER);
+    }
+
     private void tickRangedAndBossBehavior(ServerLevel level) {
         if (rangedCooldown > 0) {
             rangedCooldown--;
@@ -497,35 +583,42 @@ public class BasicCandyZombieEntity extends Zombie {
         if (isBossSuguard()) {
             tickBossSuguard(level);
         }
+        if (getBossBowDrawTicks() > 0) {
+            entityData.set(BOSS_BOW_DRAW_TICKS, getBossBowDrawTicks() - 1);
+        }
     }
 
     private void tickBossSuguard(ServerLevel level) {
-        if (!angry) {
-            heal(5.0F);
-            setDeltaMovement(0.0D, getDeltaMovement().y, 0.0D);
-            if (getAttribute(Attributes.MOVEMENT_SPEED) != null) {
-                getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(0.0D);
-            }
+        if (!isBossSuguardAwake()) {
+            tickDormantBossSuguard();
             return;
         }
         if (getAttribute(Attributes.MOVEMENT_SPEED) != null) {
             getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(0.35D);
         }
         if (--bossSuguardCounter <= 0) {
-            bossSuguardCounter = 300;
+            bossSuguardCounter = 240 + random.nextInt(80);
             bossSuguardStat = random.nextInt(3) + 1;
         }
-        Player target = CandyTargeting.nearestAttackablePlayer(level, this, 48.0D);
+        LivingEntity target = getTarget();
+        if (target != null && (!CandyTargeting.canAttackEntity(target) || distanceToSqr(target) > 48.0D * 48.0D)) {
+            setTarget(null);
+            target = null;
+        }
         if (target == null) {
-            angry = false;
+            target = CandyTargeting.nearestAttackablePlayer(level, this, 48.0D);
+        }
+        if (target == null) {
+            setBossSuguardAwake(false);
             bossSuguardStat = 0;
             return;
         }
         setTarget(target);
         getLookControl().setLookAt(target, 10.0F, getMaxHeadXRot());
         if (rangedCooldown <= 0) {
-            rangedCooldown = 30;
-            int shots = distanceTo(target) < 3.0F ? 5 : bossSuguardStat == 1 ? 4 : 1;
+            boolean volley = bossSuguardStat == 1 || bossSuguardCounter < 70;
+            rangedCooldown = volley ? 5 : 24;
+            int shots = distanceTo(target) < 3.0F ? 5 : volley ? 2 + random.nextInt(3) : 1;
             for (int i = 0; i < shots; i++) {
                 shootBossSuguardArrow(level, target);
             }
@@ -533,15 +626,16 @@ public class BasicCandyZombieEntity extends Zombie {
     }
 
     private void shootBossSuguardArrow(ServerLevel level, LivingEntity target) {
+        entityData.set(BOSS_BOW_DRAW_TICKS, 14);
         HoneyArrowEntity arrow = new HoneyArrowEntity(level, this);
-        arrow.setPos(getX(), getEyeY() - 0.1D, getZ());
-        arrow.setBaseDamage(3.0D + level.getDifficulty().getId() * 0.11D + random.nextGaussian() * 0.25D);
+        arrow.setPos(getX(), getEyeY() - 0.05D, getZ());
+        arrow.setBaseDamage(4.0D + level.getDifficulty().getId() * 0.2D + random.nextGaussian() * 0.25D);
         arrow.setSecondsOnFire(bossSuguardStat == 3 ? 5 : 0);
         arrow.setSlow(bossSuguardStat == 2);
         if (distanceTo(target) < 3.0F) {
             arrow.setKnockback(2);
         }
-        arrow.shoot(target.getX() - getX(), target.getEyeY() - arrow.getY(), target.getZ() - getZ(), 1.6F, 8.0F);
+        arrow.shoot(target.getX() - getX(), target.getEyeY() - arrow.getY(), target.getZ() - getZ(), 1.85F, bossSuguardStat == 1 ? 12.0F : 7.0F);
         level.addFreshEntity(arrow);
         playSound(SoundEvents.ARROW_SHOOT, 1.0F, 1.0F / (random.nextFloat() * 0.4F + 0.8F));
     }
@@ -640,10 +734,11 @@ public class BasicCandyZombieEntity extends Zombie {
         bossEvent.setName(getBossBarName());
         bossEvent.setColor(getBossBarColor());
         bossEvent.setProgress(Math.max(0.0F, Math.min(1.0F, getHealth() / getMaxHealth())));
+        bossEvent.setVisible(!isBossSuguard() || angry);
     }
 
     private boolean hasBossBar() {
-        return isBossSuguard() || isDragon() || isKingBeetle();
+        return isBossSuguard() || isKingBeetle();
     }
 
     private Component getBossBarName() {
@@ -651,9 +746,6 @@ public class BasicCandyZombieEntity extends Zombie {
     }
 
     private BossEvent.BossBarColor getBossBarColor() {
-        if (isDragon()) {
-            return BossEvent.BossBarColor.BLUE;
-        }
         if (isKingBeetle()) {
             return BossEvent.BossBarColor.YELLOW;
         }
@@ -665,7 +757,14 @@ public class BasicCandyZombieEntity extends Zombie {
             return;
         }
 
+        LivingEntity currentTarget = getTarget();
+        if (currentTarget != null && !CandyTargeting.canAttackEntity(currentTarget)) {
+            setTarget(null);
+            currentTarget = null;
+        }
         Player nearby = CandyTargeting.nearestAttackablePlayer(level, this, 8.0D);
+        LivingEntity trigger = currentTarget != null ? currentTarget : nearby;
+        waiting = trigger == null;
         if (waiting) {
             getNavigation().stop();
             setDeltaMovement(0.0D, getDeltaMovement().y, 0.0D);
@@ -678,20 +777,18 @@ public class BasicCandyZombieEntity extends Zombie {
             }
         }
 
-        if (nearby != null) {
-            waiting = false;
+        if (trigger != null) {
+            setTarget(trigger);
             clearFire();
             if (!spawnedMinions) {
-                summonSupportCircle(level);
+                summonSupportCircle(level, trigger);
                 spawnedMinions = true;
                 summonCooldown = 2400;
             }
-        } else {
-            waiting = true;
         }
     }
 
-    private void summonSupportCircle(ServerLevel level) {
+    private void summonSupportCircle(ServerLevel level, LivingEntity target) {
         for (int i = 0; i <= 8; i++) {
             double angle = i / 3.75F * Math.PI;
             double x = -Math.sin(angle) * 2.5D + getX();
@@ -704,17 +801,24 @@ public class BasicCandyZombieEntity extends Zombie {
             }
             summoned.angry = true;
             summoned.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(CCItems.DYNAMITE.get()));
+            summoned.setTarget(target);
             if (summoned.getAttribute(Attributes.MAX_HEALTH) != null) {
                 summoned.getAttribute(Attributes.MAX_HEALTH).setBaseValue(10.0D);
+            }
+            if (summoned.getAttribute(Attributes.ATTACK_DAMAGE) != null) {
+                summoned.getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(6.0D);
             }
             summoned.setHealth(10.0F);
 
             BlockPos spawnPos = BlockPos.containing(x, y, z);
-            if (!level.getBlockState(spawnPos).isAir()) {
+            if (!level.getBlockState(spawnPos).isAir() || !level.getBlockState(spawnPos.above()).isAir()) {
                 spawnPos = blockPosition();
             }
             summoned.moveTo(spawnPos.getX() + 0.5D, spawnPos.getY(), spawnPos.getZ() + 0.5D, getYRot(), 0.0F);
-            level.addFreshEntity(summoned);
+            if (!level.noCollision(summoned)) {
+                summoned.moveTo(getX(), getY(), getZ(), getYRot(), 0.0F);
+            }
+            level.addFreshEntityWithPassengers(summoned);
         }
     }
 
@@ -751,6 +855,50 @@ public class BasicCandyZombieEntity extends Zombie {
 
     private boolean isBossSuguard() {
         return getType() == CCEntityTypes.BOSS_SUGUARD.get();
+    }
+
+    public boolean isBossSuguardAwake() {
+        return isBossSuguard() && entityData.get(BOSS_SUGUARD_AWAKE);
+    }
+
+    private void setBossSuguardAwake(boolean awake) {
+        angry = awake;
+        entityData.set(BOSS_SUGUARD_AWAKE, awake);
+    }
+
+    private void tickDormantBossSuguard() {
+        setBossSuguardAwake(false);
+        heal(5.0F);
+        setTarget(null);
+        getNavigation().stop();
+        getLookControl().setLookAt(this);
+        setDeltaMovement(0.0D, getDeltaMovement().y, 0.0D);
+        if (getAttribute(Attributes.MOVEMENT_SPEED) != null) {
+            getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(0.0D);
+        }
+        bossSuguardStat = 0;
+        entityData.set(BOSS_BOW_DRAW_TICKS, 0);
+        yRotO = getYRot();
+        yBodyRot = getYRot();
+        yHeadRot = getYRot();
+        yBodyRotO = yBodyRot;
+        yHeadRotO = yHeadRot;
+    }
+
+    public int getBossSuguardStat() {
+        return bossSuguardStat;
+    }
+
+    public int getBossBowDrawTicks() {
+        return entityData.get(BOSS_BOW_DRAW_TICKS);
+    }
+
+    public float getBossBowDrawProgress(float partialTicks) {
+        if (!isBossSuguard()) {
+            return 0.0F;
+        }
+        float ticks = Math.max(0.0F, getBossBowDrawTicks() - partialTicks);
+        return Math.min(1.0F, ticks / 14.0F);
     }
 
     private boolean isNessie() {

@@ -2,15 +2,20 @@ package com.valentin4311.candycraftmod.registry;
 
 import com.valentin4311.candycraftmod.CandyCraft;
 import java.util.function.Consumer;
+import com.mojang.blaze3d.shaders.FogShape;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Camera;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.FogRenderer;
+import net.minecraft.client.renderer.ScreenEffectRenderer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.Rarity;
 import net.minecraft.world.level.material.Fluid;
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.shaders.FogShape;
 import net.minecraftforge.client.extensions.common.IClientFluidTypeExtensions;
 import net.minecraftforge.common.SoundActions;
 import net.minecraftforge.eventbus.api.IEventBus;
@@ -32,6 +37,11 @@ public final class CCFluids {
     private static final ResourceLocation LIQUID_CHOCOLATE_FLOWING = new ResourceLocation(CandyCraft.MODID, "block/liquid_chocolate_flow");
     private static final ResourceLocation LIQUID_CANDY_STILL = new ResourceLocation(CandyCraft.MODID, "block/liquid_candy_still");
     private static final ResourceLocation LIQUID_CANDY_FLOWING = new ResourceLocation(CandyCraft.MODID, "block/liquid_candy_flow");
+    private static final ResourceLocation VANILLA_UNDERWATER_OVERLAY = new ResourceLocation("minecraft", "textures/misc/underwater.png");
+    private static final Vector3f GRENADINE_FOG = color(0xF22929);
+    private static final Vector3f CARAMEL_FOG = color(0x914000);
+    private static final Vector3f LIQUID_CHOCOLATE_FOG = color(0x482B17);
+    private static final Vector3f LIQUID_CANDY_FOG = color(0xE674CA);
 
     public static final RegistryObject<FluidType> GRENADINE_TYPE = FLUID_TYPES.register("grenadine", () -> new FluidType(
         FluidType.Properties.create()
@@ -61,16 +71,20 @@ public final class CCFluids {
                 }
 
                 @Override
+                public void renderOverlay(Minecraft minecraft, PoseStack poseStack) {
+                    renderVanillaWaterOverlay(minecraft, poseStack);
+                }
+
+                @Override
                 public Vector3f modifyFogColor(Camera camera, float partialTick, ClientLevel level, int renderDistance, float darkenWorldAmount, Vector3f fluidFogColor) {
-                    return new Vector3f(1.0F, 0.15F, 0.26F);
+                    return new Vector3f(GRENADINE_FOG);
                 }
 
                 @Override
                 public void modifyFogRender(Camera camera, FogRenderer.FogMode mode, float renderDistance, float partialTick, float nearDistance, float farDistance, FogShape shape) {
-                    RenderSystem.setShaderFogStart(-8.0F);
-                    RenderSystem.setShaderFogEnd(renderDistance * 0.5F);
-                    RenderSystem.setShaderFogShape(shape);
+                    renderVanillaWaterFog(renderDistance, shape, 48.0F);
                 }
+
             });
         }
     });
@@ -105,16 +119,20 @@ public final class CCFluids {
                 }
 
                 @Override
+                public void renderOverlay(Minecraft minecraft, PoseStack poseStack) {
+                    renderVanillaWaterOverlay(minecraft, poseStack);
+                }
+
+                @Override
                 public Vector3f modifyFogColor(Camera camera, float partialTick, ClientLevel level, int renderDistance, float darkenWorldAmount, Vector3f fluidFogColor) {
-                    return new Vector3f(0.72F, 0.42F, 0.14F);
+                    return new Vector3f(CARAMEL_FOG);
                 }
 
                 @Override
                 public void modifyFogRender(Camera camera, FogRenderer.FogMode mode, float renderDistance, float partialTick, float nearDistance, float farDistance, FogShape shape) {
-                    RenderSystem.setShaderFogStart(-8.0F);
-                    RenderSystem.setShaderFogEnd(renderDistance * 0.5F);
-                    RenderSystem.setShaderFogShape(shape);
+                    renderVanillaWaterFog(renderDistance, shape, 48.0F);
                 }
+
             });
         }
     });
@@ -150,15 +168,14 @@ public final class CCFluids {
 
                 @Override
                 public Vector3f modifyFogColor(Camera camera, float partialTick, ClientLevel level, int renderDistance, float darkenWorldAmount, Vector3f fluidFogColor) {
-                    return new Vector3f(0.30F, 0.14F, 0.07F);
+                    return new Vector3f(LIQUID_CHOCOLATE_FOG);
                 }
 
                 @Override
                 public void modifyFogRender(Camera camera, FogRenderer.FogMode mode, float renderDistance, float partialTick, float nearDistance, float farDistance, FogShape shape) {
-                    RenderSystem.setShaderFogStart(-8.0F);
-                    RenderSystem.setShaderFogEnd(renderDistance * 0.35F);
-                    RenderSystem.setShaderFogShape(shape);
+                    renderVanillaLavaFog(camera, renderDistance, shape);
                 }
+
             });
         }
     });
@@ -195,15 +212,14 @@ public final class CCFluids {
 
                 @Override
                 public Vector3f modifyFogColor(Camera camera, float partialTick, ClientLevel level, int renderDistance, float darkenWorldAmount, Vector3f fluidFogColor) {
-                    return new Vector3f(1.0F, 0.26F, 0.58F);
+                    return new Vector3f(LIQUID_CANDY_FOG);
                 }
 
                 @Override
                 public void modifyFogRender(Camera camera, FogRenderer.FogMode mode, float renderDistance, float partialTick, float nearDistance, float farDistance, FogShape shape) {
-                    RenderSystem.setShaderFogStart(-8.0F);
-                    RenderSystem.setShaderFogEnd(renderDistance * 0.35F);
-                    RenderSystem.setShaderFogShape(shape);
+                    renderVanillaLavaFog(camera, renderDistance, shape);
                 }
+
             });
         }
     });
@@ -216,6 +232,38 @@ public final class CCFluids {
     public static void register(IEventBus eventBus) {
         FLUID_TYPES.register(eventBus);
         FLUIDS.register(eventBus);
+    }
+
+    private static void renderVanillaWaterOverlay(Minecraft minecraft, PoseStack poseStack) {
+        ScreenEffectRenderer.renderFluid(minecraft, poseStack, VANILLA_UNDERWATER_OVERLAY);
+    }
+
+    private static void renderVanillaWaterFog(float renderDistance, FogShape shape, float maxDistance) {
+        RenderSystem.setShaderFogStart(-8.0F);
+        RenderSystem.setShaderFogEnd(Math.min(maxDistance, renderDistance));
+        RenderSystem.setShaderFogShape(shape);
+    }
+
+    private static Vector3f color(int rgb) {
+        return new Vector3f(
+            ((rgb >> 16) & 0xFF) / 255.0F,
+            ((rgb >> 8) & 0xFF) / 255.0F,
+            (rgb & 0xFF) / 255.0F
+        );
+    }
+
+    private static void renderVanillaLavaFog(Camera camera, float renderDistance, FogShape shape) {
+        if (camera.getEntity().isSpectator()) {
+            RenderSystem.setShaderFogStart(-8.0F);
+            RenderSystem.setShaderFogEnd(renderDistance * 0.5F);
+        } else if (camera.getEntity() instanceof LivingEntity living && living.hasEffect(MobEffects.FIRE_RESISTANCE)) {
+            RenderSystem.setShaderFogStart(0.0F);
+            RenderSystem.setShaderFogEnd(3.0F);
+        } else {
+            RenderSystem.setShaderFogStart(0.25F);
+            RenderSystem.setShaderFogEnd(1.0F);
+        }
+        RenderSystem.setShaderFogShape(shape);
     }
 
     private static ForgeFlowingFluid.Properties grenadineProperties() {

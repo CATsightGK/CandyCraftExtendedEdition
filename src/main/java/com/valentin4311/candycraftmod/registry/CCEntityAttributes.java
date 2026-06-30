@@ -21,6 +21,7 @@ import net.minecraft.world.entity.animal.Pig;
 import net.minecraft.world.entity.animal.Rabbit;
 import net.minecraft.world.entity.animal.Wolf;
 import net.minecraft.world.entity.monster.Creeper;
+import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.monster.Spider;
 import net.minecraft.world.entity.monster.Zombie;
 import net.minecraft.world.entity.npc.Villager;
@@ -93,7 +94,7 @@ public final class CCEntityAttributes {
             .add(Attributes.ATTACK_DAMAGE, 8.0D)
             .build());
 
-        AttributeSupplier spider = Spider.createAttributes()
+        AttributeSupplier spider = Monster.createMonsterAttributes()
             .add(Attributes.MAX_HEALTH, 16.0D)
             .add(Attributes.MOVEMENT_SPEED, 0.3D)
             .add(Attributes.ATTACK_DAMAGE, 3.0D)
@@ -109,12 +110,12 @@ public final class CCEntityAttributes {
         putSlime(event, slime);
 
         event.put(CCEntityTypes.CARAMEL_BEE.get(), CaramelBeeEntity.createAttributes().build());
-        event.put(CCEntityTypes.BEETLE.get(), Spider.createAttributes()
+        event.put(CCEntityTypes.BEETLE.get(), Monster.createMonsterAttributes()
             .add(Attributes.MAX_HEALTH, 25.0D)
             .add(Attributes.MOVEMENT_SPEED, 1.2D)
             .add(Attributes.ATTACK_DAMAGE, 3.0D)
             .build());
-        event.put(CCEntityTypes.BOSS_BEETLE.get(), Spider.createAttributes()
+        event.put(CCEntityTypes.BOSS_BEETLE.get(), Monster.createMonsterAttributes()
             .add(Attributes.MAX_HEALTH, 300.0D)
             .add(Attributes.MOVEMENT_SPEED, 0.35D)
             .add(Attributes.ATTACK_DAMAGE, 10.0D)

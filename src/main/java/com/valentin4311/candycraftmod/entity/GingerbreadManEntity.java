@@ -15,12 +15,19 @@ import net.minecraft.world.entity.SpawnGroupData;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.entity.npc.VillagerData;
 import net.minecraft.world.entity.npc.VillagerProfession;
 import net.minecraft.world.entity.npc.VillagerType;
 import net.minecraft.world.entity.ai.goal.AvoidEntityGoal;
-import net.minecraft.world.entity.ai.goal.PanicGoal;
+import net.minecraft.world.entity.ai.goal.FloatGoal;
+import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
+import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
+import net.minecraft.world.entity.ai.goal.TradeWithPlayerGoal;
+import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
+import net.minecraft.world.entity.ai.goal.LookAtTradingPlayerGoal;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.trading.MerchantOffer;
@@ -38,15 +45,20 @@ public class GingerbreadManEntity extends Villager {
 
     public GingerbreadManEntity(EntityType<? extends GingerbreadManEntity> type, Level level) {
         super(type, level);
-        setVillagerData(new VillagerData(VillagerType.PLAINS, VillagerProfession.NONE, 1));
+        setVillagerData(new VillagerData(VillagerType.PLAINS, VillagerProfession.FARMER, 1));
     }
 
     @Override
     protected void registerGoals() {
-        super.registerGoals();
-        goalSelector.removeAllGoals(goal -> goal instanceof PanicGoal || goal.getClass().getName().contains("VillagerMakeLove"));
-        goalSelector.addGoal(1, new AvoidEntityGoal<Player>(this, Player.class,
-            entity -> entity instanceof Player player && shouldAvoidPlayer(player), 10.0F, 1.65D, 2.1D, entity -> true));
+        goalSelector.removeAllGoals(goal -> true);
+        goalSelector.addGoal(0, new FloatGoal(this));
+        goalSelector.addGoal(1, new TradeWithPlayerGoal(this));
+        goalSelector.addGoal(1, new LookAtTradingPlayerGoal(this));
+        goalSelector.addGoal(2, new GingerbreadAvoidPlayerGoal(this));
+        goalSelector.addGoal(6, new WaterAvoidingRandomStrollGoal(this, 0.25D));
+        goalSelector.addGoal(8, new LookAtPlayerGoal(this, Player.class, 3.0F, 1.0F));
+        goalSelector.addGoal(8, new LookAtPlayerGoal(this, GingerbreadManEntity.class, 5.0F, 0.02F));
+        goalSelector.addGoal(9, new RandomLookAroundGoal(this));
     }
 
     @Override
@@ -89,6 +101,25 @@ public class GingerbreadManEntity extends Villager {
     private boolean shouldAvoidPlayer(Player player) {
         return getGingerProfession() != ELDER && !isTrading() && !player.isSpectator()
             && !EmblemHelper.has(player, CCItems.GINGERBREAD_EMBLEM.get());
+    }
+
+    @Override
+    public InteractionResult mobInteract(Player player, InteractionHand hand) {
+        if (!isAlive() || isTrading() || isBaby()) {
+            return super.mobInteract(player, hand);
+        }
+        if (player.isSpectator()) {
+            return InteractionResult.PASS;
+        }
+        if (!level().isClientSide) {
+            getNavigation().stop();
+            updateTrades();
+            if (!getOffers().isEmpty()) {
+                setTradingPlayer(player);
+                openTradingScreen(player, getDisplayName(), 1);
+            }
+        }
+        return InteractionResult.sidedSuccess(level().isClientSide);
     }
 
     @Override
@@ -230,5 +261,30 @@ public class GingerbreadManEntity extends Villager {
             default -> "gingerbread.job.citizen";
         };
         return Component.translatable(key);
+    }
+
+    private static final class GingerbreadAvoidPlayerGoal extends AvoidEntityGoal<Player> {
+        private final GingerbreadManEntity gingerbread;
+
+        private GingerbreadAvoidPlayerGoal(GingerbreadManEntity gingerbread) {
+            super(gingerbread, Player.class, player -> player instanceof Player target && gingerbread.shouldAvoidPlayer(target), 16.0F, 0.8D, 1.33D, player -> true);
+            this.gingerbread = gingerbread;
+        }
+
+        @Override
+        public void tick() {
+            super.tick();
+            Player threat = getNearestPlayer();
+            if (threat != null && gingerbread.distanceToSqr(threat) < 49.0D) {
+                gingerbread.getNavigation().setSpeedModifier(1.33D);
+            } else {
+                gingerbread.getNavigation().setSpeedModifier(0.8D);
+            }
+        }
+
+        @Nullable
+        private Player getNearestPlayer() {
+            return gingerbread.level().getNearestPlayer(gingerbread, 16.0D);
+        }
     }
 }

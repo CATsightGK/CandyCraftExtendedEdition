@@ -2,7 +2,11 @@ package com.valentin4311.candycraftmod.item;
 
 import com.valentin4311.candycraftmod.entity.GummyBallEntity;
 import com.valentin4311.candycraftmod.registry.CCItems;
+import java.util.List;
+import javax.annotation.Nullable;
+import net.minecraft.ChatFormatting;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.stats.Stats;
@@ -13,6 +17,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.UseAnim;
 import net.minecraft.world.level.Level;
 
@@ -22,7 +27,7 @@ public class JellyWandItem extends Item {
     private static final int MAX_USES = 99;
     private static final int RECHARGE_USES = 11;
     private static final int TAP_CHARGES = 5;
-    private static final int AIM_MODE_TICKS = 10;
+    private static final int SNIPE_MODE_TICKS = 15;
     private static final int RED_JELLY_CHARGE_TICKS = 30;
 
     public JellyWandItem(Properties properties) {
@@ -52,7 +57,7 @@ public class JellyWandItem extends Item {
             return;
         }
 
-        if (usedTicks < AIM_MODE_TICKS) {
+        if (usedTicks < SNIPE_MODE_TICKS) {
             if (entity instanceof Player player) {
                 addTapCharge(stack, level, player);
             }
@@ -76,13 +81,22 @@ public class JellyWandItem extends Item {
 
     private void fireScatterShot(ItemStack stack, Level level, LivingEntity entity) {
         if (!level.isClientSide) {
-            int count = 3 + level.getRandom().nextInt(2);
+            int count = 3 + level.getRandom().nextInt(4);
             for (int i = 0; i < count; i++) {
-                GummyBallEntity ball = new GummyBallEntity(level, entity, 3);
-                ball.setVisualVariant(level.getRandom().nextInt(3));
-                float yawOffset = (i - (count - 1) * 0.5F) * 6.5F + (level.getRandom().nextFloat() - 0.5F) * 2.5F;
-                float pitchOffset = (level.getRandom().nextFloat() - 0.5F) * 2.0F;
-                ball.shootFromRotation(entity, entity.getXRot() + pitchOffset, entity.getYRot() + yawOffset, 0.0F, 1.75F, 2.5F);
+                GummyBallEntity ball = new GummyBallEntity(level, entity, 1);
+                ball.setVisualVariant(randomScatterVisual(level));
+                ball.setBonusDamage(4.0F);
+                float yawOffset = (level.getRandom().nextFloat() - 0.5F) * 9.0F;
+                float pitchOffset = (level.getRandom().nextFloat() - 0.5F) * 7.0F;
+                double yaw = Math.toRadians(entity.getYRot() + yawOffset);
+                double forwardX = -Math.sin(yaw);
+                double forwardZ = Math.cos(yaw);
+                double sideX = Math.cos(Math.toRadians(entity.getYRot()));
+                double sideZ = Math.sin(Math.toRadians(entity.getYRot()));
+                double side = (level.getRandom().nextDouble() - 0.5D) * 0.12D;
+                double vertical = (level.getRandom().nextDouble() - 0.5D) * 0.08D;
+                ball.setPos(entity.getX() + forwardX * 0.72D + sideX * side, entity.getEyeY() - 0.18D + vertical, entity.getZ() + forwardZ * 0.72D + sideZ * side);
+                ball.shootFromRotation(entity, entity.getXRot() + pitchOffset, entity.getYRot() + yawOffset, 0.0F, 1.9F, 2.15F);
                 level.addFreshEntity(ball);
             }
         }
@@ -97,10 +111,10 @@ public class JellyWandItem extends Item {
     private void fireRedJellyShot(ItemStack stack, Level level, LivingEntity entity, int usedTicks) {
         setTapCharge(stack, 0);
         if (!level.isClientSide) {
-            float charge = Mth.clamp((usedTicks - AIM_MODE_TICKS) / (float)(RED_JELLY_CHARGE_TICKS - AIM_MODE_TICKS), 0.0F, 1.0F);
+            float charge = Mth.clamp((usedTicks - SNIPE_MODE_TICKS) / (float)(RED_JELLY_CHARGE_TICKS - SNIPE_MODE_TICKS), 0.0F, 1.0F);
             GummyBallEntity ball = new GummyBallEntity(level, entity, 4);
-            ball.setVisualVariant(GummyBallEntity.RED_JELLY_VISUAL);
-            ball.setBonusDamage(5.0F + charge * 4.0F);
+            ball.setVisualVariant(0);
+            ball.setBonusDamage(10.0F + charge * 8.0F);
             ball.shootFromRotation(entity, entity.getXRot(), entity.getYRot(), 0.0F, 2.1F + charge * 0.25F, 0.5F);
             level.addFreshEntity(ball);
         }
@@ -142,6 +156,11 @@ public class JellyWandItem extends Item {
         return repairCandidate.is(CCItems.GUMMY_BALL.get());
     }
 
+    @Override
+    public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tooltip, TooltipFlag flag) {
+        tooltip.add(Component.translatable("tooltip.candycraftmod.wand_uses", getUses(stack), MAX_USES).withStyle(ChatFormatting.GRAY));
+    }
+
     public static int getUses(ItemStack stack) {
         CompoundTag tag = stack.getTag();
         if (tag == null || !tag.contains(USES_TAG)) {
@@ -171,7 +190,26 @@ public class JellyWandItem extends Item {
     }
 
     public static boolean isAiming(Player player) {
-        return getAimProgress(player) > 0.0F;
+        return getAimProgress(player) >= 0.5F;
+    }
+
+    public static boolean isChargingTap(ItemStack stack) {
+        return stack.is(CCItems.JELLY_WAND.get()) && getTapCharge(stack) > 0;
+    }
+
+    private static int randomJellyBallVisual(Level level) {
+        return switch (level.getRandom().nextInt(6)) {
+            case 0 -> GummyBallEntity.LEMON_JELLY_VISUAL;
+            case 1 -> GummyBallEntity.RASPBERRY_JELLY_VISUAL;
+            case 2 -> GummyBallEntity.MINT_JELLY_VISUAL;
+            case 3 -> GummyBallEntity.PEZ_JELLY_VISUAL;
+            case 4 -> GummyBallEntity.CARAMEL_KING_JELLY_VISUAL;
+            default -> GummyBallEntity.STRAWBERRY_QUEEN_JELLY_VISUAL;
+        };
+    }
+
+    private static int randomScatterVisual(Level level) {
+        return level.getRandom().nextInt(12) == 0 ? 0 : randomJellyBallVisual(level);
     }
 
     private static void setUses(ItemStack stack, int uses) {

@@ -6,7 +6,7 @@
                       "entries":  [
                                       {
                                           "type":  "minecraft:item",
-                                          "name":  "candycraftmod:marshmallow_flower_block"
+                                          "name":  "candycraftmod:marshmallow_flower"
                                       }
                                   ],
                       "conditions":  [

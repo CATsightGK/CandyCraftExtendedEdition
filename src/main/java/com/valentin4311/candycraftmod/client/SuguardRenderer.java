@@ -16,7 +16,11 @@ public class SuguardRenderer extends MobRenderer<BasicCandyZombieEntity, Suguard
     private static final ResourceLocation SUGUARD = texture("sugarde.png");
     private static final ResourceLocation SOLDIER = texture("suguardesoldier.png");
     private static final ResourceLocation MAGE = texture("suguardemage.png");
-    private static final ResourceLocation BOSS = texture("sugardeboss.png");
+    private static final ResourceLocation BOSS_AWAKE = texture("sugardeboss.png");
+    private static final ResourceLocation BOSS_SLEEPING = texture("sugardeboss1.png");
+    private static final ResourceLocation BOSS_STAT_1 = texture("sugardeboss2.png");
+    private static final ResourceLocation BOSS_STAT_2 = texture("sugardeboss3.png");
+    private static final ResourceLocation BOSS_STAT_3 = texture("sugardeboss4.png");
 
     public SuguardRenderer(EntityRendererProvider.Context context) {
         super(context, new SuguardModel<>(context.bakeLayer(SuguardModel.LAYER)), 0.5F);
@@ -25,8 +29,16 @@ public class SuguardRenderer extends MobRenderer<BasicCandyZombieEntity, Suguard
 
     @Override
     public void render(BasicCandyZombieEntity entity, float entityYaw, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int packedLight) {
-        shadowRadius = entity.getType() == CCEntityTypes.BOSS_SUGUARD.get() ? 0.65F : 0.26F;
+        shadowRadius = entity.getType() == CCEntityTypes.BOSS_SUGUARD.get() ? 0.55F : 0.26F;
         super.render(entity, entityYaw, partialTicks, poseStack, buffer, packedLight);
+    }
+
+    @Override
+    protected void scale(BasicCandyZombieEntity entity, PoseStack poseStack, float partialTickTime) {
+        if (entity.getType() == CCEntityTypes.BOSS_SUGUARD.get()) {
+            poseStack.scale(2.0F, 2.0F, 2.0F);
+        }
+        super.scale(entity, poseStack, partialTickTime);
     }
 
     @Override
@@ -35,7 +47,10 @@ public class SuguardRenderer extends MobRenderer<BasicCandyZombieEntity, Suguard
             return MAGE;
         }
         if (entity.getType() == CCEntityTypes.BOSS_SUGUARD.get()) {
-            return BOSS;
+            if (!entity.isBossSuguardAwake()) {
+                return BOSS_SLEEPING;
+            }
+            return BOSS_AWAKE;
         }
         return entity.getMainHandItem().is(CCItems.DYNAMITE.get()) ? SOLDIER : SUGUARD;
     }

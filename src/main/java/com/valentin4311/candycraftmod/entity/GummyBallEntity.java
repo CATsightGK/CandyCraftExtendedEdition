@@ -2,7 +2,6 @@ package com.valentin4311.candycraftmod.entity;
 
 import com.valentin4311.candycraftmod.registry.CCEntityTypes;
 import com.valentin4311.candycraftmod.registry.CCItems;
-import com.valentin4311.candycraftmod.registry.CCSweetscapeItems;
 import net.minecraft.core.particles.ItemParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
@@ -24,7 +23,12 @@ import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 
 public class GummyBallEntity extends ThrowableItemProjectile {
-    public static final int RED_JELLY_VISUAL = 100;
+    public static final int LEMON_JELLY_VISUAL = 101;
+    public static final int RASPBERRY_JELLY_VISUAL = 102;
+    public static final int MINT_JELLY_VISUAL = 103;
+    public static final int PEZ_JELLY_VISUAL = 104;
+    public static final int CARAMEL_KING_JELLY_VISUAL = 105;
+    public static final int STRAWBERRY_QUEEN_JELLY_VISUAL = 106;
     private static final EntityDataAccessor<Integer> POWER = SynchedEntityData.defineId(GummyBallEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Integer> VISUAL_VARIANT = SynchedEntityData.defineId(GummyBallEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Float> BONUS_DAMAGE = SynchedEntityData.defineId(GummyBallEntity.class, EntityDataSerializers.FLOAT);
@@ -51,7 +55,11 @@ public class GummyBallEntity extends ThrowableItemProjectile {
     }
 
     public void setVisualVariant(int variant) {
-        entityData.set(VISUAL_VARIANT, variant == RED_JELLY_VISUAL ? RED_JELLY_VISUAL : Math.max(0, Math.min(2, variant)));
+        if (variant >= LEMON_JELLY_VISUAL && variant <= STRAWBERRY_QUEEN_JELLY_VISUAL) {
+            entityData.set(VISUAL_VARIANT, variant);
+        } else {
+            entityData.set(VISUAL_VARIANT, 0);
+        }
     }
 
     public int getVisualVariant() {
@@ -82,25 +90,34 @@ public class GummyBallEntity extends ThrowableItemProjectile {
     @Override
     public ItemStack getItem() {
         int variant = getVisualVariant();
-        if (variant == RED_JELLY_VISUAL) {
-            return new ItemStack(CCSweetscapeItems.RED_GUMMY.get());
+        if (variant == LEMON_JELLY_VISUAL) {
+            return new ItemStack(CCItems.LEMON_JELLY_BALL.get());
         }
-        ItemStack stack = new ItemStack(getDefaultItem());
-        if (variant > 0) {
-            stack.getOrCreateTag().putInt("CustomModelData", variant);
+        if (variant == RASPBERRY_JELLY_VISUAL) {
+            return new ItemStack(CCItems.RASPBERRY_JELLY_BALL.get());
         }
-        return stack;
+        if (variant == MINT_JELLY_VISUAL) {
+            return new ItemStack(CCItems.MINT_JELLY_BALL.get());
+        }
+        if (variant == PEZ_JELLY_VISUAL) {
+            return new ItemStack(CCItems.PEZ_JELLY_BALL.get());
+        }
+        if (variant == CARAMEL_KING_JELLY_VISUAL) {
+            return new ItemStack(CCItems.CARAMEL_KING_JELLY_BALL.get());
+        }
+        if (variant == STRAWBERRY_QUEEN_JELLY_VISUAL) {
+            return new ItemStack(CCItems.STRAWBERRY_QUEEN_JELLY_BALL.get());
+        }
+        return new ItemStack(getDefaultItem());
     }
 
     @Override
     public void tick() {
         super.tick();
-        if (level().isClientSide && getPower() == 1) {
+        if (level().isClientSide && (getPower() == 1 || getPower() >= 3) && tickCount % 2 == 0) {
             spawnBreakParticle();
         } else if (level().isClientSide && getPower() == 2) {
             level().addParticle(ParticleTypes.FLAME, getX(), getY(), getZ(), 0.0D, 0.0D, 0.0D);
-        } else if (level().isClientSide && getPower() >= 3 && tickCount % 2 == 0) {
-            spawnBreakParticle();
         }
     }
 
@@ -134,9 +151,17 @@ public class GummyBallEntity extends ThrowableItemProjectile {
 
     @Override
     protected void onHit(HitResult result) {
+        if (result.getType() == HitResult.Type.ENTITY && ((EntityHitResult) result).getEntity() instanceof GummyBallEntity) {
+            return;
+        }
+        if (result.getType() == HitResult.Type.ENTITY && ((EntityHitResult) result).getEntity() == getOwner() && tickCount < 8) {
+            return;
+        }
         super.onHit(result);
         if (result.getType() == HitResult.Type.ENTITY) {
-            hitEntity((EntityHitResult) result);
+            if (!hitEntity((EntityHitResult) result)) {
+                return;
+            }
         }
 
         if (level().isClientSide) {
@@ -152,14 +177,21 @@ public class GummyBallEntity extends ThrowableItemProjectile {
         }
     }
 
-    private void hitEntity(EntityHitResult result) {
+    private boolean hitEntity(EntityHitResult result) {
         if (level().isClientSide) {
-            return;
+            return true;
         }
         Entity entity = result.getEntity();
         int power = getPower();
         float damage = getBonusDamage() > 0.0F ? getBonusDamage() : power == 1 ? 6.0F : power == 2 ? 4.0F : power == 3 ? 3.0F : power == 4 ? 8.0F : 0.1F;
+        if (entity instanceof BasicCandySlimeEntity candy && (candy.isPezJelly() || candy.isKingSlime() || candy.isJellyQueen())) {
+            entity.hurt(damageSources().thrown(this, getOwner()), damage);
+            return false;
+        }
         entity.hurt(damageSources().thrown(this, getOwner()), damage);
+        if (power == 5) {
+            return true;
+        }
         if (entity instanceof LivingEntity living && (power == 3 || power == 4)) {
             living.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 5 * 20, 0));
         } else if (entity instanceof LivingEntity living && power < 2) {
@@ -167,6 +199,7 @@ public class GummyBallEntity extends ThrowableItemProjectile {
         } else if (power == 2) {
             entity.setSecondsOnFire(7);
         }
+        return true;
     }
 
     private void spawnBreakParticle() {
