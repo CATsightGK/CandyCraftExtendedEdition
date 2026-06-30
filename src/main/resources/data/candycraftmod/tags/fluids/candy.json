@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    "candycraftmod:liquid_chocolate",
+    "candycraftmod:flowing_liquid_chocolate",
+    "candycraftmod:liquid_candy",
+    "candycraftmod:flowing_liquid_candy"
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "##",
+    "##"
+  ],
+  "key": {
+    "#": {
+      "item": "candycraftmod:pure_rock_candy"
+    }
+  },
+  "result": {
+    "item": "candycraftmod:crystallized_sugar"
+  }
+}

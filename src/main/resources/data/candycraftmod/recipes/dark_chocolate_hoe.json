@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "BB ",
+    " W ",
+    " W "
+  ],
+  "key": {
+    "B": {
+      "item": "candycraftmod:dark_chocolate_bar"
+    },
+    "W": {
+      "item": "candycraftmod:wafer_stick"
+    }
+  },
+  "result": {
+    "item": "candycraftmod:dark_chocolate_hoe"
+  }
+}
