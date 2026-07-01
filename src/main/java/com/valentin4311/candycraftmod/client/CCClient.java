@@ -101,6 +101,7 @@ public final class CCClient {
             MenuScreens.register(CCMenus.SUGAR_FACTORY.get(), SugarFactoryScreen::new);
             MenuScreens.register(CCMenus.LICORICE_FURNACE.get(), LicoriceFurnaceScreen::new);
             MenuScreens.register(CCMenus.EMBLEM_BASKET.get(), EmblemBasketScreen::new);
+            MenuScreens.register(CCMenus.CANDY_WORKBENCH.get(), CandyWorkbenchScreen::new);
             registerProjectileItemProperties();
         });
     }

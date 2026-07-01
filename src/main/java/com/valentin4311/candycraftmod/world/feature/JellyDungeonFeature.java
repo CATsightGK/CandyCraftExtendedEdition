@@ -455,11 +455,13 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
     private void restoreLayeredWater(WorldGenLevel level, int x, int y, int z) {
         BlockState sourceWater = Blocks.WATER.defaultBlockState().setValue(net.minecraft.world.level.block.LiquidBlock.LEVEL, 0);
         for (int i = 1; i < 23; i++) {
+            boolean water = true;
             for (int j = 5; j < 23; j++) {
+                BlockState state = water && j < 21 ? sourceWater : Blocks.AIR.defaultBlockState();
                 for (int k = 1; k < 23; k++) {
-                    BlockState state = j < 21 && (j & 1) == 1 ? sourceWater : Blocks.AIR.defaultBlockState();
                     setStatic(level, x + i - 12, y + j, z - k - 1, state);
                 }
+                water = !water;
             }
         }
     }

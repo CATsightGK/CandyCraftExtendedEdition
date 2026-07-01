@@ -2,10 +2,13 @@ package com.valentin4311.candycraftmod.registry;
 
 import com.valentin4311.candycraftmod.CandyCraft;
 import com.valentin4311.candycraftmod.block.SugarFactoryBlock;
+import com.valentin4311.candycraftmod.block.CandyWorkbenchBlock;
+import com.valentin4311.candycraftmod.menu.CandyWorkbenchMenu;
 import com.valentin4311.candycraftmod.menu.EmblemBasketMenu;
 import com.valentin4311.candycraftmod.menu.LicoriceFurnaceMenu;
 import com.valentin4311.candycraftmod.menu.SugarFactoryMenu;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.common.extensions.IForgeMenuType;
@@ -39,6 +42,20 @@ public final class CCMenus {
         MENU_TYPES.register("emblem_basket", () -> IForgeMenuType.create((id, inventory, data) ->
             new EmblemBasketMenu(id, inventory)
         ));
+
+    public static final RegistryObject<MenuType<CandyWorkbenchMenu>> CANDY_WORKBENCH =
+        MENU_TYPES.register("candy_workbench", () -> IForgeMenuType.create((id, inventory, data) -> {
+            CandyWorkbenchBlock.CandyWorkbenchTheme theme = CandyWorkbenchBlock.CandyWorkbenchTheme.MARSHMALLOW;
+            ContainerLevelAccess access = ContainerLevelAccess.NULL;
+            if (data != null) {
+                BlockPos pos = data.readBlockPos();
+                access = ContainerLevelAccess.create(inventory.player.level(), pos);
+                if (inventory.player.level().getBlockState(pos).getBlock() instanceof CandyWorkbenchBlock workbench) {
+                    theme = workbench.theme();
+                }
+            }
+            return new CandyWorkbenchMenu(id, inventory, access, theme);
+        }));
 
     private CCMenus() {
     }

@@ -4,6 +4,7 @@ import com.valentin4311.candycraftmod.block.entity.AlchemyTableBlockEntity;
 import com.valentin4311.candycraftmod.CandyCraft;
 import com.valentin4311.candycraftmod.block.entity.DragonEggBlockEntity;
 import com.valentin4311.candycraftmod.block.entity.LicoriceFurnaceBlockEntity;
+import com.valentin4311.candycraftmod.block.entity.MarshmallowChestBlockEntity;
 import com.valentin4311.candycraftmod.block.entity.SugarFactoryBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraftforge.eventbus.api.IEventBus;
@@ -39,7 +40,14 @@ public final class CCBlockEntities {
     public static final RegistryObject<BlockEntityType<DragonEggBlockEntity>> DRAGON_EGG =
         BLOCK_ENTITY_TYPES.register("dragon_egg", () -> new BlockEntityType<>(
             DragonEggBlockEntity::new,
-            java.util.Set.of(CCBlocks.DRAGON_EGG_BLOCK.get()),
+            java.util.Set.of(CCBlocks.DRAGON_EGG_BLOCK.get(), CCBlocks.BEETLE_EGG_BLOCK.get()),
+            null
+        ));
+
+    public static final RegistryObject<BlockEntityType<MarshmallowChestBlockEntity>> MARSHMALLOW_CHEST =
+        BLOCK_ENTITY_TYPES.register("marshmallow_chest", () -> new BlockEntityType<>(
+            MarshmallowChestBlockEntity::new,
+            java.util.Set.of(CCBlocks.MARSHMALLOW_CHEST.get()),
             null
         ));
 

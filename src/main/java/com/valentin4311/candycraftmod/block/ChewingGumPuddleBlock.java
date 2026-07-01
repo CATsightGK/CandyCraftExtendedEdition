@@ -64,6 +64,9 @@ public class ChewingGumPuddleBlock extends Block {
 
     @Override
     public void entityInside(BlockState state, Level level, BlockPos pos, Entity entity) {
+        if (ChewingGumBlock.isChewingGumNative(entity)) {
+            return;
+        }
         if (level.isClientSide && entity.onGround() && entity.getDeltaMovement().horizontalDistanceSqr() > 0.001D) {
             spawnStepParticle(state, level, pos, entity);
         }
@@ -71,7 +74,7 @@ public class ChewingGumPuddleBlock extends Block {
             return;
         }
         Vec3 movement = entity.getDeltaMovement();
-        entity.setDeltaMovement(movement.x * 0.2D, Math.min(0.0D, movement.y), movement.z * 0.2D);
+        entity.setDeltaMovement(movement.x * 0.2D, 0.0D, movement.z * 0.2D);
     }
 
     @Override

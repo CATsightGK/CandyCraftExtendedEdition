@@ -33,7 +33,19 @@ public class SeaweedBlock extends LegacyMetadataBlock.Plant implements SimpleWat
             || below.is(CCSweetscapeBlocks.SUGAR_SAND.get())
             || canStack && below.is(this);
         boolean topValid = above.getFluidState().is(FluidTags.WATER) || canStack && above.is(this);
-        return bottomValid && topValid && level.getFluidState(pos).is(FluidTags.WATER);
+        return bottomValid && topValid && level.getFluidState(pos).is(FluidTags.WATER) && hasOpaqueOrWaterNeighbors(level, pos);
+    }
+
+    private static boolean hasOpaqueOrWaterNeighbors(LevelReader level, BlockPos pos) {
+        for (Direction direction : Direction.Plane.HORIZONTAL) {
+            BlockPos neighborPos = pos.relative(direction);
+            BlockState neighborState = level.getBlockState(neighborPos);
+            if (!neighborState.getFluidState().is(FluidTags.WATER)
+                && !neighborState.isFaceSturdy(level, neighborPos, direction.getOpposite())) {
+                return false;
+            }
+        }
+        return true;
     }
 
     @Override

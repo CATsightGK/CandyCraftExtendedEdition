@@ -56,10 +56,40 @@ public class PuddingBlock extends Block implements BonemealableBlock {
 
     @Override
     public void performBonemeal(ServerLevel level, RandomSource random, BlockPos pos, BlockState state) {
-        BlockPos above = pos.above();
-        if (level.isEmptyBlock(above)) {
-            level.setBlockAndUpdate(above, CCBlocks.SWEET_GRASS.get().defaultBlockState());
+        BlockPos origin = pos.above();
+        for (int i = 0; i < 128; i++) {
+            BlockPos target = origin;
+
+            for (int step = 0; step < i / 16; step++) {
+                target = target.offset(
+                    random.nextInt(3) - 1,
+                    (random.nextInt(3) - 1) * random.nextInt(3) / 2,
+                    random.nextInt(3) - 1
+                );
+                if (!level.getBlockState(target.below()).is(CCBlocks.PUDDING.get()) || level.getBlockState(target).isCollisionShapeFullBlock(level, target)) {
+                    target = null;
+                    break;
+                }
+            }
+
+            if (target != null && level.isEmptyBlock(target)) {
+                BlockState growth = random.nextInt(8) == 0
+                    ? CCBlocks.FRAISE_TAGADA_FLOWER.get().defaultBlockState()
+                    : randomSweetGrass(random);
+                if (growth.canSurvive(level, target)) {
+                    level.setBlock(target, growth, 3);
+                }
+            }
         }
+    }
+
+    private static BlockState randomSweetGrass(RandomSource random) {
+        return switch (random.nextInt(4)) {
+            case 0 -> CCBlocks.SWEET_GRASS_PINK.get().defaultBlockState();
+            case 1 -> CCBlocks.SWEET_GRASS_PALE.get().defaultBlockState();
+            case 2 -> CCBlocks.SWEET_GRASS_YELLOW.get().defaultBlockState();
+            default -> CCBlocks.SWEET_GRASS_RED.get().defaultBlockState();
+        };
     }
 
     @Override

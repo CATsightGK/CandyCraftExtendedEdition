@@ -28,6 +28,13 @@ public final class CherryTreeDecorator extends TreeDecorator {
 
     @Override
     public void place(Context context) {
+        for (BlockPos leafPos : context.leaves()) {
+            BlockPos fruitPos = leafPos.below();
+            if (context.isAir(fruitPos) && context.random().nextInt(7) == 0) {
+                placeCherry(context, fruitPos, Direction.UP);
+            }
+        }
+
         for (BlockPos logPos : context.logs()) {
             for (Direction direction : HORIZONTAL) {
                 BlockPos fruitPos = logPos.relative(direction);

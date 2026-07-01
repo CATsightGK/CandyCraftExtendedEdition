@@ -2,6 +2,7 @@ package com.valentin4311.candycraftmod.registry;
 
 import com.valentin4311.candycraftmod.CandyCraft;
 import com.valentin4311.candycraftmod.block.CCPlantBlock;
+import com.valentin4311.candycraftmod.block.CandyWorkbenchBlock;
 import com.valentin4311.candycraftmod.block.CandyLiquidBlock;
 import com.valentin4311.candycraftmod.block.JellyBlock;
 import com.valentin4311.candycraftmod.block.SameBlockCullBlock;
@@ -61,9 +62,9 @@ public final class CCSweetscapeBlocks {
     public static final RegistryObject<Block> DARK_CHOCOLATE_BRICK_SLAB = register("dark_chocolate_brick_slab", () -> new SlabBlock(chocolate(MapColor.TERRACOTTA_BROWN)));
     public static final RegistryObject<Block> DARK_CHOCOLATE_BRICK_WALL = register("dark_chocolate_brick_wall", () -> new WallBlock(chocolate(MapColor.TERRACOTTA_BROWN)));
 
-    public static final RegistryObject<Block> MILK_CHOCOLATE_WORKBENCH = register("milk_chocolate_workbench", () -> new Block(wood(MapColor.COLOR_BROWN).strength(0.9F)));
-    public static final RegistryObject<Block> WHITE_CHOCOLATE_WORKBENCH = register("white_chocolate_workbench", () -> new Block(wood(MapColor.SAND).strength(0.9F)));
-    public static final RegistryObject<Block> DARK_CHOCOLATE_WORKBENCH = register("dark_chocolate_workbench", () -> new Block(wood(MapColor.TERRACOTTA_BROWN).strength(0.9F)));
+    public static final RegistryObject<Block> MILK_CHOCOLATE_WORKBENCH = register("milk_chocolate_workbench", () -> new CandyWorkbenchBlock(CandyWorkbenchBlock.CandyWorkbenchTheme.MILK_CHOCOLATE, wood(MapColor.COLOR_BROWN).strength(0.9F)));
+    public static final RegistryObject<Block> WHITE_CHOCOLATE_WORKBENCH = register("white_chocolate_workbench", () -> new CandyWorkbenchBlock(CandyWorkbenchBlock.CandyWorkbenchTheme.WHITE_CHOCOLATE, wood(MapColor.SAND).strength(0.9F)));
+    public static final RegistryObject<Block> DARK_CHOCOLATE_WORKBENCH = register("dark_chocolate_workbench", () -> new CandyWorkbenchBlock(CandyWorkbenchBlock.CandyWorkbenchTheme.DARK_CHOCOLATE, wood(MapColor.TERRACOTTA_BROWN).strength(0.9F)));
 
     public static final RegistryObject<Block> COTTON_CANDY_SAPLING = cutout(register("cotton_candy_sapling", () -> new CCPlantBlock(plant())));
     public static final RegistryObject<Block> COTTON_CANDY_BLOCK = cutout(register("cotton_candy_block", () -> new Block(leaves(MapColor.COLOR_PINK).sound(SoundType.WOOL))));
@@ -81,12 +82,12 @@ public final class CCSweetscapeBlocks {
     public static final RegistryObject<Block> RED_GREEN_CANDY_CANE_BLOCK = register("red_green_candy_cane_block", () -> new RotatedPillarBlock(candyCane(MapColor.COLOR_RED)));
     public static final RegistryObject<Block> PINK_CANDY_CANE_BLOCK = register("pink_candy_cane_block", () -> new RotatedPillarBlock(candyCane(MapColor.COLOR_PINK)));
 
-    public static final RegistryObject<Block> WHITE_CANDY_CANE_WORKBENCH = register("white_candy_cane_workbench", () -> new Block(candyCane(MapColor.TERRACOTTA_WHITE)));
-    public static final RegistryObject<Block> RED_CANDY_CANE_WORKBENCH = register("red_candy_cane_workbench", () -> new Block(candyCane(MapColor.COLOR_RED)));
-    public static final RegistryObject<Block> GREEN_CANDY_CANE_WORKBENCH = register("green_candy_cane_workbench", () -> new Block(candyCane(MapColor.COLOR_GREEN)));
-    public static final RegistryObject<Block> WHITE_RED_CANDY_CANE_WORKBENCH = register("white_red_candy_cane_workbench", () -> new Block(candyCane(MapColor.COLOR_RED)));
-    public static final RegistryObject<Block> WHITE_GREEN_CANDY_CANE_WORKBENCH = register("white_green_candy_cane_workbench", () -> new Block(candyCane(MapColor.COLOR_GREEN)));
-    public static final RegistryObject<Block> RED_GREEN_CANDY_CANE_WORKBENCH = register("red_green_candy_cane_workbench", () -> new Block(candyCane(MapColor.COLOR_RED)));
+    public static final RegistryObject<Block> WHITE_CANDY_CANE_WORKBENCH = register("white_candy_cane_workbench", () -> new CandyWorkbenchBlock(CandyWorkbenchBlock.CandyWorkbenchTheme.WHITE_CANDY_CANE, candyCane(MapColor.TERRACOTTA_WHITE)));
+    public static final RegistryObject<Block> RED_CANDY_CANE_WORKBENCH = register("red_candy_cane_workbench", () -> new CandyWorkbenchBlock(CandyWorkbenchBlock.CandyWorkbenchTheme.RED_CANDY_CANE, candyCane(MapColor.COLOR_RED)));
+    public static final RegistryObject<Block> GREEN_CANDY_CANE_WORKBENCH = register("green_candy_cane_workbench", () -> new CandyWorkbenchBlock(CandyWorkbenchBlock.CandyWorkbenchTheme.GREEN_CANDY_CANE, candyCane(MapColor.COLOR_GREEN)));
+    public static final RegistryObject<Block> WHITE_RED_CANDY_CANE_WORKBENCH = register("white_red_candy_cane_workbench", () -> new CandyWorkbenchBlock(CandyWorkbenchBlock.CandyWorkbenchTheme.WHITE_RED_CANDY_CANE, candyCane(MapColor.COLOR_RED)));
+    public static final RegistryObject<Block> WHITE_GREEN_CANDY_CANE_WORKBENCH = register("white_green_candy_cane_workbench", () -> new CandyWorkbenchBlock(CandyWorkbenchBlock.CandyWorkbenchTheme.WHITE_GREEN_CANDY_CANE, candyCane(MapColor.COLOR_GREEN)));
+    public static final RegistryObject<Block> RED_GREEN_CANDY_CANE_WORKBENCH = register("red_green_candy_cane_workbench", () -> new CandyWorkbenchBlock(CandyWorkbenchBlock.CandyWorkbenchTheme.RED_GREEN_CANDY_CANE, candyCane(MapColor.COLOR_RED)));
 
     public static final RegistryObject<Block> CRYSTALLIZED_SUGAR = register("crystallized_sugar", () -> new Block(stone(MapColor.TERRACOTTA_WHITE).strength(1.5F)));
     public static final RegistryObject<Block> SUGAR_SAND = register("sugar_sand", () -> new FallingBlock(BlockBehaviour.Properties.copy(Blocks.SAND).mapColor(MapColor.SAND).strength(0.5F)));
@@ -119,11 +120,11 @@ public final class CCSweetscapeBlocks {
     public static final RegistryObject<Block> WHITE_GUMMY_WORM_BLOCK = register("white_gummy_worm_block", () -> new SameBlockCullRotatedPillarBlock(gummy(MapColor.SAND)));
     public static final RegistryObject<Block> GREEN_GUMMY_WORM_BLOCK = register("green_gummy_worm_block", () -> new SameBlockCullRotatedPillarBlock(gummy(MapColor.COLOR_LIGHT_GREEN)));
 
-    public static final RegistryObject<Block> RED_GUMMY_WORKBENCH = register("red_gummy_workbench", () -> new SameBlockCullBlock(gummy(MapColor.COLOR_RED)));
-    public static final RegistryObject<Block> ORANGE_GUMMY_WORKBENCH = register("orange_gummy_workbench", () -> new SameBlockCullBlock(gummy(MapColor.COLOR_ORANGE)));
-    public static final RegistryObject<Block> YELLOW_GUMMY_WORKBENCH = register("yellow_gummy_workbench", () -> new SameBlockCullBlock(gummy(MapColor.COLOR_YELLOW)));
-    public static final RegistryObject<Block> WHITE_GUMMY_WORKBENCH = register("white_gummy_workbench", () -> new SameBlockCullBlock(gummy(MapColor.SAND)));
-    public static final RegistryObject<Block> GREEN_GUMMY_WORKBENCH = register("green_gummy_workbench", () -> new SameBlockCullBlock(gummy(MapColor.COLOR_LIGHT_GREEN)));
+    public static final RegistryObject<Block> RED_GUMMY_WORKBENCH = register("red_gummy_workbench", () -> new CandyWorkbenchBlock(CandyWorkbenchBlock.CandyWorkbenchTheme.RED_GUMMY, gummy(MapColor.COLOR_RED)));
+    public static final RegistryObject<Block> ORANGE_GUMMY_WORKBENCH = register("orange_gummy_workbench", () -> new CandyWorkbenchBlock(CandyWorkbenchBlock.CandyWorkbenchTheme.ORANGE_GUMMY, gummy(MapColor.COLOR_ORANGE)));
+    public static final RegistryObject<Block> YELLOW_GUMMY_WORKBENCH = register("yellow_gummy_workbench", () -> new CandyWorkbenchBlock(CandyWorkbenchBlock.CandyWorkbenchTheme.YELLOW_GUMMY, gummy(MapColor.COLOR_YELLOW)));
+    public static final RegistryObject<Block> WHITE_GUMMY_WORKBENCH = register("white_gummy_workbench", () -> new CandyWorkbenchBlock(CandyWorkbenchBlock.CandyWorkbenchTheme.WHITE_GUMMY, gummy(MapColor.SAND)));
+    public static final RegistryObject<Block> GREEN_GUMMY_WORKBENCH = register("green_gummy_workbench", () -> new CandyWorkbenchBlock(CandyWorkbenchBlock.CandyWorkbenchTheme.GREEN_GUMMY, gummy(MapColor.COLOR_LIGHT_GREEN)));
     public static final RegistryObject<LiquidBlock> LIQUID_CHOCOLATE = translucent(registerNoItem("liquid_chocolate", () -> new CandyLiquidBlock(CCFluids.SOURCE_LIQUID_CHOCOLATE, BlockBehaviour.Properties.copy(Blocks.WATER).mapColor(MapColor.COLOR_BROWN).noLootTable(), CandyLiquidBlock.Kind.LIQUID_CHOCOLATE)));
     public static final RegistryObject<LiquidBlock> LIQUID_CANDY = translucent(registerNoItem("liquid_candy", () -> new CandyLiquidBlock(CCFluids.SOURCE_LIQUID_CANDY, BlockBehaviour.Properties.copy(Blocks.WATER).mapColor(MapColor.COLOR_PINK).lightLevel(state -> 12).noLootTable(), CandyLiquidBlock.Kind.LIQUID_CANDY)));
 

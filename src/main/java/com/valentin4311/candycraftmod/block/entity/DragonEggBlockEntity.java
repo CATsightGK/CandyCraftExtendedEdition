@@ -4,6 +4,7 @@ import com.valentin4311.candycraftmod.entity.BasicCandyZombieEntity;
 import com.valentin4311.candycraftmod.registry.CCBlockEntities;
 import com.valentin4311.candycraftmod.registry.CCBlocks;
 import com.valentin4311.candycraftmod.registry.CCEntityTypes;
+import com.valentin4311.candycraftmod.registry.CCItems;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
@@ -14,6 +15,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.item.ItemStack;
 
 public class DragonEggBlockEntity extends BlockEntity {
     private static final int MIN_HATCH_TICKS = 48000;
@@ -37,16 +39,32 @@ public class DragonEggBlockEntity extends BlockEntity {
         egg.timeLeft--;
         egg.setChanged();
         if (!level.isClientSide && egg.timeLeft == SPAWN_DELAY_TICKS && level instanceof ServerLevel serverLevel) {
-            BasicCandyZombieEntity dragon = CCEntityTypes.DRAGON.get().create(serverLevel);
-            if (dragon != null) {
-                dragon.setBabyDragon(true);
-                dragon.moveTo(pos.getX() + 0.5D, pos.getY() + 1.0D, pos.getZ() + 0.5D, level.getRandom().nextFloat() * 360.0F, 0.0F);
-                serverLevel.addFreshEntity(dragon);
-            }
+            spawnHatchedEntity(serverLevel, pos, state);
         }
         if (!level.isClientSide && egg.timeLeft <= 0) {
             level.removeBlock(pos, false);
             convertSugarEssenceRing(level, pos);
+        }
+    }
+
+    private static void spawnHatchedEntity(ServerLevel level, BlockPos pos, BlockState state) {
+        BasicCandyZombieEntity entity = state.is(CCBlocks.BEETLE_EGG_BLOCK.get())
+            ? CCEntityTypes.KING_BEETLE.get().create(level)
+            : CCEntityTypes.DRAGON.get().create(level);
+
+        if (entity == null) {
+            return;
+        }
+
+        if (entity.getType() == CCEntityTypes.DRAGON.get()) {
+            entity.setBabyDragon(true);
+        }
+
+        entity.moveTo(pos.getX() + 0.5D, pos.getY() + 1.0D, pos.getZ() + 0.5D, level.getRandom().nextFloat() * 360.0F, 0.0F);
+        level.addFreshEntity(entity);
+
+        if (entity.getType() == CCEntityTypes.KING_BEETLE.get()) {
+            entity.spawnAtLocation(new ItemStack(CCItems.CHEWING_GUM_EMBLEM.get()), 0.5F);
         }
     }
 

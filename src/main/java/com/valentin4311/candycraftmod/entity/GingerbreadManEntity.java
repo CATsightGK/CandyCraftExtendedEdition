@@ -105,7 +105,7 @@ public class GingerbreadManEntity extends Villager {
 
     @Override
     public InteractionResult mobInteract(Player player, InteractionHand hand) {
-        if (!isAlive() || isTrading() || isBaby()) {
+        if (!isAlive() || isBaby()) {
             return super.mobInteract(player, hand);
         }
         if (player.isSpectator()) {
@@ -113,6 +113,7 @@ public class GingerbreadManEntity extends Villager {
         }
         if (!level().isClientSide) {
             getNavigation().stop();
+            setTradingPlayer(null);
             updateTrades();
             if (!getOffers().isEmpty()) {
                 setTradingPlayer(player);

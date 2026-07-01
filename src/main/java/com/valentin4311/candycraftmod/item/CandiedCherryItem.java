@@ -20,18 +20,21 @@ public class CandiedCherryItem extends Item {
     @Override
     public InteractionResult useOn(UseOnContext context) {
         Direction face = context.getClickedFace();
-        if (face.getAxis().isVertical()) {
+        if (face == Direction.UP) {
             return InteractionResult.PASS;
         }
 
         Level level = context.getLevel();
         BlockPos supportPos = context.getClickedPos();
-        if (!CherryBlock.isValidSupport(level.getBlockState(supportPos))) {
+        BlockState supportState = level.getBlockState(supportPos);
+        boolean hanging = face == Direction.DOWN && CherryBlock.isValidLeafSupport(supportState);
+        boolean sideMounted = face.getAxis().isHorizontal() && CherryBlock.isValidSideSupport(supportState);
+        if (!hanging && !sideMounted) {
             return InteractionResult.PASS;
         }
 
         BlockPos placePos = supportPos.relative(face);
-        BlockState state = CCBlocks.CHERRY_BLOCK.get().defaultBlockState().setValue(CherryBlock.FACING, face.getOpposite());
+        BlockState state = CCBlocks.CHERRY_BLOCK.get().defaultBlockState().setValue(CherryBlock.FACING, hanging ? Direction.UP : face.getOpposite());
         if (!level.getBlockState(placePos).canBeReplaced() || !state.canSurvive(level, placePos)) {
             return InteractionResult.PASS;
         }

@@ -7,6 +7,7 @@ import com.valentin4311.candycraftmod.block.CandyLiquidBlock;
 import com.valentin4311.candycraftmod.block.CandyPortalBlock;
 import com.valentin4311.candycraftmod.block.CandyWaterlilyBlock;
 import com.valentin4311.candycraftmod.block.CandyWebBlock;
+import com.valentin4311.candycraftmod.block.CandyWorkbenchBlock;
 import com.valentin4311.candycraftmod.block.CherryBlock;
 import com.valentin4311.candycraftmod.block.ChewingGumBlock;
 import com.valentin4311.candycraftmod.block.ChewingGumPuddleBlock;
@@ -26,6 +27,7 @@ import com.valentin4311.candycraftmod.block.LegacyTypeBlock;
 import com.valentin4311.candycraftmod.block.LicoriceFurnaceBlock;
 import com.valentin4311.candycraftmod.block.LollipopBlock;
 import com.valentin4311.candycraftmod.block.LollipopPlantBlock;
+import com.valentin4311.candycraftmod.block.MarshmallowChestBlock;
 import com.valentin4311.candycraftmod.block.NougatHeadBlock;
 import com.valentin4311.candycraftmod.block.PuddingBlock;
 import com.valentin4311.candycraftmod.block.SeaweedBlock;
@@ -119,11 +121,11 @@ public final class CCBlocks {
     public static final RegistryObject<Block> DRAGIBUS_CROPS = cutout(register("dragibus_crops", () -> new CandyCropBlock(() -> CCItems.DRAGIBUS.get(), plant())));
     public static final RegistryObject<Block> ROPE_LICORICE = cutout(register("rope_licorice", () -> new SeaweedBlock(true, plant())));
     public static final RegistryObject<Block> MINT = cutout(register("mint", () -> new SeaweedBlock(false, plant())));
-    public static final RegistryObject<Block> MARSHMALLOW_WORKBENCH = register("marshmallow_workbench", () -> new Block(wood(MapColor.COLOR_PINK).strength(2.5F)));
+    public static final RegistryObject<Block> MARSHMALLOW_WORKBENCH = register("marshmallow_workbench", () -> new CandyWorkbenchBlock(CandyWorkbenchBlock.CandyWorkbenchTheme.MARSHMALLOW, wood(MapColor.COLOR_PINK).strength(2.5F)));
     public static final RegistryObject<Block> MARSHMALLOW_LADDER = cutout(register("marshmallow_ladder", () -> new LadderBlock(wood(MapColor.COLOR_PINK).strength(2.5F).noOcclusion())));
     public static final RegistryObject<Block> MARSHMALLOW_DOOR = cutout(register("marshmallow_door", () -> new DoorBlock(wood(MapColor.COLOR_PINK).strength(2.5F).noOcclusion(), BlockSetType.OAK)));
     public static final RegistryObject<Block> FRAISE_TAGADA_FLOWER = cutout(register("fraise_tagada_flower", () -> new LegacyMetadataBlock.Plant(plant())));
-    public static final RegistryObject<Block> MARSHMALLOW_CHEST = register("marshmallow_chest", () -> new FacingModelBlock(wood(MapColor.COLOR_PINK).strength(2.5F).noOcclusion()));
+    public static final RegistryObject<Block> MARSHMALLOW_CHEST = register("marshmallow_chest", () -> new MarshmallowChestBlock(wood(MapColor.COLOR_PINK).strength(2.5F).noOcclusion()));
     public static final RegistryObject<Block> HONEY_ORE = register("honey_ore", () -> new Block(stone().strength(3.0F, 5.0F).requiresCorrectToolForDrops()));
     public static final RegistryObject<Block> HONEY_TORCH = cutout(register("honey_torch", () -> new TorchBlock(BlockBehaviour.Properties.copy(Blocks.TORCH).lightLevel(state -> 15), ParticleTypes.FLAME)));
     public static final RegistryObject<Block> HONEY_WALL_TORCH = cutout(registerNoItem("honey_wall_torch", () -> new WallTorchBlock(BlockBehaviour.Properties.copy(Blocks.WALL_TORCH).lightLevel(state -> 15), ParticleTypes.FLAME)));
@@ -177,7 +179,7 @@ public final class CCBlocks {
     public static final RegistryObject<Block> ICE_CREAM_SLAB_3 = register("ice_cream_slab.3", () -> new SlabBlock(BlockBehaviour.Properties.copy(Blocks.SNOW_BLOCK).strength(1.0F)));
     public static final RegistryObject<Block> ICE_CREAM_DOUBLE_SLAB_3 = register("ice_cream_double_slab.3", () -> new SlabBlock(BlockBehaviour.Properties.copy(Blocks.SNOW_BLOCK).strength(1.0F)));
     public static final RegistryObject<Block> DRAGON_EGG_BLOCK = register("dragon_egg_block", () -> new DragonEggBlock(stone().mapColor(MapColor.COLOR_BLUE).strength(3.0F, 15.0F).noOcclusion()));
-    public static final RegistryObject<Block> BEETLE_EGG_BLOCK = register("beetle_egg_block", () -> new Block(stone().mapColor(MapColor.COLOR_PURPLE).strength(3.0F, 15.0F).noOcclusion()));
+    public static final RegistryObject<Block> BEETLE_EGG_BLOCK = register("beetle_egg_block", () -> new DragonEggBlock(stone().mapColor(MapColor.COLOR_PURPLE).strength(3.0F, 15.0F).noOcclusion()));
     public static final RegistryObject<Block> SUGAR_ESSENCE_FLOWER = cutout(register("sugar_essence_flower", () -> new LegacyMetadataBlock.Plant(plant())));
     public static final RegistryObject<Block> MARSHMALLOW_PLANKS_DARK = register("marshmallow_planks_dark", () -> new Block(wood(MapColor.COLOR_BROWN).strength(3.0F, 5.0F)));
     public static final RegistryObject<Block> MARSHMALLOW_PLANKS_LIGHT = register("marshmallow_planks_light", () -> new Block(wood(MapColor.TERRACOTTA_WHITE).strength(3.0F, 5.0F)));
@@ -298,7 +300,8 @@ public final class CCBlocks {
     }
 
     private static BlockBehaviour.Properties jelly() {
-        return BlockBehaviour.Properties.copy(Blocks.SLIME_BLOCK).mapColor(MapColor.COLOR_PURPLE).strength(3.0F, 2000.0F).noOcclusion();
+        return BlockBehaviour.Properties.copy(Blocks.SLIME_BLOCK).mapColor(MapColor.COLOR_PURPLE)
+            .strength(3.0F, 2000.0F).sound(CCSoundTypes.JELLY).noOcclusion();
     }
 
     private static BlockBehaviour.Properties glass(MapColor color) {

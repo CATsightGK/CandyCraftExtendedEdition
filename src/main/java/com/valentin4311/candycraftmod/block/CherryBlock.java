@@ -34,7 +34,10 @@ public class CherryBlock extends Block {
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext context) {
         Direction face = context.getClickedFace();
-        if (face.getAxis().isVertical() || !isValidSupport(context.getLevel().getBlockState(context.getClickedPos()))) {
+        if (face == Direction.DOWN && isValidLeafSupport(context.getLevel().getBlockState(context.getClickedPos()))) {
+            return defaultBlockState().setValue(FACING, Direction.UP);
+        }
+        if (face.getAxis().isVertical() || !isValidSideSupport(context.getLevel().getBlockState(context.getClickedPos()))) {
             return null;
         }
         return defaultBlockState().setValue(FACING, face.getOpposite());
@@ -45,7 +48,10 @@ public class CherryBlock extends Block {
         Direction supportDirection = state.getValue(FACING);
         BlockPos supportPos = pos.relative(supportDirection);
         BlockState supportState = level.getBlockState(supportPos);
-        return supportDirection.getAxis().isHorizontal() && isValidSupport(supportState);
+        if (supportDirection == Direction.UP) {
+            return isValidLeafSupport(supportState);
+        }
+        return supportDirection.getAxis().isHorizontal() && isValidSideSupport(supportState);
     }
 
     @Override
@@ -79,9 +85,19 @@ public class CherryBlock extends Block {
         };
     }
 
-    public static boolean isValidSupport(BlockState state) {
+    public static boolean isValidSideSupport(BlockState state) {
         return state.is(CCBlocks.MARSHMALLOW_LOG.get())
             || state.is(CCBlocks.MARSHMALLOW_LOG_DARK.get())
             || state.is(CCBlocks.MARSHMALLOW_LOG_LIGHT.get());
+    }
+
+    public static boolean isValidLeafSupport(BlockState state) {
+        return state.is(CCBlocks.CANDY_LEAVE.get())
+            || state.is(CCBlocks.CANDY_LEAVE2.get())
+            || state.is(CCBlocks.CANDY_LEAVES.get())
+            || state.is(CCBlocks.CANDY_LEAVES_DARK.get())
+            || state.is(CCBlocks.CANDY_LEAVES_LIGHT.get())
+            || state.is(CCBlocks.CANDY_LEAVES_CHERRY.get())
+            || state.is(CCBlocks.CANDY_LEAVES_ENCHANT.get());
     }
 }

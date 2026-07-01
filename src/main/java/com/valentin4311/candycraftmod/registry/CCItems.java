@@ -16,6 +16,7 @@ import com.valentin4311.candycraftmod.item.JellyDungeonKeyItem;
 import com.valentin4311.candycraftmod.item.JellyWandItem;
 import com.valentin4311.candycraftmod.item.JumpWandItem;
 import com.valentin4311.candycraftmod.item.LollipopItem;
+import com.valentin4311.candycraftmod.item.NougatPowderItem;
 import com.valentin4311.candycraftmod.item.RawGummyItem;
 import com.valentin4311.candycraftmod.item.SugarPillItem;
 import com.valentin4311.candycraftmod.item.WikiItem;
@@ -37,6 +38,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemNameBlockItem;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.PickaxeItem;
+import net.minecraft.world.item.PlaceOnWaterBlockItem;
 import net.minecraft.world.item.Rarity;
 import net.minecraft.world.item.RecordItem;
 import net.minecraft.world.item.ShovelItem;
@@ -56,28 +58,48 @@ public final class CCItems {
     public static final List<RegistryObject<Item>> PORT_ITEMS = new ArrayList<>();
 
     public static final RegistryObject<Item> HONEY_SHARD = registerPortItem("honey_shard");
-    public static final RegistryObject<Item> NOUGAT_POWDER = registerPortItem("nougat_powder");
-    public static final RegistryObject<Item> PEZ = registerPortItem("pez");
+    public static final RegistryObject<Item> NOUGAT_POWDER = registerPortItem("nougat_powder", () -> new NougatPowderItem(foodProperties(3, 0.6F)));
+    public static final RegistryObject<Item> PEZ = registerPortItem("pez", () -> new Item(new Item.Properties().food(new FoodProperties.Builder()
+        .nutrition(10)
+        .saturationMod(0.6F)
+        .alwaysEat()
+        .effect(() -> new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 60, 0), 0.9F)
+        .build())));
     public static final RegistryObject<Item> PEZ_DUST = registerPortItem("pez_dust");
-    public static final RegistryObject<Item> LICORICE = registerPortItem("licorice");
+    public static final RegistryObject<Item> LICORICE = registerFood("licorice", 6, 0.6F, true);
     public static final RegistryObject<Item> HONEYCOMB = registerPortItem("honeycomb");
-    public static final RegistryObject<Item> CHOCOLATE_COIN = registerPortItem("chocolate_coin");
+    public static final RegistryObject<Item> CHOCOLATE_COIN = registerFood("chocolate_coin", 2, 0.6F);
     public static final RegistryObject<Item> CRANBERRY_SCALE = registerPortItem("cranberry_scale");
     public static final RegistryObject<Item> SUGAR_CRYSTAL = registerPortItem("pure_rock_candy", () -> new Item(new Item.Properties().rarity(Rarity.RARE)));
     public static final RegistryObject<Item> WAFFLE_NUGGET = registerFood("waffle_nugget", 1, 0.6F, true);
     public static final RegistryObject<Item> MARSHMALLOW_STICK = registerPortItem("marshmallow_stick");
-    public static final RegistryObject<Item> LOLLIPOP = registerPortItem("lollipop", () -> new LollipopItem(new Item.Properties()));
+    public static final RegistryObject<Item> LOLLIPOP = registerPortItem("lollipop", () -> new LollipopItem(foodProperties(1, 0.6F)));
     public static final RegistryObject<Item> LOLLIPOP_SEEDS = registerSeedItem("lollipop_seeds", () -> CCBlocks.LOLLIPOP_PLANT.get());
     public static final RegistryObject<Item> DRAGIBUS = registerPortItem("dragibus", () -> new DragibusSeedFoodItem(CCBlocks.DRAGIBUS_CROPS.get()));
     public static final RegistryObject<Item> MARSHMALLOW_FLOWER = registerPortItem("marshmallow_flower");
-    public static final RegistryObject<Item> CANDIED_CHERRY = registerPortItem("candied_cherry", () -> new CandiedCherryItem(foodProperties(4, 0.3F)));
-    public static final RegistryObject<Item> CANDY_CANE = registerFood("candy_cane", 2, 0.2F);
+    public static final RegistryObject<Item> CANDIED_CHERRY = registerPortItem("candied_cherry", () -> new CandiedCherryItem(foodProperties(3, 0.6F, true)));
+    public static final RegistryObject<Item> CANDY_CANE = registerFood("candy_cane", 4, 0.6F, true);
     public static final RegistryObject<Item> CHEWING_GUM = registerFood("chewing_gum", 1, 0.1F);
-    public static final RegistryObject<Item> COTTON_CANDY = registerFood("raspberry_cotton_candy", 3, 0.2F);
-    public static final RegistryObject<Item> CRANBERRY_FISH = registerFood("cranberry_fish", 2, 0.1F);
-    public static final RegistryObject<Item> CRANBERRY_FISH_COOKED = registerFood("cranberry_fish_cooked", 5, 0.6F);
+    public static final RegistryObject<Item> COTTON_CANDY = registerPortItem("raspberry_cotton_candy", () -> new Item(new Item.Properties().food(new FoodProperties.Builder()
+        .nutrition(3)
+        .saturationMod(0.6F)
+        .alwaysEat()
+        .effect(() -> new MobEffectInstance(MobEffects.DIG_SPEED, 30, 0), 0.9F)
+        .build())));
+    public static final RegistryObject<Item> CRANBERRY_FISH = registerPortItem("cranberry_fish", () -> new Item(new Item.Properties().food(new FoodProperties.Builder()
+        .nutrition(2)
+        .saturationMod(0.6F)
+        .alwaysEat()
+        .effect(() -> new MobEffectInstance(MobEffects.WATER_BREATHING, 30, 0), 0.9F)
+        .build())));
+    public static final RegistryObject<Item> CRANBERRY_FISH_COOKED = registerPortItem("cranberry_fish_cooked", () -> new Item(new Item.Properties().food(new FoodProperties.Builder()
+        .nutrition(6)
+        .saturationMod(0.6F)
+        .alwaysEat()
+        .effect(() -> new MobEffectInstance(MobEffects.WATER_BREATHING, 60, 0), 0.9F)
+        .build())));
     public static final RegistryObject<Item> DRAGIBUS_STICK = registerPortItem("dragibus_stick", () -> new DragibusStickItem(new Item.Properties().stacksTo(1).durability(25)));
-    public static final RegistryObject<Item> GUMMY = registerPortItem("gummy", () -> new RawGummyItem(foodProperties(3, 0.25F)));
+    public static final RegistryObject<Item> GUMMY = registerPortItem("gummy", () -> new RawGummyItem(foodProperties(4, 0.6F)));
     public static final RegistryObject<Item> HOT_GUMMY = registerPortItem("hot_gummy", () -> new Item(new Item.Properties().food(new FoodProperties.Builder()
         .nutrition(7)
         .saturationMod(0.6F)
@@ -89,7 +111,7 @@ public final class CCItems {
         .saturationMod(0.0F)
         .alwaysEat()
         .build())));
-    public static final RegistryObject<Item> WAFFLE = registerFood("waffle", 5, 0.5F);
+    public static final RegistryObject<Item> WAFFLE = registerFood("waffle", 10, 0.6F, true);
     public static final RegistryObject<Item> HONEY_ARROW = registerPortItem("honey_arrow", () -> new HoneyArrowItem(new Item.Properties()));
     public static final RegistryObject<Item> HONEY_BOLT = registerPortItem("honey_bolt", () -> new HoneyBoltItem(new Item.Properties()));
     public static final RegistryObject<Item> CARAMEL_BOW = registerPortItem("caramel_bow", () -> new CaramelBowItem(new Item.Properties().durability(384)));
@@ -211,6 +233,7 @@ public final class CCItems {
             case "marshmallow_door" -> new DoubleHighBlockItem(block, properties);
             case "cotton_candy_bed_block" -> new BedItem(block, properties.stacksTo(1));
             case "honey_torch" -> new StandingAndWallBlockItem(block, CCBlocks.HONEY_WALL_TORCH.get(), properties, Direction.DOWN);
+            case "marshmallow_slice", "marshmallow_slice_block", "marshmallow_flower_block" -> new PlaceOnWaterBlockItem(block, properties);
             default -> new BlockItem(block, properties);
         };
     }
