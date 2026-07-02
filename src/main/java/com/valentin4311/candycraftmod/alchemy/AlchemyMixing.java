@@ -4,7 +4,6 @@ import com.valentin4311.candycraftmod.item.SugarPillItem;
 import com.valentin4311.candycraftmod.registry.CCItems;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,7 +30,7 @@ public final class AlchemyMixing {
     private static final int COLOR_BLACK = 0x2D2D2D;
     private static final int COLOR_DARK_BLUE = 0x2D4F9E;
     private static final int COLOR_GRAY_BLUE = 0x7B8AA8;
-    private static final Map<Item, IngredientEffect> RECIPES = new HashMap<>();
+    private static final Map<Item, IngredientEffect> RECIPES = new LinkedHashMap<>();
 
     static {
         register(CCItems.COTTON_CANDY.get(), COLOR_RED, MobEffects.SATURATION);
@@ -64,6 +63,12 @@ public final class AlchemyMixing {
 
     public static boolean isValidIngredient(ItemStack stack) {
         return !stack.isEmpty() && RECIPES.containsKey(stack.getItem());
+    }
+
+    public static List<ItemStack> getDisplayIngredientStacks() {
+        return RECIPES.keySet().stream()
+            .map(ItemStack::new)
+            .toList();
     }
 
     public static ItemStack craft(List<ItemStack> inputs) {

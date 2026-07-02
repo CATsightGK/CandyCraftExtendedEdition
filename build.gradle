@@ -46,10 +46,15 @@ sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 repositories {
     mavenCentral()
+    maven {
+        url = 'https://maven.blamejared.com'
+    }
 }
 
 dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+    compileOnly fg.deobf("mezz.jei:jei-${minecraft_version}-common-api:15.20.0.132")
+    compileOnly fg.deobf("mezz.jei:jei-${minecraft_version}-forge-api:15.20.0.132")
 }
 
 tasks.withType(ProcessResources).configureEach {
