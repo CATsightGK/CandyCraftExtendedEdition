@@ -98,6 +98,8 @@ public final class CCClient {
     private static ResourceLocation portalOverlayTexture = CARAMEL_PORTAL_OVERLAY;
     private static boolean dungeonLoadingActive;
     private static int dungeonLoadingTimeoutTicks;
+    private static boolean candyWorldLoadingActive;
+    private static int candyWorldLoadingTimeoutTicks;
 
     private CCClient() {
     }
@@ -739,9 +741,12 @@ public final class CCClient {
                 portalOverlayTicks = 0;
                 dungeonLoadingActive = false;
                 dungeonLoadingTimeoutTicks = 0;
+                candyWorldLoadingActive = false;
+                candyWorldLoadingTimeoutTicks = 0;
                 return;
             }
             tickDungeonLoadingScreen(minecraft);
+            tickCandyWorldLoadingScreen(minecraft);
             updateCandyPortalOverlay(minecraft);
             applyPurpleJellyBob(minecraft);
         }
@@ -767,7 +772,7 @@ public final class CCClient {
             int height = minecraft.getWindow().getGuiScaledHeight();
             if (dungeon) {
                 renderDungeonLoadingBackground(graphics, width, height);
-            } else {
+            } else if (candyWorldLoadingActive) {
                 renderCandyWorldLoadingBackground(graphics, width, height);
             }
         }
@@ -803,6 +808,26 @@ public final class CCClient {
             }
         }
 
+        private static void beginCandyWorldLoadingScreen() {
+            candyWorldLoadingActive = true;
+            candyWorldLoadingTimeoutTicks = 20 * 60;
+        }
+
+        private static void tickCandyWorldLoadingScreen(Minecraft minecraft) {
+            if (!candyWorldLoadingActive) {
+                return;
+            }
+            boolean loading = minecraft.screen instanceof ReceivingLevelScreen || minecraft.screen instanceof LevelLoadingScreen || minecraft.screen instanceof GenericDirtMessageScreen;
+            if (!loading && portalOverlayTicks <= 0) {
+                candyWorldLoadingActive = false;
+                candyWorldLoadingTimeoutTicks = 0;
+                return;
+            }
+            if (--candyWorldLoadingTimeoutTicks <= 0) {
+                candyWorldLoadingActive = false;
+            }
+        }
+
         private static void updateCandyPortalOverlay(Minecraft minecraft) {
             if (minecraft.level == null || minecraft.player.isSpectator()) {
                 portalOverlayTicks = 0;
@@ -812,6 +837,7 @@ public final class CCClient {
             net.minecraft.world.level.block.state.BlockState state = minecraft.level.getBlockState(eyePos);
             if (state.is(CCBlocks.CANDY_PORTAL.get()) || state.is(CCBlocks.LIQUID_CANDY_PORTAL.get())) {
                 portalOverlayTicks = Math.min(80, portalOverlayTicks + 1);
+                beginCandyWorldLoadingScreen();
                 portalOverlayTexture = state.is(CCBlocks.LIQUID_CANDY_PORTAL.get()) ? LIQUID_CANDY_PORTAL_OVERLAY : CARAMEL_PORTAL_OVERLAY;
             } else {
                 portalOverlayTicks = Math.max(0, portalOverlayTicks - 4);
