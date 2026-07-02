@@ -14,11 +14,15 @@
   "criteria": {
     "chocolate_coin": {
       "trigger": "minecraft:inventory_changed",
-      "items": [
-        {
-          "item": "candycraftmod:chocolate_coin"
-        }
-      ]
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "candycraftmod:chocolate_coin"
+            ]
+          }
+        ]
+      }
     }
   }
 }

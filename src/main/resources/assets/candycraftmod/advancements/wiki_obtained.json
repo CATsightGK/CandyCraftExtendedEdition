@@ -15,11 +15,15 @@
   "criteria": {
     "wiki": {
       "trigger": "minecraft:inventory_changed",
-      "items": [
-        {
-          "item": "candycraftmod:wiki"
-        }
-      ]
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "candycraftmod:wiki"
+            ]
+          }
+        ]
+      }
     }
   }
 }

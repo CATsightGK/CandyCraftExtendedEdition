@@ -41,7 +41,7 @@ public class SuguardHeldItemLayer extends RenderLayer<BasicCandyZombieEntity, Su
 
     private void translateToLegacySuguardHand(PoseStack poseStack, ItemStack stack, BasicCandyZombieEntity entity, float partialTicks) {
         getParentModel().translateToRightArm(poseStack);
-        poseStack.translate(0.0275F, 0.1225F, 0.1425F);
+        poseStack.translate(0.0275F, 0.1475F, 0.1425F);
         if (stack.is(CCItems.CARAMEL_BOW.get())) {
             float draw = entity.getBossBowDrawProgress(partialTicks);
             poseStack.translate(-0.075F - 0.028F * draw, 0.105F - 0.026F * draw, -0.145F - 0.045F * draw);

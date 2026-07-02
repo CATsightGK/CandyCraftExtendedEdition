@@ -1,17 +1,7 @@
 {
   "type": "forge:add_features",
   "biomes": [
-    "candycraftmod:caramel_forest",
-    "candycraftmod:chocolate_forest",
-    "candycraftmod:cotton_candy_plains",
-    "candycraftmod:gummy_swamp",
-    "candycraftmod:ice_cream_plains",
-    "candycraftmod:ice_cream_sky_mountains",
-    "candycraftmod:sugar_cold_forest",
-    "candycraftmod:sugar_enchanted_forest",
     "candycraftmod:sugar_forest",
-    "candycraftmod:sugar_hell_mountains",
-    "candycraftmod:sugar_mountains",
     "candycraftmod:sugar_plains"
   ],
   "features": "candycraftmod:marshmallow_waterlilies",

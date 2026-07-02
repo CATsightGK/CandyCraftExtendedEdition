@@ -58,7 +58,7 @@ public final class CCItems {
     public static final List<RegistryObject<Item>> PORT_ITEMS = new ArrayList<>();
 
     public static final RegistryObject<Item> HONEY_SHARD = registerPortItem("honey_shard");
-    public static final RegistryObject<Item> NOUGAT_POWDER = registerPortItem("nougat_powder", () -> new NougatPowderItem(foodProperties(3, 0.6F)));
+    public static final RegistryObject<Item> NOUGAT_POWDER = registerPortItem("nougat_powder", () -> new NougatPowderItem(foodProperties(3, 0.6F, true)));
     public static final RegistryObject<Item> PEZ = registerPortItem("pez", () -> new Item(new Item.Properties().food(new FoodProperties.Builder()
         .nutrition(10)
         .saturationMod(0.6F)

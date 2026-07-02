@@ -293,15 +293,37 @@ public class SuguardDungeonFeature extends Feature<NoneFeatureConfiguration> {
         jellyColumn(level, x + 2, 11, z + 9, 250, 7);
         box(level, x - 2, 11, z + 5, x + 2, 11, z + 9, CCBlocks.YELLOW_TRAMPOJELLY.get().defaultBlockState());
         box(level, x, 11, z + 1, x, 11, z + 4, CCBlocks.JELLY_SHOCK_ABSORBER.get().defaultBlockState());
+        int lastX2 = -1;
+        int lastZ2 = -1;
         int yy = 15;
         while (yy < 240) {
-            set(level, x - 2 + random.nextInt(5), yy, z + 5 + random.nextInt(5), jumpPad(random, yy));
-            yy += random.nextInt(8) + 5;
+            int x2;
+            int z2;
+            do {
+                boolean edge = random.nextBoolean();
+                x2 = edge ? random.nextInt(5) : random.nextInt(3) + 1;
+                z2 = edge ? random.nextInt(3) + 1 : random.nextInt(5);
+            } while (lastX2 == x2 && lastZ2 == z2);
+            lastX2 = x2;
+            lastZ2 = z2;
+
+            BlockState pad = jumpPad(random, yy);
+            set(level, x - 2 + x2, yy, z + 5 + z2, pad);
+            if (pad.is(CCBlocks.RED_TRAMPOJELLY.get())) {
+                yy += 55;
+            } else if (pad.is(CCBlocks.TRAMPOJELLY.get())) {
+                yy += 15;
+            } else {
+                yy += 4;
+            }
         }
         yy = 235;
         while (yy > 20) {
             for (int i = 0; i < random.nextInt(8) + 2; i++) {
-                set(level, x - 2 + random.nextInt(5), yy, z + 13 + random.nextInt(5), CCBlocks.RED_TRAMPOJELLY.get().defaultBlockState());
+                boolean edge = random.nextBoolean();
+                int x2 = edge ? random.nextInt(5) : random.nextInt(3) + 1;
+                int z2 = edge ? random.nextInt(3) + 1 : random.nextInt(5);
+                set(level, x - 2 + x2, yy, z + 13 + z2, CCBlocks.RED_TRAMPOJELLY.get().defaultBlockState());
             }
             yy -= random.nextInt(3) + 3;
         }
@@ -316,6 +338,8 @@ public class SuguardDungeonFeature extends Feature<NoneFeatureConfiguration> {
         box(level, x - 1, 240, z + 9, x + 1, 249, z + 12, Blocks.AIR.defaultBlockState());
         hollowBox(level, x - 1, 239, z + 11, x + 1, 249, z + 11, jumpWallPattern());
         box(level, x - 1, 239, z + 10, x + 1, 239, z + 12, CCBlocks.JELLY_SHOCK_ABSORBER.get().defaultBlockState());
+        box(level, x - 4, 250, z + 3, x + 4, 251, z + 19, caramelBrick());
+        box(level, x - 3, 250, z + 4, x + 3, 250, z + 18, jumpWallPattern());
         box(level, x, 12, z + 17, x, 14, z + 19, Blocks.AIR.defaultBlockState());
         keyChest(level, x + 3, 12, z + 17, CCItems.SUGUARD_SENTRY_KEY.get());
     }

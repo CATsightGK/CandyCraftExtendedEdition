@@ -1,10 +1,7 @@
 {
-    "variants": {
-        "": [
-            { "model": "candycraftmod:block/marshmallow_slice_block" },
-            { "model": "candycraftmod:block/marshmallow_slice_block", "y": 90 },
-            { "model": "candycraftmod:block/marshmallow_slice_block", "y": 180 },
-            { "model": "candycraftmod:block/marshmallow_slice_block", "y": 270 }
-        ]
+  "variants": {
+    "": {
+      "model": "candycraftmod:block/marshmallow_slice_block"
     }
+  }
 }

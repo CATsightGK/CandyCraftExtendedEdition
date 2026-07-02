@@ -10,15 +10,19 @@
       "translate": "advancements.candycraft.caramel.desc"
     }
   },
-  "parent": "candycraftmod:tame_candy_wolf",
+  "parent": "candycraftmod:candy_world",
   "criteria": {
     "caramel": {
       "trigger": "minecraft:inventory_changed",
-      "items": [
-        {
-          "item": "candycraftmod:caramel_bucket"
-        }
-      ]
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "candycraftmod:caramel_bucket"
+            ]
+          }
+        ]
+      }
     }
   }
 }

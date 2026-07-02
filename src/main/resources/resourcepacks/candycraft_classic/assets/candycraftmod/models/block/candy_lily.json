@@ -1,16 +1,22 @@
 {
-    "ambientocclusion": false,
-    "textures": {
-        "particle": "#texture",
-        "texture": "candycraftmod:block/marshmallow_slice"
-    },
-    "elements": [
-        {   "from": [  0, 0.25,  0 ],
-            "to":   [ 16, 0.25, 16 ],
-            "faces": {
-              "down":  { "uv": [  0, 16, 16,  0 ], "texture": "#texture", "tintindex": 0 },
-                "up":  { "uv": [  0,  0, 16, 16 ], "texture": "#texture", "tintindex": 0 }
-            }
-        }
-    ]
+  "ambientocclusion": false,
+  "render_type": "minecraft:cutout",
+  "textures": {
+    "particle": "candycraftmod:block/marshmallow_slice",
+    "texture": "candycraftmod:block/marshmallow_slice"
+  },
+  "elements": [
+    {
+      "from": [1, 0, 1],
+      "to": [15, 1.5, 15],
+      "faces": {
+        "down": { "uv": [1, 1, 15, 15], "texture": "#texture", "cullface": "down" },
+        "up": { "uv": [1, 1, 15, 15], "texture": "#texture" },
+        "north": { "uv": [1, 14.5, 15, 16], "texture": "#texture", "cullface": "north" },
+        "south": { "uv": [1, 14.5, 15, 16], "texture": "#texture", "cullface": "south" },
+        "west": { "uv": [1, 14.5, 15, 16], "texture": "#texture", "cullface": "west" },
+        "east": { "uv": [1, 14.5, 15, 16], "texture": "#texture", "cullface": "east" }
+      }
+    }
+  ]
 }

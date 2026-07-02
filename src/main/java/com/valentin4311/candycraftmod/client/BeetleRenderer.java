@@ -39,6 +39,7 @@ public class BeetleRenderer extends MobRenderer<BasicCandySpiderEntity, BeetleMo
         if (entity.isChildBeetle()) {
             poseStack.scale(0.5F, 0.5F, 0.5F);
         }
+        poseStack.mulPose(Axis.YP.rotationDegrees(270.0F));
     }
 
     private static ResourceLocation texture(String name) {

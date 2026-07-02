@@ -63,9 +63,13 @@ public class BasicCandyZombieEntity extends Zombie {
     private static final String TAG_WAITING = "Waiting";
     private static final String TAG_SPAWNED = "Spawned";
     private static final String TAG_COUNTDOWN = "CountDown";
+    private static final String TAG_BOSS_SUGUARD_AWAKE_TICKS = "BossSuguardAwakeTicks";
+    private static final int BOSS_SUGUARD_WAKE_TICKS = 20 * 20;
     private static final EntityDataAccessor<Integer> LEGACY_VARIANT = SynchedEntityData.defineId(BasicCandyZombieEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Boolean> SADDLED = SynchedEntityData.defineId(BasicCandyZombieEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Boolean> BABY_DRAGON = SynchedEntityData.defineId(BasicCandyZombieEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Integer> MOUNT_POWER = SynchedEntityData.defineId(BasicCandyZombieEntity.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Boolean> DRAGON_FALLING = SynchedEntityData.defineId(BasicCandyZombieEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Integer> BOSS_BOW_DRAW_TICKS = SynchedEntityData.defineId(BasicCandyZombieEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Boolean> BOSS_SUGUARD_AWAKE = SynchedEntityData.defineId(BasicCandyZombieEntity.class, EntityDataSerializers.BOOLEAN);
     private boolean angry;
@@ -73,9 +77,9 @@ public class BasicCandyZombieEntity extends Zombie {
     private boolean spawnedMinions;
     private int summonCooldown;
     private int rangedCooldown;
-    private int power;
     private int bossSuguardStat;
     private int bossSuguardCounter = 300;
+    private int bossSuguardAwakeTicks;
     private int dragonShootTicks;
     private int kingBeetleExplosionCount;
     private int dragonAgeTicks;
@@ -103,6 +107,8 @@ public class BasicCandyZombieEntity extends Zombie {
         entityData.define(LEGACY_VARIANT, 0);
         entityData.define(SADDLED, false);
         entityData.define(BABY_DRAGON, false);
+        entityData.define(MOUNT_POWER, 0);
+        entityData.define(DRAGON_FALLING, false);
         entityData.define(BOSS_BOW_DRAW_TICKS, 0);
         entityData.define(BOSS_SUGUARD_AWAKE, false);
     }
@@ -158,9 +164,10 @@ public class BasicCandyZombieEntity extends Zombie {
         tag.putBoolean(TAG_WAITING, waiting);
         tag.putBoolean(TAG_SPAWNED, spawnedMinions);
         tag.putInt(TAG_COUNTDOWN, summonCooldown);
-        tag.putInt("Power", power);
+        tag.putInt("Power", getMountPower());
         tag.putInt("BossSuguardStat", bossSuguardStat);
         tag.putInt("BossSuguardCounter", bossSuguardCounter);
+        tag.putInt(TAG_BOSS_SUGUARD_AWAKE_TICKS, bossSuguardAwakeTicks);
         tag.putInt("DragonShootTicks", dragonShootTicks);
         tag.putInt("KingBeetleExplosionCount", kingBeetleExplosionCount);
         tag.putInt("Variant", getLegacyVariant());
@@ -177,9 +184,10 @@ public class BasicCandyZombieEntity extends Zombie {
         waiting = tag.getBoolean(TAG_WAITING);
         spawnedMinions = tag.getBoolean(TAG_SPAWNED);
         summonCooldown = tag.getInt(TAG_COUNTDOWN);
-        power = tag.getInt("Power");
+        setMountPower(tag.getInt("Power"));
         bossSuguardStat = tag.getInt("BossSuguardStat");
         bossSuguardCounter = tag.contains("BossSuguardCounter") ? tag.getInt("BossSuguardCounter") : 300;
+        bossSuguardAwakeTicks = tag.contains(TAG_BOSS_SUGUARD_AWAKE_TICKS) ? tag.getInt(TAG_BOSS_SUGUARD_AWAKE_TICKS) : (angry ? BOSS_SUGUARD_WAKE_TICKS : 0);
         dragonShootTicks = tag.getInt("DragonShootTicks");
         kingBeetleExplosionCount = tag.getInt("KingBeetleExplosionCount");
         setLegacyVariant(tag.getInt("Variant"));
@@ -230,10 +238,12 @@ public class BasicCandyZombieEntity extends Zombie {
             if (forward <= 0.0F) {
                 forward *= 0.25F;
             }
-            double speed = isDragon() ? 0.18D : 0.12D;
-            if (isDragon() && !onGround()) {
-                setDeltaMovement(getDeltaMovement().add(0.0D, -rider.getXRot() / 1000.0D, 0.0D));
-            } else if (isNessie() && isInWater()) {
+            if (isDragon()) {
+                travelDragon(rider, strafe, forward);
+                return;
+            }
+            double speed = 0.12D;
+            if (isNessie() && isInWater()) {
                 setDeltaMovement(getDeltaMovement().add(0.0D, -rider.getXRot() / 900.0D, 0.0D));
             }
             setSpeed((float)speed);
@@ -246,7 +256,48 @@ public class BasicCandyZombieEntity extends Zombie {
             setDeltaMovement(getDeltaMovement().multiply(0.8D, 0.8D, 0.8D).add(0.0D, -0.02D, 0.0D));
             return;
         }
+        if (isMermaid()) {
+            if (!isInWater() && !isNoGravity()) {
+                setDeltaMovement(getDeltaMovement().add(0.0D, -0.08D, 0.0D));
+            }
+            move(MoverType.SELF, getDeltaMovement());
+            if (isInWater()) {
+                setDeltaMovement(getDeltaMovement().multiply(0.8D, 0.8D, 0.8D).add(0.0D, -0.02D, 0.0D));
+            } else {
+                double groundFriction = onGround() ? 0.55D : 0.98D;
+                setDeltaMovement(getDeltaMovement().multiply(groundFriction, 0.98D, groundFriction));
+            }
+            return;
+        }
         super.travel(travelVector);
+    }
+
+    private void travelDragon(LivingEntity rider, float strafe, float forward) {
+        Vec3 motion = getDeltaMovement();
+        if (forward > 0.0F && !isDragonFalling()) {
+            double yaw = Math.toRadians(rider.getYRot());
+            double push = 0.20D * forward;
+            double side = 0.08D * strafe;
+            motion = motion.add(
+                -Math.sin(yaw) * push + Math.cos(yaw) * side,
+                0.0D,
+                Math.cos(yaw) * push + Math.sin(yaw) * side
+            );
+            if (rider.getXRot() < -8.0F && getMountPower() > getMountMaxPower() / 10) {
+                double lift = Mth.clamp(-rider.getXRot() / 900.0D, 0.015D, 0.085D);
+                motion = motion.add(0.0D, lift + (onGround() ? 0.32D : 0.0D), 0.0D);
+            } else if (!onGround()) {
+                motion = motion.add(0.0D, Mth.clamp(-rider.getXRot() / 1300.0D, -0.04D, 0.06D), 0.0D);
+            }
+        }
+        if (isDragonFalling()) {
+            motion = motion.add(0.0D, -0.08D, 0.0D);
+        }
+        setDeltaMovement(motion);
+        move(MoverType.SELF, getDeltaMovement());
+        double drag = isInWater() ? 0.8D : 0.86D;
+        setDeltaMovement(getDeltaMovement().multiply(drag, isDragonFalling() ? 0.98D : 0.90D, drag));
+        calculateEntityAnimation(false);
     }
 
     @Override
@@ -292,10 +343,9 @@ public class BasicCandyZombieEntity extends Zombie {
         if (isBossSuguard()) {
             LivingEntity attacker = source.getEntity() instanceof LivingEntity living && CandyTargeting.canAttackEntity(living) ? living : null;
             boolean hurt = super.hurt(source, amount);
-            if (hurt && !level().isClientSide && attacker != null) {
-                setBossSuguardAwake(true);
-                setTarget(attacker);
-                if (level() instanceof ServerLevel serverLevel) {
+            if (hurt && !level().isClientSide) {
+                activateBossSuguard(attacker);
+                if (attacker != null && level() instanceof ServerLevel serverLevel) {
                     shootBossSuguardArrow(serverLevel, attacker);
                 }
             }
@@ -467,22 +517,21 @@ public class BasicCandyZombieEntity extends Zombie {
             setAirSupply(getMaxAirSupply());
             if (isInWater() && getControllingPassenger() == null && !level().isClientSide) {
                 tickNessieSwimming();
-            } else if (!isInWater() && onGround() && tickCount % 10 == 0) {
+            } else if (!isInWater() && onGround()) {
                 nessieSwimTarget = null;
-                setDeltaMovement((random.nextDouble() - 0.5D) * 0.5D, 0.34D, (random.nextDouble() - 0.5D) * 0.5D);
+                zza = 0.0F;
+                setDeltaMovement(getDeltaMovement().multiply(0.15D, 1.0D, 0.15D).add(0.0D, 0.01D, 0.0D));
             }
         } else if (isDragon()) {
             tickDragonGrowth();
-            if (power < getMountMaxPower()) {
-                power++;
-            }
+            tickDragonStamina();
             tickDragonPower();
             if (!onGround() && getDeltaMovement().y < -0.4D) {
                 setDeltaMovement(getDeltaMovement().multiply(0.8D, 0.85D, 0.8D));
             }
         } else if (isKingBeetle()) {
-            if (power < getMountMaxPower()) {
-                power++;
+            if (getMountPower() < getMountMaxPower()) {
+                setMountPower(getMountPower() + 1);
             }
             tickKingBeetlePower();
         } else if (isMermaid()) {
@@ -496,7 +545,9 @@ public class BasicCandyZombieEntity extends Zombie {
                 }
             } else if (onGround() && tickCount % 10 == 0) {
                 playSound(SoundEvents.GUARDIAN_FLOP, 1.0F, 1.0F);
-                setDeltaMovement((random.nextDouble() - 0.5D) * 0.5D, 0.34D, (random.nextDouble() - 0.5D) * 0.5D);
+                setDeltaMovement(random.nextFloat() - 0.5F, getDeltaMovement().y + 0.34D, random.nextFloat() - 0.5F);
+                setYRot(random.nextFloat() * 360.0F);
+                yRotO = getYRot();
             }
         }
     }
@@ -609,10 +660,16 @@ public class BasicCandyZombieEntity extends Zombie {
             target = CandyTargeting.nearestAttackablePlayer(level, this, 48.0D);
         }
         if (target == null) {
-            setBossSuguardAwake(false);
-            bossSuguardStat = 0;
+            if (bossSuguardAwakeTicks > 0) {
+                bossSuguardAwakeTicks--;
+                getNavigation().stop();
+                entityData.set(BOSS_BOW_DRAW_TICKS, 0);
+                return;
+            }
+            tickDormantBossSuguard();
             return;
         }
+        bossSuguardAwakeTicks = BOSS_SUGUARD_WAKE_TICKS;
         setTarget(target);
         getLookControl().setLookAt(target, 10.0F, getMaxHeadXRot());
         if (rangedCooldown <= 0) {
@@ -640,7 +697,18 @@ public class BasicCandyZombieEntity extends Zombie {
         playSound(SoundEvents.ARROW_SHOOT, 1.0F, 1.0F / (random.nextFloat() * 0.4F + 0.8F));
     }
 
-    private int getMountMaxPower() {
+    private void activateBossSuguard(@Nullable LivingEntity target) {
+        if (!isBossSuguard()) {
+            return;
+        }
+        setBossSuguardAwake(true);
+        bossSuguardAwakeTicks = BOSS_SUGUARD_WAKE_TICKS;
+        if (target != null) {
+            setTarget(target);
+        }
+    }
+
+    public int getMountMaxPower() {
         return isKingBeetle() ? 1200 : 1500;
     }
 
@@ -648,15 +716,48 @@ public class BasicCandyZombieEntity extends Zombie {
         return isKingBeetle() ? 1200 : 300;
     }
 
+    public int getMountPower() {
+        return entityData.get(MOUNT_POWER);
+    }
+
+    private void setMountPower(int value) {
+        entityData.set(MOUNT_POWER, Mth.clamp(value, 0, getMountMaxPower()));
+    }
+
+    public boolean isDragonFalling() {
+        return isDragon() && entityData.get(DRAGON_FALLING);
+    }
+
+    private void setDragonFalling(boolean falling) {
+        if (isDragon()) {
+            entityData.set(DRAGON_FALLING, falling);
+        }
+    }
+
+    private void tickDragonStamina() {
+        LivingEntity controller = getControllingPassenger();
+        if (controller != null && !onGround() && !isDragonFalling()) {
+            setMountPower(getMountPower() - 2);
+            if (getMountPower() <= 0) {
+                setDragonFalling(true);
+            }
+        } else if (getMountPower() < getMountMaxPower() && (!isDragonFalling() || onGround())) {
+            setMountPower(getMountPower() + 1);
+        }
+        if (isDragonFalling() && onGround()) {
+            setDragonFalling(false);
+        }
+    }
+
     private void tryUnleashMountPower() {
-        if (power < getMountPowerUsed()) {
+        if (getMountPower() < getMountPowerUsed()) {
             return;
         }
         if (isDragon()) {
-            power -= getMountPowerUsed();
+            setMountPower(getMountPower() - getMountPowerUsed());
             dragonShootTicks += 10 + random.nextInt(8);
         } else if (isKingBeetle()) {
-            power = 0;
+            setMountPower(0);
             kingBeetleExplosionCount = 8 + random.nextInt(8);
         }
     }
@@ -868,6 +969,7 @@ public class BasicCandyZombieEntity extends Zombie {
 
     private void tickDormantBossSuguard() {
         setBossSuguardAwake(false);
+        bossSuguardAwakeTicks = 0;
         heal(5.0F);
         setTarget(null);
         getNavigation().stop();

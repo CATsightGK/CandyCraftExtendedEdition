@@ -14,11 +14,15 @@
   "criteria": {
     "candy_cane": {
       "trigger": "minecraft:inventory_changed",
-      "items": [
-        {
-          "item": "candycraftmod:candy_cane"
-        }
-      ]
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "candycraftmod:candy_cane"
+            ]
+          }
+        ]
+      }
     }
   }
 }

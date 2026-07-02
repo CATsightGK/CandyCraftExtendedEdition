@@ -14,11 +14,15 @@
   "criteria": {
     "licorice": {
       "trigger": "minecraft:inventory_changed",
-      "items": [
-        {
-          "item": "candycraftmod:licorice"
-        }
-      ]
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "candycraftmod:licorice"
+            ]
+          }
+        ]
+      }
     }
   }
 }

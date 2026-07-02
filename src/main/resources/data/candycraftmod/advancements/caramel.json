@@ -14,11 +14,15 @@
   "criteria": {
     "caramel": {
       "trigger": "minecraft:inventory_changed",
-      "items": [
-        {
-          "item": "candycraftmod:caramel_bucket"
-        }
-      ]
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "candycraftmod:caramel_bucket"
+            ]
+          }
+        ]
+      }
     }
   }
 }

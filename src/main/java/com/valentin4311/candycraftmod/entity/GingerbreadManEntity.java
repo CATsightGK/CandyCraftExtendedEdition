@@ -45,7 +45,7 @@ public class GingerbreadManEntity extends Villager {
 
     public GingerbreadManEntity(EntityType<? extends GingerbreadManEntity> type, Level level) {
         super(type, level);
-        setVillagerData(new VillagerData(VillagerType.PLAINS, VillagerProfession.FARMER, 1));
+        ensureGingerbreadVillagerData();
     }
 
     @Override
@@ -75,6 +75,7 @@ public class GingerbreadManEntity extends Villager {
         if (getGingerProfession() != ELDER) {
             setGingerProfession(getRandom().nextInt(3));
         }
+        ensureGingerbreadVillagerData();
         updateTrades();
         return data;
     }
@@ -98,6 +99,18 @@ public class GingerbreadManEntity extends Villager {
         updateTrades();
     }
 
+    @Override
+    public void setVillagerData(VillagerData data) {
+        super.setVillagerData(gingerbreadVillagerData(data));
+    }
+
+    @Override
+    protected void customServerAiStep() {
+        ensureGingerbreadVillagerData();
+        super.customServerAiStep();
+        ensureGingerbreadVillagerData();
+    }
+
     private boolean shouldAvoidPlayer(Player player) {
         return getGingerProfession() != ELDER && !isTrading() && !player.isSpectator()
             && !EmblemHelper.has(player, CCItems.GINGERBREAD_EMBLEM.get());
@@ -114,6 +127,7 @@ public class GingerbreadManEntity extends Villager {
         if (!level().isClientSide) {
             getNavigation().stop();
             setTradingPlayer(null);
+            ensureGingerbreadVillagerData();
             updateTrades();
             if (!getOffers().isEmpty()) {
                 setTradingPlayer(player);
@@ -125,6 +139,7 @@ public class GingerbreadManEntity extends Villager {
 
     @Override
     protected void updateTrades() {
+        ensureGingerbreadVillagerData();
         MerchantOffers offers = getOffers();
         if (!offers.isEmpty()) {
             return;
@@ -240,7 +255,26 @@ public class GingerbreadManEntity extends Villager {
             setGingerProfession(tag.getInt("GingerProfession"));
         } else if (tag.contains("SkinVariant")) {
             setGingerProfession(tag.getInt("SkinVariant"));
+        } else {
+            ensureGingerbreadVillagerData();
+            updateTrades();
         }
+    }
+
+    private void ensureGingerbreadVillagerData() {
+        if (level() != null && level().isClientSide) {
+            return;
+        }
+        VillagerData data = getVillagerData();
+        if (data.getProfession() != VillagerProfession.FARMER || data.getLevel() <= 0) {
+            setVillagerData(data);
+        }
+    }
+
+    private static VillagerData gingerbreadVillagerData(VillagerData data) {
+        VillagerType type = data == null ? VillagerType.PLAINS : data.getType();
+        int level = data == null ? 1 : Math.max(1, data.getLevel());
+        return new VillagerData(type, VillagerProfession.FARMER, level);
     }
 
     @Override

@@ -7,10 +7,12 @@ import com.valentin4311.candycraftmod.block.LegacyLogBlock;
 import com.valentin4311.candycraftmod.block.LegacyMetadataBlock;
 import com.valentin4311.candycraftmod.block.LegacyTypeBlock;
 import com.valentin4311.candycraftmod.entity.BasicCandySpiderEntity;
+import com.valentin4311.candycraftmod.entity.BasicCandyZombieEntity;
 import com.valentin4311.candycraftmod.entity.GingerbreadManEntity;
 import com.valentin4311.candycraftmod.registry.CCBlocks;
 import com.valentin4311.candycraftmod.registry.CCEntityTypes;
 import com.valentin4311.candycraftmod.registry.CCItems;
+import com.valentin4311.candycraftmod.registry.CCSweetscapeBlocks;
 import com.valentin4311.candycraftmod.util.EmblemHelper;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,11 +24,13 @@ import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.RotatedPillarBlock;
+import net.minecraft.world.level.block.SlabBlock;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.CropBlock;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.block.entity.SpawnerBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.SlabType;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.feature.Feature;
 import net.minecraft.world.level.levelgen.feature.FeaturePlaceContext;
@@ -76,20 +80,100 @@ public class LegacyStructureFeature extends Feature<NoneFeatureConfiguration> {
     }
 
     private static boolean candyHouse(WorldGenLevel level, RandomSource random, BlockPos pos) {
-        if (!isCandyGround(level.getBlockState(pos.below()))) {
+        if (random.nextInt(2) != 0) {
             return false;
         }
-        BlockPos base = pos.offset(-2, 0, -2);
-        clear(level, base.offset(-1, 0, -1), base.offset(5, 5, 5));
-        buildSmallHouse(level, base, random, true);
-        set(level, base.offset(2, 0, 2), Blocks.CHEST.defaultBlockState());
-        loot(level, random, base.offset(2, 0, 2), CANDY_HOUSE_LOOT);
-        set(level, base.offset(2, -1, 2), CCBlocks.HONEY_LAMP.get().defaultBlockState());
+        BlockPos center = pos.offset(-8, 0, -8);
+        while (center.getY() > 5 && shouldCandyHouseSinkThrough(level, center)) {
+            center = center.below();
+        }
+        center = center.above();
+        if (!level.getBlockState(center).is(CCBlocks.PUDDING.get())) {
+            return false;
+        }
+
+        clear(level, center.offset(-2, 0, -2), center.offset(2, 4, 2));
+
+        BlockState log = marshmallowLog(0, Direction.Axis.Y);
+        BlockState lightLogZ = CCBlocks.MARSHMALLOW_LOG_LIGHT.get().defaultBlockState()
+            .setValue(RotatedPillarBlock.AXIS, Direction.Axis.Z);
+        BlockState planks = marshmallowPlanks(0);
+        BlockState darkLeaves = leafState(1);
+        BlockState caneWall = CCBlocks.CANDY_CANE_WALL.get().defaultBlockState();
+        BlockState caramel = CCBlocks.CARAMEL_BLOCK.get().defaultBlockState();
+        BlockState slabBottom = CCBlocks.MARSHMALLOW_SLAB.get().defaultBlockState();
+        BlockState slabTop = slabBottom.setValue(SlabBlock.TYPE, SlabType.TOP);
+        BlockState flour = CCBlocks.FLOUR.get().defaultBlockState();
+
+        for (int layer = -1; layer <= 4; layer++) {
+            if (layer == -1 || layer == 3) {
+                place(level, center, lightLogZ,
+                    -2, layer, 0, -2, layer, -1, -2, layer, 1,
+                    2, layer, 0, 2, layer, -1, 2, layer, 1);
+                place(level, center, log,
+                    -2, layer, -2, -2, layer, 2, 2, layer, -2, 2, layer, 2);
+                place(level, center, darkLeaves,
+                    -1, layer, -2, 0, layer, -2, 1, layer, -2,
+                    -1, layer, 2, 0, layer, 2, 1, layer, 2);
+                if (layer == -1) {
+                    place(level, center, planks,
+                        1, layer, 0, -1, layer, 0, 0, layer, -1, 0, layer, 1,
+                        1, layer, 1, -1, layer, 1, 1, layer, -1, -1, layer, -1, 0, layer, 0);
+                }
+            }
+            if (layer == 0 || layer == 2) {
+                place(level, center, caneWall, -2, layer, -2, -2, layer, 2, 2, layer, 2, 2, layer, -2);
+            } else {
+                place(level, center, log, -2, layer, -2, -2, layer, 2, 2, layer, 2, 2, layer, -2);
+            }
+        }
+
+        place(level, center, candyCaneBlock(1), -2, 0, 0, 2, 0, 0, 0, 0, 2, 0, 0, -2);
+        place(level, center, candyCaneBlock(2), -2, 1, 0, 2, 1, 0);
+        place(level, center, candyCaneBlock(0), 0, 1, 2, 0, 1, -2);
+        place(level, center, candyCaneBlock(1),
+            -2, 1, 1, 2, 1, -1, 1, 1, 2, -1, 1, -2,
+            -2, 1, -1, 2, 1, 1, -1, 1, 2, 1, 1, -2);
+        place(level, center, candyCaneBlock(2),
+            -2, 0, 1, 2, 0, -1, -2, 0, -1, 2, 0, 1);
+        place(level, center, candyCaneBlock(0),
+            1, 0, 2, -1, 0, -2, -1, 0, 2, 1, 0, -2);
+
+        place(level, center, caramel,
+            2, 2, 0, 2, 2, 1, 2, 2, -1,
+            -2, 2, 0, -2, 2, 1, -2, 2, -1,
+            0, 2, 2, 1, 2, 2, -1, 2, 2,
+            0, 2, -2, 1, 2, -2, -1, 2, -2);
+
+        place(level, center, slabTop, 1, 3, 0, -1, 3, 0, 0, 3, -1, 0, 3, 1);
+        place(level, center, slabBottom, 0, 4, 2, 0, 4, -2, 2, 4, 0, -2, 4, 0);
+        place(level, center, planks, 1, 3, 1, -1, 3, 1, 1, 3, -1, -1, 3, -1);
+
+        place(level, center, flour,
+            -2, -2, 0, -2, -2, -1, -2, -2, -2, -2, -2, 1, -2, -2, 2,
+            2, -2, 0, 2, -2, -1, 2, -2, -2, 2, -2, 1, 2, -2, 2,
+            -1, -2, -2, 0, -2, -2, 1, -2, -2,
+            -1, -2, 2, 0, -2, 2, 1, -2, 2);
+
+        BlockPos chest = center.offset(1, -2, 2);
+        set(level, chest, Blocks.CHEST.defaultBlockState());
+        loot(level, random, chest, CANDY_HOUSE_LOOT);
+        set(level, center.below(), CCBlocks.HONEY_LAMP.get().defaultBlockState());
         return true;
     }
 
     private static boolean iceTower(WorldGenLevel level, RandomSource random, BlockPos pos) {
-        BlockPos ground = pos.below();
+        BlockPos ground = null;
+        for (int y = Math.min(100, level.getMaxBuildHeight() - 1); y > 50; y--) {
+            BlockPos candidate = new BlockPos(pos.getX(), y, pos.getZ());
+            if (level.getBlockState(candidate).is(CCBlocks.PUDDING.get())) {
+                ground = candidate;
+                break;
+            }
+        }
+        if (ground == null) {
+            return false;
+        }
         for (int dx = 0; dx <= 6; dx++) {
             for (int dz = 0; dz <= 6; dz++) {
                 if (!level.getBlockState(ground.offset(dx, 0, dz)).is(CCBlocks.PUDDING.get())) {
@@ -97,6 +181,7 @@ public class LegacyStructureFeature extends Feature<NoneFeatureConfiguration> {
                 }
             }
         }
+        pos = ground.above();
 
         BlockState vanilla = iceCream(3);
         for (int y = 0; y < 2; y++) {
@@ -164,9 +249,29 @@ public class LegacyStructureFeature extends Feature<NoneFeatureConfiguration> {
         return CCBlocks.ICE_CREAM.get().defaultBlockState().setValue(LegacyTypeBlock.TYPE, metadata & 3);
     }
 
+    private static boolean shouldCandyHouseSinkThrough(WorldGenLevel level, BlockPos pos) {
+        BlockState state = level.getBlockState(pos);
+        return state.isAir()
+            || state.is(CCBlocks.SWEET_GRASS.get())
+            || state.is(CCBlocks.CANDY_LEAVES.get())
+            || state.is(CCBlocks.CANDY_LEAVES_DARK.get())
+            || state.is(CCBlocks.CANDY_LEAVES_LIGHT.get())
+            || state.is(CCBlocks.CANDY_LEAVES_CHERRY.get())
+            || state.is(CCBlocks.CANDY_LEAVES_ENCHANT.get());
+    }
+
+    private static BlockState candyCaneBlock(int metadata) {
+        Direction.Axis axis = switch (metadata & 3) {
+            case 1 -> Direction.Axis.X;
+            case 2 -> Direction.Axis.Z;
+            default -> Direction.Axis.Y;
+        };
+        return CCBlocks.CANDY_CANE_BLOCK.get().defaultBlockState().setValue(RotatedPillarBlock.AXIS, axis);
+    }
+
     private static boolean waterTemple(WorldGenLevel level, RandomSource random, BlockPos origin) {
-        BlockPos floor = oceanFloor(level, origin);
-        if (floor == null || !level.getFluidState(floor.above(12)).isSource()) {
+        BlockPos floor = oceanFlourFloor(level, origin);
+        if (floor == null || !level.getFluidState(floor.above(13)).isSource()) {
             return false;
         }
         BlockPos center = floor.above();
@@ -237,7 +342,7 @@ public class LegacyStructureFeature extends Feature<NoneFeatureConfiguration> {
             1, 4, 1, -1, 4, 1, 1, 4, -1, -1, 4, -1);
 
         set(level, center, Blocks.CHEST.defaultBlockState());
-        loot(level, random, center, WATER_TEMPLE_LOOT);
+        loot(level, random, center, CANDY_HOUSE_LOOT);
         return true;
     }
 
@@ -247,12 +352,12 @@ public class LegacyStructureFeature extends Feature<NoneFeatureConfiguration> {
         }
     }
 
-    private static BlockPos oceanFloor(WorldGenLevel level, BlockPos origin) {
+    private static BlockPos oceanFlourFloor(WorldGenLevel level, BlockPos origin) {
         int x = origin.getX();
         int z = origin.getZ();
-        for (int y = 62; y > level.getMinBuildHeight() + 8; y--) {
+        for (int y = origin.getY() + 9; y >= 20; y--) {
             BlockPos pos = new BlockPos(x, y, z);
-            if (!level.getBlockState(pos).isAir() && !level.getFluidState(pos).isSource()) {
+            if (level.getBlockState(pos).is(CCBlocks.FLOUR.get())) {
                 return pos;
             }
         }
@@ -360,18 +465,17 @@ public class LegacyStructureFeature extends Feature<NoneFeatureConfiguration> {
             }
         }
 
-        int type = random.nextInt(4);
-        if (type == 0) {
+        int type = random.nextInt(3);
+        if (type == 0 || type == 1) {
             decoratePigFeedIsland(level, random, top);
-        } else if (type == 1) {
-            decoratePigFeedIsland(level, random, top);
+        }
+        if (type == 1) {
             BlockPos house = base.offset(14 + random.nextInt(4) - 2, maxHeight - 1, 14 + random.nextInt(4) - 2);
             buildVillageHouse(level, random, house, random.nextInt(4), true);
-        } else if (type == 2) {
+        }
+        if (type == 2) {
             decorateChewingGumIsland(level, random, top);
-            spawnBossBeetle(level, base.offset(16, maxHeight + 1, 16));
-        } else {
-            decorateOrdinaryIsland(level, random, top);
+            spawnBossBeetle(level, base.offset(16, maxHeight + 2, 16));
         }
         return true;
     }
@@ -469,7 +573,7 @@ public class LegacyStructureFeature extends Feature<NoneFeatureConfiguration> {
                 for (int y = 0; y < 7; y++) {
                     BlockPos pos = base.offset(x, y, z);
                     if (y < 2) {
-                        set(level, pos, CCBlocks.CHOCOLATE_STONE.get().defaultBlockState());
+                        set(level, pos, CCSweetscapeBlocks.CRYSTALLIZED_SUGAR.get().defaultBlockState());
                     } else if (x == 0 || z == 0 || x == 63 || z == 63) {
                         set(level, pos, CCBlocks.CHOCOLATE_COBBLESTONE.get().defaultBlockState());
                     } else if ((y == 2 || y == 5) && (x == 1 || z == 1 || x == 62 || z == 62)) {
@@ -548,7 +652,7 @@ public class LegacyStructureFeature extends Feature<NoneFeatureConfiguration> {
         buildVillageCenter(level, random, base);
         decorateVillageLeaves(level, random, base);
         scatterVillageSweetGrass(level, random, base);
-        spawnUndergroundVillageGingerbread(level, random, base);
+        spawnBossSuguard(level, base.offset(32, 3, 32));
         callHoneyEmblemPlayers(level, origin);
         return true;
     }
@@ -562,6 +666,19 @@ public class LegacyStructureFeature extends Feature<NoneFeatureConfiguration> {
             }
             spawnGingerbread(level, pos, random.nextInt(3));
         }
+    }
+
+    private static void spawnBossSuguard(WorldGenLevel level, BlockPos pos) {
+        if (!(level instanceof WorldGenRegion region)) {
+            return;
+        }
+        BasicCandyZombieEntity entity = CCEntityTypes.BOSS_SUGUARD.get().create(region.getLevel());
+        if (entity == null) {
+            return;
+        }
+        entity.moveTo(pos.getX() + 0.5D, pos.getY(), pos.getZ() + 0.5D, 0.0F, 0.0F);
+        entity.finalizeSpawn(region, region.getCurrentDifficultyAt(pos), MobSpawnType.STRUCTURE, null, null);
+        region.addFreshEntity(entity);
     }
 
     private static boolean isVillageGate(int x, int z) {
@@ -591,9 +708,7 @@ public class LegacyStructureFeature extends Feature<NoneFeatureConfiguration> {
             {29, 31}, {29, 32}, {34, 31}, {34, 32}
         };
         for (int[] p : slabs) {
-            set(level, base.offset(p[0], 2, p[1]), random.nextBoolean()
-                ? CCBlocks.MARSHMALLOW_SLAB.get().defaultBlockState()
-                : CCBlocks.CANDY_CANE_SLAB.get().defaultBlockState());
+            set(level, base.offset(p[0], 2, p[1]), CCBlocks.MARSHMALLOW_SLAB.get().defaultBlockState());
         }
     }
 
@@ -637,21 +752,14 @@ public class LegacyStructureFeature extends Feature<NoneFeatureConfiguration> {
     }
 
     private static BlockState leafState(int metadata) {
-        int variantId = metadata & 3;
-        LegacyLeavesBlock.LeafVariant variant;
-        if (variantId == 1) {
-            variant = LegacyLeavesBlock.LeafVariant.SPRUCE;
-        } else if (variantId == 2) {
-            variant = LegacyLeavesBlock.LeafVariant.BIRCH;
-        } else if (variantId == 3) {
-            variant = LegacyLeavesBlock.LeafVariant.JUNGLE;
-        } else {
-            variant = LegacyLeavesBlock.LeafVariant.OAK;
-        }
-        return CCBlocks.CANDY_LEAVE.get().defaultBlockState()
+        BlockState state = switch (metadata % 3) {
+            case 1 -> CCBlocks.CANDY_LEAVES_DARK.get().defaultBlockState();
+            case 2 -> CCBlocks.CANDY_LEAVES_LIGHT.get().defaultBlockState();
+            default -> CCBlocks.CANDY_LEAVES.get().defaultBlockState();
+        };
+        return state
             .setValue(LegacyLeavesBlock.CHECK_DECAY, false)
-            .setValue(LegacyLeavesBlock.DECAYABLE, false)
-            .setValue(LegacyLeavesBlock.VARIANT, variant);
+            .setValue(LegacyLeavesBlock.DECAYABLE, false);
     }
 
     private static void scatterVillageSweetGrass(WorldGenLevel level, RandomSource random, BlockPos base) {

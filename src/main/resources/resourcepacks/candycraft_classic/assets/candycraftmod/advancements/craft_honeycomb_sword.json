@@ -12,13 +12,17 @@
   },
   "parent": "candycraftmod:honeycomb",
   "criteria": {
-    "honeycomb_sword": {
+    "honey_sword": {
       "trigger": "minecraft:inventory_changed",
-      "items": [
-        {
-          "item": "candycraftmod:honeycomb_sword"
-        }
-      ]
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "candycraftmod:honey_sword"
+            ]
+          }
+        ]
+      }
     },
     "recipe": {
       "trigger": "minecraft:recipe_unlocked",
@@ -29,7 +33,7 @@
   },
   "requirements": [
     [
-      "honeycomb_sword",
+      "honey_sword",
       "recipe"
     ]
   ]

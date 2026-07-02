@@ -1,7 +1,7 @@
 {
   "display": {
     "icon": {
-      "item": "candycraftmod:orange_key"
+      "item": "candycraftmod:jelly_key"
     },
     "title": {
       "translate": "advancements.candycraft.kill_jelly_queen.title"
@@ -16,9 +16,15 @@
     "kill_jelly_queen": {
       "trigger": "minecraft:player_killed_entity",
       "conditions": {
-        "entity": {
-          "type": "candycraftmod:jelly_queen"
-        }
+        "entity": [
+          {
+            "condition": "minecraft:entity_properties",
+            "entity": "this",
+            "predicate": {
+              "type": "candycraftmod:jelly_queen"
+            }
+          }
+        ]
       }
     }
   }

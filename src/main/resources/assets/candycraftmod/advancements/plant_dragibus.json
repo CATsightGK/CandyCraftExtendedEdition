@@ -10,12 +10,12 @@
       "translate": "advancements.candycraft.dragibus.description"
     }
   },
-  "parent": "candycraftmod:plant_dragibus",
+  "parent": "candycraftmod:candy_world",
   "criteria": {
     "dragibus": {
       "trigger": "minecraft:placed_block",
       "conditions": {
-        "block": "candycraftmod:lollipop_plant"
+        "block": "candycraftmod:dragibus_crops"
       }
     }
   }

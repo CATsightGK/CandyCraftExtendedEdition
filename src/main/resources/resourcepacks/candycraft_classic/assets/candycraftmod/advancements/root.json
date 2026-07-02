@@ -9,18 +9,22 @@
     "description": {
       "translate": "advancements.candycraft.root.desc"
     },
-    "background": "candycraftmod:textures/blocks/chocolate_stone.png",
+    "background": "candycraftmod:textures/block/chocolate_stone.png",
     "show_toast": true,
     "announce_to_chat": false
   },
   "criteria": {
     "sugar_block": {
       "trigger": "minecraft:inventory_changed",
-      "items": [
-        {
-          "item": "candycraftmod:sugar_block"
-        }
-      ]
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "candycraftmod:sugar_block"
+            ]
+          }
+        ]
+      }
     },
     "recipe": {
       "trigger": "minecraft:recipe_unlocked",

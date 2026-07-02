@@ -14,16 +14,20 @@
   "criteria": {
     "stick": {
       "trigger": "minecraft:inventory_changed",
-      "items": [
-        {
-          "item": "minecraft:stick"
-        }
-      ]
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "minecraft:stick"
+            ]
+          }
+        ]
+      }
     },
     "recipe": {
       "trigger": "minecraft:recipe_unlocked",
       "conditions": {
-        "recipe": "minecraft:stick"
+        "recipe": "candycraftmod:stick"
       }
     }
   },

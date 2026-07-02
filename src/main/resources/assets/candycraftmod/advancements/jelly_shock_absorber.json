@@ -13,13 +13,17 @@
   },
   "parent": "candycraftmod:trampojelly",
   "criteria": {
-    "trampojelly": {
+    "jelly_shock_absorber": {
       "trigger": "minecraft:inventory_changed",
-      "items": [
-        {
-          "item": "candycraftmod:jelly_shock_absorber"
-        }
-      ]
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "candycraftmod:jelly_shock_absorber"
+            ]
+          }
+        ]
+      }
     }
   }
 }

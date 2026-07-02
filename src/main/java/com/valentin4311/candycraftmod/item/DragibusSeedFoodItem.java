@@ -15,7 +15,6 @@ public class DragibusSeedFoodItem extends ItemNameBlockItem {
     private static final FoodProperties FOOD = new FoodProperties.Builder()
         .nutrition(1)
         .saturationMod(0.3F)
-        .alwaysEat()
         .build();
 
     public DragibusSeedFoodItem(Block crop) {

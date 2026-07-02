@@ -9,6 +9,7 @@ import com.valentin4311.candycraftmod.block.CandyWaterlilyBlock;
 import com.valentin4311.candycraftmod.block.CandyWebBlock;
 import com.valentin4311.candycraftmod.block.CandyWorkbenchBlock;
 import com.valentin4311.candycraftmod.block.CherryBlock;
+import com.valentin4311.candycraftmod.block.CherryLeavesBlock;
 import com.valentin4311.candycraftmod.block.ChewingGumBlock;
 import com.valentin4311.candycraftmod.block.ChewingGumPuddleBlock;
 import com.valentin4311.candycraftmod.block.DragonEggBlock;
@@ -105,8 +106,8 @@ public final class CCBlocks {
     public static final RegistryObject<Block> TRAMPOJELLY = translucent(register("trampojelly", () -> new JellyBlock(2.0D, jelly())));
     public static final RegistryObject<Block> RED_TRAMPOJELLY = translucent(register("red_trampojelly", () -> new JellyBlock(4.0D, jelly())));
     public static final RegistryObject<Block> JELLY_SHOCK_ABSORBER = translucent(register("jelly_shock_absorber", () -> new JellyBlock(-1.0D, jelly())));
-    public static final RegistryObject<Block> LOLLIPOP_BLOCK = cutout(register("lollipop_block", () -> new LollipopBlock(plant().strength(0.0F, 0.0F))));
-    public static final RegistryObject<Block> LOLLIPOP_PLANT = cutout(register("lollipop_plant", () -> new LollipopPlantBlock(plant().randomTicks())));
+    public static final RegistryObject<Block> LOLLIPOP_BLOCK = cutout(register("lollipop_block", () -> new LollipopBlock(cropPlant().strength(0.0F, 0.0F))));
+    public static final RegistryObject<Block> LOLLIPOP_PLANT = cutout(register("lollipop_plant", () -> new LollipopPlantBlock(cropPlant().randomTicks())));
     public static final RegistryObject<Block> CARAMEL_BLOCK = register("caramel_block", () -> new Block(metal(MapColor.COLOR_ORANGE).strength(2.0F, 2000.0F)));
     public static final RegistryObject<Block> SUGAR_FACTORY = register("sugar_factory", () -> new SugarFactoryBlock(false, metal(MapColor.METAL).strength(2.0F, 5.0F)));
     public static final RegistryObject<Block> LICORICE_FURNACE = register("licorice_furnace", () -> new LicoriceFurnaceBlock(false, stone().strength(5.0F, 10.0F)));
@@ -117,8 +118,8 @@ public final class CCBlocks {
     public static final RegistryObject<Block> CHOCOLATE_STONE = register("chocolate_stone", () -> new Block(stone().mapColor(MapColor.DIRT).strength(1.5F, 10.0F)));
     public static final RegistryObject<Block> CHOCOLATE_COBBLESTONE = register("chocolate_cobblestone", () -> new Block(stone().mapColor(MapColor.COLOR_BROWN).strength(2.0F, 10.0F)));
     public static final RegistryObject<Block> CHOCOLATE_COBBLESTONE_WALL = register("chocolate_cobblestone_wall", () -> new WallBlock(stone().mapColor(MapColor.COLOR_BROWN).strength(2.0F, 10.0F)));
-    public static final RegistryObject<Block> MARSHMALLOW_SLICE_BLOCK = cutout(register("marshmallow_slice_block", () -> new CandyWaterlilyBlock(false, plant().strength(0.0F))));
-    public static final RegistryObject<Block> DRAGIBUS_CROPS = cutout(register("dragibus_crops", () -> new CandyCropBlock(() -> CCItems.DRAGIBUS.get(), plant())));
+    public static final RegistryObject<Block> MARSHMALLOW_SLICE_BLOCK = cutout(register("marshmallow_slice_block", () -> new CandyWaterlilyBlock(false, lilyPad(MapColor.COLOR_PINK))));
+    public static final RegistryObject<Block> DRAGIBUS_CROPS = cutout(register("dragibus_crops", () -> new CandyCropBlock(() -> CCItems.DRAGIBUS.get(), cropPlant())));
     public static final RegistryObject<Block> ROPE_LICORICE = cutout(register("rope_licorice", () -> new SeaweedBlock(true, plant())));
     public static final RegistryObject<Block> MINT = cutout(register("mint", () -> new SeaweedBlock(false, plant())));
     public static final RegistryObject<Block> MARSHMALLOW_WORKBENCH = register("marshmallow_workbench", () -> new CandyWorkbenchBlock(CandyWorkbenchBlock.CandyWorkbenchTheme.MARSHMALLOW, wood(MapColor.COLOR_PINK).strength(2.5F)));
@@ -162,7 +163,7 @@ public final class CCBlocks {
     public static final RegistryObject<Block> CHEWING_GUM_BLOCK = register("chewing_gum_block", () -> new ChewingGumBlock(jelly().mapColor(MapColor.COLOR_PINK).strength(1.0F).noOcclusion()));
     public static final RegistryObject<Block> CHEWING_GUM_PUDDLE = cutout(register("chewing_gum_puddle", () -> new ChewingGumPuddleBlock(jelly().mapColor(MapColor.COLOR_PINK).strength(1.0F).noCollission().noOcclusion())));
     public static final RegistryObject<Block> ALCHEMY_TABLE = cutout(register("alchemy_table", () -> new AlchemyTableBlock(stone().mapColor(MapColor.COLOR_BROWN).strength(1.0F).sound(SoundType.METAL).noOcclusion())));
-    public static final RegistryObject<Block> MARSHMALLOW_FLOWER_BLOCK = cutout(register("marshmallow_flower_block", () -> new CandyWaterlilyBlock(true, plant().strength(0.0F))));
+    public static final RegistryObject<Block> MARSHMALLOW_FLOWER_BLOCK = cutout(register("marshmallow_flower_block", () -> new CandyWaterlilyBlock(true, lilyPad(MapColor.COLOR_PINK))));
     public static final RegistryObject<Block> GRENADINE_BLOCK = translucent(register("grenadine_block", () -> new GlassBlock(glass(MapColor.COLOR_RED).strength(1.0F))));
     public static final RegistryObject<Block> FRAGILE_GRENADINE_BLOCK = translucent(registerNoItem("fragile_grenadine_block", () -> new FragileGrenadineBlock(glass(MapColor.COLOR_RED).strength(0.25F).randomTicks().noLootTable())));
     public static final RegistryObject<Block> ICE_CREAM = register("ice_cream", () -> new LegacyTypeBlock(BlockBehaviour.Properties.copy(Blocks.SNOW_BLOCK).mapColor(MapColor.SNOW).strength(1.0F), 3));
@@ -188,7 +189,7 @@ public final class CCBlocks {
     public static final RegistryObject<Block> CANDY_LEAVES = cutout(register("candy_leaves", () -> new LegacyLeavesBlock(leaves(MapColor.COLOR_BROWN))));
     public static final RegistryObject<Block> CANDY_LEAVES_DARK = cutout(register("candy_leaves_dark", () -> new LegacyLeavesBlock(leaves(MapColor.COLOR_BROWN))));
     public static final RegistryObject<Block> CANDY_LEAVES_LIGHT = cutout(register("candy_leaves_light", () -> new LegacyLeavesBlock(leaves(MapColor.TERRACOTTA_WHITE))));
-    public static final RegistryObject<Block> CANDY_LEAVES_CHERRY = cutout(register("candy_leaves_cherry", () -> new LegacyLeavesBlock(leaves(MapColor.COLOR_RED))));
+    public static final RegistryObject<Block> CANDY_LEAVES_CHERRY = cutout(register("candy_leaves_cherry", () -> new CherryLeavesBlock(leaves(MapColor.COLOR_RED))));
     public static final RegistryObject<Block> CANDY_LEAVES_ENCHANT = cutout(register("candy_leaves_enchant", () -> new LegacyLeavesBlock(leaves(MapColor.COLOR_PURPLE))));
     public static final RegistryObject<Block> CANDY_SAPLING_DARK = cutout(register("candy_sapling_dark", () -> new LegacySaplingBlock(plant())));
     public static final RegistryObject<Block> CANDY_SAPLING_LIGHT = cutout(register("candy_sapling_light", () -> new LegacySaplingBlock(plant())));
@@ -218,7 +219,7 @@ public final class CCBlocks {
     public static final RegistryObject<Block> CHOCOLATE_COBBLESTONE_STAIRS = register("chocolate_cobblestone_stairs", () -> stairs(Blocks.COBBLESTONE.defaultBlockState(), stone().mapColor(MapColor.COLOR_BROWN).strength(2.0F, 10.0F)));
     public static final RegistryObject<Block> CHOCOLATE_COBBLESTONE_SLAB = register("chocolate_cobblestone_slab", () -> new SlabBlock(stone().mapColor(MapColor.COLOR_BROWN).strength(2.0F, 10.0F)));
     public static final RegistryObject<Block> CHOCOLATE_COBBLESTONE_DOUBLE_SLAB = register("chocolate_cobblestone_double_slab", () -> new SlabBlock(stone().mapColor(MapColor.COLOR_BROWN).strength(2.0F, 10.0F)));
-    public static final RegistryObject<Block> MARSHMALLOW_SLICE = cutout(register("marshmallow_slice", () -> new CandyWaterlilyBlock(false, plant().strength(0.0F))));
+    public static final RegistryObject<Block> MARSHMALLOW_SLICE = cutout(register("marshmallow_slice", () -> new CandyWaterlilyBlock(false, lilyPad(MapColor.COLOR_PINK))));
     public static final RegistryObject<Block> COTTON_CANDY_JUKEBOX = register("cotton_candy_jukebox", () -> new net.minecraft.world.level.block.JukeboxBlock(wood(MapColor.COLOR_PINK).strength(2.0F, 6.0F)));
     public static final RegistryObject<Block> SUGUARD_SENTRY_KEY_HOLE = register("suguard_sentry_key_hole", () -> new DungeonLockBlock(DungeonLockBlock.Kind.SUGUARD_SENTRY, stone().strength(-1.0F, 6000000.0F)));
     public static final RegistryObject<Block> SUGUARD_BOSS_KEY_HOLE = register("suguard_boss_key_hole", () -> new DungeonLockBlock(DungeonLockBlock.Kind.SUGUARD_BOSS, stone().strength(-1.0F, 6000000.0F)));
@@ -297,6 +298,14 @@ public final class CCBlocks {
 
     private static BlockBehaviour.Properties plant() {
         return BlockBehaviour.Properties.copy(Blocks.GRASS).noCollission().noOcclusion();
+    }
+
+    private static BlockBehaviour.Properties cropPlant() {
+        return BlockBehaviour.Properties.copy(Blocks.WHEAT).noCollission().noOcclusion();
+    }
+
+    private static BlockBehaviour.Properties lilyPad(MapColor color) {
+        return BlockBehaviour.Properties.copy(Blocks.LILY_PAD).mapColor(color).noOcclusion();
     }
 
     private static BlockBehaviour.Properties jelly() {

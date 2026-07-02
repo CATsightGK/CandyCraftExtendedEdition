@@ -14,11 +14,15 @@
   "criteria": {
     "trampojelly": {
       "trigger": "minecraft:inventory_changed",
-      "items": [
-        {
-          "item": "candycraftmod:trampojelly"
-        }
-      ]
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "candycraftmod:trampojelly"
+            ]
+          }
+        ]
+      }
     }
   }
 }

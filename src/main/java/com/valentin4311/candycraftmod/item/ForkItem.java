@@ -3,6 +3,7 @@ package com.valentin4311.candycraftmod.item;
 import com.valentin4311.candycraftmod.CandyCraft;
 import com.valentin4311.candycraftmod.entity.ThrownForkEntity;
 import com.valentin4311.candycraftmod.registry.CCBlocks;
+import com.valentin4311.candycraftmod.registry.CCCriteriaTriggers;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.BlockParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
@@ -10,6 +11,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.BlockTags;
@@ -183,6 +185,9 @@ public class ForkItem extends TieredItem {
         if (player.level() instanceof ServerLevel) {
             spawnHeldBlockParticles(stack, player, 18);
             player.getFoodData().eat(1, 0.0F);
+            if (player instanceof ServerPlayer serverPlayer) {
+                CCCriteriaTriggers.EAT_BLOCK.trigger(serverPlayer);
+            }
             player.level().playSound(null, player.blockPosition(), SoundEvents.PLAYER_BURP, SoundSource.PLAYERS, 0.5F, 0.9F + player.getRandom().nextFloat() * 0.1F);
             if (!player.getAbilities().instabuild) {
                 stack.hurtAndBreak(1, player, living -> living.broadcastBreakEvent(hand));

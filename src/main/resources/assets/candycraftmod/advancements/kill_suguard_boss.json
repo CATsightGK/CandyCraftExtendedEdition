@@ -1,7 +1,7 @@
 {
   "display": {
     "icon": {
-      "item": "candycraftmod:blue_key"
+      "item": "candycraftmod:suguard_boss_key"
     },
     "title": {
       "translate": "advancements.candycraft.kill_suguard_boss.title"
@@ -16,9 +16,15 @@
     "kill_suguard_boss": {
       "trigger": "minecraft:player_killed_entity",
       "conditions": {
-        "entity": {
-          "type": "candycraftmod:suguard_statue"
-        }
+        "entity": [
+          {
+            "condition": "minecraft:entity_properties",
+            "entity": "this",
+            "predicate": {
+              "type": "candycraftmod:boss_suguard"
+            }
+          }
+        ]
       }
     }
   }

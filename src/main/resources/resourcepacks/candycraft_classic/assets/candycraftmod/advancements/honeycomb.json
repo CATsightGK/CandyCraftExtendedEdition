@@ -14,11 +14,15 @@
   "criteria": {
     "honeycomb": {
       "trigger": "minecraft:inventory_changed",
-      "items": [
-        {
-          "item": "candycraftmod:honeycomb"
-        }
-      ]
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "candycraftmod:honeycomb"
+            ]
+          }
+        ]
+      }
     }
   }
 }

@@ -12,13 +12,17 @@
   },
   "parent": "candycraftmod:candy_world",
   "criteria": {
-    "candy_cane_fence": {
+    "fork": {
       "trigger": "minecraft:inventory_changed",
-      "items": [
-        {
-          "item": "candycraftmod:fork"
-        }
-      ]
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "candycraftmod:fork"
+            ]
+          }
+        ]
+      }
     },
     "recipe": {
       "trigger": "minecraft:recipe_unlocked",
@@ -35,7 +39,7 @@
   },
   "requirements": [
     [
-      "candy_cane_fence",
+      "fork",
       "recipe",
       "recipe_2"
     ]

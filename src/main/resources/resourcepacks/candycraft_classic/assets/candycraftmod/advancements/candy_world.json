@@ -1,8 +1,7 @@
 {
   "display": {
     "icon": {
-      "item": "candycraftmod:marshmallow_log",
-      "data": 0
+      "item": "candycraftmod:marshmallow_log"
     },
     "title": {
       "translate": "advancements.candycraft.candy_world.title"
@@ -17,7 +16,7 @@
     "travel_to_dim": {
       "trigger": "minecraft:changed_dimension",
       "conditions": {
-        "to": "Candy Valley"
+        "to": "candycraftmod:candy_world"
       }
     }
   }

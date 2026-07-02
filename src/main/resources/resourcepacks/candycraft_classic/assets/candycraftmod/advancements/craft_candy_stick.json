@@ -14,11 +14,15 @@
   "criteria": {
     "marshmallow_stick": {
       "trigger": "minecraft:inventory_changed",
-      "items": [
-        {
-          "item": "candycraftmod:marshmallow_stick"
-        }
-      ]
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "candycraftmod:marshmallow_stick"
+            ]
+          }
+        ]
+      }
     },
     "recipe": {
       "trigger": "minecraft:recipe_unlocked",

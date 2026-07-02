@@ -2,6 +2,7 @@ package com.valentin4311.candycraftmod;
 
 import com.valentin4311.candycraftmod.registry.CCBlocks;
 import com.valentin4311.candycraftmod.registry.CCBlockEntities;
+import com.valentin4311.candycraftmod.registry.CCCriteriaTriggers;
 import com.valentin4311.candycraftmod.registry.CCSweetscapeBlocks;
 import com.valentin4311.candycraftmod.registry.CCSweetscapeItems;
 import com.valentin4311.candycraftmod.registry.CCCreativeTabs;
@@ -49,6 +50,7 @@ public class CandyCraft {
         CCSweetscapeItems.register(modBus);
         CCMenus.register(modBus);
         CCCreativeTabs.register(modBus);
+        CCCriteriaTriggers.register();
         CCTasteNetwork.register();
     }
 

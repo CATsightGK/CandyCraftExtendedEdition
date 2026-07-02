@@ -2,8 +2,10 @@ package com.valentin4311.candycraftmod.item;
 
 import com.valentin4311.candycraftmod.entity.CandyCreeperEntity;
 import com.valentin4311.candycraftmod.entity.CandyWolfEntity;
+import com.valentin4311.candycraftmod.registry.CCCriteriaTriggers;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
@@ -28,6 +30,9 @@ public class LollipopItem extends Item {
                 wolf.heal(WOLF_HEAL_AMOUNT);
                 consumeOne(stack, player);
                 playUseEffects(player, wolf);
+                if (player instanceof ServerPlayer serverPlayer) {
+                    CCCriteriaTriggers.HEAL_CANDY_WOLF.trigger(serverPlayer);
+                }
             }
             return InteractionResult.sidedSuccess(player.level().isClientSide);
         }
@@ -37,6 +42,9 @@ public class LollipopItem extends Item {
                 creeper.stallWithLollipop(CREEPER_STALL_TICKS);
                 consumeOne(stack, player);
                 playUseEffects(player, creeper);
+                if (player instanceof ServerPlayer serverPlayer) {
+                    CCCriteriaTriggers.STALL_CANDY_CREEPER.trigger(serverPlayer);
+                }
             }
             return InteractionResult.sidedSuccess(player.level().isClientSide);
         }

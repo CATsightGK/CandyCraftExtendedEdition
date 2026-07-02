@@ -142,14 +142,21 @@ public class CaramelBeeEntity extends Monster {
         }
 
         Vec3 movement = getDeltaMovement();
-        setDeltaMovement(
-            movement.x + (Math.signum(dx) * 0.5D - movement.x) * 0.10000000149011612D,
-            (movement.y + (Math.signum(dy) * 0.699999988079071D - movement.y) * 0.10000000149011612D) * 0.6000000238418579D,
-            movement.z + (Math.signum(dz) * 0.5D - movement.z) * 0.10000000149011612D
-        );
+        Vec3 toTarget = new Vec3(dx, dy, dz);
+        if (toTarget.lengthSqr() > 1.0E-4D) {
+            Vec3 direction = toTarget.normalize();
+            double speed = isAngry() && player != null ? 0.30D : 0.20D;
+            Vec3 desired = new Vec3(
+                direction.x * speed,
+                Mth.clamp(direction.y * speed, -0.16D, 0.20D),
+                direction.z * speed
+            );
+            double blend = isAngry() && player != null ? 0.12D : 0.08D;
+            setDeltaMovement(movement.lerp(desired, blend));
+        }
 
         float targetYaw = (float)(Math.atan2(getDeltaMovement().z, getDeltaMovement().x) * 180.0D / Math.PI) - 90.0F;
-        setYRot(getYRot() + Mth.wrapDegrees(targetYaw - getYRot()));
+        setYRot(getYRot() + Mth.wrapDegrees(targetYaw - getYRot()) * 0.22F);
         yBodyRot = getYRot();
     }
 

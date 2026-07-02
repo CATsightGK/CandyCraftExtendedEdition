@@ -133,7 +133,7 @@ public class CandyLiquidBlock extends LiquidBlock {
             BlockState neighbor = level.getBlockState(neighborPos);
             if (isNonLavaLiquid(neighbor.getFluidState())) {
                 level.setBlock(source ? pos : neighborPos, source
-                    ? CCSweetscapeBlocks.PINK_CANDY_CANE_BLOCK.get().defaultBlockState()
+                    ? CCBlocks.CANDY_CANE_BLOCK.get().defaultBlockState()
                     : CCSweetscapeBlocks.CRYSTALLIZED_SUGAR.get().defaultBlockState(), Block.UPDATE_ALL);
                 return;
             }

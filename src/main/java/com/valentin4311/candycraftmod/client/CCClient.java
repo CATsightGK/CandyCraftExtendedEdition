@@ -14,6 +14,7 @@ import com.valentin4311.candycraftmod.client.model.NougatGolemModel;
 import com.valentin4311.candycraftmod.client.model.PingouinModel;
 import com.valentin4311.candycraftmod.client.model.SuguardModel;
 import com.valentin4311.candycraftmod.client.model.WaffleSheepModel;
+import com.valentin4311.candycraftmod.entity.BasicCandyZombieEntity;
 import com.valentin4311.candycraftmod.registry.CCBlocks;
 import com.valentin4311.candycraftmod.registry.CCEntityTypes;
 import com.valentin4311.candycraftmod.registry.CCFluids;
@@ -123,7 +124,41 @@ public final class CCClient {
 
     @SubscribeEvent
     public static void registerGuiOverlays(RegisterGuiOverlaysEvent event) {
+        event.registerAboveAll("dragon_mount_power", CCClient::renderDragonMountPowerOverlay);
         event.registerAboveAll("jelly_wand_charge", CCClient::renderJellyWandChargeOverlay);
+    }
+
+    private static void renderDragonMountPowerOverlay(net.minecraftforge.client.gui.overlay.ForgeGui gui, GuiGraphics graphics,
+            float partialTick, int screenWidth, int screenHeight) {
+        Minecraft minecraft = gui.getMinecraft();
+        if (minecraft.player == null || minecraft.options.hideGui || minecraft.player.isSpectator()) {
+            return;
+        }
+        if (!(minecraft.player.getVehicle() instanceof BasicCandyZombieEntity mount) || mount.getType() != CCEntityTypes.DRAGON.get()) {
+            return;
+        }
+
+        int max = Math.max(1, mount.getMountMaxPower());
+        float progress = Mth.clamp(mount.getMountPower() / (float)max, 0.0F, 1.0F);
+        int width = 48;
+        int height = 7;
+        int x = screenWidth - width - 10;
+        int y = 10;
+        int fill = Math.round((width - 4) * progress);
+        int fillColor = mount.isDragonFalling() ? 0xFFD84A5B : 0xFF5AA8FF;
+
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
+        graphics.fill(x, y, x + width, y + height, 0xAA1A1830);
+        graphics.fill(x + 2, y + 2, x + 2 + fill, y + height - 2, fillColor);
+        graphics.fill(x + 2, y + 2, x + 2 + fill, y + 3, 0x88FFFFFF);
+        graphics.fill(x, y, x + width, y + 1, 0xCCBBDDFF);
+        graphics.fill(x, y + height - 1, x + width, y + height, 0xCC30406D);
+        graphics.fill(x, y, x + 1, y + height, 0xCCBBDDFF);
+        graphics.fill(x + width - 1, y, x + width, y + height, 0xCC30406D);
+        Component label = Component.translatable("overlay.candycraftmod.mount.energy");
+        graphics.drawString(minecraft.font, label, x + width / 2 - minecraft.font.width(label) / 2, y + 10, 0xFFFFFF, true);
+        RenderSystem.disableBlend();
     }
 
     private static void renderJellyWandChargeOverlay(net.minecraftforge.client.gui.overlay.ForgeGui gui, GuiGraphics graphics,

@@ -1,6 +1,7 @@
 package com.valentin4311.candycraftmod.entity;
 
 import com.valentin4311.candycraftmod.registry.CCBlocks;
+import com.valentin4311.candycraftmod.registry.CCCriteriaTriggers;
 import com.valentin4311.candycraftmod.registry.CCEntityTypes;
 import com.valentin4311.candycraftmod.registry.CCItems;
 import com.valentin4311.candycraftmod.registry.CCSweetscapeItems;
@@ -11,6 +12,7 @@ import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.Difficulty;
@@ -131,6 +133,9 @@ public class CandyWolfEntity extends Wolf {
                     setTarget(null);
                     setHealth(getMaxHealth());
                     resetCaramelTimer();
+                    if (player instanceof ServerPlayer serverPlayer) {
+                        CCCriteriaTriggers.TAME_CANDY_WOLF.trigger(serverPlayer);
+                    }
                     level().broadcastEntityEvent(this, (byte) 7);
                 } else {
                     level().broadcastEntityEvent(this, (byte) 6);

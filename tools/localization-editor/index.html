@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CandyCraft Localization Editor</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div>
+        <h1>CandyCraft 本地化浏览编辑器</h1>
+        <p>浏览方块、实体、进度和文本键，直接编辑中文与英文名称。</p>
+      </div>
+      <div id="status" class="pill">加载中</div>
+    </header>
+
+    <section class="controls">
+      <button class="tab active" data-filter="block">方块</button>
+      <button class="tab" data-filter="entity">实体</button>
+      <button class="tab" data-filter="advancement">进度</button>
+      <button class="tab" data-filter="text">文本</button>
+      <button class="tab" data-filter="all">全部</button>
+      <input id="search" placeholder="搜索注册名、键、中文或英文">
+      <label class="toggle"><input id="onlyMissing" type="checkbox"> 只看缺失</label>
+      <label class="toggle"><input id="syncClassic" type="checkbox" checked> 同步 classic 包</label>
+      <button id="save" class="save">保存本地化</button>
+    </section>
+
+    <main class="layout">
+      <section class="minecraft-panel">
+        <div class="panel-title">
+          <span id="title">方块</span>
+          <span id="count">0 项</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th class="kind">类型</th>
+                <th class="id">注册名 / 键</th>
+                <th>中文</th>
+                <th>English</th>
+                <th class="source">来源</th>
+              </tr>
+            </thead>
+            <tbody id="rows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <aside class="side-panel">
+        <div class="panel-title">
+          <span>检查状态</span>
+          <span id="changed">0 已改</span>
+        </div>
+        <div id="stats" class="stats"></div>
+        <div class="hint">
+          保存只会写语言文件。新增键会追加到文件末尾；已有键保持原来的顺序。
+        </div>
+        <div class="path-box">
+          <strong>写入文件</strong>
+          <span id="zhPath"></span>
+          <span id="enPath"></span>
+        </div>
+      </aside>
+    </main>
+  </div>
+  <div id="toast"></div>
+
+  <script>
+    const rowsBody = document.getElementById("rows");
+    const search = document.getElementById("search");
+    const onlyMissing = document.getElementById("onlyMissing");
+    const syncClassic = document.getElementById("syncClassic");
+    const title = document.getElementById("title");
+    const count = document.getElementById("count");
+    const changed = document.getElementById("changed");
+    const stats = document.getElementById("stats");
+    const status = document.getElementById("status");
+    const toast = document.getElementById("toast");
+    const state = { rows: [], filter: "block", edits: new Map(), paths: {} };
+
+    function escapeHtml(text) {
+      return String(text).replace(/[&<>"']/g, s => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[s]));
+    }
+
+    function showToast(text) {
+      toast.textContent = text;
+      toast.className = "show";
+      setTimeout(() => toast.className = "", 1800);
+    }
+
+    function rowValue(row, lang) {
+      const edit = state.edits.get(row.key);
+      return edit ? edit[lang] : row[lang];
+    }
+
+    function isDirty(row) {
+      const edit = state.edits.get(row.key);
+      return !!edit && (edit.zh !== row.zh || edit.en !== row.en);
+    }
+
+    function matches(row) {
+      const q = search.value.trim().toLowerCase();
+      if (state.filter !== "all" && row.category !== state.filter) {
+        return false;
+      }
+      if (onlyMissing.checked && rowValue(row, "zh") && rowValue(row, "en")) {
+        return false;
+      }
+      if (!q) {
+        return true;
+      }
+      return row.key.toLowerCase().includes(q)
+        || row.id.toLowerCase().includes(q)
+        || rowValue(row, "zh").toLowerCase().includes(q)
+        || rowValue(row, "en").toLowerCase().includes(q)
+        || row.source.toLowerCase().includes(q);
+    }
+
+    function categoryName(category) {
+      return {
+        block: "方块",
+        entity: "实体",
+        advancement: "进度",
+        item: "物品",
+        text: "文本"
+      }[category] || category;
+    }
+
+    function renderStats() {
+      const counts = state.rows.reduce((acc, row) => {
+        acc[row.category] = (acc[row.category] || 0) + 1;
+        return acc;
+      }, {});
+      stats.innerHTML = ["block", "entity", "advancement", "item", "text"].map(key => {
+        return `<button class="stat" data-filter="${key}"><span>${categoryName(key)}</span><b>${counts[key] || 0}</b></button>`;
+      }).join("") + `<button class="stat" data-filter="all"><span>全部</span><b>${state.rows.length}</b></button>`;
+      stats.querySelectorAll(".stat").forEach(button => {
+        button.addEventListener("click", () => setFilter(button.dataset.filter));
+      });
+    }
+
+    function render() {
+      const visible = state.rows.filter(matches);
+      title.textContent = categoryName(state.filter);
+      count.textContent = `${visible.length} 项`;
+      changed.textContent = `${[...state.edits.values()].filter(Boolean).length} 已改`;
+      rowsBody.innerHTML = visible.map(row => {
+        const dirty = isDirty(row);
+        const missing = !rowValue(row, "zh") || !rowValue(row, "en");
+        return `<tr class="${dirty ? "dirty" : ""} ${missing ? "missing" : ""}" data-key="${escapeHtml(row.key)}">
+          <td class="kind"><span class="badge">${categoryName(row.category)}</span></td>
+          <td class="id">
+            <strong>${escapeHtml(row.id)}</strong>
+            <small>${escapeHtml(row.key)}</small>
+          </td>
+          <td><input data-lang="zh" value="${escapeHtml(rowValue(row, "zh"))}" placeholder="缺中文"></td>
+          <td><input data-lang="en" value="${escapeHtml(rowValue(row, "en"))}" placeholder="Missing English"></td>
+          <td class="source">${escapeHtml(row.source)}</td>
+        </tr>`;
+      }).join("");
+    }
+
+    function setFilter(filter) {
+      state.filter = filter;
+      document.querySelectorAll(".tab").forEach(button => button.classList.toggle("active", button.dataset.filter === filter));
+      render();
+    }
+
+    function onInput(event) {
+      const input = event.target.closest("input[data-lang]");
+      if (!input) {
+        return;
+      }
+      const tr = input.closest("tr");
+      const row = state.rows.find(row => row.key === tr.dataset.key);
+      if (!row) {
+        return;
+      }
+      const edit = state.edits.get(row.key) || { key: row.key, zh: row.zh, en: row.en };
+      edit[input.dataset.lang] = input.value;
+      if (edit.zh === row.zh && edit.en === row.en) {
+        state.edits.delete(row.key);
+      } else {
+        state.edits.set(row.key, edit);
+      }
+      tr.classList.toggle("dirty", isDirty(row));
+      tr.classList.toggle("missing", !rowValue(row, "zh") || !rowValue(row, "en"));
+      changed.textContent = `${state.edits.size} 已改`;
+    }
+
+    async function load() {
+      const res = await fetch("/api/state");
+      const data = await res.json();
+      state.rows = data.rows || [];
+      state.paths = data.paths || {};
+      document.getElementById("zhPath").textContent = state.paths.zh || "";
+      document.getElementById("enPath").textContent = state.paths.en || "";
+      status.textContent = "已加载";
+      status.classList.add("ok");
+      renderStats();
+      render();
+    }
+
+    async function save() {
+      if (!state.edits.size) {
+        showToast("没有改动");
+        return;
+      }
+      const rows = [...state.edits.values()];
+      const res = await fetch("/api/save", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ rows, syncClassic: syncClassic.checked })
+      });
+      const data = await res.json();
+      if (!data.ok) {
+        alert(data.error || "保存失败");
+        return;
+      }
+      showToast(`已保存 ${data.changed} 项`);
+      state.edits.clear();
+      await load();
+    }
+
+    document.querySelectorAll(".tab").forEach(button => button.addEventListener("click", () => setFilter(button.dataset.filter)));
+    rowsBody.addEventListener("input", onInput);
+    search.addEventListener("input", render);
+    onlyMissing.addEventListener("change", render);
+    document.getElementById("save").addEventListener("click", save);
+    load().catch(error => {
+      status.textContent = "加载失败";
+      alert(error && error.message || error);
+    });
+  </script>
+</body>
+</html>

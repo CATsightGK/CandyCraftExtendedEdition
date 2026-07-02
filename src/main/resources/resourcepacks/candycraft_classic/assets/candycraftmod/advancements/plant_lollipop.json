@@ -15,7 +15,7 @@
     "lollipop_plant": {
       "trigger": "minecraft:placed_block",
       "conditions": {
-        "block": "candycraftmod:dragibus_crops"
+        "block": "candycraftmod:lollipop_plant"
       }
     }
   }

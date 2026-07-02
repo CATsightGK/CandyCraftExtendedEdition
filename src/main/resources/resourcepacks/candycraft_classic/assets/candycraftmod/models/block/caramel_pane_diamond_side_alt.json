@@ -1,4 +1,5 @@
 {
+  "render_type": "minecraft:translucent",
   "parent": "minecraft:block/template_glass_pane_side_alt",
   "textures": {
     "pane": "candycraftmod:block/caramel_glass_2",
