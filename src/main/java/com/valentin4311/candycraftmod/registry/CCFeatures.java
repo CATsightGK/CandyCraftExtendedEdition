@@ -85,6 +85,10 @@ public final class CCFeatures {
         "ice_tower",
         () -> new LegacyStructureFeature(NoneFeatureConfiguration.CODEC, LegacyStructureFeature.Kind.ICE_TOWER)
     );
+    public static final RegistryObject<Feature<NoneFeatureConfiguration>> ICE_CREAM_DOME = FEATURES.register(
+        "ice_cream_dome",
+        () -> new LegacyStructureFeature(NoneFeatureConfiguration.CODEC, LegacyStructureFeature.Kind.ICE_CREAM_DOME)
+    );
     public static final RegistryObject<Feature<NoneFeatureConfiguration>> WATER_TEMPLE = FEATURES.register(
         "water_temple",
         () -> new LegacyStructureFeature(NoneFeatureConfiguration.CODEC, LegacyStructureFeature.Kind.WATER_TEMPLE)

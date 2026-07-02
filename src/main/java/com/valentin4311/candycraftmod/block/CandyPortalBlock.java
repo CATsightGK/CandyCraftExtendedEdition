@@ -42,7 +42,7 @@ public class CandyPortalBlock extends Block {
     );
     private static final int SURVIVAL_PORTAL_DELAY = 80;
     private static final int CREATIVE_PORTAL_DELAY = 1;
-    private static final int CANDY_WORLD_PRELOAD_RADIUS = 12;
+    private static final int CANDY_WORLD_PRELOAD_RADIUS = 1;
     public static final EnumProperty<Direction.Axis> AXIS = BlockStateProperties.HORIZONTAL_AXIS;
     private static final int MIN_WIDTH = 2;
     private static final int MAX_WIDTH = 21;

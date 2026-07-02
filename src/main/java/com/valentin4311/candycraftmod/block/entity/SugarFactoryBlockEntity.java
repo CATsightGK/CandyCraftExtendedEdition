@@ -210,7 +210,7 @@ public class SugarFactoryBlockEntity extends BaseContainerBlockEntity implements
             }
 
             ItemStack advancedResult = getRecipeResult(input, true);
-            if (!advancedResult.isEmpty() && !ItemStack.isSameItemSameTags(normalResult, advancedResult)) {
+            if (!advancedResult.isEmpty() && (!ItemStack.isSameItemSameTags(normalResult, advancedResult) || advancedResult.is(Items.SUGAR))) {
                 addDisplayRecipe(recipes, seen, input, advancedResult, true);
             }
         }

@@ -59,6 +59,9 @@ public class LegacyStructureFeature extends Feature<NoneFeatureConfiguration> {
         if (kind == Kind.ICE_TOWER) {
             return iceTower(level, random, surface(level, origin));
         }
+        if (kind == Kind.ICE_CREAM_DOME) {
+            return iceCreamDome(level, random, surface(level, origin));
+        }
         if (kind == Kind.WATER_TEMPLE) {
             return waterTemple(level, random, origin);
         }
@@ -242,6 +245,33 @@ public class LegacyStructureFeature extends Feature<NoneFeatureConfiguration> {
         BlockPos chest = pos.offset(3, 3, 3);
         set(level, chest, Blocks.CHEST.defaultBlockState());
         loot(level, random, chest, ICE_TOWER_LOOT);
+        return true;
+    }
+
+    private static boolean iceCreamDome(WorldGenLevel level, RandomSource random, BlockPos pos) {
+        BlockState below = level.getBlockState(pos.below());
+        if (!below.is(CCBlocks.PUDDING.get()) && !below.is(CCBlocks.FLOUR.get()) && !below.is(CCBlocks.ICE_CREAM.get())) {
+            return false;
+        }
+        BlockState ice = CCBlocks.ICE_CREAM.get().defaultBlockState();
+        for (int y = 0; y <= 8; y++) {
+            int radius = y < 2 ? 3 : y < 6 ? 2 : 1;
+            for (int dx = -radius; dx <= radius; dx++) {
+                for (int dz = -radius; dz <= radius; dz++) {
+                    if (Math.abs(dx) == radius || Math.abs(dz) == radius || y == 0 || y == 7) {
+                        set(level, pos.offset(dx, y, dz), ice);
+                    } else {
+                        set(level, pos.offset(dx, y, dz), Blocks.AIR.defaultBlockState());
+                    }
+                }
+            }
+        }
+        if (random.nextInt(12) == 0) {
+            BlockPos chest = pos.above(5);
+            set(level, chest, Blocks.CHEST.defaultBlockState());
+            loot(level, random, chest, ICE_TOWER_LOOT);
+            set(level, pos.above(4), CCBlocks.HONEY_LAMP.get().defaultBlockState());
+        }
         return true;
     }
 
@@ -963,6 +993,7 @@ public class LegacyStructureFeature extends Feature<NoneFeatureConfiguration> {
     public enum Kind {
         CANDY_HOUSE,
         ICE_TOWER,
+        ICE_CREAM_DOME,
         WATER_TEMPLE,
         GEYSER,
         CHEWING_GUM_TOTEM,

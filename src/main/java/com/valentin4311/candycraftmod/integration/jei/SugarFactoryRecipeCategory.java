@@ -19,10 +19,10 @@ import org.jetbrains.annotations.Nullable;
 public class SugarFactoryRecipeCategory implements IRecipeCategory<SugarFactoryJeiRecipe> {
     private static final ResourceLocation SUGAR_FACTORY_GUI = new ResourceLocation(CandyCraft.MODID, "textures/gui/gui_sugar.png");
     private static final ResourceLocation ADVANCED_SUGAR_FACTORY_GUI = new ResourceLocation(CandyCraft.MODID, "textures/gui/gui_advancedsugar.png");
-    private static final int CROP_X = 4;
-    private static final int CROP_Y = 4;
-    private static final int CROP_WIDTH = 166;
-    private static final int CROP_HEIGHT = 50;
+    private static final int CROP_X = 0;
+    private static final int CROP_Y = 0;
+    private static final int CROP_WIDTH = 174;
+    private static final int CROP_HEIGHT = 26;
     private final IDrawable icon;
     private final IDrawableStatic sugarFactoryBackground;
     private final IDrawableStatic advancedSugarFactoryBackground;
@@ -63,9 +63,9 @@ public class SugarFactoryRecipeCategory implements IRecipeCategory<SugarFactoryJ
 
     @Override
     public void setRecipe(IRecipeLayoutBuilder builder, SugarFactoryJeiRecipe recipe, IFocusGroup focuses) {
-        builder.addInputSlot(8 - CROP_X, 33 - CROP_Y)
+        builder.addInputSlot(8, 7)
             .addItemStacks(recipe.inputs());
-        builder.addOutputSlot(152 - CROP_X, 33 - CROP_Y)
+        builder.addOutputSlot(152, 7)
             .addItemStack(recipe.output());
     }
 
@@ -73,7 +73,7 @@ public class SugarFactoryRecipeCategory implements IRecipeCategory<SugarFactoryJ
     public void draw(SugarFactoryJeiRecipe recipe, IRecipeSlotsView recipeSlotsView, GuiGraphics guiGraphics, double mouseX, double mouseY) {
         IDrawableStatic background = recipe.advancedFactory() ? advancedSugarFactoryBackground : sugarFactoryBackground;
         background.draw(guiGraphics, 0, 0);
-        arrow.draw(guiGraphics, 27 - CROP_X, 9 - CROP_Y);
+        arrow.draw(guiGraphics, 27, 9);
         drawFrame(guiGraphics, recipe.advancedFactory());
     }
 
