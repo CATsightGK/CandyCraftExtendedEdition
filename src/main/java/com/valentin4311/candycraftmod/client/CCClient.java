@@ -40,7 +40,11 @@ import net.minecraft.client.Camera;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.DimensionSpecialEffects;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.GenericDirtMessageScreen;
+import net.minecraft.client.gui.screens.LevelLoadingScreen;
 import net.minecraft.client.gui.screens.MenuScreens;
+import net.minecraft.client.gui.screens.ReceivingLevelScreen;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.color.block.BlockColors;
 import net.minecraft.client.color.item.ItemColors;
 import net.minecraft.client.renderer.BiomeColors;
@@ -58,6 +62,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraftforge.client.event.RegisterGuiOverlaysEvent;
+import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.client.event.ViewportEvent;
 import net.minecraftforge.client.event.ModelEvent;
 import net.minecraftforge.client.event.RegisterParticleProvidersEvent;
@@ -65,6 +70,7 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RegisterDimensionSpecialEffectsEvent;
 import net.minecraftforge.client.event.RegisterColorHandlersEvent;
 import net.minecraftforge.client.event.EntityRenderersEvent;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -75,6 +81,11 @@ import org.joml.Matrix4f;
 @Mod.EventBusSubscriber(modid = CandyCraft.MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public final class CCClient {
     private static final ResourceLocation SUGAR_FACTORY_GUI = new ResourceLocation(CandyCraft.MODID, "textures/gui/gui_sugar.png");
+    private static final ResourceLocation PUDDING_LOADING_BACKGROUND = new ResourceLocation(CandyCraft.MODID, "textures/block/pudding_top.png");
+    private static final ResourceLocation JAWBREAKER_LOADING_BACKGROUND = new ResourceLocation(CandyCraft.MODID, "textures/block/jaw_breaker_block.png");
+    private static final ResourceLocation JAWBREAKER_RUNE_BACKGROUND = new ResourceLocation(CandyCraft.MODID, "textures/block/jaw_breaker_light.png");
+    private static final ResourceLocation CARAMEL_PORTAL_OVERLAY = new ResourceLocation(CandyCraft.MODID, "textures/block/caramel_portal.png");
+    private static final ResourceLocation LIQUID_CANDY_PORTAL_OVERLAY = new ResourceLocation(CandyCraft.MODID, "textures/block/liquid_candy_portal.png");
     private static final ResourceLocation CANDY_WORLD_EFFECTS = new ResourceLocation(CandyCraft.MODID, "candy_world_effects");
     private static final int CANDY_WORLD_FOG_FALLBACK = 0xEEAABB;
     private static final int CANDY_WORLD_SKY_FALLBACK = 0xFDD8D7;
@@ -82,6 +93,9 @@ public final class CCClient {
     private static String jellyWandModeKey = "";
     private static int jellyWandModeUntilTick;
     private static String activeJellyWandModeKey = "";
+    private static int portalOverlayTicks;
+    private static ResourceLocation portalOverlayTexture = CARAMEL_PORTAL_OVERLAY;
+    private static int dungeonLoadingHintTicks;
 
     private CCClient() {
     }
@@ -126,6 +140,29 @@ public final class CCClient {
     public static void registerGuiOverlays(RegisterGuiOverlaysEvent event) {
         event.registerAboveAll("dragon_mount_power", CCClient::renderDragonMountPowerOverlay);
         event.registerAboveAll("jelly_wand_charge", CCClient::renderJellyWandChargeOverlay);
+        event.registerAboveAll("candy_portal_view", CCClient::renderCandyPortalOverlay);
+    }
+
+    private static void renderCandyPortalOverlay(net.minecraftforge.client.gui.overlay.ForgeGui gui, GuiGraphics graphics,
+            float partialTick, int screenWidth, int screenHeight) {
+        if (portalOverlayTicks <= 0) {
+            return;
+        }
+        float progress = Mth.clamp((portalOverlayTicks + partialTick) / 80.0F, 0.0F, 1.0F);
+        float alpha = Mth.clamp(0.12F + progress * progress * 0.78F, 0.0F, 0.9F);
+        int tile = Math.max(24, Math.round(96.0F - progress * 48.0F));
+        int scroll = Math.round((Minecraft.getInstance().player == null ? 0 : Minecraft.getInstance().player.tickCount + partialTick) * (2.0F + progress * 4.0F));
+
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, alpha);
+        for (int x = -tile + Math.floorMod(scroll, tile); x < screenWidth + tile; x += tile) {
+            for (int y = -tile + Math.floorMod(scroll / 2, tile); y < screenHeight + tile; y += tile) {
+                graphics.blit(portalOverlayTexture, x, y, 0, 0, tile, tile, tile, tile);
+            }
+        }
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        RenderSystem.disableBlend();
     }
 
     private static void renderDragonMountPowerOverlay(net.minecraftforge.client.gui.overlay.ForgeGui gui, GuiGraphics graphics,
@@ -697,9 +734,80 @@ public final class CCClient {
             }
             Minecraft minecraft = Minecraft.getInstance();
             if (minecraft.player == null) {
+                portalOverlayTicks = 0;
+                dungeonLoadingHintTicks = 0;
                 return;
             }
+            if (dungeonLoadingHintTicks > 0) {
+                dungeonLoadingHintTicks--;
+            }
+            updateCandyPortalOverlay(minecraft);
             applyPurpleJellyBob(minecraft);
+        }
+
+        @SubscribeEvent
+        public static void onClientRightClickBlock(PlayerInteractEvent.RightClickBlock event) {
+            if (event.getLevel().isClientSide() && event.getLevel().getBlockState(event.getPos()).is(CCBlocks.BLOCK_TELEPORTER.get())) {
+                dungeonLoadingHintTicks = 200;
+            }
+        }
+
+        @SubscribeEvent
+        public static void renderLoadingBackground(ScreenEvent.BackgroundRendered event) {
+            Screen screen = event.getScreen();
+            if (!(screen instanceof ReceivingLevelScreen || screen instanceof LevelLoadingScreen || screen instanceof GenericDirtMessageScreen)) {
+                return;
+            }
+
+            Minecraft minecraft = Minecraft.getInstance();
+            boolean dungeon = dungeonLoadingHintTicks > 0 || isDungeonLevel(minecraft.level);
+            GuiGraphics graphics = event.getGuiGraphics();
+            int width = minecraft.getWindow().getGuiScaledWidth();
+            int height = minecraft.getWindow().getGuiScaledHeight();
+            if (dungeon) {
+                renderDungeonLoadingBackground(graphics, width, height);
+            } else {
+                renderTiledBackground(graphics, PUDDING_LOADING_BACKGROUND, width, height, 32, 0xFFFFFFFF);
+            }
+        }
+
+        private static void updateCandyPortalOverlay(Minecraft minecraft) {
+            if (minecraft.level == null || minecraft.player.isSpectator()) {
+                portalOverlayTicks = 0;
+                return;
+            }
+            net.minecraft.core.BlockPos eyePos = net.minecraft.core.BlockPos.containing(minecraft.player.getEyePosition());
+            net.minecraft.world.level.block.state.BlockState state = minecraft.level.getBlockState(eyePos);
+            if (state.is(CCBlocks.CANDY_PORTAL.get()) || state.is(CCBlocks.LIQUID_CANDY_PORTAL.get())) {
+                portalOverlayTicks = Math.min(80, portalOverlayTicks + 1);
+                portalOverlayTexture = state.is(CCBlocks.LIQUID_CANDY_PORTAL.get()) ? LIQUID_CANDY_PORTAL_OVERLAY : CARAMEL_PORTAL_OVERLAY;
+            } else {
+                portalOverlayTicks = Math.max(0, portalOverlayTicks - 4);
+            }
+        }
+
+        private static void renderDungeonLoadingBackground(GuiGraphics graphics, int width, int height) {
+            renderTiledBackground(graphics, JAWBREAKER_LOADING_BACKGROUND, width, height, 32, 0xFFFFFFFF);
+            int tile = 32;
+            for (int x = 0; x < width + tile; x += tile * 4) {
+                for (int y = ((x / tile) % 2) * tile * 2; y < height + tile; y += tile * 4) {
+                    graphics.blit(JAWBREAKER_RUNE_BACKGROUND, x, y, 0, 0, tile, tile, tile, tile);
+                }
+            }
+        }
+
+        private static void renderTiledBackground(GuiGraphics graphics, ResourceLocation texture, int width, int height, int tile, int color) {
+            RenderSystem.enableBlend();
+            RenderSystem.defaultBlendFunc();
+            for (int x = 0; x < width + tile; x += tile) {
+                for (int y = 0; y < height + tile; y += tile) {
+                    graphics.blit(texture, x, y, 0, 0, tile, tile, tile, tile);
+                }
+            }
+            if ((color >>> 24) < 255) {
+                graphics.fill(0, 0, width, height, color);
+            }
+            RenderSystem.disableBlend();
         }
 
         private static void applyPurpleJellyBob(Minecraft minecraft) {
@@ -758,6 +866,15 @@ public final class CCClient {
         private static boolean isCandyWorld(net.minecraft.client.Camera camera) {
             ResourceLocation dimension = camera.getEntity().level().dimension().location();
             return CandyCraft.MODID.equals(dimension.getNamespace()) && "candy_world".equals(dimension.getPath());
+        }
+
+        private static boolean isDungeonLevel(Level level) {
+            if (level == null) {
+                return false;
+            }
+            ResourceLocation dimension = level.dimension().location();
+            return CandyCraft.MODID.equals(dimension.getNamespace())
+                && ("jelly_dungeon".equals(dimension.getPath()) || "suguard_dungeon".equals(dimension.getPath()));
         }
 
         private static float candyDayFactor(Level level, float partialTick) {

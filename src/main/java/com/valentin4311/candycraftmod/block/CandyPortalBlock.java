@@ -42,6 +42,7 @@ public class CandyPortalBlock extends Block {
     );
     private static final int SURVIVAL_PORTAL_DELAY = 80;
     private static final int CREATIVE_PORTAL_DELAY = 1;
+    private static final int CANDY_WORLD_PRELOAD_RADIUS = 12;
     public static final EnumProperty<Direction.Axis> AXIS = BlockStateProperties.HORIZONTAL_AXIS;
     private static final int MIN_WIDTH = 2;
     private static final int MAX_WIDTH = 21;
@@ -221,12 +222,22 @@ public class CandyPortalBlock extends Block {
         int x = player.getBlockX();
         int z = player.getBlockZ();
         if (target.dimension() == CANDY_WORLD) {
-            target.getChunk(Mth.floorDiv(x, 16), Mth.floorDiv(z, 16));
+            preloadChunks(target, x, z, CANDY_WORLD_PRELOAD_RADIUS);
             int y = Math.max(target.getMinBuildHeight() + 2, Math.min(248, target.getMaxBuildHeight() - 4));
             return new BlockPos(x, y, z);
         }
         int y = Math.max(target.getMinBuildHeight() + 2, Math.min(player.getBlockY(), target.getMaxBuildHeight() - 2));
         return new BlockPos(x, y, z);
+    }
+
+    private static void preloadChunks(ServerLevel level, int blockX, int blockZ, int radius) {
+        int centerChunkX = Mth.floorDiv(blockX, 16);
+        int centerChunkZ = Mth.floorDiv(blockZ, 16);
+        for (int chunkX = centerChunkX - radius; chunkX <= centerChunkX + radius; chunkX++) {
+            for (int chunkZ = centerChunkZ - radius; chunkZ <= centerChunkZ + radius; chunkZ++) {
+                level.getChunk(chunkX, chunkZ);
+            }
+        }
     }
 
     private static BlockPos findCandySurface(ServerLevel target, int x, int z) {
