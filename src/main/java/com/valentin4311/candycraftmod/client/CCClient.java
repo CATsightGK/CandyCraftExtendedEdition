@@ -81,7 +81,8 @@ import org.joml.Matrix4f;
 @Mod.EventBusSubscriber(modid = CandyCraft.MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public final class CCClient {
     private static final ResourceLocation SUGAR_FACTORY_GUI = new ResourceLocation(CandyCraft.MODID, "textures/gui/gui_sugar.png");
-    private static final ResourceLocation PUDDING_LOADING_BACKGROUND = new ResourceLocation(CandyCraft.MODID, "textures/block/pudding_top.png");
+    private static final ResourceLocation PUDDING_LOADING_TOP = new ResourceLocation(CandyCraft.MODID, "textures/block/pudding_side.png");
+    private static final ResourceLocation FLOUR_LOADING_BACKGROUND = new ResourceLocation(CandyCraft.MODID, "textures/block/flour.png");
     private static final ResourceLocation JAWBREAKER_LOADING_BACKGROUND = new ResourceLocation(CandyCraft.MODID, "textures/block/jaw_breaker_block.png");
     private static final ResourceLocation JAWBREAKER_RUNE_BACKGROUND = new ResourceLocation(CandyCraft.MODID, "textures/block/jaw_breaker_light.png");
     private static final ResourceLocation CARAMEL_PORTAL_OVERLAY = new ResourceLocation(CandyCraft.MODID, "textures/block/caramel_portal.png");
@@ -95,7 +96,8 @@ public final class CCClient {
     private static String activeJellyWandModeKey = "";
     private static int portalOverlayTicks;
     private static ResourceLocation portalOverlayTexture = CARAMEL_PORTAL_OVERLAY;
-    private static int dungeonLoadingHintTicks;
+    private static boolean dungeonLoadingActive;
+    private static int dungeonLoadingTimeoutTicks;
 
     private CCClient() {
     }
@@ -735,12 +737,11 @@ public final class CCClient {
             Minecraft minecraft = Minecraft.getInstance();
             if (minecraft.player == null) {
                 portalOverlayTicks = 0;
-                dungeonLoadingHintTicks = 0;
+                dungeonLoadingActive = false;
+                dungeonLoadingTimeoutTicks = 0;
                 return;
             }
-            if (dungeonLoadingHintTicks > 0) {
-                dungeonLoadingHintTicks--;
-            }
+            tickDungeonLoadingScreen(minecraft);
             updateCandyPortalOverlay(minecraft);
             applyPurpleJellyBob(minecraft);
         }
@@ -748,7 +749,7 @@ public final class CCClient {
         @SubscribeEvent
         public static void onClientRightClickBlock(PlayerInteractEvent.RightClickBlock event) {
             if (event.getLevel().isClientSide() && event.getLevel().getBlockState(event.getPos()).is(CCBlocks.BLOCK_TELEPORTER.get())) {
-                dungeonLoadingHintTicks = 200;
+                beginDungeonLoadingScreen();
             }
         }
 
@@ -760,14 +761,45 @@ public final class CCClient {
             }
 
             Minecraft minecraft = Minecraft.getInstance();
-            boolean dungeon = dungeonLoadingHintTicks > 0 || isDungeonLevel(minecraft.level);
+            boolean dungeon = dungeonLoadingActive || isDungeonLevel(minecraft.level);
             GuiGraphics graphics = event.getGuiGraphics();
             int width = minecraft.getWindow().getGuiScaledWidth();
             int height = minecraft.getWindow().getGuiScaledHeight();
             if (dungeon) {
                 renderDungeonLoadingBackground(graphics, width, height);
             } else {
-                renderTiledBackground(graphics, PUDDING_LOADING_BACKGROUND, width, height, 32, 0xFFFFFFFF);
+                renderCandyWorldLoadingBackground(graphics, width, height);
+            }
+        }
+
+        private static void beginDungeonLoadingScreen() {
+            Minecraft minecraft = Minecraft.getInstance();
+            dungeonLoadingActive = true;
+            dungeonLoadingTimeoutTicks = 20 * 60;
+            if (!(minecraft.screen instanceof ReceivingLevelScreen || minecraft.screen instanceof LevelLoadingScreen)) {
+                minecraft.setScreen(new GenericDirtMessageScreen(Component.translatable("chat.generating")));
+            }
+        }
+
+        private static void tickDungeonLoadingScreen(Minecraft minecraft) {
+            if (!dungeonLoadingActive) {
+                return;
+            }
+            if (isDungeonLevel(minecraft.level)
+                && !(minecraft.screen instanceof ReceivingLevelScreen)
+                && !(minecraft.screen instanceof LevelLoadingScreen)) {
+                dungeonLoadingActive = false;
+                dungeonLoadingTimeoutTicks = 0;
+                if (minecraft.screen instanceof GenericDirtMessageScreen) {
+                    minecraft.setScreen(null);
+                }
+                return;
+            }
+            if (--dungeonLoadingTimeoutTicks <= 0) {
+                dungeonLoadingActive = false;
+                if (minecraft.screen instanceof GenericDirtMessageScreen) {
+                    minecraft.setScreen(null);
+                }
             }
         }
 
@@ -793,6 +825,14 @@ public final class CCClient {
                 for (int y = ((x / tile) % 2) * tile * 2; y < height + tile; y += tile * 4) {
                     graphics.blit(JAWBREAKER_RUNE_BACKGROUND, x, y, 0, 0, tile, tile, tile, tile);
                 }
+            }
+        }
+
+        private static void renderCandyWorldLoadingBackground(GuiGraphics graphics, int width, int height) {
+            int tile = 32;
+            renderTiledBackground(graphics, FLOUR_LOADING_BACKGROUND, width, height, tile, 0xFFFFFFFF);
+            for (int x = 0; x < width + tile; x += tile) {
+                graphics.blit(PUDDING_LOADING_TOP, x, 0, 0, 0, tile, tile, tile, tile);
             }
         }
 
