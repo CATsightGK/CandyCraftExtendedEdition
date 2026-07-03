@@ -59,9 +59,9 @@ public class SugarFactoryRecipeCategory implements IRecipeCategory<SugarFactoryJ
 
     @Override
     public void setRecipe(IRecipeLayoutBuilder builder, SugarFactoryJeiRecipe recipe, IFocusGroup focuses) {
-        builder.addInputSlot(8, 5)
+        builder.addInputSlot(8, 7)
             .addItemStacks(recipe.inputs());
-        builder.addOutputSlot(150, 5)
+        builder.addOutputSlot(152, 7)
             .addItemStack(recipe.output());
     }
 
