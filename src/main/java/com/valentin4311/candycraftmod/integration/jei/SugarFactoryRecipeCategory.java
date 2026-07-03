@@ -33,8 +33,8 @@ public class SugarFactoryRecipeCategory implements IRecipeCategory<SugarFactoryJ
         this.icon = guiHelper.createDrawableItemLike(CCBlocks.SUGAR_FACTORY.get());
         this.sugarFactoryBackground = guiHelper.createDrawable(SUGAR_FACTORY_GUI, CROP_X, CROP_Y, CROP_WIDTH, CROP_HEIGHT);
         this.advancedSugarFactoryBackground = guiHelper.createDrawable(ADVANCED_SUGAR_FACTORY_GUI, CROP_X, CROP_Y, CROP_WIDTH, CROP_HEIGHT);
-        IDrawableStatic sugarProgress = guiHelper.createDrawable(SUGAR_FACTORY_GUI, 0, 32, 120, 12);
-        IDrawableStatic advancedProgress = guiHelper.createDrawable(ADVANCED_SUGAR_FACTORY_GUI, 0, 32, 120, 12);
+        IDrawableStatic sugarProgress = guiHelper.createDrawable(SUGAR_FACTORY_GUI, 1, 32, 120, 12);
+        IDrawableStatic advancedProgress = guiHelper.createDrawable(ADVANCED_SUGAR_FACTORY_GUI, 1, 32, 120, 12);
         this.sugarFactoryProgress = guiHelper.createAnimatedDrawable(sugarProgress, 240, IDrawableAnimated.StartDirection.LEFT, false);
         this.advancedSugarFactoryProgress = guiHelper.createAnimatedDrawable(advancedProgress, 240, IDrawableAnimated.StartDirection.LEFT, false);
     }
@@ -66,9 +66,9 @@ public class SugarFactoryRecipeCategory implements IRecipeCategory<SugarFactoryJ
 
     @Override
     public void setRecipe(IRecipeLayoutBuilder builder, SugarFactoryJeiRecipe recipe, IFocusGroup focuses) {
-        builder.addInputSlot(8, 5)
+        builder.addInputSlot(6, 6)
             .addItemStacks(recipe.inputs());
-        builder.addOutputSlot(150, 5)
+        builder.addOutputSlot(151, 6)
             .addItemStack(recipe.output());
     }
 
@@ -77,7 +77,7 @@ public class SugarFactoryRecipeCategory implements IRecipeCategory<SugarFactoryJ
         IDrawableStatic background = recipe.advancedFactory() ? advancedSugarFactoryBackground : sugarFactoryBackground;
         background.draw(guiGraphics, 0, 0);
         IDrawableAnimated progress = recipe.advancedFactory() ? advancedSugarFactoryProgress : sugarFactoryProgress;
-        progress.draw(guiGraphics, 27, 9);
+        progress.draw(guiGraphics, 27, 10);
     }
 
     @Override
