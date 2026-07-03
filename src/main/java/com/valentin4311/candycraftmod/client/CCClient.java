@@ -741,8 +741,10 @@ public final class CCClient {
                 portalOverlayTicks = 0;
                 dungeonLoadingActive = false;
                 dungeonLoadingTimeoutTicks = 0;
-                candyWorldLoadingActive = false;
-                candyWorldLoadingTimeoutTicks = 0;
+                if (!isLevelLoadingScreen(minecraft.screen)) {
+                    candyWorldLoadingActive = false;
+                    candyWorldLoadingTimeoutTicks = 0;
+                }
                 return;
             }
             tickDungeonLoadingScreen(minecraft);
@@ -817,8 +819,7 @@ public final class CCClient {
             if (!candyWorldLoadingActive) {
                 return;
             }
-            boolean loading = minecraft.screen instanceof ReceivingLevelScreen || minecraft.screen instanceof LevelLoadingScreen || minecraft.screen instanceof GenericDirtMessageScreen;
-            if (!loading && portalOverlayTicks <= 0) {
+            if (!isLevelLoadingScreen(minecraft.screen) && portalOverlayTicks <= 0) {
                 candyWorldLoadingActive = false;
                 candyWorldLoadingTimeoutTicks = 0;
                 return;
@@ -826,6 +827,10 @@ public final class CCClient {
             if (--candyWorldLoadingTimeoutTicks <= 0) {
                 candyWorldLoadingActive = false;
             }
+        }
+
+        private static boolean isLevelLoadingScreen(Screen screen) {
+            return screen instanceof ReceivingLevelScreen || screen instanceof LevelLoadingScreen || screen instanceof GenericDirtMessageScreen;
         }
 
         private static void updateCandyPortalOverlay(Minecraft minecraft) {
