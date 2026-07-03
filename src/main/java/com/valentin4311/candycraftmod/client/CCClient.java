@@ -100,6 +100,8 @@ public final class CCClient {
     private static int dungeonLoadingTimeoutTicks;
     private static boolean candyWorldLoadingActive;
     private static int candyWorldLoadingTimeoutTicks;
+    private static int candyWorldLoadingGraceTicks;
+    private static boolean loadingBackgroundDrawnThisFrame;
 
     private CCClient() {
     }
@@ -741,9 +743,10 @@ public final class CCClient {
                 portalOverlayTicks = 0;
                 dungeonLoadingActive = false;
                 dungeonLoadingTimeoutTicks = 0;
-                if (!isLevelLoadingScreen(minecraft.screen)) {
+                if (candyWorldLoadingActive && --candyWorldLoadingTimeoutTicks <= 0) {
                     candyWorldLoadingActive = false;
                     candyWorldLoadingTimeoutTicks = 0;
+                    candyWorldLoadingGraceTicks = 0;
                 }
                 return;
             }
@@ -767,9 +770,27 @@ public final class CCClient {
                 return;
             }
 
+            loadingBackgroundDrawnThisFrame = true;
+            renderCustomLoadingBackground(event.getGuiGraphics(), screen);
+        }
+
+        @SubscribeEvent
+        public static void beforeLoadingScreenRender(ScreenEvent.Render.Pre event) {
+            if (isLevelLoadingScreen(event.getScreen())) {
+                loadingBackgroundDrawnThisFrame = false;
+            }
+        }
+
+        @SubscribeEvent
+        public static void afterLoadingScreenRender(ScreenEvent.Render.Post event) {
+            if (!loadingBackgroundDrawnThisFrame && isLevelLoadingScreen(event.getScreen())) {
+                renderCustomLoadingBackground(event.getGuiGraphics(), event.getScreen());
+            }
+        }
+
+        private static void renderCustomLoadingBackground(GuiGraphics graphics, Screen screen) {
             Minecraft minecraft = Minecraft.getInstance();
             boolean dungeon = dungeonLoadingActive || isDungeonLevel(minecraft.level);
-            GuiGraphics graphics = event.getGuiGraphics();
             int width = minecraft.getWindow().getGuiScaledWidth();
             int height = minecraft.getWindow().getGuiScaledHeight();
             if (dungeon) {
@@ -813,19 +834,30 @@ public final class CCClient {
         private static void beginCandyWorldLoadingScreen() {
             candyWorldLoadingActive = true;
             candyWorldLoadingTimeoutTicks = 20 * 60;
+            candyWorldLoadingGraceTicks = 20 * 12;
         }
 
         private static void tickCandyWorldLoadingScreen(Minecraft minecraft) {
             if (!candyWorldLoadingActive) {
                 return;
             }
-            if (!isLevelLoadingScreen(minecraft.screen) && portalOverlayTicks <= 0) {
-                candyWorldLoadingActive = false;
-                candyWorldLoadingTimeoutTicks = 0;
+            if (isLevelLoadingScreen(minecraft.screen)) {
+                if (--candyWorldLoadingTimeoutTicks <= 0) {
+                    candyWorldLoadingActive = false;
+                    candyWorldLoadingGraceTicks = 0;
+                }
                 return;
             }
-            if (--candyWorldLoadingTimeoutTicks <= 0) {
+
+            if (portalOverlayTicks > 0) {
+                candyWorldLoadingGraceTicks = 20 * 12;
+                return;
+            }
+
+            if (isCandyWorldLevel(minecraft.level) || --candyWorldLoadingGraceTicks <= 0 || --candyWorldLoadingTimeoutTicks <= 0) {
                 candyWorldLoadingActive = false;
+                candyWorldLoadingTimeoutTicks = 0;
+                candyWorldLoadingGraceTicks = 0;
             }
         }
 
@@ -946,6 +978,14 @@ public final class CCClient {
             ResourceLocation dimension = level.dimension().location();
             return CandyCraft.MODID.equals(dimension.getNamespace())
                 && ("jelly_dungeon".equals(dimension.getPath()) || "suguard_dungeon".equals(dimension.getPath()));
+        }
+
+        private static boolean isCandyWorldLevel(Level level) {
+            if (level == null) {
+                return false;
+            }
+            ResourceLocation dimension = level.dimension().location();
+            return CandyCraft.MODID.equals(dimension.getNamespace()) && "candy_world".equals(dimension.getPath());
         }
 
         private static float candyDayFactor(Level level, float partialTick) {
