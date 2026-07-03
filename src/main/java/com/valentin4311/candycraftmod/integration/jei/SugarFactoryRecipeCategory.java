@@ -17,8 +17,8 @@ import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
 
 public class SugarFactoryRecipeCategory implements IRecipeCategory<SugarFactoryJeiRecipe> {
-    private static final ResourceLocation SUGAR_FACTORY_GUI = new ResourceLocation(CandyCraft.MODID, "textures/gui/gui_sugar.png");
-    private static final ResourceLocation ADVANCED_SUGAR_FACTORY_GUI = new ResourceLocation(CandyCraft.MODID, "textures/gui/gui_advancedsugar.png");
+    private static final ResourceLocation SUGAR_FACTORY_GUI = new ResourceLocation(CandyCraft.MODID, "textures/gui/jei_sugar_factory.png");
+    private static final ResourceLocation ADVANCED_SUGAR_FACTORY_GUI = new ResourceLocation(CandyCraft.MODID, "textures/gui/jei_advanced_sugar_factory.png");
     private static final int CROP_X = 0;
     private static final int CROP_Y = 0;
     private static final int CROP_WIDTH = 174;
@@ -74,19 +74,6 @@ public class SugarFactoryRecipeCategory implements IRecipeCategory<SugarFactoryJ
         IDrawableStatic background = recipe.advancedFactory() ? advancedSugarFactoryBackground : sugarFactoryBackground;
         background.draw(guiGraphics, 0, 0);
         arrow.draw(guiGraphics, 27, 9);
-        drawFrame(guiGraphics, recipe.advancedFactory());
-    }
-
-    private static void drawFrame(GuiGraphics guiGraphics, boolean advanced) {
-        int light = advanced ? 0xFFEAA15B : 0xFFE7BE76;
-        int mid = advanced ? 0xFFC56A32 : 0xFFAA6E35;
-        int dark = advanced ? 0xFF6D2B18 : 0xFF5A3824;
-        guiGraphics.fill(0, 0, CROP_WIDTH, 1, light);
-        guiGraphics.fill(0, 1, 1, CROP_HEIGHT, light);
-        guiGraphics.fill(1, CROP_HEIGHT - 1, CROP_WIDTH, CROP_HEIGHT, dark);
-        guiGraphics.fill(CROP_WIDTH - 1, 1, CROP_WIDTH, CROP_HEIGHT, dark);
-        guiGraphics.fill(1, 1, CROP_WIDTH - 1, 2, mid);
-        guiGraphics.fill(1, 2, 2, CROP_HEIGHT - 1, mid);
     }
 
     @Override
