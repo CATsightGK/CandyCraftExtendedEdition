@@ -177,12 +177,8 @@ public class LegacyStructureFeature extends Feature<NoneFeatureConfiguration> {
         if (ground == null) {
             return false;
         }
-        for (int dx = 0; dx <= 6; dx++) {
-            for (int dz = 0; dz <= 6; dz++) {
-                if (!level.getBlockState(ground.offset(dx, 0, dz)).is(CCBlocks.PUDDING.get())) {
-                    return false;
-                }
-            }
+        if (!hasFlatSupport(level, ground.above(), 0, 6, 0, 6, true)) {
+            return false;
         }
         pos = ground.above();
 
@@ -249,8 +245,7 @@ public class LegacyStructureFeature extends Feature<NoneFeatureConfiguration> {
     }
 
     private static boolean iceCreamDome(WorldGenLevel level, RandomSource random, BlockPos pos) {
-        BlockState below = level.getBlockState(pos.below());
-        if (!below.is(CCBlocks.PUDDING.get()) && !below.is(CCBlocks.FLOUR.get()) && !below.is(CCBlocks.ICE_CREAM.get())) {
+        if (!hasFlatSupport(level, pos, -3, 3, -3, 3, false)) {
             return false;
         }
         BlockState ice = CCBlocks.ICE_CREAM.get().defaultBlockState();
@@ -273,6 +268,29 @@ public class LegacyStructureFeature extends Feature<NoneFeatureConfiguration> {
             set(level, pos.above(4), CCBlocks.HONEY_LAMP.get().defaultBlockState());
         }
         return true;
+    }
+
+    private static boolean hasFlatSupport(WorldGenLevel level, BlockPos pos, int minX, int maxX, int minZ, int maxZ, boolean puddingOnly) {
+        for (int dx = minX; dx <= maxX; dx++) {
+            for (int dz = minZ; dz <= maxZ; dz++) {
+                BlockPos floor = pos.offset(dx, -1, dz);
+                BlockState floorState = level.getBlockState(floor);
+                if (puddingOnly ? !floorState.is(CCBlocks.PUDDING.get()) : !isIceCreamFeatureGround(floorState)) {
+                    return false;
+                }
+                if (!level.getBlockState(pos.offset(dx, 0, dz)).canBeReplaced()) {
+                    return false;
+                }
+                if (!level.getBlockState(pos.offset(dx, 1, dz)).canBeReplaced()) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    private static boolean isIceCreamFeatureGround(BlockState state) {
+        return state.is(CCBlocks.PUDDING.get()) || state.is(CCBlocks.FLOUR.get()) || state.is(CCBlocks.ICE_CREAM.get());
     }
 
     private static BlockState iceCream(int metadata) {
