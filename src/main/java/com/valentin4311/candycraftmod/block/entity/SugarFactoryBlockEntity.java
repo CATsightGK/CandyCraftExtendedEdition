@@ -6,7 +6,6 @@ import com.valentin4311.candycraftmod.menu.SugarFactoryMenu;
 import com.valentin4311.candycraftmod.registry.CCBlockEntities;
 import com.valentin4311.candycraftmod.registry.CCBlocks;
 import com.valentin4311.candycraftmod.registry.CCItems;
-import com.valentin4311.candycraftmod.registry.CCSweetscapeItems;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -191,15 +190,9 @@ public class SugarFactoryBlockEntity extends BaseContainerBlockEntity implements
         List<DisplayRecipe> recipes = new ArrayList<>();
         Set<Item> inputs = new LinkedHashSet<>();
         inputs.add(Items.STICK);
-        inputs.add(CCBlocks.FRAISE_TAGADA_FLOWER.get().asItem());
-        inputs.add(CCBlocks.CHOCOLATE_STONE.get().asItem());
-        inputs.add(CCBlocks.HONEYCOMB_BLOCK.get().asItem());
-        inputs.add(CCBlocks.NOUGAT_BLOCK.get().asItem());
-        inputs.add(CCBlocks.SUGAR_ESSENCE_FLOWER.get().asItem());
-        CCItems.PORT_ITEMS.forEach(registryObject -> inputs.add(registryObject.get()));
-        CCItems.BLOCK_ITEMS.forEach(registryObject -> inputs.add(registryObject.get()));
-        CCSweetscapeItems.SIMPLE_ITEMS.forEach(registryObject -> inputs.add(registryObject.get()));
-        CCSweetscapeItems.BLOCK_ITEMS.forEach(registryObject -> inputs.add(registryObject.get()));
+        ForgeRegistries.ITEMS.getValues().stream()
+            .filter(SugarFactoryBlockEntity::isCandyCraftItem)
+            .forEach(inputs::add);
 
         Set<String> seen = new LinkedHashSet<>();
         for (Item item : inputs) {
@@ -301,10 +294,8 @@ public class SugarFactoryBlockEntity extends BaseContainerBlockEntity implements
     }
 
     private static boolean isCandyCraftItem(Item item) {
-        return CCItems.PORT_ITEMS.stream().anyMatch(registryObject -> registryObject.get() == item)
-            || CCItems.BLOCK_ITEMS.stream().anyMatch(registryObject -> registryObject.get() == item)
-            || CCSweetscapeItems.SIMPLE_ITEMS.stream().anyMatch(registryObject -> registryObject.get() == item)
-            || CCSweetscapeItems.BLOCK_ITEMS.stream().anyMatch(registryObject -> registryObject.get() == item);
+        ResourceLocation id = ForgeRegistries.ITEMS.getKey(item);
+        return id != null && CandyCraft.MODID.equals(id.getNamespace());
     }
 
     public record DisplayRecipe(ItemStack input, ItemStack output, boolean advancedFactory, ResourceLocation id) {
