@@ -172,6 +172,7 @@
   "block.candycraftmod.yellow_trampojelly": "黄色弹跳果冻",
   "container.candycraftmod.advanced_sugar_factory": "高级制糖机",
   "container.candycraftmod.alchemy_table": "炼金搅拌锅",
+  "jei.candycraftmod.alchemy_table.description": "将锅用动力激活并放入番石榴糖浆和四种材料，然后放一颗糖来当作触媒启动炼金",
   "container.candycraftmod.marshmallow_chest": "棉花糖箱子",
   "container.candycraftmod.sugar_factory": "制糖机",
   "entity.candycraftmod.honey_arrow": "蜂蜜箭",

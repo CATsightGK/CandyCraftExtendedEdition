@@ -4,6 +4,7 @@ import com.valentin4311.candycraftmod.CandyCraft;
 import com.valentin4311.candycraftmod.registry.CCBlocks;
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
 import mezz.jei.api.gui.drawable.IDrawable;
+import mezz.jei.api.gui.drawable.IDrawableAnimated;
 import mezz.jei.api.gui.drawable.IDrawableStatic;
 import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
 import mezz.jei.api.helpers.IGuiHelper;
@@ -21,15 +22,21 @@ public class SugarFactoryRecipeCategory implements IRecipeCategory<SugarFactoryJ
     private static final int CROP_X = 0;
     private static final int CROP_Y = 0;
     private static final int CROP_WIDTH = 174;
-    private static final int CROP_HEIGHT = 26;
+    private static final int CROP_HEIGHT = 30;
     private final IDrawable icon;
     private final IDrawableStatic sugarFactoryBackground;
     private final IDrawableStatic advancedSugarFactoryBackground;
+    private final IDrawableAnimated sugarFactoryProgress;
+    private final IDrawableAnimated advancedSugarFactoryProgress;
 
     public SugarFactoryRecipeCategory(IGuiHelper guiHelper) {
         this.icon = guiHelper.createDrawableItemLike(CCBlocks.SUGAR_FACTORY.get());
         this.sugarFactoryBackground = guiHelper.createDrawable(SUGAR_FACTORY_GUI, CROP_X, CROP_Y, CROP_WIDTH, CROP_HEIGHT);
         this.advancedSugarFactoryBackground = guiHelper.createDrawable(ADVANCED_SUGAR_FACTORY_GUI, CROP_X, CROP_Y, CROP_WIDTH, CROP_HEIGHT);
+        IDrawableStatic sugarProgress = guiHelper.createDrawable(SUGAR_FACTORY_GUI, 0, 32, 120, 12);
+        IDrawableStatic advancedProgress = guiHelper.createDrawable(ADVANCED_SUGAR_FACTORY_GUI, 0, 32, 120, 12);
+        this.sugarFactoryProgress = guiHelper.createAnimatedDrawable(sugarProgress, 240, IDrawableAnimated.StartDirection.LEFT, false);
+        this.advancedSugarFactoryProgress = guiHelper.createAnimatedDrawable(advancedProgress, 240, IDrawableAnimated.StartDirection.LEFT, false);
     }
 
     @Override
@@ -69,6 +76,8 @@ public class SugarFactoryRecipeCategory implements IRecipeCategory<SugarFactoryJ
     public void draw(SugarFactoryJeiRecipe recipe, IRecipeSlotsView recipeSlotsView, GuiGraphics guiGraphics, double mouseX, double mouseY) {
         IDrawableStatic background = recipe.advancedFactory() ? advancedSugarFactoryBackground : sugarFactoryBackground;
         background.draw(guiGraphics, 0, 0);
+        IDrawableAnimated progress = recipe.advancedFactory() ? advancedSugarFactoryProgress : sugarFactoryProgress;
+        progress.draw(guiGraphics, 27, 9);
     }
 
     @Override
