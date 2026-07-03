@@ -4,7 +4,6 @@ import com.valentin4311.candycraftmod.CandyCraft;
 import com.valentin4311.candycraftmod.registry.CCBlocks;
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
 import mezz.jei.api.gui.drawable.IDrawable;
-import mezz.jei.api.gui.drawable.IDrawableAnimated;
 import mezz.jei.api.gui.drawable.IDrawableStatic;
 import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
 import mezz.jei.api.helpers.IGuiHelper;
@@ -26,14 +25,11 @@ public class SugarFactoryRecipeCategory implements IRecipeCategory<SugarFactoryJ
     private final IDrawable icon;
     private final IDrawableStatic sugarFactoryBackground;
     private final IDrawableStatic advancedSugarFactoryBackground;
-    private final IDrawableAnimated arrow;
 
     public SugarFactoryRecipeCategory(IGuiHelper guiHelper) {
         this.icon = guiHelper.createDrawableItemLike(CCBlocks.SUGAR_FACTORY.get());
         this.sugarFactoryBackground = guiHelper.createDrawable(SUGAR_FACTORY_GUI, CROP_X, CROP_Y, CROP_WIDTH, CROP_HEIGHT);
         this.advancedSugarFactoryBackground = guiHelper.createDrawable(ADVANCED_SUGAR_FACTORY_GUI, CROP_X, CROP_Y, CROP_WIDTH, CROP_HEIGHT);
-        IDrawableStatic progress = guiHelper.createDrawable(SUGAR_FACTORY_GUI, 0, 114, 120, 12);
-        this.arrow = guiHelper.createAnimatedDrawable(progress, 240, IDrawableAnimated.StartDirection.LEFT, false);
     }
 
     @Override
@@ -63,9 +59,9 @@ public class SugarFactoryRecipeCategory implements IRecipeCategory<SugarFactoryJ
 
     @Override
     public void setRecipe(IRecipeLayoutBuilder builder, SugarFactoryJeiRecipe recipe, IFocusGroup focuses) {
-        builder.addInputSlot(8, 7)
+        builder.addInputSlot(8, 5)
             .addItemStacks(recipe.inputs());
-        builder.addOutputSlot(152, 7)
+        builder.addOutputSlot(150, 5)
             .addItemStack(recipe.output());
     }
 
@@ -73,7 +69,6 @@ public class SugarFactoryRecipeCategory implements IRecipeCategory<SugarFactoryJ
     public void draw(SugarFactoryJeiRecipe recipe, IRecipeSlotsView recipeSlotsView, GuiGraphics guiGraphics, double mouseX, double mouseY) {
         IDrawableStatic background = recipe.advancedFactory() ? advancedSugarFactoryBackground : sugarFactoryBackground;
         background.draw(guiGraphics, 0, 0);
-        arrow.draw(guiGraphics, 27, 9);
     }
 
     @Override
