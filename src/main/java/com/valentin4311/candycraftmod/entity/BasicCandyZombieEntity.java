@@ -54,6 +54,7 @@ import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.pathfinder.BlockPathTypes;
 import net.minecraft.world.phys.Vec3;
@@ -75,6 +76,7 @@ public class BasicCandyZombieEntity extends Zombie {
     private boolean angry;
     private boolean waiting;
     private boolean spawnedMinions;
+    private boolean bossSuguardHealthBarRevealed;
     private int summonCooldown;
     private int rangedCooldown;
     private int bossSuguardStat;
@@ -92,6 +94,9 @@ public class BasicCandyZombieEntity extends Zombie {
         setPathfindingMalus(BlockPathTypes.WATER, isNessie() ? 1.0F : -1.0F);
         this.waiting = isMageSuguard();
         this.angry = isMageSuguard();
+        if (isBossSuguard()) {
+            bossEvent.setVisible(false);
+        }
     }
 
     public static AttributeSupplier.Builder createAttributes() {
@@ -168,6 +173,7 @@ public class BasicCandyZombieEntity extends Zombie {
         tag.putInt("BossSuguardStat", bossSuguardStat);
         tag.putInt("BossSuguardCounter", bossSuguardCounter);
         tag.putInt(TAG_BOSS_SUGUARD_AWAKE_TICKS, bossSuguardAwakeTicks);
+        tag.putBoolean("BossSuguardHealthBarRevealed", bossSuguardHealthBarRevealed);
         tag.putInt("DragonShootTicks", dragonShootTicks);
         tag.putInt("KingBeetleExplosionCount", kingBeetleExplosionCount);
         tag.putInt("Variant", getLegacyVariant());
@@ -188,6 +194,7 @@ public class BasicCandyZombieEntity extends Zombie {
         bossSuguardStat = tag.getInt("BossSuguardStat");
         bossSuguardCounter = tag.contains("BossSuguardCounter") ? tag.getInt("BossSuguardCounter") : 300;
         bossSuguardAwakeTicks = tag.contains(TAG_BOSS_SUGUARD_AWAKE_TICKS) ? tag.getInt(TAG_BOSS_SUGUARD_AWAKE_TICKS) : (angry ? BOSS_SUGUARD_WAKE_TICKS : 0);
+        bossSuguardHealthBarRevealed = tag.getBoolean("BossSuguardHealthBarRevealed");
         dragonShootTicks = tag.getInt("DragonShootTicks");
         kingBeetleExplosionCount = tag.getInt("KingBeetleExplosionCount");
         setLegacyVariant(tag.getInt("Variant"));
@@ -225,11 +232,11 @@ public class BasicCandyZombieEntity extends Zombie {
 
     @Override
     public void travel(Vec3 travelVector) {
-        if ((isNessie() || isDragon()) && getControllingPassenger() != null) {
+        if ((isNessie() || isDragon() || isKingBeetle()) && getControllingPassenger() != null) {
             LivingEntity rider = getControllingPassenger();
             setYRot(rider.getYRot());
             yRotO = getYRot();
-            setXRot(rider.getXRot() * 0.5F);
+            setXRot(isKingBeetle() ? 0.0F : rider.getXRot() * 0.5F);
             setRot(getYRot(), getXRot());
             yBodyRot = getYRot();
             yHeadRot = yBodyRot;
@@ -240,6 +247,10 @@ public class BasicCandyZombieEntity extends Zombie {
             }
             if (isDragon()) {
                 travelDragon(rider, strafe, forward);
+                return;
+            }
+            if (isKingBeetle()) {
+                travelKingBeetle(rider, strafe, forward);
                 return;
             }
             double speed = 0.12D;
@@ -300,6 +311,34 @@ public class BasicCandyZombieEntity extends Zombie {
         calculateEntityAnimation(false);
     }
 
+    private void travelKingBeetle(LivingEntity rider, float strafe, float forward) {
+        getNavigation().stop();
+        setTarget(null);
+        if (getMountPower() < getMountMaxPower()) {
+            setMountPower(getMountPower() + 1);
+        }
+        setSpeed(0.32F);
+        if (forward <= 0.0F) {
+            forward *= 0.2F;
+        }
+        super.travel(new Vec3(strafe, 0.0D, forward));
+        if (!onGround()) {
+            setDeltaMovement(getDeltaMovement().multiply(0.67D, 1.0D, 0.67D));
+        }
+        calculateEntityAnimation(false);
+    }
+
+    @Override
+    public double getPassengersRidingOffset() {
+        if (isDragon()) {
+            return getBbHeight() - 1.2D - Math.sin(tickCount * 0.05F) / 6.0D;
+        }
+        if (isKingBeetle()) {
+            return getBbHeight() - 0.05D;
+        }
+        return super.getPassengersRidingOffset();
+    }
+
     @Override
     public InteractionResult mobInteract(Player player, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
@@ -338,10 +377,16 @@ public class BasicCandyZombieEntity extends Zombie {
             angry = true;
         }
         if (isBossSuguard() && source.is(net.minecraft.tags.DamageTypeTags.IS_PROJECTILE)) {
+            if (!level().isClientSide && source.getEntity() instanceof LivingEntity living && CandyTargeting.canAttackEntity(living)) {
+                bossSuguardHealthBarRevealed = true;
+            }
             return false;
         }
         if (isBossSuguard()) {
             LivingEntity attacker = source.getEntity() instanceof LivingEntity living && CandyTargeting.canAttackEntity(living) ? living : null;
+            if (!level().isClientSide && attacker != null) {
+                bossSuguardHealthBarRevealed = true;
+            }
             boolean hurt = super.hurt(source, amount);
             if (hurt && !level().isClientSide) {
                 activateBossSuguard(attacker);
@@ -475,7 +520,7 @@ public class BasicCandyZombieEntity extends Zombie {
 
     @Override
     protected SoundEvent getAmbientSound() {
-        if (isSuguard() || isBossSuguard() || isMermaid() || isDragon() || isKingBeetle()) {
+        if (usesLegacySilentSounds()) {
             return null;
         }
         return isNessie() ? CCSoundEvents.MOB_NESSIE.get() : SoundEvents.ZOMBIE_AMBIENT;
@@ -483,7 +528,7 @@ public class BasicCandyZombieEntity extends Zombie {
 
     @Override
     protected SoundEvent getHurtSound(DamageSource damageSource) {
-        if (isSuguard() || isBossSuguard() || isMermaid() || isDragon() || isKingBeetle()) {
+        if (usesLegacySilentSounds()) {
             return null;
         }
         return isNessie() ? CCSoundEvents.MOB_NESSIE_HURT.get() : SoundEvents.ZOMBIE_HURT;
@@ -491,10 +536,18 @@ public class BasicCandyZombieEntity extends Zombie {
 
     @Override
     protected SoundEvent getDeathSound() {
-        if (isSuguard() || isBossSuguard() || isMermaid() || isDragon() || isKingBeetle()) {
+        if (usesLegacySilentSounds()) {
             return null;
         }
         return isNessie() ? CCSoundEvents.MOB_NESSIE_HURT.get() : SoundEvents.ZOMBIE_DEATH;
+    }
+
+    @Override
+    protected void playStepSound(BlockPos pos, BlockState state) {
+        if (usesLegacySilentSounds() || isNessie()) {
+            return;
+        }
+        super.playStepSound(pos, state);
     }
 
     private void ensureDefaultEquipment() {
@@ -835,7 +888,7 @@ public class BasicCandyZombieEntity extends Zombie {
         bossEvent.setName(getBossBarName());
         bossEvent.setColor(getBossBarColor());
         bossEvent.setProgress(Math.max(0.0F, Math.min(1.0F, getHealth() / getMaxHealth())));
-        bossEvent.setVisible(!isBossSuguard() || angry);
+        bossEvent.setVisible(!isBossSuguard() || bossSuguardHealthBarRevealed);
     }
 
     private boolean hasBossBar() {
@@ -1058,6 +1111,10 @@ public class BasicCandyZombieEntity extends Zombie {
 
     private boolean isKingBeetle() {
         return getType() == CCEntityTypes.KING_BEETLE.get();
+    }
+
+    private boolean usesLegacySilentSounds() {
+        return isSuguard() || isMageSuguard() || isBossSuguard() || isMermaid() || isDragon() || isKingBeetle();
     }
 
     private boolean isAquatic() {

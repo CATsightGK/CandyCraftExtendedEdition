@@ -13,12 +13,15 @@ public class DragonRenderer extends MobRenderer<BasicCandyZombieEntity, DragonMo
     private static final ResourceLocation BABY_TEXTURE = new ResourceLocation(CandyCraft.MODID, "textures/entity/babydragons.png");
 
     public DragonRenderer(EntityRendererProvider.Context context) {
-        super(context, new DragonModel<>(context.bakeLayer(DragonModel.LAYER)), 0.8F);
+        super(context, new DragonModel<>(context.bakeLayer(DragonModel.LAYER)), 1.2F);
     }
 
     @Override
     protected void scale(BasicCandyZombieEntity entity, PoseStack poseStack, float partialTickTime) {
         poseStack.translate(-0.0625F, 0.0F, 0.0F);
+        if (entity.getControllingPassenger() != null) {
+            poseStack.translate(0.0F, Math.sin((entity.tickCount + partialTickTime) * 0.05F) / 6.0D, 0.0F);
+        }
         if (entity.isBabyDragon()) {
             poseStack.scale(0.75F, 0.75F, 0.75F);
         } else {

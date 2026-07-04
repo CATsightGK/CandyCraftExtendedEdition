@@ -1,0 +1,10 @@
+{
+  "type": "forge:add_spawns",
+  "biomes": "candycraftmod:sugar_plains",
+  "spawners": {
+    "type": "candycraftmod:nougat_golem",
+    "weight": 8,
+    "minCount": 1,
+    "maxCount": 1
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "candycraftmod:item/gummy_ball_1"
+  }
+}

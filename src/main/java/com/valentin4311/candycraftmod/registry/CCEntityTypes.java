@@ -150,8 +150,8 @@ public final class CCEntityTypes {
     );
     public static final RegistryObject<EntityType<BasicCandySpiderEntity>> BEETLE = basicSpider("beetle", 1.0F, 0.8F);
     public static final RegistryObject<EntityType<BasicCandyZombieEntity>> NESSIE = basicZombie("nessie", 1.2F, 1.6F);
-    public static final RegistryObject<EntityType<BasicCandyZombieEntity>> DRAGON = basicZombie("dragon", 1.4F, 1.2F);
-    public static final RegistryObject<EntityType<BasicCandyZombieEntity>> KING_BEETLE = basicZombie("king_beetle", 1.4F, 1.1F);
+    public static final RegistryObject<EntityType<BasicCandyZombieEntity>> DRAGON = basicZombie("dragon", 3.0F, 2.2F);
+    public static final RegistryObject<EntityType<BasicCandyZombieEntity>> KING_BEETLE = basicZombie("king_beetle", 3.0F, 2.0F);
     public static final RegistryObject<EntityType<BasicCandyZombieEntity>> MERMAID = basicZombie("mermaid", 0.95F, 1.0F);
     public static final RegistryObject<EntityType<NougatGolemEntity>> NOUGAT_GOLEM = ENTITY_TYPES.register("nougat_golem", () ->
         EntityType.Builder.of(NougatGolemEntity::new, MobCategory.CREATURE)

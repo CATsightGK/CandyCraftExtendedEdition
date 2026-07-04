@@ -29,9 +29,11 @@ public class GummyBallEntity extends ThrowableItemProjectile {
     public static final int PEZ_JELLY_VISUAL = 104;
     public static final int CARAMEL_KING_JELLY_VISUAL = 105;
     public static final int STRAWBERRY_QUEEN_JELLY_VISUAL = 106;
+    public static final int BOSS_BEETLE_GUMMY_VISUAL = 201;
     private static final EntityDataAccessor<Integer> POWER = SynchedEntityData.defineId(GummyBallEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Integer> VISUAL_VARIANT = SynchedEntityData.defineId(GummyBallEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Float> BONUS_DAMAGE = SynchedEntityData.defineId(GummyBallEntity.class, EntityDataSerializers.FLOAT);
+    private static final EntityDataAccessor<Boolean> BOSS_BEETLE_PROJECTILE = SynchedEntityData.defineId(GummyBallEntity.class, EntityDataSerializers.BOOLEAN);
 
     public GummyBallEntity(EntityType<? extends GummyBallEntity> entityType, Level level) {
         super(entityType, level);
@@ -55,7 +57,7 @@ public class GummyBallEntity extends ThrowableItemProjectile {
     }
 
     public void setVisualVariant(int variant) {
-        if (variant >= LEMON_JELLY_VISUAL && variant <= STRAWBERRY_QUEEN_JELLY_VISUAL) {
+        if ((variant >= LEMON_JELLY_VISUAL && variant <= STRAWBERRY_QUEEN_JELLY_VISUAL) || variant == BOSS_BEETLE_GUMMY_VISUAL) {
             entityData.set(VISUAL_VARIANT, variant);
         } else {
             entityData.set(VISUAL_VARIANT, 0);
@@ -74,12 +76,24 @@ public class GummyBallEntity extends ThrowableItemProjectile {
         return entityData.get(BONUS_DAMAGE);
     }
 
+    public void setBossBeetleProjectile(boolean bossBeetleProjectile) {
+        entityData.set(BOSS_BEETLE_PROJECTILE, bossBeetleProjectile);
+    }
+
+    public boolean isBossBeetleProjectile() {
+        Entity owner = getOwner();
+        return entityData.get(BOSS_BEETLE_PROJECTILE)
+            || getVisualVariant() == BOSS_BEETLE_GUMMY_VISUAL
+            || owner != null && owner.getType() == CCEntityTypes.BOSS_BEETLE.get();
+    }
+
     @Override
     protected void defineSynchedData() {
         super.defineSynchedData();
         entityData.define(POWER, 0);
         entityData.define(VISUAL_VARIANT, 0);
         entityData.define(BONUS_DAMAGE, 0.0F);
+        entityData.define(BOSS_BEETLE_PROJECTILE, false);
     }
 
     @Override
@@ -107,6 +121,9 @@ public class GummyBallEntity extends ThrowableItemProjectile {
         }
         if (variant == STRAWBERRY_QUEEN_JELLY_VISUAL) {
             return new ItemStack(CCItems.STRAWBERRY_QUEEN_JELLY_BALL.get());
+        }
+        if (variant == BOSS_BEETLE_GUMMY_VISUAL) {
+            return new ItemStack(CCItems.BOSS_BEETLE_GUMMY_BALL.get());
         }
         return new ItemStack(getDefaultItem());
     }
@@ -230,6 +247,7 @@ public class GummyBallEntity extends ThrowableItemProjectile {
         tag.putInt("Power", getPower());
         tag.putInt("VisualVariant", getVisualVariant());
         tag.putFloat("BonusDamage", getBonusDamage());
+        tag.putBoolean("BossBeetleProjectile", entityData.get(BOSS_BEETLE_PROJECTILE));
     }
 
     @Override
@@ -238,5 +256,6 @@ public class GummyBallEntity extends ThrowableItemProjectile {
         setPower(tag.getInt("Power"));
         setVisualVariant(tag.getInt("VisualVariant"));
         setBonusDamage(tag.getFloat("BonusDamage"));
+        setBossBeetleProjectile(tag.getBoolean("BossBeetleProjectile"));
     }
 }

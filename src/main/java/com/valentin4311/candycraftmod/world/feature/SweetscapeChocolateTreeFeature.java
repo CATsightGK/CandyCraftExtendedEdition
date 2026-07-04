@@ -63,9 +63,11 @@ public class SweetscapeChocolateTreeFeature extends Feature<NoneFeatureConfigura
     }
 
     private static BlockState randomLeaves(RandomSource random) {
-        return random.nextBoolean()
-            ? CCSweetscapeBlocks.WHITE_CHOCOLATE_LEAVES.get().defaultBlockState()
-            : CCSweetscapeBlocks.DARK_CHOCOLATE_LEAVES.get().defaultBlockState();
+        return switch (random.nextInt(3)) {
+            case 0 -> CCSweetscapeBlocks.MILK_CHOCOLATE_LEAVES.get().defaultBlockState();
+            case 1 -> CCSweetscapeBlocks.WHITE_CHOCOLATE_LEAVES.get().defaultBlockState();
+            default -> CCSweetscapeBlocks.DARK_CHOCOLATE_LEAVES.get().defaultBlockState();
+        };
     }
 
     private static boolean shouldPlaceLeaf(RandomSource random, int localX, int radius, int localZ, int yPlusHeight) {

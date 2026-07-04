@@ -91,6 +91,7 @@ public final class CCClient {
     private static final int CANDY_WORLD_FOG_FALLBACK = 0xEEAABB;
     private static final int CANDY_WORLD_SKY_FALLBACK = 0xFDD8D7;
     private static final int JELLY_WAND_MODE_FADE_TICKS = 28;
+    private static final int CANDY_WORLD_CLIENT_CHUNK_RADIUS = 6;
     private static String jellyWandModeKey = "";
     private static int jellyWandModeUntilTick;
     private static String activeJellyWandModeKey = "";
@@ -101,6 +102,7 @@ public final class CCClient {
     private static boolean candyWorldLoadingActive;
     private static int candyWorldLoadingTimeoutTicks;
     private static int candyWorldLoadingGraceTicks;
+    private static boolean candyWorldLoadingExit;
     private static boolean loadingBackgroundDrawnThisFrame;
 
     private CCClient() {
@@ -507,7 +509,7 @@ public final class CCClient {
             case "sugar_plains", "sugar_forest" -> 0xEEAABB;
             case "sugar_mountains" -> 0xEEBBCC;
             case "sugar_cold_forest" -> 0xFFDDEE;
-            case "ice_cream_plains", "sugar_hell_mountains" -> 0xFFFFFF;
+            case "ice_cream_plains", "ice_cream_sky_mountains", "sugar_hell_mountains" -> 0xFFFFFF;
             case "sugar_oceans" -> 0xB35EFF;
             case "caramel_forest" -> 0xB05C28;
             case "cotton_candy_plains" -> 0xFFC6E4;
@@ -747,6 +749,7 @@ public final class CCClient {
                     candyWorldLoadingActive = false;
                     candyWorldLoadingTimeoutTicks = 0;
                     candyWorldLoadingGraceTicks = 0;
+                    candyWorldLoadingExit = false;
                 }
                 return;
             }
@@ -795,7 +798,7 @@ public final class CCClient {
             int height = minecraft.getWindow().getGuiScaledHeight();
             if (dungeon) {
                 renderDungeonLoadingBackground(graphics, width, height);
-            } else if (candyWorldLoadingActive) {
+            } else if (candyWorldLoadingActive || isCandyWorldLevel(minecraft.level)) {
                 renderCandyWorldLoadingBackground(graphics, width, height);
             }
         }
@@ -832,32 +835,83 @@ public final class CCClient {
         }
 
         private static void beginCandyWorldLoadingScreen() {
+            Minecraft minecraft = Minecraft.getInstance();
+            boolean inCandyWorld = isCandyWorldLevel(minecraft.level);
+            if (!candyWorldLoadingActive) {
+                candyWorldLoadingExit = inCandyWorld;
+            } else {
+                candyWorldLoadingExit |= inCandyWorld;
+            }
             candyWorldLoadingActive = true;
-            candyWorldLoadingTimeoutTicks = 20 * 60;
-            candyWorldLoadingGraceTicks = 20 * 12;
+            candyWorldLoadingTimeoutTicks = 20 * 120;
+            candyWorldLoadingGraceTicks = inCandyWorld ? 20 * 3 : 20 * 20;
+            if (minecraft.player != null && inCandyWorld
+                && !(minecraft.screen instanceof ReceivingLevelScreen || minecraft.screen instanceof LevelLoadingScreen || minecraft.screen instanceof GenericDirtMessageScreen)) {
+                minecraft.setScreen(new GenericDirtMessageScreen(Component.translatable("chat.generating")));
+            }
         }
 
         private static void tickCandyWorldLoadingScreen(Minecraft minecraft) {
             if (!candyWorldLoadingActive) {
                 return;
             }
-            if (isLevelLoadingScreen(minecraft.screen)) {
+            if (minecraft.screen instanceof ReceivingLevelScreen || minecraft.screen instanceof LevelLoadingScreen) {
                 if (--candyWorldLoadingTimeoutTicks <= 0) {
                     candyWorldLoadingActive = false;
                     candyWorldLoadingGraceTicks = 0;
+                    candyWorldLoadingExit = false;
                 }
                 return;
             }
 
             if (portalOverlayTicks > 0) {
-                candyWorldLoadingGraceTicks = 20 * 12;
+                candyWorldLoadingGraceTicks = candyWorldLoadingExit ? 20 * 3 : 20 * 20;
                 return;
             }
 
-            if (isCandyWorldLevel(minecraft.level) || --candyWorldLoadingGraceTicks <= 0 || --candyWorldLoadingTimeoutTicks <= 0) {
+            if (isCandyWorldLevel(minecraft.level)) {
+                if (!areCandyWorldChunksReady(minecraft, CANDY_WORLD_CLIENT_CHUNK_RADIUS)
+                    && --candyWorldLoadingTimeoutTicks > 0) {
+                    if (!(minecraft.screen instanceof ReceivingLevelScreen || minecraft.screen instanceof LevelLoadingScreen || minecraft.screen instanceof GenericDirtMessageScreen)) {
+                        minecraft.setScreen(new GenericDirtMessageScreen(Component.translatable("chat.generating")));
+                    }
+                    return;
+                }
                 candyWorldLoadingActive = false;
                 candyWorldLoadingTimeoutTicks = 0;
                 candyWorldLoadingGraceTicks = 0;
+                candyWorldLoadingExit = false;
+                if (minecraft.screen instanceof GenericDirtMessageScreen) {
+                    minecraft.setScreen(null);
+                }
+                return;
+            }
+
+            if (candyWorldLoadingExit) {
+                if (--candyWorldLoadingGraceTicks > 0 && --candyWorldLoadingTimeoutTicks > 0) {
+                    if (!(minecraft.screen instanceof GenericDirtMessageScreen)) {
+                        minecraft.setScreen(new GenericDirtMessageScreen(Component.translatable("chat.generating")));
+                    }
+                    return;
+                }
+                candyWorldLoadingActive = false;
+                candyWorldLoadingTimeoutTicks = 0;
+                candyWorldLoadingGraceTicks = 0;
+                candyWorldLoadingExit = false;
+                if (minecraft.screen instanceof GenericDirtMessageScreen) {
+                    minecraft.setScreen(null);
+                }
+                return;
+            }
+
+            if (--candyWorldLoadingGraceTicks <= 0 || --candyWorldLoadingTimeoutTicks <= 0) {
+                candyWorldLoadingActive = false;
+                candyWorldLoadingTimeoutTicks = 0;
+                candyWorldLoadingGraceTicks = 0;
+                candyWorldLoadingExit = false;
+                if (minecraft.screen instanceof GenericDirtMessageScreen) {
+                    minecraft.setScreen(null);
+                }
             }
         }
 
@@ -988,6 +1042,22 @@ public final class CCClient {
             return CandyCraft.MODID.equals(dimension.getNamespace()) && "candy_world".equals(dimension.getPath());
         }
 
+        private static boolean areCandyWorldChunksReady(Minecraft minecraft, int radius) {
+            if (minecraft.level == null || minecraft.player == null || !isCandyWorldLevel(minecraft.level)) {
+                return false;
+            }
+            int centerChunkX = Mth.floorDiv(minecraft.player.getBlockX(), 16);
+            int centerChunkZ = Mth.floorDiv(minecraft.player.getBlockZ(), 16);
+            for (int chunkX = centerChunkX - radius; chunkX <= centerChunkX + radius; chunkX++) {
+                for (int chunkZ = centerChunkZ - radius; chunkZ <= centerChunkZ + radius; chunkZ++) {
+                    if (!minecraft.level.hasChunk(chunkX, chunkZ)) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
         private static float candyDayFactor(Level level, float partialTick) {
             float value = (float)Math.cos(level.getTimeOfDay(partialTick) * ((float)Math.PI * 2.0F)) * 2.0F + 0.5F;
             return Math.max(0.0F, Math.min(1.0F, value));
@@ -1027,7 +1097,9 @@ public final class CCClient {
             }
 
             setupFog.run();
-            Vec3 sky = rgbVec(CANDY_WORLD_SKY_FALLBACK);
+            float day = candySkyDayFactor(level, partialTick);
+            float night = 1.0F - day;
+            Vec3 sky = rgbVec(lerpColor(0x321326, CANDY_WORLD_SKY_FALLBACK, day));
             RenderSystem.depthMask(false);
             RenderSystem.enableBlend();
             RenderSystem.defaultBlendFunc();
@@ -1037,21 +1109,58 @@ public final class CCClient {
             poseStack.pushPose();
             poseStack.mulPose(Axis.XP.rotationDegrees(90.0F));
             Matrix4f matrix = poseStack.last().pose();
-            Tesselator tesselator = Tesselator.getInstance();
-            BufferBuilder buffer = tesselator.getBuilder();
-            buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
-            float radius = 128.0F;
-            buffer.vertex(matrix, -radius, -radius, -radius).endVertex();
-            buffer.vertex(matrix, -radius, -radius, radius).endVertex();
-            buffer.vertex(matrix, radius, -radius, radius).endVertex();
-            buffer.vertex(matrix, radius, -radius, -radius).endVertex();
-            tesselator.end();
+            drawSkyQuad(matrix, 128.0F);
+            if (night > 0.25F) {
+                drawCandyStars(matrix, Mth.clamp((night - 0.25F) / 0.75F, 0.0F, 1.0F));
+            }
             poseStack.popPose();
 
             RenderSystem.disableBlend();
             RenderSystem.depthMask(true);
             RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
             return true;
+        }
+
+        private static void drawSkyQuad(Matrix4f matrix, float radius) {
+            Tesselator tesselator = Tesselator.getInstance();
+            BufferBuilder buffer = tesselator.getBuilder();
+            buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
+            buffer.vertex(matrix, -radius, -radius, -radius).endVertex();
+            buffer.vertex(matrix, -radius, -radius, radius).endVertex();
+            buffer.vertex(matrix, radius, -radius, radius).endVertex();
+            buffer.vertex(matrix, radius, -radius, -radius).endVertex();
+            tesselator.end();
+        }
+
+        private static void drawCandyStars(Matrix4f matrix, float alpha) {
+            RenderSystem.setShader(GameRenderer::getPositionColorShader);
+            Tesselator tesselator = Tesselator.getInstance();
+            BufferBuilder buffer = tesselator.getBuilder();
+            buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+            for (int i = 0; i < 360; i++) {
+                int hash = i * 1103515245 + 12345;
+                float x = (((hash >>> 8) & 1023) / 1023.0F - 0.5F) * 240.0F;
+                float z = (((hash >>> 20) & 1023) / 1023.0F - 0.5F) * 240.0F;
+                if (x * x + z * z < 900.0F) {
+                    continue;
+                }
+                float y = -122.0F + ((hash >>> 4) & 15) * 0.12F;
+                float size = 0.22F + ((hash >>> 16) & 3) * 0.08F;
+                int brightness = 210 + ((hash >>> 12) & 45);
+                float red = brightness / 255.0F;
+                float green = (brightness * 0.86F) / 255.0F;
+                float blue = (brightness * 0.96F) / 255.0F;
+                buffer.vertex(matrix, x - size, y, z - size).color(red, green, blue, alpha).endVertex();
+                buffer.vertex(matrix, x - size, y, z + size).color(red, green, blue, alpha).endVertex();
+                buffer.vertex(matrix, x + size, y, z + size).color(red, green, blue, alpha).endVertex();
+                buffer.vertex(matrix, x + size, y, z - size).color(red, green, blue, alpha).endVertex();
+            }
+            tesselator.end();
+        }
+
+        private static float candySkyDayFactor(Level level, float partialTick) {
+            float value = (float)Math.cos(level.getTimeOfDay(partialTick) * ((float)Math.PI * 2.0F)) * 2.0F + 0.5F;
+            return Math.max(0.0F, Math.min(1.0F, value));
         }
     }
 }

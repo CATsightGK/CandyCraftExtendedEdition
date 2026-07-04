@@ -198,27 +198,30 @@ public class SugarFactoryBlockEntity extends BaseContainerBlockEntity implements
         for (Item item : inputs) {
             ItemStack input = new ItemStack(item);
             ItemStack normalResult = getRecipeResult(input, false);
-            if (!normalResult.isEmpty()) {
-                addDisplayRecipe(recipes, seen, input, normalResult, false);
-            }
-
             ItemStack advancedResult = getRecipeResult(input, true);
-            if (!advancedResult.isEmpty() && (!ItemStack.isSameItemSameTags(normalResult, advancedResult) || advancedResult.is(Items.SUGAR))) {
-                addDisplayRecipe(recipes, seen, input, advancedResult, true);
+            if (!normalResult.isEmpty() && !advancedResult.isEmpty() && ItemStack.isSameItemSameTags(normalResult, advancedResult)) {
+                addDisplayRecipe(recipes, seen, input, normalResult, true, true);
+            } else {
+                if (!normalResult.isEmpty()) {
+                    addDisplayRecipe(recipes, seen, input, normalResult, true, false);
+                }
+                if (!advancedResult.isEmpty()) {
+                    addDisplayRecipe(recipes, seen, input, advancedResult, false, true);
+                }
             }
         }
         return List.copyOf(recipes);
     }
 
-    private static void addDisplayRecipe(List<DisplayRecipe> recipes, Set<String> seen, ItemStack input, ItemStack output, boolean advancedFactory) {
+    private static void addDisplayRecipe(List<DisplayRecipe> recipes, Set<String> seen, ItemStack input, ItemStack output, boolean normalFactory, boolean advancedFactory) {
         ResourceLocation inputId = ForgeRegistries.ITEMS.getKey(input.getItem());
         ResourceLocation outputId = ForgeRegistries.ITEMS.getKey(output.getItem());
-        String key = idText(inputId, input) + "->" + idText(outputId, output) + ":" + advancedFactory;
+        String key = idText(inputId, input) + "->" + idText(outputId, output) + ":" + normalFactory + ":" + advancedFactory;
         if (seen.add(key)) {
             String path = sanitizeId((inputId == null ? input.getDescriptionId() : inputId.getPath()) + "_to_"
                 + (outputId == null ? output.getDescriptionId() : outputId.getPath())
                 + (advancedFactory ? "_advanced" : ""));
-            recipes.add(new DisplayRecipe(input.copy(), output.copy(), advancedFactory, new ResourceLocation(CandyCraft.MODID, "sugar_factory/" + path)));
+            recipes.add(new DisplayRecipe(input.copy(), output.copy(), normalFactory, advancedFactory, new ResourceLocation(CandyCraft.MODID, "sugar_factory/" + path)));
         }
     }
 
@@ -298,6 +301,6 @@ public class SugarFactoryBlockEntity extends BaseContainerBlockEntity implements
         return id != null && CandyCraft.MODID.equals(id.getNamespace());
     }
 
-    public record DisplayRecipe(ItemStack input, ItemStack output, boolean advancedFactory, ResourceLocation id) {
+    public record DisplayRecipe(ItemStack input, ItemStack output, boolean normalFactory, boolean advancedFactory, ResourceLocation id) {
     }
 }

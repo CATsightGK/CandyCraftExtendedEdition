@@ -26,6 +26,10 @@ public class NessieModel<T extends BasicCandyZombieEntity> extends EntityModel<T
     private final float leg1BaseYRot;
     private final float leg8BaseYRot;
     private final float leg2BaseYRot;
+    private final float leg7BaseZRot;
+    private final float leg1BaseZRot;
+    private final float leg8BaseZRot;
+    private final float leg2BaseZRot;
 
     public NessieModel(ModelPart root) {
         this.root = root;
@@ -37,6 +41,10 @@ public class NessieModel<T extends BasicCandyZombieEntity> extends EntityModel<T
         leg1BaseYRot = leg1.yRot;
         leg8BaseYRot = leg8.yRot;
         leg2BaseYRot = leg2.yRot;
+        leg7BaseZRot = leg7.zRot;
+        leg1BaseZRot = leg1.zRot;
+        leg8BaseZRot = leg8.zRot;
+        leg2BaseZRot = leg2.zRot;
     }
 
     public static LayerDefinition createBodyLayer() {
@@ -73,12 +81,16 @@ public class NessieModel<T extends BasicCandyZombieEntity> extends EntityModel<T
     @Override
     public void setupAnim(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
         float current = ageInTicks * 0.2F;
-        float rearSwing = Mth.cos(current * 0.8F) * 0.42F;
-        float frontSwing = Mth.cos((current + 4.0F) * 0.8F) * 0.42F;
-        leg7.yRot = leg7BaseYRot + rearSwing;
-        leg1.yRot = leg1BaseYRot + rearSwing;
-        leg8.yRot = leg8BaseYRot + frontSwing;
-        leg2.yRot = leg2BaseYRot + frontSwing;
+        float rearSwing = Mth.cos(current * 0.8F);
+        float frontSwing = Mth.cos((current + 4.0F) * 0.8F);
+        leg7.yRot = rearSwing;
+        leg1.yRot = rearSwing;
+        leg8.yRot = frontSwing;
+        leg2.yRot = frontSwing;
+        leg7.zRot = leg7BaseZRot;
+        leg1.zRot = leg1BaseZRot;
+        leg8.zRot = leg8BaseZRot;
+        leg2.zRot = leg2BaseZRot;
     }
 
     @Override

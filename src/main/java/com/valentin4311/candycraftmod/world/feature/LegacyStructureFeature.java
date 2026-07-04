@@ -20,6 +20,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.WorldGenRegion;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.Container;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.block.Blocks;
@@ -35,6 +36,11 @@ import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.feature.Feature;
 import net.minecraft.world.level.levelgen.feature.FeaturePlaceContext;
 import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
+import net.minecraft.world.level.storage.loot.LootParams;
+import net.minecraft.world.level.storage.loot.LootTable;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
+import net.minecraft.world.phys.Vec3;
 
 public class LegacyStructureFeature extends Feature<NoneFeatureConfiguration> {
     private static final ResourceLocation CANDY_HOUSE_LOOT = new ResourceLocation(CandyCraft.MODID, "chests/candy_house");
@@ -318,7 +324,7 @@ public class LegacyStructureFeature extends Feature<NoneFeatureConfiguration> {
     }
 
     private static boolean waterTemple(WorldGenLevel level, RandomSource random, BlockPos origin) {
-        BlockPos floor = oceanFlourFloor(level, origin);
+        BlockPos floor = oceanTempleFloor(level, origin);
         if (floor == null || !level.getFluidState(floor.above(13)).isSource()) {
             return false;
         }
@@ -338,60 +344,73 @@ public class LegacyStructureFeature extends Feature<NoneFeatureConfiguration> {
         };
         for (int y = 0; y <= 3; y++) {
             for (int[] p : footprint) {
-                set(level, center.offset(p[0], y, p[1]), Blocks.AIR.defaultBlockState());
+                setTemple(level, center.offset(p[0], y, p[1]), Blocks.AIR.defaultBlockState(), 3);
             }
         }
 
-        place(level, center, stone, 0, -1, 0, -1, -1, -1, -1, -1, 1, 1, -1, -1, 1, -1, 1);
-        place(level, center, cobble, -1, -1, 0, 1, -1, 0, 0, -1, -1, 0, -1, 1,
+        setTemple(level, center, CCBlocks.MARSHMALLOW_CHEST.get().defaultBlockState(), 2);
+        placeTemple(level, center, stone, 2, 0, -1, 0, -1, -1, -1, -1, -1, 1, 1, -1, -1, 1, -1, 1);
+        placeTemple(level, center, cobble, 2, -1, -1, 0, 1, -1, 0, 0, -1, -1, 0, -1, 1,
             -2, -1, 1, -2, -1, -1, 2, -1, -1, 2, -1, 1, -1, -1, 2, -1, -1, -2,
             1, -1, 2, 1, -1, -2, 0, -1, -3, 0, -1, 3, 3, -1, 0, -3, -1, 0);
-        place(level, center, stone, -3, -1, 1, -3, -1, -1, 3, -1, 1, 3, -1, -1,
+        placeTemple(level, center, stone, 2, -3, -1, 1, -3, -1, -1, 3, -1, 1, 3, -1, -1,
             -1, -1, -3, 1, -1, -3, -1, -1, 3, 1, -1, 3,
             2, -1, -2, 2, -1, 2, -2, -1, -2, -2, -1, 2);
-        place(level, center, lamp, -2, -1, 0, 2, -1, 0, 0, -1, 2, 0, -1, -2);
-        place(level, center, CCBlocks.FLOUR.get().defaultBlockState(),
+        placeTemple(level, center, lamp, 3, -2, -1, 0, 2, -1, 0, 0, -1, 2, 0, -1, -2);
+        placeTemple(level, center, CCBlocks.FLOUR.get().defaultBlockState(), 3,
             0, -1, 4, 1, -1, 4, -1, -1, 4, 0, -1, -4, 1, -1, -4, -1, -1, -4,
-            4, -1, 0, 4, -1, 1, 4, -1, -1, -4, -1, 0, -4, -1, 1, -4, -1, -1,
+            4, -1, 0, 4, -1, 1, 4, -1, -1, -4, -1, 0, -4, -1, 1, -4, -1, -1);
+        placeTemple(level, center, CCBlocks.FLOUR.get().defaultBlockState(), 2,
             2, -1, 3, -2, -1, 3, 2, -1, -3, -2, -1, -3,
             3, -1, -2, 3, -1, 2, -3, -1, -2, -3, -1, 2);
 
         for (int y = 0; y <= 1; y++) {
             int yy = y * 2;
-            place(level, center, cobble,
+            placeTemple(level, center, cobble, 3,
                 0, yy, 4, 1, yy, 4, -1, yy, 4, 0, yy, -4, 1, yy, -4, -1, yy, -4,
                 4, yy, 0, 4, yy, 1, 4, yy, -1, -4, yy, 0, -4, yy, 1, -4, yy, -1);
         }
-        place(level, center, lamp, 0, 1, 4, 0, 1, -4, 4, 1, 0, -4, 1, 0);
-        place(level, center, glass,
+        placeTemple(level, center, lamp, 3, 0, 1, 4, 0, 1, -4, 4, 1, 0, -4, 1, 0);
+        placeTemple(level, center, glass, 2,
             1, 1, 4, -1, 1, 4, 1, 1, -4, -1, 1, -4,
             4, 1, 1, 4, 1, -1, -4, 1, 1, -4, 1, -1);
 
-        place(level, center, cobble,
+        placeTemple(level, center, cobble, 2,
             2, 0, 3, -2, 0, 3, 2, 0, -3, -2, 0, -3, 3, 0, -2, 3, 0, 2, -3, 0, -2, -3, 0, 2,
             2, 3, 3, -2, 3, 3, 2, 3, -3, -2, 3, -3, 3, 3, -2, 3, 3, 2, -3, 3, -2, -3, 3, 2,
             2, 3, -2, 2, 3, 2, -2, 3, -2, -2, 3, 2);
         for (int y = 1; y <= 2; y++) {
-            place(level, center, glass,
+            placeTemple(level, center, glass, 2,
                 2, y, 3, -2, y, 3, 2, y, -3, -2, y, -3,
                 3, y, -2, 3, y, 2, -3, y, -2, -3, y, 2);
         }
 
-        place(level, center, lamp, 3, 3, 0, -3, 3, 0, 0, 3, 3, 0, 3, -3);
-        place(level, center, stone,
+        placeTemple(level, center, lamp, 3, 3, 3, 0, -3, 3, 0, 0, 3, 3, 0, 3, -3);
+        placeTemple(level, center, stone, 3,
             3, 3, 1, 3, 3, -1, -3, 3, 1, -3, 3, -1,
             -1, 3, 3, 1, 3, 3, -1, 3, -3, 1, 3, -3);
 
-        place(level, center, topGlass, 0, 4, 0, 0, 4, 1, 0, 4, -1, -1, 4, 0, 1, 4, 0);
-        place(level, center, stone,
+        placeTemple(level, center, topGlass, 3, 0, 4, 0, 0, 4, 1, 0, 4, -1, -1, 4, 0, 1, 4, 0);
+        placeTemple(level, center, stone, 3,
             0, 4, 2, 0, 4, -2, -2, 4, 0, 2, 4, 0,
             1, 4, 2, -1, 4, 2, 1, 4, -2, -1, 4, -2,
             2, 4, -1, 2, 4, 1, -2, 4, -1, -2, 4, 1,
             1, 4, 1, -1, 4, 1, 1, 4, -1, -1, 4, -1);
 
-        set(level, center, Blocks.CHEST.defaultBlockState());
         loot(level, random, center, CANDY_HOUSE_LOOT);
         return true;
+    }
+
+    private static void placeTemple(WorldGenLevel level, BlockPos center, BlockState state, int flags, int... coordinates) {
+        for (int i = 0; i + 2 < coordinates.length; i += 3) {
+            setTemple(level, center.offset(coordinates[i], coordinates[i + 1], coordinates[i + 2]), state, flags);
+        }
+    }
+
+    private static void setTemple(WorldGenLevel level, BlockPos pos, BlockState state, int flags) {
+        if (!level.isOutsideBuildHeight(pos)) {
+            level.setBlock(pos, state, flags);
+        }
     }
 
     private static void place(WorldGenLevel level, BlockPos center, BlockState state, int... coordinates) {
@@ -400,12 +419,13 @@ public class LegacyStructureFeature extends Feature<NoneFeatureConfiguration> {
         }
     }
 
-    private static BlockPos oceanFlourFloor(WorldGenLevel level, BlockPos origin) {
+    private static BlockPos oceanTempleFloor(WorldGenLevel level, BlockPos origin) {
         int x = origin.getX();
         int z = origin.getZ();
         for (int y = origin.getY() + 9; y >= 20; y--) {
             BlockPos pos = new BlockPos(x, y, z);
-            if (level.getBlockState(pos).is(CCBlocks.FLOUR.get())) {
+            BlockState state = level.getBlockState(pos);
+            if (state.is(CCBlocks.FLOUR.get()) || state.is(CCSweetscapeBlocks.SUGAR_SAND.get())) {
                 return pos;
             }
         }
@@ -825,14 +845,15 @@ public class LegacyStructureFeature extends Feature<NoneFeatureConfiguration> {
     private static void buildVillageHouse(WorldGenLevel level, RandomSource random, BlockPos base, int side, boolean window) {
         int metadata = random.nextInt(3);
         BlockState planks = marshmallowPlanks(metadata);
+        BlockState roofPlanks = CCBlocks.MARSHMALLOW_PLANKS.get().defaultBlockState();
         BlockState logs = marshmallowLog(metadata, Direction.Axis.Y);
         BlockState logX = marshmallowLog(metadata, Direction.Axis.X);
         BlockState logZ = marshmallowLog(metadata, Direction.Axis.Z);
-        BlockState slab = marshmallowSlab(metadata);
+        BlockState slab = marshmallowSlab(metadata).setValue(SlabBlock.TYPE, SlabType.TOP);
         for (int dx = 0; dx < 5; dx++) {
             for (int dz = 0; dz < 5; dz++) {
                 set(level, base.offset(dx, 0, dz), CCBlocks.CHOCOLATE_STONE.get().defaultBlockState());
-                set(level, base.offset(dx, 3, dz), planks);
+                set(level, base.offset(dx, 3, dz), roofPlanks);
             }
         }
         for (int y = 1; y <= 2; y++) {
@@ -989,6 +1010,14 @@ public class LegacyStructureFeature extends Feature<NoneFeatureConfiguration> {
     private static void loot(WorldGenLevel level, RandomSource random, BlockPos pos, ResourceLocation table) {
         if (level.getBlockEntity(pos) instanceof ChestBlockEntity chest) {
             chest.setLootTable(table, random.nextLong());
+            return;
+        }
+        if (level.getBlockEntity(pos) instanceof Container container && level instanceof WorldGenRegion region) {
+            LootTable lootTable = region.getLevel().getServer().getLootData().getLootTable(table);
+            LootParams params = new LootParams.Builder(region.getLevel())
+                .withParameter(LootContextParams.ORIGIN, Vec3.atCenterOf(pos))
+                .create(LootContextParamSets.CHEST);
+            lootTable.fill(container, params, random.nextLong());
         }
     }
 

@@ -99,15 +99,16 @@ public class DragonModel<T extends BasicCandyZombieEntity> extends EntityModel<T
     public void setupAnim(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
         boolean ridden = entity.getControllingPassenger() != null;
         if (ridden) {
-            float flap = (Mth.sin(entity.tickCount * 0.3F) + 1.0F) * 0.6F;
+            float flap = (Mth.sin(ageInTicks * 0.3F) + 1.0F) * 0.72F;
             rightWing.zRot = flap - 1.570796F;
             leftWing.zRot = -flap + 1.570796F;
             rightScaleWing.zRot = flap;
             leftScaleWing.zRot = -flap;
-            leftFrontLegTop.xRot = 0.785398F;
-            rightFrontLegTop.xRot = 0.785398F;
-            leftBackLegTop.xRot = 0.785398F;
-            rightBackLegTop.xRot = 0.785398F;
+            float tuckedLeg = entity.isDragonFalling() ? 1.05F : 0.785398F;
+            leftFrontLegTop.xRot = tuckedLeg;
+            rightFrontLegTop.xRot = tuckedLeg;
+            leftBackLegTop.xRot = tuckedLeg;
+            rightBackLegTop.xRot = tuckedLeg;
             leftFrontLegBase.xRot = 0.0F;
             rightFrontLegBase.xRot = 0.0F;
             leftBackLegBase.xRot = 0.0F;

@@ -14,6 +14,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
@@ -36,11 +37,14 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.level.material.FluidState;
 import net.minecraftforge.common.ForgeSpawnEggItem;
 import net.minecraftforge.event.entity.SpawnPlacementRegisterEvent;
 import net.minecraftforge.event.entity.EntityJoinLevelEvent;
 import net.minecraftforge.event.level.BlockEvent;
+import net.minecraftforge.event.level.ChunkEvent;
 import net.minecraftforge.event.entity.living.MobSpawnEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.TickEvent;
@@ -82,6 +86,14 @@ public final class CCForgeEvents {
             && (isBlockedCandyWorldMob(event.getEntity()) || isBlockedDungeonMob(event.getEntity()))) {
             event.setCanceled(true);
         }
+    }
+
+    @SubscribeEvent
+    public static void onChunkLoad(ChunkEvent.Load event) {
+        if (!(event.getLevel() instanceof ServerLevel level) || !isCandyWorld(level)) {
+            return;
+        }
+        scheduleExposedCandyFluidTicks(level, event.getChunk());
     }
 
     @SubscribeEvent
@@ -165,6 +177,7 @@ public final class CCForgeEvents {
             && type != CCEntityTypes.GUMMY_BUNNY.get() && type != CCEntityTypes.CANDY_WOLF.get()
             && type != CCEntityTypes.JELLY_QUEEN.get() && type != CCEntityTypes.CARAMEL_BEE.get()
             && type != CCEntityTypes.NOUGAT_GOLEM.get() && type != CCEntityTypes.BEETLE.get()
+            && type != CCEntityTypes.BOSS_BEETLE.get()
             && type != CCEntityTypes.CANDY_CREEPER.get() && type != CCEntityTypes.COTTON_CANDY_SPIDER.get()
             && type != CCEntityTypes.MAGE_SUGUARD.get() && type != CCEntityTypes.CANDY_FISH.get()
             && type != CCEntityTypes.NESSIE.get()) {
@@ -215,6 +228,9 @@ public final class CCForgeEvents {
                 default -> false;
             };
         }
+        if (type == CCEntityTypes.BOSS_BEETLE.get()) {
+            return event.getSpawnType() == MobSpawnType.STRUCTURE;
+        }
         if (type == CCEntityTypes.PINGOUIN.get()) {
             return "ice_cream_plains".equals(path);
         }
@@ -264,6 +280,45 @@ public final class CCForgeEvents {
 
     private static boolean isCandyWorld(Level level) {
         return level.dimension().equals(CANDY_WORLD);
+    }
+
+    private static void scheduleExposedCandyFluidTicks(ServerLevel level, ChunkAccess chunk) {
+        BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
+        ChunkAccess actualChunk = chunk;
+        int minY = Math.max(63, actualChunk.getMinBuildHeight());
+        int maxY = Math.min(level.getMaxBuildHeight(), actualChunk.getMaxBuildHeight());
+        int minX = actualChunk.getPos().getMinBlockX();
+        int minZ = actualChunk.getPos().getMinBlockZ();
+        for (int x = 0; x < 16; x++) {
+            for (int z = 0; z < 16; z++) {
+                for (int y = minY; y < maxY; y++) {
+                    pos.set(minX + x, y, minZ + z);
+                    FluidState fluid = actualChunk.getFluidState(pos);
+                    if (isCandyFluid(fluid) && isExposedFluid(level, pos)) {
+                        level.scheduleTick(pos.immutable(), fluid.getType(), fluid.getType().getTickDelay(level));
+                    }
+                }
+            }
+        }
+    }
+
+    private static boolean isExposedFluid(ServerLevel level, BlockPos pos) {
+        if (level.getBlockState(pos.below()).isAir()) {
+            return true;
+        }
+        for (Direction direction : Direction.Plane.HORIZONTAL) {
+            if (level.getBlockState(pos.relative(direction)).isAir()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean isCandyFluid(FluidState state) {
+        return state.is(CCFluids.SOURCE_GRENADINE.get()) || state.is(CCFluids.FLOWING_GRENADINE.get())
+            || state.is(CCFluids.SOURCE_LIQUID_CANDY.get()) || state.is(CCFluids.FLOWING_LIQUID_CANDY.get())
+            || state.is(CCFluids.SOURCE_CARAMEL.get()) || state.is(CCFluids.FLOWING_CARAMEL.get())
+            || state.is(CCFluids.SOURCE_LIQUID_CHOCOLATE.get()) || state.is(CCFluids.FLOWING_LIQUID_CHOCOLATE.get());
     }
 
     private static boolean isDungeonLevel(Level level) {
@@ -396,7 +451,12 @@ public final class CCForgeEvents {
     private static boolean canSpawnOnCandySurface(EntityType<? extends Mob> type, LevelAccessor level, MobSpawnType reason, BlockPos pos, net.minecraft.util.RandomSource random) {
         BlockState below = level.getBlockState(pos.below());
         if (isCandySpawnSurface(below)) {
-            return level.getBlockState(pos).isAir() && level.getBlockState(pos.above()).isAir();
+            BlockState state = level.getBlockState(pos);
+            BlockState above = level.getBlockState(pos.above());
+            return state.getCollisionShape(level, pos).isEmpty()
+                && above.getCollisionShape(level, pos.above()).isEmpty()
+                && level.getFluidState(pos).isEmpty()
+                && level.getFluidState(pos.above()).isEmpty();
         }
         return below.isValidSpawn(level, pos.below(), type);
     }

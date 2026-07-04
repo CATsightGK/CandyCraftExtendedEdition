@@ -42,7 +42,7 @@ public class CandyPortalBlock extends Block {
     );
     private static final int SURVIVAL_PORTAL_DELAY = 80;
     private static final int CREATIVE_PORTAL_DELAY = 1;
-    private static final int CANDY_WORLD_PRELOAD_RADIUS = 1;
+    private static final int CANDY_WORLD_PRELOAD_RADIUS = 0;
     public static final EnumProperty<Direction.Axis> AXIS = BlockStateProperties.HORIZONTAL_AXIS;
     private static final int MIN_WIDTH = 2;
     private static final int MAX_WIDTH = 21;
@@ -121,6 +121,9 @@ public class CandyPortalBlock extends Block {
         player.teleportTo(target, targetPos.getX() + 0.5D, targetPos.getY(), targetPos.getZ() + 0.5D, player.getYRot(), player.getXRot());
         target.playSound(null, targetPos, SoundEvents.PORTAL_TRAVEL, SoundSource.PLAYERS, 0.8F, 1.0F);
         player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 400, 19, false, false, true));
+        if (target.dimension() == CANDY_WORLD) {
+            player.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, 20 * 12, 0, false, false, false));
+        }
     }
 
     @Override
@@ -223,7 +226,7 @@ public class CandyPortalBlock extends Block {
         int z = player.getBlockZ();
         if (target.dimension() == CANDY_WORLD) {
             preloadChunks(target, x, z, CANDY_WORLD_PRELOAD_RADIUS);
-            int y = Math.max(target.getMinBuildHeight() + 2, Math.min(248, target.getMaxBuildHeight() - 4));
+            int y = Math.max(target.getMinBuildHeight() + 2, target.getMaxBuildHeight() - 8);
             return new BlockPos(x, y, z);
         }
         int y = Math.max(target.getMinBuildHeight() + 2, Math.min(player.getBlockY(), target.getMaxBuildHeight() - 2));

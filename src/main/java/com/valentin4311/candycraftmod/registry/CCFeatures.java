@@ -9,6 +9,7 @@ import com.valentin4311.candycraftmod.world.feature.HoneyDungeonFeature;
 import com.valentin4311.candycraftmod.world.feature.JellyDungeonFeature;
 import com.valentin4311.candycraftmod.world.feature.LegacyStructureFeature;
 import com.valentin4311.candycraftmod.world.feature.LegacyCandyTreeFeature;
+import com.valentin4311.candycraftmod.world.feature.MarshmallowWaterlilyPatchFeature;
 import com.valentin4311.candycraftmod.world.feature.SweetscapeChocolateTreeFeature;
 import com.valentin4311.candycraftmod.world.feature.SuguardDungeonFeature;
 import com.valentin4311.candycraftmod.world.tree.CherryTreeDecorator;
@@ -44,6 +45,10 @@ public final class CCFeatures {
     public static final RegistryObject<Feature<NoneFeatureConfiguration>> CANDY_SEAWEED = FEATURES.register(
         "candy_seaweed",
         () -> new CandySeaweedFeature(NoneFeatureConfiguration.CODEC)
+    );
+    public static final RegistryObject<Feature<NoneFeatureConfiguration>> MARSHMALLOW_WATERLILY_PATCH = FEATURES.register(
+        "marshmallow_waterlily_patch",
+        () -> new MarshmallowWaterlilyPatchFeature(NoneFeatureConfiguration.CODEC)
     );
     public static final RegistryObject<Feature<NoneFeatureConfiguration>> GUMMY_WORM = FEATURES.register(
         "gummy_worm",

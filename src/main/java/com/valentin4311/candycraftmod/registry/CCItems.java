@@ -125,6 +125,7 @@ public final class CCItems {
     public static final RegistryObject<Item> PEZ_JELLY_BALL = registerPortItem("pez_jelly_ball");
     public static final RegistryObject<Item> CARAMEL_KING_JELLY_BALL = registerPortItem("caramel_king_jelly_ball");
     public static final RegistryObject<Item> STRAWBERRY_QUEEN_JELLY_BALL = registerPortItem("strawberry_queen_jelly_ball");
+    public static final RegistryObject<Item> BOSS_BEETLE_GUMMY_BALL = ITEMS.register("boss_beetle_gummy_ball", () -> new Item(new Item.Properties()));
     public static final RegistryObject<Item> DYNAMITE = registerPortItem("dynamite", () -> new DynamiteItem(new Item.Properties(), false));
     public static final RegistryObject<Item> GLUE_DYNAMITE = registerPortItem("glue_dynamite", () -> new DynamiteItem(new Item.Properties(), true));
     public static final RegistryObject<Item> JELLY_WAND = registerPortItem("jelly_wand", () -> new JellyWandItem(new Item.Properties().stacksTo(1)));

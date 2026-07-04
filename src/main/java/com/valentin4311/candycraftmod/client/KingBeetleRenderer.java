@@ -13,7 +13,7 @@ public class KingBeetleRenderer extends MobRenderer<BasicCandyZombieEntity, Beet
     private static final ResourceLocation TEXTURE = new ResourceLocation(CandyCraft.MODID, "textures/entity/tamedbeetle.png");
 
     public KingBeetleRenderer(EntityRendererProvider.Context context) {
-        super(context, new BeetleModel<>(context.bakeLayer(BeetleModel.LAYER)), 0.7F);
+        super(context, new BeetleModel<>(context.bakeLayer(BeetleModel.LAYER)), 1.6F);
     }
 
     @Override
@@ -24,6 +24,7 @@ public class KingBeetleRenderer extends MobRenderer<BasicCandyZombieEntity, Beet
     @Override
     protected void scale(BasicCandyZombieEntity entity, PoseStack poseStack, float partialTickTime) {
         super.scale(entity, poseStack, partialTickTime);
+        poseStack.scale(3.0F, 3.0F, 3.0F);
         poseStack.mulPose(Axis.YP.rotationDegrees(270.0F));
     }
 }

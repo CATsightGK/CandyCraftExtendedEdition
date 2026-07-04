@@ -30,7 +30,7 @@ public class PuddingBlock extends Block implements BonemealableBlock {
                 .filter(id -> CandyCraft.MODID.equals(id.getNamespace()))
                 .map(ResourceLocation::getPath)
                 .orElse("");
-            if ("ice_cream_plains".equals(biome) || "ice_cream_sky_mountains".equals(biome)) {
+            if ("ice_cream_plains".equals(biome) || "ice_cream_sky_mountains".equals(biome) || "sugar_hell_mountains".equals(biome)) {
                 return MapColor.SNOW;
             }
         }

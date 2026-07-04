@@ -18,8 +18,9 @@ import net.minecraft.world.item.Items;
 import org.jetbrains.annotations.Nullable;
 
 public class AlchemyRecipeCategory implements IRecipeCategory<AlchemyJeiRecipe> {
-    private static final int WIDTH = 340;
-    private static final Component DESCRIPTION = Component.translatable("jei.candycraftmod.alchemy_table.description");
+    private static final int WIDTH = 176;
+    private static final Component DESCRIPTION_LINE_1 = Component.translatable("jei.candycraftmod.alchemy_table.description.line1");
+    private static final Component DESCRIPTION_LINE_2 = Component.translatable("jei.candycraftmod.alchemy_table.description.line2");
     private final IDrawable icon;
     private final IDrawableAnimated arrow;
 
@@ -55,6 +56,13 @@ public class AlchemyRecipeCategory implements IRecipeCategory<AlchemyJeiRecipe> 
 
     @Override
     public void setRecipe(IRecipeLayoutBuilder builder, AlchemyJeiRecipe recipe, IFocusGroup focuses) {
+        if (recipe.infoPage()) {
+            builder.addInputSlot(8, 26)
+                .setStandardSlotBackground()
+                .addItemStack(new ItemStack(CCBlocks.ALCHEMY_TABLE.get()));
+            return;
+        }
+
         builder.addInputSlot(4, 30)
             .setStandardSlotBackground()
             .addItemStack(new ItemStack(CCItems.GRENADINE_BUCKET.get()));
@@ -80,18 +88,14 @@ public class AlchemyRecipeCategory implements IRecipeCategory<AlchemyJeiRecipe> 
 
     @Override
     public void draw(AlchemyJeiRecipe recipe, IRecipeSlotsView recipeSlotsView, GuiGraphics guiGraphics, double mouseX, double mouseY) {
-        drawFittedText(guiGraphics, DESCRIPTION, 3, 2, WIDTH - 6, 0x7A3C56);
-        arrow.draw(guiGraphics, 112, 30);
-    }
+        if (recipe.infoPage()) {
+            var font = Minecraft.getInstance().font;
+            guiGraphics.drawWordWrap(font, DESCRIPTION_LINE_1, 34, 18, WIDTH - 40, 0x4A2A3A);
+            guiGraphics.drawWordWrap(font, DESCRIPTION_LINE_2, 34, 42, WIDTH - 40, 0x4A2A3A);
+            return;
+        }
 
-    private static void drawFittedText(GuiGraphics guiGraphics, Component text, int x, int y, int maxWidth, int color) {
-        var font = Minecraft.getInstance().font;
-        int textWidth = font.width(text);
-        float scale = textWidth <= maxWidth ? 1.0F : Math.max(0.55F, maxWidth / (float)textWidth);
-        guiGraphics.pose().pushPose();
-        guiGraphics.pose().scale(scale, scale, 1.0F);
-        guiGraphics.drawString(font, text, Math.round(x / scale), Math.round(y / scale), color, false);
-        guiGraphics.pose().popPose();
+        arrow.draw(guiGraphics, 112, 30);
     }
 
     @Override

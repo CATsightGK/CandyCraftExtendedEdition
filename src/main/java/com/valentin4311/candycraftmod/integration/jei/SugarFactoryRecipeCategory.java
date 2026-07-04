@@ -23,6 +23,13 @@ public class SugarFactoryRecipeCategory implements IRecipeCategory<SugarFactoryJ
     private static final int CROP_Y = 0;
     private static final int CROP_WIDTH = 174;
     private static final int CROP_HEIGHT = 30;
+    private static final int ROW_GAP = 4;
+    private static final int ADVANCED_ROW_Y = CROP_HEIGHT + ROW_GAP;
+    private static final int INPUT_SLOT_X = 8;
+    private static final int OUTPUT_SLOT_X = 151;
+    private static final int SLOT_Y = 8;
+    private static final int PROGRESS_X = 27;
+    private static final int PROGRESS_Y = 10;
     private final IDrawable icon;
     private final IDrawableStatic sugarFactoryBackground;
     private final IDrawableStatic advancedSugarFactoryBackground;
@@ -56,7 +63,7 @@ public class SugarFactoryRecipeCategory implements IRecipeCategory<SugarFactoryJ
 
     @Override
     public int getHeight() {
-        return CROP_HEIGHT;
+        return CROP_HEIGHT * 2 + ROW_GAP;
     }
 
     @Override
@@ -66,18 +73,30 @@ public class SugarFactoryRecipeCategory implements IRecipeCategory<SugarFactoryJ
 
     @Override
     public void setRecipe(IRecipeLayoutBuilder builder, SugarFactoryJeiRecipe recipe, IFocusGroup focuses) {
-        builder.addInputSlot(6, 6)
-            .addItemStacks(recipe.inputs());
-        builder.addOutputSlot(151, 6)
-            .addItemStack(recipe.output());
+        if (recipe.normalFactory()) {
+            builder.addInputSlot(INPUT_SLOT_X, SLOT_Y)
+                .addItemStacks(recipe.inputs());
+            builder.addOutputSlot(OUTPUT_SLOT_X, SLOT_Y)
+                .addItemStack(recipe.output());
+        }
+        if (recipe.advancedFactory()) {
+            builder.addInputSlot(INPUT_SLOT_X, ADVANCED_ROW_Y + SLOT_Y)
+                .addItemStacks(recipe.inputs());
+            builder.addOutputSlot(OUTPUT_SLOT_X, ADVANCED_ROW_Y + SLOT_Y)
+                .addItemStack(recipe.output());
+        }
     }
 
     @Override
     public void draw(SugarFactoryJeiRecipe recipe, IRecipeSlotsView recipeSlotsView, GuiGraphics guiGraphics, double mouseX, double mouseY) {
-        IDrawableStatic background = recipe.advancedFactory() ? advancedSugarFactoryBackground : sugarFactoryBackground;
-        background.draw(guiGraphics, 0, 0);
-        IDrawableAnimated progress = recipe.advancedFactory() ? advancedSugarFactoryProgress : sugarFactoryProgress;
-        progress.draw(guiGraphics, 27, 10);
+        if (recipe.normalFactory()) {
+            sugarFactoryBackground.draw(guiGraphics, 0, 0);
+            sugarFactoryProgress.draw(guiGraphics, PROGRESS_X, PROGRESS_Y);
+        }
+        if (recipe.advancedFactory()) {
+            advancedSugarFactoryBackground.draw(guiGraphics, 0, ADVANCED_ROW_Y);
+            advancedSugarFactoryProgress.draw(guiGraphics, PROGRESS_X, ADVANCED_ROW_Y + PROGRESS_Y);
+        }
     }
 
     @Override

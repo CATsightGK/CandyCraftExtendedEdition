@@ -38,6 +38,10 @@ public class CandyLiquidBlock extends LiquidBlock {
     @Override
     public void onPlace(BlockState state, Level level, BlockPos pos, BlockState oldState, boolean moving) {
         super.onPlace(state, level, pos, oldState, moving);
+        FluidState fluidState = state.getFluidState();
+        if (!fluidState.isEmpty()) {
+            level.scheduleTick(pos, fluidState.getType(), fluidState.getType().getTickDelay(level));
+        }
         reactWithNeighboringFluid(state, level, pos);
     }
 

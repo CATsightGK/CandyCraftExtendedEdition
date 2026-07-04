@@ -2,6 +2,7 @@ package com.valentin4311.candycraftmod.block;
 
 import com.valentin4311.candycraftmod.registry.CCEntityTypes;
 import com.valentin4311.candycraftmod.registry.CCItems;
+import com.valentin4311.candycraftmod.entity.GummyBallEntity;
 import com.valentin4311.candycraftmod.util.EmblemHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
@@ -42,6 +43,7 @@ public class ChewingGumBlock extends Block {
     public static boolean isChewingGumNative(Entity entity) {
         return entity.getType() == CCEntityTypes.BEETLE.get()
             || entity.getType() == CCEntityTypes.BOSS_BEETLE.get()
-            || entity.getType() == CCEntityTypes.KING_BEETLE.get();
+            || entity.getType() == CCEntityTypes.KING_BEETLE.get()
+            || entity instanceof GummyBallEntity ball && ball.isBossBeetleProjectile();
     }
 }
