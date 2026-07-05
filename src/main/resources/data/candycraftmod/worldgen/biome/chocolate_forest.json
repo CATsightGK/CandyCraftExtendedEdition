@@ -1,4 +1,4 @@
-{
+﻿{
   "has_precipitation": true,
   "temperature": 0.8,
   "downfall": 0.3,
@@ -53,6 +53,12 @@
         "weight": 21,
         "minCount": 4,
         "maxCount": 6
+      },
+      {
+        "type": "candycraftmod:easter_chicken",
+        "weight": 30,
+        "minCount": 3,
+        "maxCount": 7
       }
     ],
     "monster": [
@@ -115,6 +121,7 @@
       "candycraftmod:ore_sweetscape_milk_brownie",
       "candycraftmod:ore_sweetscape_white_brownie",
       "candycraftmod:ore_sweetscape_dark_brownie",
+      "candycraftmod:ore_sweetscape_cake_block",
       "candycraftmod:ore_sweetscape_sugar_cookie",
       "candycraftmod:ore_sweetscape_teleporter",
       "candycraftmod:ore_sweetscape_sugar_sand"

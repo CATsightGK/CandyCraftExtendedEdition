@@ -1,7 +1,7 @@
 package com.valentin4311.candycraftmod.world.feature;
 
 import com.mojang.serialization.Codec;
-import com.valentin4311.candycraftmod.registry.CCSweetscapeBlocks;
+import com.valentin4311.candycraftmod.registry.CCBlocks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.LevelAccessor;
@@ -27,13 +27,13 @@ public class CottonCandyTreeFeature extends Feature<NoneFeatureConfiguration> {
 
     public static boolean generate(LevelAccessor level, RandomSource random, BlockPos base) {
         BlockState below = level.getBlockState(base.below());
-        if (!below.is(CCSweetscapeBlocks.CANDY_GRASS_BLOCK.get()) && !below.is(CCSweetscapeBlocks.MILK_BROWNIE_BLOCK.get())) {
+        if (!below.is(CCBlocks.CANDY_GRASS_BLOCK.get()) && !below.is(CCBlocks.MILK_BROWNIE_BLOCK.get())) {
             return false;
         }
 
         int trunkHeight = 5 + random.nextInt(3);
-        BlockState trunk = CCSweetscapeBlocks.WHITE_CANDY_CANE_BLOCK.get().defaultBlockState();
-        BlockState leaves = CCSweetscapeBlocks.COTTON_CANDY_BLOCK.get().defaultBlockState();
+        BlockState trunk = CCBlocks.WHITE_CANDY_CANE_BLOCK.get().defaultBlockState();
+        BlockState leaves = CCBlocks.COTTON_CANDY_BLOCK.get().defaultBlockState();
         for (int y = 0; y < trunkHeight; y++) {
             setReplaceable(level, base.above(y), trunk);
         }
@@ -94,7 +94,7 @@ public class CottonCandyTreeFeature extends Feature<NoneFeatureConfiguration> {
     }
 
     private static void clear(LevelAccessor level, BlockPos pos) {
-        if (!level.isOutsideBuildHeight(pos) && (level.isEmptyBlock(pos) || level.getBlockState(pos).is(CCSweetscapeBlocks.COTTON_CANDY_BLOCK.get()))) {
+        if (!level.isOutsideBuildHeight(pos) && (level.isEmptyBlock(pos) || level.getBlockState(pos).is(CCBlocks.COTTON_CANDY_BLOCK.get()))) {
             level.removeBlock(pos, false);
         }
     }
@@ -104,8 +104,9 @@ public class CottonCandyTreeFeature extends Feature<NoneFeatureConfiguration> {
             return;
         }
         BlockState current = level.getBlockState(pos);
-        if (current.isAir() || current.canBeReplaced() || current.is(CCSweetscapeBlocks.COTTON_CANDY_BLOCK.get())) {
+        if (current.isAir() || current.canBeReplaced() || current.is(CCBlocks.COTTON_CANDY_BLOCK.get())) {
             level.setBlock(pos, state, 2 | 16);
         }
     }
 }
+

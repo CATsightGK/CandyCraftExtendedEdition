@@ -2,7 +2,7 @@ package com.valentin4311.candycraftmod.block;
 
 import com.valentin4311.candycraftmod.registry.CCBlocks;
 import com.valentin4311.candycraftmod.registry.CCItems;
-import com.valentin4311.candycraftmod.registry.CCSweetscapeItems;
+import com.valentin4311.candycraftmod.registry.CCItems;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -21,7 +21,7 @@ public class SugarBlock extends Block {
 
     @Override
     public InteractionResult use(BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
-        boolean liquidCandy = player.getItemInHand(hand).is(CCSweetscapeItems.LIQUID_CANDY_BUCKET.get());
+        boolean liquidCandy = player.getItemInHand(hand).is(CCItems.LIQUID_CANDY_BUCKET.get());
         if (!player.getItemInHand(hand).is(Items.LAVA_BUCKET) && !player.getItemInHand(hand).is(Items.FLINT_AND_STEEL) && !player.getItemInHand(hand).is(CCItems.CARAMEL_BUCKET.get()) && !liquidCandy) {
             return InteractionResult.PASS;
         }
@@ -40,3 +40,4 @@ public class SugarBlock extends Block {
         return InteractionResult.PASS;
     }
 }
+

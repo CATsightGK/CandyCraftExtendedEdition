@@ -1,7 +1,7 @@
-﻿{
-  "parent": "block/cube_all",
+{
+  "parent": "block/cube_column",
   "textures": {
-    "all": "candycraftmod:block/candy_soil_milk"
+    "end": "candycraftmod:block/milk_brownie_cake",
+    "side": "candycraftmod:block/milk_brownie_cake_side"
   }
 }
-

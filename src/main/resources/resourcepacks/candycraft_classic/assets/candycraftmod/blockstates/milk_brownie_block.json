@@ -1,7 +1,7 @@
-﻿{
+{
   "variants": {
-    "": {
-      "model": "candycraftmod:block/chocolate/milk_brownie_block"
-    }
+    "axis=y": { "model": "candycraftmod:block/chocolate/milk_brownie_block" },
+    "axis=z": { "model": "candycraftmod:block/chocolate/milk_brownie_block", "x": 90 },
+    "axis=x": { "model": "candycraftmod:block/chocolate/milk_brownie_block", "x": 90, "y": 90 }
   }
 }

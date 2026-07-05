@@ -3,8 +3,6 @@ package com.valentin4311.candycraftmod;
 import com.valentin4311.candycraftmod.registry.CCBlocks;
 import com.valentin4311.candycraftmod.registry.CCBlockEntities;
 import com.valentin4311.candycraftmod.registry.CCCriteriaTriggers;
-import com.valentin4311.candycraftmod.registry.CCSweetscapeBlocks;
-import com.valentin4311.candycraftmod.registry.CCSweetscapeItems;
 import com.valentin4311.candycraftmod.registry.CCCreativeTabs;
 import com.valentin4311.candycraftmod.registry.CCEntityTypes;
 import com.valentin4311.candycraftmod.registry.CCFeatures;
@@ -40,14 +38,12 @@ public class CandyCraft {
         CCParticleTypes.register(modBus);
         CCRecipeTypes.register(modBus);
         CCBlocks.register(modBus);
-        CCSweetscapeBlocks.register(modBus);
         CCBlockEntities.register(modBus);
         CCWorldgen.register(modBus);
         CCFeatures.register(modBus);
         CCEntityTypes.register(modBus);
         CCSoundEvents.register(modBus);
         CCItems.register(modBus);
-        CCSweetscapeItems.register(modBus);
         CCMenus.register(modBus);
         CCCreativeTabs.register(modBus);
         CCCriteriaTriggers.register();
@@ -79,3 +75,4 @@ public class CandyCraft {
         });
     }
 }
+

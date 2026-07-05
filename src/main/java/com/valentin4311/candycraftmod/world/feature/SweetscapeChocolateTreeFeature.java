@@ -1,7 +1,7 @@
 package com.valentin4311.candycraftmod.world.feature;
 
 import com.mojang.serialization.Codec;
-import com.valentin4311.candycraftmod.registry.CCSweetscapeBlocks;
+import com.valentin4311.candycraftmod.registry.CCBlocks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.RandomSource;
 import net.minecraft.server.level.ServerLevel;
@@ -29,12 +29,12 @@ public class SweetscapeChocolateTreeFeature extends Feature<NoneFeatureConfigura
     private static boolean generate(WorldGenLevel level, RandomSource random, BlockPos origin) {
         BlockPos base = new BlockPos(origin.getX(), level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, origin.getX(), origin.getZ()), origin.getZ());
         BlockState below = level.getBlockState(base.below());
-        if (!below.is(CCSweetscapeBlocks.CHOCOLATE_COVERED_WHITE_BROWNIE.get()) && !below.is(CCSweetscapeBlocks.WHITE_BROWNIE_BLOCK.get())) {
+        if (!below.is(CCBlocks.CHOCOLATE_COVERED_WHITE_BROWNIE.get()) && !below.is(CCBlocks.WHITE_BROWNIE_BLOCK.get())) {
             return false;
         }
 
         int trunkHeight = 5 + random.nextInt(3) + random.nextInt(2);
-        BlockState trunk = CCSweetscapeBlocks.WAFER_STICK_BLOCK.get().defaultBlockState();
+        BlockState trunk = CCBlocks.WAFER_STICK_BLOCK.get().defaultBlockState();
         BlockState leaves = randomLeaves(random);
         for (int y = 0; y < trunkHeight; y++) {
             setReplaceable(level, base.above(y), trunk);
@@ -64,9 +64,9 @@ public class SweetscapeChocolateTreeFeature extends Feature<NoneFeatureConfigura
 
     private static BlockState randomLeaves(RandomSource random) {
         return switch (random.nextInt(3)) {
-            case 0 -> CCSweetscapeBlocks.MILK_CHOCOLATE_LEAVES.get().defaultBlockState();
-            case 1 -> CCSweetscapeBlocks.WHITE_CHOCOLATE_LEAVES.get().defaultBlockState();
-            default -> CCSweetscapeBlocks.DARK_CHOCOLATE_LEAVES.get().defaultBlockState();
+            case 0 -> CCBlocks.MILK_CHOCOLATE_LEAVES.get().defaultBlockState();
+            case 1 -> CCBlocks.WHITE_CHOCOLATE_LEAVES.get().defaultBlockState();
+            default -> CCBlocks.DARK_CHOCOLATE_LEAVES.get().defaultBlockState();
         };
     }
 
@@ -80,10 +80,11 @@ public class SweetscapeChocolateTreeFeature extends Feature<NoneFeatureConfigura
         }
         BlockState current = level.getBlockState(pos);
         if (current.isAir() || current.canBeReplaced()
-            || current.is(CCSweetscapeBlocks.MILK_CHOCOLATE_LEAVES.get())
-            || current.is(CCSweetscapeBlocks.WHITE_CHOCOLATE_LEAVES.get())
-            || current.is(CCSweetscapeBlocks.DARK_CHOCOLATE_LEAVES.get())) {
+            || current.is(CCBlocks.MILK_CHOCOLATE_LEAVES.get())
+            || current.is(CCBlocks.WHITE_CHOCOLATE_LEAVES.get())
+            || current.is(CCBlocks.DARK_CHOCOLATE_LEAVES.get())) {
             level.setBlock(pos, state, 2 | 16);
         }
     }
 }
+

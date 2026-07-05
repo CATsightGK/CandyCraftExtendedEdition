@@ -5,7 +5,7 @@ import com.valentin4311.candycraftmod.block.entity.AlchemyLiquidKind;
 import com.valentin4311.candycraftmod.alchemy.AlchemyMixing;
 import com.valentin4311.candycraftmod.registry.CCBlockEntities;
 import com.valentin4311.candycraftmod.registry.CCItems;
-import com.valentin4311.candycraftmod.registry.CCSweetscapeItems;
+import com.valentin4311.candycraftmod.registry.CCItems;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -193,10 +193,10 @@ public class AlchemyTableBlock extends BaseEntityBlock implements EntityBlock {
         if (stack.is(Items.MILK_BUCKET)) {
             return AlchemyLiquidKind.MILK;
         }
-        if (stack.is(CCSweetscapeItems.LIQUID_CHOCOLATE_BUCKET.get())) {
+        if (stack.is(CCItems.LIQUID_CHOCOLATE_BUCKET.get())) {
             return AlchemyLiquidKind.CHOCOLATE;
         }
-        if (stack.is(CCSweetscapeItems.LIQUID_CANDY_BUCKET.get())) {
+        if (stack.is(CCItems.LIQUID_CANDY_BUCKET.get())) {
             return AlchemyLiquidKind.LIQUID_CANDY;
         }
         if (stack.is(Items.LAVA_BUCKET)) {
@@ -226,3 +226,4 @@ public class AlchemyTableBlock extends BaseEntityBlock implements EntityBlock {
         return expectedType == actualType ? (BlockEntityTicker<A>) ticker : null;
     }
 }
+

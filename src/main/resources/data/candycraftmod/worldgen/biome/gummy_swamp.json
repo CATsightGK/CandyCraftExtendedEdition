@@ -1,4 +1,4 @@
-{
+﻿{
   "has_precipitation": true,
   "temperature": 0.9,
   "downfall": 0.8,
@@ -41,6 +41,18 @@
         "weight": 55,
         "minCount": 4,
         "maxCount": 6
+      },
+      {
+        "type": "candycraftmod:gummy_mouse",
+        "weight": 40,
+        "minCount": 4,
+        "maxCount": 10
+      },
+      {
+        "type": "candycraftmod:gummy_bear",
+        "weight": 8,
+        "minCount": 2,
+        "maxCount": 5
       }
     ],
     "monster": [
@@ -97,6 +109,7 @@
       "candycraftmod:ore_sweetscape_milk_brownie",
       "candycraftmod:ore_sweetscape_white_brownie",
       "candycraftmod:ore_sweetscape_dark_brownie",
+      "candycraftmod:ore_sweetscape_cake_block",
       "candycraftmod:ore_sweetscape_sugar_cookie",
       "candycraftmod:ore_sweetscape_teleporter",
       "candycraftmod:ore_sweetscape_sugar_sand"

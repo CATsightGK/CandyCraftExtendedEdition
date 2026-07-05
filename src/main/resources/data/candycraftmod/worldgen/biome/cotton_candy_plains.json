@@ -1,4 +1,4 @@
-{
+﻿{
   "has_precipitation": true,
   "temperature": 0.8,
   "downfall": 0.3,
@@ -52,6 +52,12 @@
         "type": "candycraftmod:gummy_bunny",
         "weight": 55,
         "minCount": 4,
+        "maxCount": 6
+      },
+      {
+        "type": "candycraftmod:cotton_candy_sheep",
+        "weight": 35,
+        "minCount": 3,
         "maxCount": 6
       }
     ],
@@ -109,6 +115,7 @@
       "candycraftmod:ore_sweetscape_milk_brownie",
       "candycraftmod:ore_sweetscape_white_brownie",
       "candycraftmod:ore_sweetscape_dark_brownie",
+      "candycraftmod:ore_sweetscape_cake_block",
       "candycraftmod:ore_sweetscape_sugar_cookie",
       "candycraftmod:ore_sweetscape_teleporter",
       "candycraftmod:ore_sweetscape_sugar_sand"

@@ -12,7 +12,7 @@ import com.valentin4311.candycraftmod.entity.GingerbreadManEntity;
 import com.valentin4311.candycraftmod.registry.CCBlocks;
 import com.valentin4311.candycraftmod.registry.CCEntityTypes;
 import com.valentin4311.candycraftmod.registry.CCItems;
-import com.valentin4311.candycraftmod.registry.CCSweetscapeBlocks;
+import com.valentin4311.candycraftmod.registry.CCBlocks;
 import com.valentin4311.candycraftmod.util.EmblemHelper;
 import java.util.ArrayList;
 import java.util.List;
@@ -425,7 +425,7 @@ public class LegacyStructureFeature extends Feature<NoneFeatureConfiguration> {
         for (int y = origin.getY() + 9; y >= 20; y--) {
             BlockPos pos = new BlockPos(x, y, z);
             BlockState state = level.getBlockState(pos);
-            if (state.is(CCBlocks.FLOUR.get()) || state.is(CCSweetscapeBlocks.SUGAR_SAND.get())) {
+            if (state.is(CCBlocks.FLOUR.get()) || state.is(CCBlocks.SUGAR_SAND.get())) {
                 return pos;
             }
         }
@@ -641,7 +641,7 @@ public class LegacyStructureFeature extends Feature<NoneFeatureConfiguration> {
                 for (int y = 0; y < 7; y++) {
                     BlockPos pos = base.offset(x, y, z);
                     if (y < 2) {
-                        set(level, pos, CCSweetscapeBlocks.CRYSTALLIZED_SUGAR.get().defaultBlockState());
+                        set(level, pos, CCBlocks.CRYSTALLIZED_SUGAR.get().defaultBlockState());
                     } else if (x == 0 || z == 0 || x == 63 || z == 63) {
                         set(level, pos, CCBlocks.CHOCOLATE_COBBLESTONE.get().defaultBlockState());
                     } else if ((y == 2 || y == 5) && (x == 1 || z == 1 || x == 62 || z == 62)) {
@@ -1048,3 +1048,4 @@ public class LegacyStructureFeature extends Feature<NoneFeatureConfiguration> {
         UNDERGROUND_VILLAGE
     }
 }
+

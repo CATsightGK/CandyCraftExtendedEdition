@@ -9,11 +9,15 @@ import com.valentin4311.candycraftmod.entity.CandyCreeperEntity;
 import com.valentin4311.candycraftmod.entity.CandyFishEntity;
 import com.valentin4311.candycraftmod.entity.CandyPigEntity;
 import com.valentin4311.candycraftmod.entity.CandyWolfEntity;
+import com.valentin4311.candycraftmod.entity.CottonCandySheepEntity;
 import com.valentin4311.candycraftmod.entity.CottonCandySpiderEntity;
 import com.valentin4311.candycraftmod.entity.DynamiteEntity;
+import com.valentin4311.candycraftmod.entity.EasterChickenEntity;
 import com.valentin4311.candycraftmod.entity.GlueDynamiteEntity;
 import com.valentin4311.candycraftmod.entity.GummyBallEntity;
+import com.valentin4311.candycraftmod.entity.GummyBearEntity;
 import com.valentin4311.candycraftmod.entity.GummyBunnyEntity;
+import com.valentin4311.candycraftmod.entity.GummyMouseEntity;
 import com.valentin4311.candycraftmod.entity.GingerbreadManEntity;
 import com.valentin4311.candycraftmod.entity.HoneyArrowEntity;
 import com.valentin4311.candycraftmod.entity.HoneyBoltEntity;
@@ -120,6 +124,30 @@ public final class CCEntityTypes {
             .sized(0.5F, 0.5F)
             .clientTrackingRange(10)
             .build(CandyCraft.MODID + ":gummy_bunny")
+    );
+    public static final RegistryObject<EntityType<CottonCandySheepEntity>> COTTON_CANDY_SHEEP = ENTITY_TYPES.register("cotton_candy_sheep", () ->
+        EntityType.Builder.of(CottonCandySheepEntity::new, MobCategory.CREATURE)
+            .sized(0.9F, 1.3F)
+            .clientTrackingRange(10)
+            .build(CandyCraft.MODID + ":cotton_candy_sheep")
+    );
+    public static final RegistryObject<EntityType<EasterChickenEntity>> EASTER_CHICKEN = ENTITY_TYPES.register("easter_chicken", () ->
+        EntityType.Builder.of(EasterChickenEntity::new, MobCategory.CREATURE)
+            .sized(0.4F, 0.7F)
+            .clientTrackingRange(10)
+            .build(CandyCraft.MODID + ":easter_chicken")
+    );
+    public static final RegistryObject<EntityType<GummyMouseEntity>> GUMMY_MOUSE = ENTITY_TYPES.register("gummy_mouse", () ->
+        EntityType.Builder.of(GummyMouseEntity::new, MobCategory.CREATURE)
+            .sized(0.35F, 0.2F)
+            .clientTrackingRange(10)
+            .build(CandyCraft.MODID + ":gummy_mouse")
+    );
+    public static final RegistryObject<EntityType<GummyBearEntity>> GUMMY_BEAR = ENTITY_TYPES.register("gummy_bear", () ->
+        EntityType.Builder.of(GummyBearEntity::new, MobCategory.CREATURE)
+            .sized(1.4F, 1.4F)
+            .clientTrackingRange(10)
+            .build(CandyCraft.MODID + ":gummy_bear")
     );
 
     public static final RegistryObject<EntityType<BasicCandyZombieEntity>> SUGUARD = basicZombie("suguard", 0.5F, 0.9F);

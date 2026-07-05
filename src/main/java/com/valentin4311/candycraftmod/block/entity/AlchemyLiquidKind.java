@@ -1,7 +1,7 @@
 package com.valentin4311.candycraftmod.block.entity;
 
 import com.valentin4311.candycraftmod.registry.CCItems;
-import com.valentin4311.candycraftmod.registry.CCSweetscapeItems;
+import com.valentin4311.candycraftmod.registry.CCItems;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
@@ -30,8 +30,8 @@ public enum AlchemyLiquidKind {
             case GRENADINE -> new ItemStack(CCItems.GRENADINE_BUCKET.get());
             case WATER -> new ItemStack(Items.WATER_BUCKET);
             case MILK -> new ItemStack(Items.MILK_BUCKET);
-            case CHOCOLATE -> new ItemStack(CCSweetscapeItems.LIQUID_CHOCOLATE_BUCKET.get());
-            case LIQUID_CANDY -> new ItemStack(CCSweetscapeItems.LIQUID_CANDY_BUCKET.get());
+            case CHOCOLATE -> new ItemStack(CCItems.LIQUID_CHOCOLATE_BUCKET.get());
+            case LIQUID_CANDY -> new ItemStack(CCItems.LIQUID_CANDY_BUCKET.get());
             case LAVA -> new ItemStack(Items.LAVA_BUCKET);
             case CARAMEL -> new ItemStack(CCItems.CARAMEL_BUCKET.get());
             case NONE -> ItemStack.EMPTY;
@@ -47,3 +47,4 @@ public enum AlchemyLiquidKind {
         return NONE;
     }
 }
+

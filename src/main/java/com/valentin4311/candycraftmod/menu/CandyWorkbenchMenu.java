@@ -3,7 +3,7 @@ package com.valentin4311.candycraftmod.menu;
 import com.valentin4311.candycraftmod.block.CandyWorkbenchBlock;
 import com.valentin4311.candycraftmod.registry.CCBlocks;
 import com.valentin4311.candycraftmod.registry.CCMenus;
-import com.valentin4311.candycraftmod.registry.CCSweetscapeBlocks;
+import com.valentin4311.candycraftmod.registry.CCBlocks;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.ContainerLevelAccess;
@@ -41,19 +41,20 @@ public class CandyWorkbenchMenu extends CraftingMenu {
 
     private static boolean isCandyWorkbench(Block block) {
         return block == CCBlocks.MARSHMALLOW_WORKBENCH.get()
-            || block == CCSweetscapeBlocks.MILK_CHOCOLATE_WORKBENCH.get()
-            || block == CCSweetscapeBlocks.WHITE_CHOCOLATE_WORKBENCH.get()
-            || block == CCSweetscapeBlocks.DARK_CHOCOLATE_WORKBENCH.get()
-            || block == CCSweetscapeBlocks.WHITE_CANDY_CANE_WORKBENCH.get()
-            || block == CCSweetscapeBlocks.RED_CANDY_CANE_WORKBENCH.get()
-            || block == CCSweetscapeBlocks.GREEN_CANDY_CANE_WORKBENCH.get()
-            || block == CCSweetscapeBlocks.WHITE_RED_CANDY_CANE_WORKBENCH.get()
-            || block == CCSweetscapeBlocks.WHITE_GREEN_CANDY_CANE_WORKBENCH.get()
-            || block == CCSweetscapeBlocks.RED_GREEN_CANDY_CANE_WORKBENCH.get()
-            || block == CCSweetscapeBlocks.RED_GUMMY_WORKBENCH.get()
-            || block == CCSweetscapeBlocks.ORANGE_GUMMY_WORKBENCH.get()
-            || block == CCSweetscapeBlocks.YELLOW_GUMMY_WORKBENCH.get()
-            || block == CCSweetscapeBlocks.WHITE_GUMMY_WORKBENCH.get()
-            || block == CCSweetscapeBlocks.GREEN_GUMMY_WORKBENCH.get();
+            || block == CCBlocks.MILK_CHOCOLATE_WORKBENCH.get()
+            || block == CCBlocks.WHITE_CHOCOLATE_WORKBENCH.get()
+            || block == CCBlocks.DARK_CHOCOLATE_WORKBENCH.get()
+            || block == CCBlocks.WHITE_CANDY_CANE_WORKBENCH.get()
+            || block == CCBlocks.RED_CANDY_CANE_WORKBENCH.get()
+            || block == CCBlocks.GREEN_CANDY_CANE_WORKBENCH.get()
+            || block == CCBlocks.WHITE_RED_CANDY_CANE_WORKBENCH.get()
+            || block == CCBlocks.WHITE_GREEN_CANDY_CANE_WORKBENCH.get()
+            || block == CCBlocks.RED_GREEN_CANDY_CANE_WORKBENCH.get()
+            || block == CCBlocks.RED_GUMMY_WORKBENCH.get()
+            || block == CCBlocks.ORANGE_GUMMY_WORKBENCH.get()
+            || block == CCBlocks.YELLOW_GUMMY_WORKBENCH.get()
+            || block == CCBlocks.WHITE_GUMMY_WORKBENCH.get()
+            || block == CCBlocks.GREEN_GUMMY_WORKBENCH.get();
     }
 }
+

@@ -4,7 +4,7 @@ import com.valentin4311.candycraftmod.registry.CCBlocks;
 import com.valentin4311.candycraftmod.registry.CCCriteriaTriggers;
 import com.valentin4311.candycraftmod.registry.CCEntityTypes;
 import com.valentin4311.candycraftmod.registry.CCItems;
-import com.valentin4311.candycraftmod.registry.CCSweetscapeItems;
+import com.valentin4311.candycraftmod.registry.CCItems;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
@@ -205,9 +205,9 @@ public class CandyWolfEntity extends Wolf {
     }
 
     private boolean isBrownie(ItemStack stack) {
-        return stack.is(CCSweetscapeItems.MILK_BROWNIE.get())
-            || stack.is(CCSweetscapeItems.WHITE_BROWNIE.get())
-            || stack.is(CCSweetscapeItems.DARK_BROWNIE.get());
+        return stack.is(CCItems.MILK_BROWNIE.get())
+            || stack.is(CCItems.WHITE_BROWNIE.get())
+            || stack.is(CCItems.DARK_BROWNIE.get());
     }
 
     private void resetCaramelTimer() {
@@ -218,3 +218,4 @@ public class CandyWolfEntity extends Wolf {
         }
     }
 }
+

@@ -4,8 +4,8 @@ import com.valentin4311.candycraftmod.alchemy.AlchemyMixing;
 import com.valentin4311.candycraftmod.registry.CCBlockEntities;
 import com.valentin4311.candycraftmod.registry.CCBlocks;
 import com.valentin4311.candycraftmod.registry.CCItems;
-import com.valentin4311.candycraftmod.registry.CCSweetscapeBlocks;
-import com.valentin4311.candycraftmod.registry.CCSweetscapeItems;
+import com.valentin4311.candycraftmod.registry.CCBlocks;
+import com.valentin4311.candycraftmod.registry.CCItems;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -459,12 +459,12 @@ public class AlchemyTableBlockEntity extends BlockEntity {
 
     private static boolean isCandyCaneBlock(BlockState state) {
         return state.is(CCBlocks.CANDY_CANE_BLOCK.get())
-            || state.is(CCSweetscapeBlocks.WHITE_CANDY_CANE_BLOCK.get())
-            || state.is(CCSweetscapeBlocks.RED_CANDY_CANE_BLOCK.get())
-            || state.is(CCSweetscapeBlocks.GREEN_CANDY_CANE_BLOCK.get())
-            || state.is(CCSweetscapeBlocks.WHITE_RED_CANDY_CANE_BLOCK.get())
-            || state.is(CCSweetscapeBlocks.WHITE_GREEN_CANDY_CANE_BLOCK.get())
-            || state.is(CCSweetscapeBlocks.RED_GREEN_CANDY_CANE_BLOCK.get());
+            || state.is(CCBlocks.WHITE_CANDY_CANE_BLOCK.get())
+            || state.is(CCBlocks.RED_CANDY_CANE_BLOCK.get())
+            || state.is(CCBlocks.GREEN_CANDY_CANE_BLOCK.get())
+            || state.is(CCBlocks.WHITE_RED_CANDY_CANE_BLOCK.get())
+            || state.is(CCBlocks.WHITE_GREEN_CANDY_CANE_BLOCK.get())
+            || state.is(CCBlocks.RED_GREEN_CANDY_CANE_BLOCK.get());
     }
 
     public void clearIngredients() {
@@ -531,3 +531,4 @@ public class AlchemyTableBlockEntity extends BlockEntity {
     private record MixerState(boolean hasPower, boolean hasSugar, boolean hasAdvancedSugar) {
     }
 }
+

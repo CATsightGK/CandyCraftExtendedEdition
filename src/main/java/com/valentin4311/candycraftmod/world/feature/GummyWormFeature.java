@@ -1,7 +1,7 @@
 package com.valentin4311.candycraftmod.world.feature;
 
 import com.mojang.serialization.Codec;
-import com.valentin4311.candycraftmod.registry.CCSweetscapeBlocks;
+import com.valentin4311.candycraftmod.registry.CCBlocks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
@@ -136,20 +136,21 @@ public class GummyWormFeature extends Feature<NoneFeatureConfiguration> {
     }
 
     private static boolean isWormBlock(BlockState state) {
-        return state.is(CCSweetscapeBlocks.RED_GUMMY_WORM_BLOCK.get())
-            || state.is(CCSweetscapeBlocks.ORANGE_GUMMY_WORM_BLOCK.get())
-            || state.is(CCSweetscapeBlocks.YELLOW_GUMMY_WORM_BLOCK.get())
-            || state.is(CCSweetscapeBlocks.WHITE_GUMMY_WORM_BLOCK.get())
-            || state.is(CCSweetscapeBlocks.GREEN_GUMMY_WORM_BLOCK.get());
+        return state.is(CCBlocks.RED_GUMMY_WORM_BLOCK.get())
+            || state.is(CCBlocks.ORANGE_GUMMY_WORM_BLOCK.get())
+            || state.is(CCBlocks.YELLOW_GUMMY_WORM_BLOCK.get())
+            || state.is(CCBlocks.WHITE_GUMMY_WORM_BLOCK.get())
+            || state.is(CCBlocks.GREEN_GUMMY_WORM_BLOCK.get());
     }
 
     private static BlockState randomWormState(RandomSource random) {
         return switch (random.nextInt(5)) {
-            case 1 -> CCSweetscapeBlocks.ORANGE_GUMMY_WORM_BLOCK.get().defaultBlockState();
-            case 2 -> CCSweetscapeBlocks.YELLOW_GUMMY_WORM_BLOCK.get().defaultBlockState();
-            case 3 -> CCSweetscapeBlocks.WHITE_GUMMY_WORM_BLOCK.get().defaultBlockState();
-            case 4 -> CCSweetscapeBlocks.GREEN_GUMMY_WORM_BLOCK.get().defaultBlockState();
-            default -> CCSweetscapeBlocks.RED_GUMMY_WORM_BLOCK.get().defaultBlockState();
+            case 1 -> CCBlocks.ORANGE_GUMMY_WORM_BLOCK.get().defaultBlockState();
+            case 2 -> CCBlocks.YELLOW_GUMMY_WORM_BLOCK.get().defaultBlockState();
+            case 3 -> CCBlocks.WHITE_GUMMY_WORM_BLOCK.get().defaultBlockState();
+            case 4 -> CCBlocks.GREEN_GUMMY_WORM_BLOCK.get().defaultBlockState();
+            default -> CCBlocks.RED_GUMMY_WORM_BLOCK.get().defaultBlockState();
         };
     }
 }
+

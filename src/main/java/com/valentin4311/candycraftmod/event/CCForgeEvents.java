@@ -7,7 +7,7 @@ import com.valentin4311.candycraftmod.registry.CCBlocks;
 import com.valentin4311.candycraftmod.registry.CCEntityTypes;
 import com.valentin4311.candycraftmod.registry.CCFluids;
 import com.valentin4311.candycraftmod.registry.CCItems;
-import com.valentin4311.candycraftmod.registry.CCSweetscapeBlocks;
+import com.valentin4311.candycraftmod.registry.CCBlocks;
 import com.valentin4311.candycraftmod.util.EmblemHelper;
 import com.valentin4311.candycraftmod.world.feature.CottonCandyTreeFeature;
 import net.minecraft.core.registries.Registries;
@@ -402,7 +402,7 @@ public final class CCForgeEvents {
         if (state.getBlock() instanceof LegacySaplingBlock) {
             return false;
         }
-        if (!state.is(CCSweetscapeBlocks.COTTON_CANDY_SAPLING.get())) {
+        if (!state.is(CCBlocks.COTTON_CANDY_SAPLING.get())) {
             return false;
         }
 
@@ -434,6 +434,10 @@ public final class CCForgeEvents {
             event.register(CCEntityTypes.WAFFLE_SHEEP.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, CCForgeEvents::canSpawnOnCandySurface, SpawnPlacementRegisterEvent.Operation.REPLACE);
             event.register(CCEntityTypes.CANDY_WOLF.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, CCForgeEvents::canSpawnOnCandySurface, SpawnPlacementRegisterEvent.Operation.REPLACE);
             event.register(CCEntityTypes.GUMMY_BUNNY.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, CCForgeEvents::canSpawnOnCandySurface, SpawnPlacementRegisterEvent.Operation.REPLACE);
+            event.register(CCEntityTypes.COTTON_CANDY_SHEEP.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, com.valentin4311.candycraftmod.entity.CottonCandySheepEntity::canSpawn, SpawnPlacementRegisterEvent.Operation.REPLACE);
+            event.register(CCEntityTypes.EASTER_CHICKEN.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, com.valentin4311.candycraftmod.entity.EasterChickenEntity::canSpawn, SpawnPlacementRegisterEvent.Operation.REPLACE);
+            event.register(CCEntityTypes.GUMMY_MOUSE.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, com.valentin4311.candycraftmod.entity.GummyMouseEntity::canSpawn, SpawnPlacementRegisterEvent.Operation.REPLACE);
+            event.register(CCEntityTypes.GUMMY_BEAR.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, com.valentin4311.candycraftmod.entity.GummyBearEntity::canSpawn, SpawnPlacementRegisterEvent.Operation.REPLACE);
             event.register(CCEntityTypes.PINGOUIN.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, CCForgeEvents::canSpawnOnCandySurface, SpawnPlacementRegisterEvent.Operation.REPLACE);
             event.register(CCEntityTypes.SUGUARD.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, CCForgeEvents::canSpawnOnCandySurface, SpawnPlacementRegisterEvent.Operation.REPLACE);
             event.register(CCEntityTypes.MAGE_SUGUARD.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, CCForgeEvents::canSpawnOnCandySurface, SpawnPlacementRegisterEvent.Operation.REPLACE);
@@ -450,6 +454,9 @@ public final class CCForgeEvents {
 
     private static boolean canSpawnOnCandySurface(EntityType<? extends Mob> type, LevelAccessor level, MobSpawnType reason, BlockPos pos, net.minecraft.util.RandomSource random) {
         BlockState below = level.getBlockState(pos.below());
+        if (isCandyLeafSurface(below)) {
+            return false;
+        }
         if (isCandySpawnSurface(below)) {
             BlockState state = level.getBlockState(pos);
             BlockState above = level.getBlockState(pos.above());
@@ -474,19 +481,26 @@ public final class CCForgeEvents {
     }
 
     private static boolean isCandySpawnSurface(BlockState state) {
-        return state.is(CCBlocks.CANDY_LEAVE.get())
-            || state.is(CCBlocks.PUDDING.get())
+        return state.is(CCBlocks.PUDDING.get())
             || state.is(CCBlocks.FLOUR.get())
+            || state.is(CCBlocks.MARSHMALLOW_PLANKS.get())
+            || state.is(CCBlocks.MARSHMALLOW_LOG.get())
+            || state.is(CCBlocks.MARSHMALLOW_LOG_DARK.get())
+            || state.is(CCBlocks.MARSHMALLOW_LOG_LIGHT.get())
+            || state.is(CCBlocks.COTTON_CANDY_BLOCK.get());
+    }
+
+    private static boolean isCandyLeafSurface(BlockState state) {
+        return state.is(CCBlocks.CANDY_LEAVE.get())
             || state.is(CCBlocks.CANDY_LEAVE2.get())
             || state.is(CCBlocks.CANDY_LEAVES.get())
             || state.is(CCBlocks.CANDY_LEAVES_DARK.get())
             || state.is(CCBlocks.CANDY_LEAVES_LIGHT.get())
             || state.is(CCBlocks.CANDY_LEAVES_CHERRY.get())
             || state.is(CCBlocks.CANDY_LEAVES_ENCHANT.get())
-            || state.is(CCBlocks.MARSHMALLOW_PLANKS.get())
-            || state.is(CCBlocks.MARSHMALLOW_LOG.get())
-            || state.is(CCBlocks.MARSHMALLOW_LOG_DARK.get())
-            || state.is(CCBlocks.MARSHMALLOW_LOG_LIGHT.get())
-            || state.is(CCSweetscapeBlocks.COTTON_CANDY_BLOCK.get());
+            || state.is(CCBlocks.MILK_CHOCOLATE_LEAVES.get())
+            || state.is(CCBlocks.WHITE_CHOCOLATE_LEAVES.get())
+            || state.is(CCBlocks.DARK_CHOCOLATE_LEAVES.get());
     }
 }
+

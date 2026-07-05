@@ -4,7 +4,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.valentin4311.candycraftmod.CandyCraft;
 import com.valentin4311.candycraftmod.registry.CCBlocks;
-import com.valentin4311.candycraftmod.registry.CCSweetscapeBlocks;
+import com.valentin4311.candycraftmod.registry.CCBlocks;
 import com.valentin4311.candycraftmod.registry.CCWorldgen;
 import com.valentin4311.candycraftmod.world.noise.LegacyPerlinOctaveNoise;
 import java.util.List;
@@ -17,6 +17,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
+import net.minecraft.core.Direction.Axis;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.WorldGenRegion;
 import net.minecraft.util.Mth;
@@ -28,6 +29,7 @@ import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.BiomeManager;
 import net.minecraft.world.level.biome.BiomeSource;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.RotatedPillarBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkGenerator;
@@ -228,7 +230,8 @@ public class CandyWorldChunkGenerator extends ChunkGenerator {
                         continue;
                     }
 
-                    chunk.setBlockState(mutable, underwater ? underwaterMaterial(replaced) : replaced > 0 ? materials.under() : materials.top(), false);
+                    BlockState replacement = underwater ? underwaterMaterial(replaced) : replaced > 0 ? materials.under() : materials.top();
+                    chunk.setBlockState(mutable, orientNaturalBrownie(replacement, worldX, y, worldZ, randomState), false);
                     replaced++;
                 }
             }
@@ -865,8 +868,8 @@ public class CandyWorldChunkGenerator extends ChunkGenerator {
                     }
                     BlockState state = chunk.getBlockState(mutable.set(worldX, y, worldZ));
                     if (state.is(Blocks.WATER)
-                        || state.is(CCSweetscapeBlocks.LIQUID_CHOCOLATE.get())
-                        || state.is(CCSweetscapeBlocks.LIQUID_CANDY.get()) && y > LAVA_LEVEL) {
+                        || state.is(CCBlocks.LIQUID_CHOCOLATE.get())
+                        || state.is(CCBlocks.LIQUID_CANDY.get()) && y > LAVA_LEVEL) {
                         return true;
                     }
                     if (y != minY - 1 && localX != minX && localX != maxX - 1 && localZ != minZ && localZ != maxZ - 1) {
@@ -901,11 +904,11 @@ public class CandyWorldChunkGenerator extends ChunkGenerator {
     }
 
     private static BlockState baseStone() {
-        return CCSweetscapeBlocks.CRYSTALLIZED_SUGAR.get().defaultBlockState();
+        return CCBlocks.CRYSTALLIZED_SUGAR.get().defaultBlockState();
     }
 
     private static BlockState liquidCandy() {
-        return CCSweetscapeBlocks.LIQUID_CANDY.get().defaultBlockState();
+        return CCBlocks.LIQUID_CANDY.get().defaultBlockState();
     }
 
     private static BlockState springFluidForMountain(ResourceLocation biomeId) {
@@ -915,17 +918,31 @@ public class CandyWorldChunkGenerator extends ChunkGenerator {
     }
 
     private static boolean isBaseStone(BlockState state) {
-        return state.is(CCSweetscapeBlocks.CRYSTALLIZED_SUGAR.get());
+        return state.is(CCBlocks.CRYSTALLIZED_SUGAR.get());
+    }
+
+    private static BlockState orientNaturalBrownie(BlockState state, int worldX, int y, int worldZ, RandomState randomState) {
+        if (!state.hasProperty(RotatedPillarBlock.AXIS) || !isBrownieBlock(state)) {
+            return state;
+        }
+        int axis = Math.floorMod(hash(worldX, y, worldZ) ^ (int)worldSeed(randomState), 3);
+        return state.setValue(RotatedPillarBlock.AXIS, axis == 0 ? Axis.X : axis == 1 ? Axis.Y : Axis.Z);
+    }
+
+    private static boolean isBrownieBlock(BlockState state) {
+        return state.is(CCBlocks.MILK_BROWNIE_BLOCK.get())
+            || state.is(CCBlocks.WHITE_BROWNIE_BLOCK.get())
+            || state.is(CCBlocks.DARK_BROWNIE_BLOCK.get());
     }
 
     private static SurfaceMaterials surfaceMaterials(ResourceLocation biomeId, int worldX, int worldZ, RandomState randomState) {
         if (biomeId.equals(COTTON_CANDY_PLAINS)) {
-            BlockState under = CCSweetscapeBlocks.MILK_BROWNIE_BLOCK.get().defaultBlockState();
-            return new SurfaceMaterials(CCSweetscapeBlocks.CANDY_GRASS_BLOCK.get().defaultBlockState(), under, under);
+            BlockState under = CCBlocks.MILK_BROWNIE_BLOCK.get().defaultBlockState();
+            return new SurfaceMaterials(CCBlocks.CANDY_GRASS_BLOCK.get().defaultBlockState(), under, under);
         }
         if (biomeId.equals(CHOCOLATE_FOREST)) {
-            BlockState under = CCSweetscapeBlocks.WHITE_BROWNIE_BLOCK.get().defaultBlockState();
-            return new SurfaceMaterials(CCSweetscapeBlocks.CHOCOLATE_COVERED_WHITE_BROWNIE.get().defaultBlockState(), under, under);
+            BlockState under = CCBlocks.WHITE_BROWNIE_BLOCK.get().defaultBlockState();
+            return new SurfaceMaterials(CCBlocks.CHOCOLATE_COVERED_WHITE_BROWNIE.get().defaultBlockState(), under, under);
         }
         if (biomeId.equals(GUMMY_SWAMP)) {
             return gummySurfaceMaterials(worldX, worldZ, randomState);
@@ -949,43 +966,43 @@ public class CandyWorldChunkGenerator extends ChunkGenerator {
         }
         return switch (index) {
             case 1, 8 -> new SurfaceMaterials(
-                CCSweetscapeBlocks.ORANGE_GUMMY_BLOCK.get().defaultBlockState(),
-                CCSweetscapeBlocks.ORANGE_HARDENED_GUMMY_BLOCK.get().defaultBlockState(),
-                CCSweetscapeBlocks.ORANGE_GUMMY_BLOCK.get().defaultBlockState()
+                CCBlocks.ORANGE_GUMMY_BLOCK.get().defaultBlockState(),
+                CCBlocks.ORANGE_HARDENED_GUMMY_BLOCK.get().defaultBlockState(),
+                CCBlocks.ORANGE_GUMMY_BLOCK.get().defaultBlockState()
             );
             case 2, 5, 7 -> new SurfaceMaterials(
-                CCSweetscapeBlocks.YELLOW_GUMMY_BLOCK.get().defaultBlockState(),
-                CCSweetscapeBlocks.YELLOW_HARDENED_GUMMY_BLOCK.get().defaultBlockState(),
-                CCSweetscapeBlocks.YELLOW_GUMMY_BLOCK.get().defaultBlockState()
+                CCBlocks.YELLOW_GUMMY_BLOCK.get().defaultBlockState(),
+                CCBlocks.YELLOW_HARDENED_GUMMY_BLOCK.get().defaultBlockState(),
+                CCBlocks.YELLOW_GUMMY_BLOCK.get().defaultBlockState()
             );
             case 3, 4 -> new SurfaceMaterials(
-                CCSweetscapeBlocks.GREEN_GUMMY_BLOCK.get().defaultBlockState(),
-                CCSweetscapeBlocks.GREEN_HARDENED_GUMMY_BLOCK.get().defaultBlockState(),
-                CCSweetscapeBlocks.GREEN_GUMMY_BLOCK.get().defaultBlockState()
+                CCBlocks.GREEN_GUMMY_BLOCK.get().defaultBlockState(),
+                CCBlocks.GREEN_HARDENED_GUMMY_BLOCK.get().defaultBlockState(),
+                CCBlocks.GREEN_GUMMY_BLOCK.get().defaultBlockState()
             );
             case 6 -> new SurfaceMaterials(
-                CCSweetscapeBlocks.WHITE_GUMMY_BLOCK.get().defaultBlockState(),
-                CCSweetscapeBlocks.WHITE_HARDENED_GUMMY_BLOCK.get().defaultBlockState(),
-                CCSweetscapeBlocks.WHITE_GUMMY_BLOCK.get().defaultBlockState()
+                CCBlocks.WHITE_GUMMY_BLOCK.get().defaultBlockState(),
+                CCBlocks.WHITE_HARDENED_GUMMY_BLOCK.get().defaultBlockState(),
+                CCBlocks.WHITE_GUMMY_BLOCK.get().defaultBlockState()
             );
             default -> new SurfaceMaterials(
-                CCSweetscapeBlocks.RED_GUMMY_BLOCK.get().defaultBlockState(),
-                CCSweetscapeBlocks.RED_HARDENED_GUMMY_BLOCK.get().defaultBlockState(),
-                CCSweetscapeBlocks.RED_GUMMY_BLOCK.get().defaultBlockState()
+                CCBlocks.RED_GUMMY_BLOCK.get().defaultBlockState(),
+                CCBlocks.RED_HARDENED_GUMMY_BLOCK.get().defaultBlockState(),
+                CCBlocks.RED_GUMMY_BLOCK.get().defaultBlockState()
             );
         };
     }
 
     private static BlockState fluidForBiome(ResourceLocation biomeId) {
         if (biomeId.equals(CHOCOLATE_FOREST)) {
-            return CCSweetscapeBlocks.LIQUID_CHOCOLATE.get().defaultBlockState();
+            return CCBlocks.LIQUID_CHOCOLATE.get().defaultBlockState();
         }
         return WATER;
     }
 
     private static BlockState underwaterMaterial(int replaced) {
         return replaced == 0
-            ? CCSweetscapeBlocks.SUGAR_SAND.get().defaultBlockState()
+            ? CCBlocks.SUGAR_SAND.get().defaultBlockState()
             : CCBlocks.FLOUR.get().defaultBlockState();
     }
 
@@ -1143,3 +1160,4 @@ public class CandyWorldChunkGenerator extends ChunkGenerator {
         }
     }
 }
+

@@ -2,7 +2,7 @@ package com.valentin4311.candycraftmod.entity;
 
 import com.valentin4311.candycraftmod.registry.CCEntityTypes;
 import com.valentin4311.candycraftmod.registry.CCItems;
-import com.valentin4311.candycraftmod.registry.CCSweetscapeItems;
+import com.valentin4311.candycraftmod.registry.CCItems;
 import com.valentin4311.candycraftmod.util.EmblemHelper;
 import java.util.List;
 import net.minecraft.nbt.CompoundTag;
@@ -37,11 +37,11 @@ public class CandyPigEntity extends Pig {
     private int boostTimeTotal;
     private static final List<java.util.function.Supplier<? extends net.minecraft.world.item.Item>> CANDY_CANE_DROPS = List.of(
         CCItems.CANDY_CANE,
-        CCSweetscapeItems.WHITE_CANDY_CANE,
-        CCSweetscapeItems.RED_CANDY_CANE,
-        CCSweetscapeItems.GREEN_CANDY_CANE,
-        CCSweetscapeItems.WHITE_GREEN_CANDY_CANE,
-        CCSweetscapeItems.RED_GREEN_CANDY_CANE
+        CCItems.WHITE_CANDY_CANE,
+        CCItems.RED_CANDY_CANE,
+        CCItems.GREEN_CANDY_CANE,
+        CCItems.WHITE_GREEN_CANDY_CANE,
+        CCItems.RED_GREEN_CANDY_CANE
     );
 
     public CandyPigEntity(EntityType<? extends CandyPigEntity> type, Level level) {
@@ -64,6 +64,11 @@ public class CandyPigEntity extends Pig {
     @Override
     public boolean isFood(ItemStack stack) {
         return stack.is(CCItems.DRAGIBUS.get());
+    }
+
+    @Override
+    public int getMaxSpawnClusterSize() {
+        return 6;
     }
 
     @Override
@@ -232,3 +237,4 @@ public class CandyPigEntity extends Pig {
         }
     }
 }
+

@@ -8,6 +8,7 @@ import com.valentin4311.candycraftmod.client.model.BeeModel;
 import com.valentin4311.candycraftmod.client.model.BeetleModel;
 import com.valentin4311.candycraftmod.client.model.DragonModel;
 import com.valentin4311.candycraftmod.client.model.GummyBunnyModel;
+import com.valentin4311.candycraftmod.client.model.GummyMouseModel;
 import com.valentin4311.candycraftmod.client.model.MermaidModel;
 import com.valentin4311.candycraftmod.client.model.NessieModel;
 import com.valentin4311.candycraftmod.client.model.NougatGolemModel;
@@ -21,7 +22,7 @@ import com.valentin4311.candycraftmod.registry.CCFluids;
 import com.valentin4311.candycraftmod.registry.CCItems;
 import com.valentin4311.candycraftmod.registry.CCMenus;
 import com.valentin4311.candycraftmod.registry.CCParticleTypes;
-import com.valentin4311.candycraftmod.registry.CCSweetscapeBlocks;
+import com.valentin4311.candycraftmod.registry.CCBlocks;
 import com.valentin4311.candycraftmod.item.CaramelCrossbowItem;
 import com.valentin4311.candycraftmod.item.DynamiteItem;
 import com.valentin4311.candycraftmod.item.JellyWandItem;
@@ -559,67 +560,67 @@ public final class CCClient {
         colors.register((stack, tintIndex) -> tintIndex >= 0 ? PuddingBlock.DEFAULT_COLOR : -1, CCBlocks.PUDDING.get());
         colors.register(SugarPillItem::getLayerColor, CCItems.SUGAR_PILL.get());
         colors.register((stack, tintIndex) -> 0xff4530,
-            CCSweetscapeBlocks.RED_GUMMY_BLOCK.get(),
-            CCSweetscapeBlocks.RED_HARDENED_GUMMY_BLOCK.get(),
-            CCSweetscapeBlocks.RED_GUMMY_WORKBENCH.get(),
-            CCSweetscapeBlocks.RED_GUMMY_WORM_BLOCK.get()
+            CCBlocks.RED_GUMMY_BLOCK.get(),
+            CCBlocks.RED_HARDENED_GUMMY_BLOCK.get(),
+            CCBlocks.RED_GUMMY_WORKBENCH.get(),
+            CCBlocks.RED_GUMMY_WORM_BLOCK.get()
         );
         colors.register((stack, tintIndex) -> 0xff9b4f,
-            CCSweetscapeBlocks.ORANGE_GUMMY_BLOCK.get(),
-            CCSweetscapeBlocks.ORANGE_HARDENED_GUMMY_BLOCK.get(),
-            CCSweetscapeBlocks.ORANGE_GUMMY_WORKBENCH.get(),
-            CCSweetscapeBlocks.ORANGE_GUMMY_WORM_BLOCK.get()
+            CCBlocks.ORANGE_GUMMY_BLOCK.get(),
+            CCBlocks.ORANGE_HARDENED_GUMMY_BLOCK.get(),
+            CCBlocks.ORANGE_GUMMY_WORKBENCH.get(),
+            CCBlocks.ORANGE_GUMMY_WORM_BLOCK.get()
         );
         colors.register((stack, tintIndex) -> 0xffe563,
-            CCSweetscapeBlocks.YELLOW_GUMMY_BLOCK.get(),
-            CCSweetscapeBlocks.YELLOW_HARDENED_GUMMY_BLOCK.get(),
-            CCSweetscapeBlocks.YELLOW_GUMMY_WORKBENCH.get(),
-            CCSweetscapeBlocks.YELLOW_GUMMY_WORM_BLOCK.get()
+            CCBlocks.YELLOW_GUMMY_BLOCK.get(),
+            CCBlocks.YELLOW_HARDENED_GUMMY_BLOCK.get(),
+            CCBlocks.YELLOW_GUMMY_WORKBENCH.get(),
+            CCBlocks.YELLOW_GUMMY_WORM_BLOCK.get()
         );
         colors.register((stack, tintIndex) -> 0xfffeb0,
-            CCSweetscapeBlocks.WHITE_GUMMY_BLOCK.get(),
-            CCSweetscapeBlocks.WHITE_HARDENED_GUMMY_BLOCK.get(),
-            CCSweetscapeBlocks.WHITE_GUMMY_WORKBENCH.get(),
-            CCSweetscapeBlocks.WHITE_GUMMY_WORM_BLOCK.get()
+            CCBlocks.WHITE_GUMMY_BLOCK.get(),
+            CCBlocks.WHITE_HARDENED_GUMMY_BLOCK.get(),
+            CCBlocks.WHITE_GUMMY_WORKBENCH.get(),
+            CCBlocks.WHITE_GUMMY_WORM_BLOCK.get()
         );
         colors.register((stack, tintIndex) -> 0x80e22b,
-            CCSweetscapeBlocks.GREEN_GUMMY_BLOCK.get(),
-            CCSweetscapeBlocks.GREEN_HARDENED_GUMMY_BLOCK.get(),
-            CCSweetscapeBlocks.GREEN_GUMMY_WORKBENCH.get(),
-            CCSweetscapeBlocks.GREEN_GUMMY_WORM_BLOCK.get()
+            CCBlocks.GREEN_GUMMY_BLOCK.get(),
+            CCBlocks.GREEN_HARDENED_GUMMY_BLOCK.get(),
+            CCBlocks.GREEN_GUMMY_WORKBENCH.get(),
+            CCBlocks.GREEN_GUMMY_WORM_BLOCK.get()
         );
     }
 
     private static void registerGummyBlockColors(BlockColors colors) {
         colors.register((state, level, pos, tintIndex) -> 0xff4530,
-            CCSweetscapeBlocks.RED_GUMMY_BLOCK.get(),
-            CCSweetscapeBlocks.RED_HARDENED_GUMMY_BLOCK.get(),
-            CCSweetscapeBlocks.RED_GUMMY_WORKBENCH.get(),
-            CCSweetscapeBlocks.RED_GUMMY_WORM_BLOCK.get()
+            CCBlocks.RED_GUMMY_BLOCK.get(),
+            CCBlocks.RED_HARDENED_GUMMY_BLOCK.get(),
+            CCBlocks.RED_GUMMY_WORKBENCH.get(),
+            CCBlocks.RED_GUMMY_WORM_BLOCK.get()
         );
         colors.register((state, level, pos, tintIndex) -> 0xff9b4f,
-            CCSweetscapeBlocks.ORANGE_GUMMY_BLOCK.get(),
-            CCSweetscapeBlocks.ORANGE_HARDENED_GUMMY_BLOCK.get(),
-            CCSweetscapeBlocks.ORANGE_GUMMY_WORKBENCH.get(),
-            CCSweetscapeBlocks.ORANGE_GUMMY_WORM_BLOCK.get()
+            CCBlocks.ORANGE_GUMMY_BLOCK.get(),
+            CCBlocks.ORANGE_HARDENED_GUMMY_BLOCK.get(),
+            CCBlocks.ORANGE_GUMMY_WORKBENCH.get(),
+            CCBlocks.ORANGE_GUMMY_WORM_BLOCK.get()
         );
         colors.register((state, level, pos, tintIndex) -> 0xffe563,
-            CCSweetscapeBlocks.YELLOW_GUMMY_BLOCK.get(),
-            CCSweetscapeBlocks.YELLOW_HARDENED_GUMMY_BLOCK.get(),
-            CCSweetscapeBlocks.YELLOW_GUMMY_WORKBENCH.get(),
-            CCSweetscapeBlocks.YELLOW_GUMMY_WORM_BLOCK.get()
+            CCBlocks.YELLOW_GUMMY_BLOCK.get(),
+            CCBlocks.YELLOW_HARDENED_GUMMY_BLOCK.get(),
+            CCBlocks.YELLOW_GUMMY_WORKBENCH.get(),
+            CCBlocks.YELLOW_GUMMY_WORM_BLOCK.get()
         );
         colors.register((state, level, pos, tintIndex) -> 0xfffeb0,
-            CCSweetscapeBlocks.WHITE_GUMMY_BLOCK.get(),
-            CCSweetscapeBlocks.WHITE_HARDENED_GUMMY_BLOCK.get(),
-            CCSweetscapeBlocks.WHITE_GUMMY_WORKBENCH.get(),
-            CCSweetscapeBlocks.WHITE_GUMMY_WORM_BLOCK.get()
+            CCBlocks.WHITE_GUMMY_BLOCK.get(),
+            CCBlocks.WHITE_HARDENED_GUMMY_BLOCK.get(),
+            CCBlocks.WHITE_GUMMY_WORKBENCH.get(),
+            CCBlocks.WHITE_GUMMY_WORM_BLOCK.get()
         );
         colors.register((state, level, pos, tintIndex) -> 0x80e22b,
-            CCSweetscapeBlocks.GREEN_GUMMY_BLOCK.get(),
-            CCSweetscapeBlocks.GREEN_HARDENED_GUMMY_BLOCK.get(),
-            CCSweetscapeBlocks.GREEN_GUMMY_WORKBENCH.get(),
-            CCSweetscapeBlocks.GREEN_GUMMY_WORM_BLOCK.get()
+            CCBlocks.GREEN_GUMMY_BLOCK.get(),
+            CCBlocks.GREEN_HARDENED_GUMMY_BLOCK.get(),
+            CCBlocks.GREEN_GUMMY_WORKBENCH.get(),
+            CCBlocks.GREEN_GUMMY_WORM_BLOCK.get()
         );
     }
 
@@ -640,6 +641,10 @@ public final class CCClient {
         event.registerEntityRenderer(CCEntityTypes.MAGE_SUGUARD.get(), SuguardRenderer::new);
         event.registerEntityRenderer(CCEntityTypes.CANDY_WOLF.get(), CandyWolfRenderer::new);
         event.registerEntityRenderer(CCEntityTypes.GUMMY_BUNNY.get(), GummyBunnyRenderer::new);
+        event.registerEntityRenderer(CCEntityTypes.COTTON_CANDY_SHEEP.get(), CottonCandySheepRenderer::new);
+        event.registerEntityRenderer(CCEntityTypes.EASTER_CHICKEN.get(), EasterChickenRenderer::new);
+        event.registerEntityRenderer(CCEntityTypes.GUMMY_MOUSE.get(), GummyMouseRenderer::new);
+        event.registerEntityRenderer(CCEntityTypes.GUMMY_BEAR.get(), GummyBearRenderer::new);
         event.registerEntityRenderer(CCEntityTypes.GINGERBREAD_MAN.get(), GingerbreadManRenderer::new);
         event.registerEntityRenderer(CCEntityTypes.CANDY_FISH.get(), CandyFishRenderer::new);
         event.registerEntityRenderer(CCEntityTypes.PINGOUIN.get(), PingouinRenderer::new);
@@ -665,6 +670,7 @@ public final class CCClient {
         event.registerLayerDefinition(CandyFishModel.LAYER, CandyFishModel::createBodyLayer);
         event.registerLayerDefinition(PingouinModel.LAYER, PingouinModel::createBodyLayer);
         event.registerLayerDefinition(GummyBunnyModel.LAYER, GummyBunnyModel::createBodyLayer);
+        event.registerLayerDefinition(GummyMouseModel.LAYER, GummyMouseModel::createBodyLayer);
         event.registerLayerDefinition(GingerbreadManModel.LAYER, GingerbreadManModel::createBodyLayer);
         event.registerLayerDefinition(SuguardModel.LAYER, SuguardModel::createBodyLayer);
         event.registerLayerDefinition(WaffleSheepModel.LAYER, WaffleSheepModel::createBodyLayer);
@@ -1164,3 +1170,4 @@ public final class CCClient {
         }
     }
 }
+

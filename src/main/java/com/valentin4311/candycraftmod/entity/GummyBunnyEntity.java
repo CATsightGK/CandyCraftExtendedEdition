@@ -84,6 +84,11 @@ public class GummyBunnyEntity extends Rabbit {
         return stack.is(CCItems.LICORICE.get());
     }
 
+    @Override
+    public int getMaxSpawnClusterSize() {
+        return 6;
+    }
+
     @Nullable
     @Override
     protected SoundEvent getAmbientSound() {

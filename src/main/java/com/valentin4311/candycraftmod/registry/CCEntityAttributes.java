@@ -9,8 +9,12 @@ import com.valentin4311.candycraftmod.entity.CandyCreeperEntity;
 import com.valentin4311.candycraftmod.entity.CandyFishEntity;
 import com.valentin4311.candycraftmod.entity.CandyPigEntity;
 import com.valentin4311.candycraftmod.entity.CandyWolfEntity;
+import com.valentin4311.candycraftmod.entity.CottonCandySheepEntity;
 import com.valentin4311.candycraftmod.entity.CottonCandySpiderEntity;
+import com.valentin4311.candycraftmod.entity.EasterChickenEntity;
+import com.valentin4311.candycraftmod.entity.GummyBearEntity;
 import com.valentin4311.candycraftmod.entity.GummyBunnyEntity;
+import com.valentin4311.candycraftmod.entity.GummyMouseEntity;
 import com.valentin4311.candycraftmod.entity.NougatGolemEntity;
 import com.valentin4311.candycraftmod.entity.PingouinEntity;
 import com.valentin4311.candycraftmod.entity.WaffleSheepEntity;
@@ -49,6 +53,10 @@ public final class CCEntityAttributes {
             .add(Attributes.MAX_HEALTH, 10.0D)
             .add(Attributes.MOVEMENT_SPEED, 0.20000000298023224D)
             .build());
+        event.put(CCEntityTypes.COTTON_CANDY_SHEEP.get(), CottonCandySheepEntity.createAttributes().build());
+        event.put(CCEntityTypes.EASTER_CHICKEN.get(), EasterChickenEntity.createAttributes().build());
+        event.put(CCEntityTypes.GUMMY_MOUSE.get(), GummyMouseEntity.createAttributes().build());
+        event.put(CCEntityTypes.GUMMY_BEAR.get(), GummyBearEntity.createAttributes().build());
         event.put(CCEntityTypes.CANDY_FISH.get(), CandyFishEntity.createAttributes().build());
         event.put(CCEntityTypes.PINGOUIN.get(), PingouinEntity.createAttributes().build());
         event.put(CCEntityTypes.CANDY_CREEPER.get(), Creeper.createAttributes()

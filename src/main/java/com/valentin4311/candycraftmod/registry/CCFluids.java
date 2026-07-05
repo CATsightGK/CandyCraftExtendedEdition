@@ -300,8 +300,8 @@ public final class CCFluids {
             SOURCE_LIQUID_CHOCOLATE,
             FLOWING_LIQUID_CHOCOLATE
         )
-            .bucket(CCSweetscapeItems.LIQUID_CHOCOLATE_BUCKET)
-            .block(CCSweetscapeBlocks.LIQUID_CHOCOLATE)
+            .bucket(CCItems.LIQUID_CHOCOLATE_BUCKET)
+            .block(CCBlocks.LIQUID_CHOCOLATE)
             .slopeFindDistance(4)
             .levelDecreasePerBlock(1)
             .tickRate(5)
@@ -314,11 +314,12 @@ public final class CCFluids {
             SOURCE_LIQUID_CANDY,
             FLOWING_LIQUID_CANDY
         )
-            .bucket(CCSweetscapeItems.LIQUID_CANDY_BUCKET)
-            .block(CCSweetscapeBlocks.LIQUID_CANDY)
+            .bucket(CCItems.LIQUID_CANDY_BUCKET)
+            .block(CCBlocks.LIQUID_CANDY)
             .slopeFindDistance(4)
             .levelDecreasePerBlock(1)
             .tickRate(30)
             .explosionResistance(100.0F);
     }
 }
+

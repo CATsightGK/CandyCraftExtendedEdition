@@ -1,7 +1,7 @@
 package com.valentin4311.candycraftmod.block;
 
 import com.valentin4311.candycraftmod.registry.CCBlocks;
-import com.valentin4311.candycraftmod.registry.CCSweetscapeBlocks;
+import com.valentin4311.candycraftmod.registry.CCBlocks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.tags.FluidTags;
@@ -30,7 +30,7 @@ public class SeaweedBlock extends LegacyMetadataBlock.Plant implements SimpleWat
         boolean bottomValid = below.is(CCBlocks.FLOUR.get())
             || below.is(CCBlocks.PUDDING.get())
             || below.is(CCBlocks.CANDY_FARMLAND.get())
-            || below.is(CCSweetscapeBlocks.SUGAR_SAND.get())
+            || below.is(CCBlocks.SUGAR_SAND.get())
             || canStack && below.is(this);
         boolean topValid = above.getFluidState().is(FluidTags.WATER) || canStack && above.is(this);
         return bottomValid && topValid && level.getFluidState(pos).is(FluidTags.WATER) && hasOpaqueOrWaterNeighbors(level, pos);
@@ -62,3 +62,4 @@ public class SeaweedBlock extends LegacyMetadataBlock.Plant implements SimpleWat
         return Fluids.WATER.getSource(false);
     }
 }
+

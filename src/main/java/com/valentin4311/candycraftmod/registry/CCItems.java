@@ -23,6 +23,10 @@ import com.valentin4311.candycraftmod.item.WikiItem;
 import com.valentin4311.candycraftmod.CandyCraft;
 import java.util.ArrayList;
 import java.util.List;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.core.Direction;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -46,6 +50,7 @@ import net.minecraft.world.item.StandingAndWallBlockItem;
 import net.minecraft.world.item.SwordItem;
 import net.minecraft.world.item.Tier;
 import net.minecraft.world.level.block.Block;
+import net.minecraftforge.common.ForgeTier;
 import net.minecraftforge.common.ForgeSpawnEggItem;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
@@ -56,6 +61,19 @@ public final class CCItems {
     public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, CandyCraft.MODID);
     public static final List<RegistryObject<Item>> BLOCK_ITEMS = new ArrayList<>();
     public static final List<RegistryObject<Item>> PORT_ITEMS = new ArrayList<>();
+    public static final List<RegistryObject<Item>> SIMPLE_ITEMS = new ArrayList<>();
+    public static final List<RegistryObject<Item>> TOOL_ITEMS = new ArrayList<>();
+
+    private static final Tier CHOCOLATE = new ForgeTier(2, 750, 7.0F, 2.5F, 25,
+        BlockTags.create(new ResourceLocation(CandyCraft.MODID, "needs_chocolate_tool")),
+        () -> Ingredient.of(
+            BuiltInRegistries.ITEM.get(new ResourceLocation(CandyCraft.MODID, "milk_chocolate_bar")),
+            BuiltInRegistries.ITEM.get(new ResourceLocation(CandyCraft.MODID, "white_chocolate_bar")),
+            BuiltInRegistries.ITEM.get(new ResourceLocation(CandyCraft.MODID, "dark_chocolate_bar"))
+        ));
+    private static final Tier COTTON_CANDY_TIER = new ForgeTier(1, 5, 15.0F, 5.0F, 65,
+        BlockTags.create(new ResourceLocation(CandyCraft.MODID, "needs_cotton_candy_tool")),
+        () -> Ingredient.of(BuiltInRegistries.ITEM.get(new ResourceLocation(CandyCraft.MODID, "cotton_candy"))));
 
     public static final RegistryObject<Item> HONEY_SHARD = registerPortItem("honey_shard");
     public static final RegistryObject<Item> NOUGAT_POWDER = registerPortItem("nougat_powder", () -> new NougatPowderItem(foodProperties(3, 0.6F, true)));
@@ -200,6 +218,10 @@ public final class CCItems {
     public static final RegistryObject<Item> MAGE_SUGUARD_SPAWN_EGG = registerSpawnEgg("mage_suguard_spawn_egg", CCEntityTypes.MAGE_SUGUARD, 0xF3F3F3, 0x7A42C8);
     public static final RegistryObject<Item> CANDY_WOLF_SPAWN_EGG = registerSpawnEgg("candy_wolf_spawn_egg", CCEntityTypes.CANDY_WOLF, 0x4B2E22, 0xDDB98F);
     public static final RegistryObject<Item> GUMMY_BUNNY_SPAWN_EGG = registerSpawnEgg("gummy_bunny_spawn_egg", CCEntityTypes.GUMMY_BUNNY, 0xEBA3C8, 0xFFFFFF);
+    public static final RegistryObject<Item> COTTON_CANDY_SHEEP_SPAWN_EGG = registerSpawnEgg("cotton_candy_sheep_spawn_egg", CCEntityTypes.COTTON_CANDY_SHEEP, 0xFF33FF, 0xFFCCFF);
+    public static final RegistryObject<Item> EASTER_CHICKEN_SPAWN_EGG = registerSpawnEgg("easter_chicken_spawn_egg", CCEntityTypes.EASTER_CHICKEN, 0x996611, 0x774411);
+    public static final RegistryObject<Item> GUMMY_MOUSE_SPAWN_EGG = registerSpawnEgg("gummy_mouse_spawn_egg", CCEntityTypes.GUMMY_MOUSE, 0x00FF00, 0x33BB33);
+    public static final RegistryObject<Item> GUMMY_BEAR_SPAWN_EGG = registerSpawnEgg("gummy_bear_spawn_egg", CCEntityTypes.GUMMY_BEAR, 0x00FF00, 0x33BB33);
     public static final RegistryObject<Item> CARAMEL_BEE_SPAWN_EGG = registerSpawnEgg("caramel_bee_spawn_egg", CCEntityTypes.CARAMEL_BEE, 0xB26B20, 0xFFD65A);
     public static final RegistryObject<Item> GINGERBREAD_MAN_SPAWN_EGG = registerSpawnEgg("gingerbread_man_spawn_egg", CCEntityTypes.GINGERBREAD_MAN, 0xB87535, 0xFFFFFF);
     public static final RegistryObject<Item> CANDY_FISH_SPAWN_EGG = registerSpawnEgg("candy_fish_spawn_egg", CCEntityTypes.CANDY_FISH, 0xB61E34, 0xF7A3B1);
@@ -218,6 +240,61 @@ public final class CCItems {
     public static final RegistryObject<Item> JELLY_QUEEN_SPAWN_EGG = registerSpawnEgg("jelly_queen_spawn_egg", CCEntityTypes.JELLY_QUEEN, 0xD85AFF, 0xFFF15A);
     public static final RegistryObject<Item> BOSS_SUGUARD_SPAWN_EGG = registerSpawnEgg("boss_suguard_spawn_egg", CCEntityTypes.BOSS_SUGUARD, 0xE8E8E8, 0xA12424);
     public static final RegistryObject<Item> BOSS_BEETLE_SPAWN_EGG = registerSpawnEgg("boss_beetle_spawn_egg", CCEntityTypes.BOSS_BEETLE, 0x171313, 0x8B1F2D);
+
+
+    public static final RegistryObject<Item> BUTTER = registerSweetscapeFood("butter", 1, 1.0F);
+    public static final RegistryObject<Item> CANDY_FLOSS = registerSweetscapeFood("cotton_candy", 4, 0.5F);
+    public static final RegistryObject<Item> WAFER_STICK = registerSweetscapeFood("wafer_stick", 5, 0.6F);
+    public static final RegistryObject<Item> ROCK_CANDY = registerSweetscapeFood("rock_candy", 4, 0.2F);
+    public static final RegistryObject<Item> WHITE_CANDY_CANE = registerSweetscapeFood("white_candy_cane", 5, 0.6F);
+    public static final RegistryObject<Item> RED_CANDY_CANE = registerSweetscapeFood("red_candy_cane", 5, 0.6F);
+    public static final RegistryObject<Item> GREEN_CANDY_CANE = registerSweetscapeFood("green_candy_cane", 5, 0.6F);
+    public static final RegistryObject<Item> WHITE_RED_CANDY_CANE = registerSweetscapeFood("white_red_candy_cane", 5, 0.6F);
+    public static final RegistryObject<Item> WHITE_GREEN_CANDY_CANE = registerSweetscapeFood("white_green_candy_cane", 5, 0.6F);
+    public static final RegistryObject<Item> RED_GREEN_CANDY_CANE = registerSweetscapeFood("red_green_candy_cane", 5, 0.6F);
+    public static final RegistryObject<Item> MILK_BROWNIE = registerSweetscapeFood("milk_brownie", 4, 0.5F);
+    public static final RegistryObject<Item> WHITE_BROWNIE = registerSweetscapeFood("white_brownie", 4, 0.5F);
+    public static final RegistryObject<Item> DARK_BROWNIE = registerSweetscapeFood("dark_brownie", 4, 0.5F);
+    public static final RegistryObject<Item> MILK_CHOCOLATE_BAR = registerSweetscapeFood("milk_chocolate_bar", 6, 0.6F);
+    public static final RegistryObject<Item> WHITE_CHOCOLATE_BAR = registerSweetscapeFood("white_chocolate_bar", 6, 0.6F);
+    public static final RegistryObject<Item> DARK_CHOCOLATE_BAR = registerSweetscapeFood("dark_chocolate_bar", 6, 0.6F);
+    public static final RegistryObject<Item> MILK_CHOCOLATE_EGG = registerSweetscapeFood("milk_chocolate_egg", 7, 0.8F);
+    public static final RegistryObject<Item> WHITE_CHOCOLATE_EGG = registerSweetscapeFood("white_chocolate_egg", 7, 0.8F);
+    public static final RegistryObject<Item> DARK_CHOCOLATE_EGG = registerSweetscapeFood("dark_chocolate_egg", 7, 0.8F);
+    public static final RegistryObject<Item> RED_GUMMY = registerSweetscapeFood("red_gummy", 4, 0.6F);
+    public static final RegistryObject<Item> ORANGE_GUMMY = registerSweetscapeFood("orange_gummy", 4, 0.6F);
+    public static final RegistryObject<Item> YELLOW_GUMMY = registerSweetscapeFood("yellow_gummy", 4, 0.6F);
+    public static final RegistryObject<Item> WHITE_GUMMY = registerSweetscapeFood("white_gummy", 4, 0.6F);
+    public static final RegistryObject<Item> GREEN_GUMMY = registerSweetscapeFood("green_gummy", 4, 0.6F);
+    public static final RegistryObject<Item> RED_GUMMY_WORM = registerSweetscapeFood("red_gummy_worm", 6, 1.0F);
+    public static final RegistryObject<Item> ORANGE_GUMMY_WORM = registerSweetscapeFood("orange_gummy_worm", 6, 1.0F);
+    public static final RegistryObject<Item> YELLOW_GUMMY_WORM = registerSweetscapeFood("yellow_gummy_worm", 6, 1.0F);
+    public static final RegistryObject<Item> WHITE_GUMMY_WORM = registerSweetscapeFood("white_gummy_worm", 6, 1.0F);
+    public static final RegistryObject<Item> GREEN_GUMMY_WORM = registerSweetscapeFood("green_gummy_worm", 6, 1.0F);
+    public static final RegistryObject<Item> TELEPORTER = registerSweetscapeFood("teleporter", 1, 1.0F, true);
+
+    public static final RegistryObject<Item> MILK_CHOCOLATE_AXE = registerSweetscapeTool("milk_chocolate_axe", () -> new AxeItem(CHOCOLATE, 5.5F, -3.0F, foodProperties(6, 0.6F)));
+    public static final RegistryObject<Item> MILK_CHOCOLATE_PICKAXE = registerSweetscapeTool("milk_chocolate_pickaxe", () -> new PickaxeItem(CHOCOLATE, 1, -2.8F, foodProperties(6, 0.6F)));
+    public static final RegistryObject<Item> MILK_CHOCOLATE_SHOVEL = registerSweetscapeTool("milk_chocolate_shovel", () -> new ShovelItem(CHOCOLATE, 1.5F, -3.0F, foodProperties(6, 0.6F)));
+    public static final RegistryObject<Item> MILK_CHOCOLATE_SWORD = registerSweetscapeTool("milk_chocolate_sword", () -> new SwordItem(CHOCOLATE, 3, -2.4F, foodProperties(6, 0.6F)));
+    public static final RegistryObject<Item> MILK_CHOCOLATE_HOE = registerSweetscapeTool("milk_chocolate_hoe", () -> new HoeItem(CHOCOLATE, -2, -1.0F, foodProperties(6, 0.6F)));
+    public static final RegistryObject<Item> WHITE_CHOCOLATE_AXE = registerSweetscapeTool("white_chocolate_axe", () -> new AxeItem(CHOCOLATE, 5.5F, -3.0F, foodProperties(6, 0.6F)));
+    public static final RegistryObject<Item> WHITE_CHOCOLATE_PICKAXE = registerSweetscapeTool("white_chocolate_pickaxe", () -> new PickaxeItem(CHOCOLATE, 1, -2.8F, foodProperties(6, 0.6F)));
+    public static final RegistryObject<Item> WHITE_CHOCOLATE_SHOVEL = registerSweetscapeTool("white_chocolate_shovel", () -> new ShovelItem(CHOCOLATE, 1.5F, -3.0F, foodProperties(6, 0.6F)));
+    public static final RegistryObject<Item> WHITE_CHOCOLATE_SWORD = registerSweetscapeTool("white_chocolate_sword", () -> new SwordItem(CHOCOLATE, 3, -2.4F, foodProperties(6, 0.6F)));
+    public static final RegistryObject<Item> WHITE_CHOCOLATE_HOE = registerSweetscapeTool("white_chocolate_hoe", () -> new HoeItem(CHOCOLATE, -2, -1.0F, foodProperties(6, 0.6F)));
+    public static final RegistryObject<Item> DARK_CHOCOLATE_AXE = registerSweetscapeTool("dark_chocolate_axe", () -> new AxeItem(CHOCOLATE, 5.5F, -3.0F, foodProperties(6, 0.6F)));
+    public static final RegistryObject<Item> DARK_CHOCOLATE_PICKAXE = registerSweetscapeTool("dark_chocolate_pickaxe", () -> new PickaxeItem(CHOCOLATE, 1, -2.8F, foodProperties(6, 0.6F)));
+    public static final RegistryObject<Item> DARK_CHOCOLATE_SHOVEL = registerSweetscapeTool("dark_chocolate_shovel", () -> new ShovelItem(CHOCOLATE, 1.5F, -3.0F, foodProperties(6, 0.6F)));
+    public static final RegistryObject<Item> DARK_CHOCOLATE_SWORD = registerSweetscapeTool("dark_chocolate_sword", () -> new SwordItem(CHOCOLATE, 3, -2.4F, foodProperties(6, 0.6F)));
+    public static final RegistryObject<Item> DARK_CHOCOLATE_HOE = registerSweetscapeTool("dark_chocolate_hoe", () -> new HoeItem(CHOCOLATE, -2, -1.0F, foodProperties(6, 0.6F)));
+    public static final RegistryObject<Item> COTTON_CANDY_AXE = registerSweetscapeTool("cotton_candy_axe", () -> new AxeItem(COTTON_CANDY_TIER, 5.0F, -3.0F, foodProperties(1, 0.6F)));
+    public static final RegistryObject<Item> COTTON_CANDY_PICKAXE = registerSweetscapeTool("cotton_candy_pickaxe", () -> new PickaxeItem(COTTON_CANDY_TIER, 1, -2.8F, foodProperties(1, 0.6F)));
+    public static final RegistryObject<Item> COTTON_CANDY_SHOVEL = registerSweetscapeTool("cotton_candy_shovel", () -> new ShovelItem(COTTON_CANDY_TIER, 1.5F, -3.0F, foodProperties(1, 0.6F)));
+    public static final RegistryObject<Item> COTTON_CANDY_SWORD = registerSweetscapeTool("cotton_candy_sword", () -> new SwordItem(COTTON_CANDY_TIER, 3, -2.4F, foodProperties(1, 0.6F)));
+    public static final RegistryObject<Item> COTTON_CANDY_HOE = registerSweetscapeTool("cotton_candy_hoe", () -> new HoeItem(COTTON_CANDY_TIER, -2, -1.0F, foodProperties(1, 0.6F)));
+    public static final RegistryObject<Item> LIQUID_CHOCOLATE_BUCKET = registerSweetscapeSimple("liquid_chocolate_bucket", () -> new BucketItem(CCFluids.SOURCE_LIQUID_CHOCOLATE, new Item.Properties().craftRemainder(Items.BUCKET).stacksTo(1)));
+    public static final RegistryObject<Item> LIQUID_CANDY_BUCKET = registerSweetscapeSimple("liquid_candy_bucket", () -> new BucketItem(CCFluids.SOURCE_LIQUID_CANDY, new Item.Properties().craftRemainder(Items.BUCKET).stacksTo(1)));
 
     private CCItems() {
     }
@@ -251,6 +328,27 @@ public final class CCItems {
         return item;
     }
 
+    private static RegistryObject<Item> registerSweetscapeFood(String name, int nutrition, float saturation) {
+        return registerSweetscapeFood(name, nutrition, saturation, false);
+    }
+
+    private static RegistryObject<Item> registerSweetscapeFood(String name, int nutrition, float saturation, boolean alwaysEat) {
+        RegistryObject<Item> item = ITEMS.register(name, () -> new Item(foodProperties(nutrition, saturation, alwaysEat)));
+        SIMPLE_ITEMS.add(item);
+        return item;
+    }
+
+    private static RegistryObject<Item> registerSweetscapeSimple(String name, SupplierItem itemSupplier) {
+        RegistryObject<Item> item = ITEMS.register(name, itemSupplier::get);
+        SIMPLE_ITEMS.add(item);
+        return item;
+    }
+
+    private static RegistryObject<Item> registerSweetscapeTool(String name, SupplierItem itemSupplier) {
+        RegistryObject<Item> item = ITEMS.register(name, itemSupplier::get);
+        TOOL_ITEMS.add(item);
+        return item;
+    }
     private static RegistryObject<Item> registerFood(String name, int nutrition, float saturation) {
         return registerFood(name, nutrition, saturation, false);
     }
@@ -328,3 +426,4 @@ public final class CCItems {
     ) {
     }
 }
+

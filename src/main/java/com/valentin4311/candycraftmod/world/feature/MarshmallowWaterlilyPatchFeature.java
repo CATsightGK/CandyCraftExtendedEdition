@@ -3,7 +3,7 @@ package com.valentin4311.candycraftmod.world.feature;
 import com.mojang.serialization.Codec;
 import com.valentin4311.candycraftmod.CandyCraft;
 import com.valentin4311.candycraftmod.registry.CCBlocks;
-import com.valentin4311.candycraftmod.registry.CCSweetscapeBlocks;
+import com.valentin4311.candycraftmod.registry.CCBlocks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
@@ -111,7 +111,7 @@ public class MarshmallowWaterlilyPatchFeature extends Feature<NoneFeatureConfigu
                 }
                 for (int dy = -2; dy <= 1; dy++) {
                     cursor.set(pos.getX() + dx, pos.getY() + dy, pos.getZ() + dz);
-                    if (level.getBlockState(cursor).is(CCSweetscapeBlocks.CANDY_GRASS_BLOCK.get())) {
+                    if (level.getBlockState(cursor).is(CCBlocks.CANDY_GRASS_BLOCK.get())) {
                         return true;
                     }
                 }
@@ -132,3 +132,4 @@ public class MarshmallowWaterlilyPatchFeature extends Feature<NoneFeatureConfigu
         return true;
     }
 }
+

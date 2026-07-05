@@ -36,7 +36,6 @@ public final class CCCreativeTabs {
                 return;
             }
             CCItems.BLOCK_ITEMS.forEach(item -> output.accept(item.get()));
-            CCSweetscapeItems.BLOCK_ITEMS.forEach(item -> output.accept(item.get()));
         })
         .build());
 
@@ -48,7 +47,7 @@ public final class CCCreativeTabs {
                 return;
             }
             CCItems.PORT_ITEMS.forEach(item -> output.accept(item.get()));
-            CCSweetscapeItems.SIMPLE_ITEMS.forEach(item -> output.accept(item.get()));
+            CCItems.SIMPLE_ITEMS.forEach(item -> output.accept(item.get()));
         })
         .build());
 
@@ -59,7 +58,7 @@ public final class CCCreativeTabs {
             if (acceptOrderedTab("tools_armor", output)) {
                 return;
             }
-            CCSweetscapeItems.TOOL_ITEMS.forEach(item -> output.accept(item.get()));
+            CCItems.TOOL_ITEMS.forEach(item -> output.accept(item.get()));
         })
         .build());
 
@@ -90,7 +89,8 @@ public final class CCCreativeTabs {
             CCItems.CANDY_PIG_SPAWN_EGG, CCItems.WAFFLE_SHEEP_SPAWN_EGG,
             CCItems.CANDY_CREEPER_SPAWN_EGG, CCItems.COTTON_CANDY_SPIDER_SPAWN_EGG,
             CCItems.SUGUARD_SPAWN_EGG, CCItems.MAGE_SUGUARD_SPAWN_EGG, CCItems.CANDY_WOLF_SPAWN_EGG,
-            CCItems.GUMMY_BUNNY_SPAWN_EGG, CCItems.CARAMEL_BEE_SPAWN_EGG, CCItems.GINGERBREAD_MAN_SPAWN_EGG,
+            CCItems.GUMMY_BUNNY_SPAWN_EGG, CCItems.COTTON_CANDY_SHEEP_SPAWN_EGG, CCItems.EASTER_CHICKEN_SPAWN_EGG,
+            CCItems.GUMMY_MOUSE_SPAWN_EGG, CCItems.GUMMY_BEAR_SPAWN_EGG, CCItems.CARAMEL_BEE_SPAWN_EGG, CCItems.GINGERBREAD_MAN_SPAWN_EGG,
             CCItems.CANDY_FISH_SPAWN_EGG, CCItems.PINGOUIN_SPAWN_EGG, CCItems.BEETLE_SPAWN_EGG,
             CCItems.NESSIE_SPAWN_EGG, CCItems.DRAGON_SPAWN_EGG, CCItems.KING_BEETLE_SPAWN_EGG,
             CCItems.MERMAID_SPAWN_EGG, CCItems.NOUGAT_GOLEM_SPAWN_EGG,
@@ -140,3 +140,4 @@ public final class CCCreativeTabs {
     }
 
 }
+
