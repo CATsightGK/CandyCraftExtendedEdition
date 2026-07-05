@@ -6,6 +6,7 @@ import com.valentin4311.candycraftmod.registry.CCItems;
 import java.util.List;
 import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -40,12 +41,17 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.pathfinder.Node;
 import net.minecraft.world.level.pathfinder.Path;
+import org.joml.Vector3f;
 
 public class BasicCandySpiderEntity extends Monster {
     private static final EntityDataAccessor<Boolean> ANGRY = SynchedEntityData.defineId(BasicCandySpiderEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Boolean> CHILD = SynchedEntityData.defineId(BasicCandySpiderEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDimensions BEETLE_DIMENSIONS = EntityDimensions.scalable(1.0F, 0.8F);
     private static final EntityDimensions CHILD_BEETLE_DIMENSIONS = EntityDimensions.scalable(0.5F, 0.4F);
+    private static final int BOSS_VOLLEY_CHARGE_DURATION = 45;
+    private static final DustParticleOptions BOSS_BEETLE_LICORICE_SWIRL = new DustParticleOptions(new Vector3f(0.09F, 0.02F, 0.06F), 1.25F);
+    private static final DustParticleOptions BOSS_BEETLE_CANDY_SWIRL = new DustParticleOptions(new Vector3f(0.92F, 0.34F, 0.55F), 0.95F);
+    private static final DustParticleOptions BOSS_BEETLE_SUGAR_GLEAM = new DustParticleOptions(new Vector3f(1.0F, 0.74F, 0.88F), 0.65F);
     private boolean bossAwake;
     private boolean bossHealthBarRevealed;
     private int bossCooldown = 100;
@@ -406,7 +412,7 @@ public class BasicCandySpiderEntity extends Monster {
             bossCooldown--;
         }
         if (bossVolleyChargeTicks > 0) {
-            spawnBossBeetleVolleyFlames((ServerLevel) level());
+            spawnBossBeetleVolleyChargeParticles((ServerLevel) level());
             bossVolleyChargeTicks--;
             if (bossVolleyChargeTicks <= 0) {
                 bossVolleyTicks = 50;
@@ -427,7 +433,7 @@ public class BasicCandySpiderEntity extends Monster {
             double healthPercent = getHealth() / getMaxHealth();
             bossCooldown = (int)(40 - (35 - healthPercent * 35));
             if (healthPercent < 0.5D && random.nextInt(6) == 0) {
-                bossVolleyChargeTicks = 45;
+                bossVolleyChargeTicks = BOSS_VOLLEY_CHARGE_DURATION;
             } else if (healthPercent < 0.84D && random.nextInt(10) == 0) {
                 bossSpinTicks = 200;
             } else {
@@ -446,14 +452,36 @@ public class BasicCandySpiderEntity extends Monster {
         bossEvent.setVisible(bossHealthBarRevealed);
     }
 
-    private void spawnBossBeetleVolleyFlames(ServerLevel level) {
-        for (int i = 0; i <= 16; i++) {
-            double angle = (i * 11.25D + tickCount) / 90.0D * Math.PI;
-            double wave = Math.cos(tickCount * 0.05D);
-            double x = -Math.sin(angle) * (wave * 2.5D) + getX();
-            double z = Math.cos(angle) * (wave * 2.5D) + getZ();
-            double y = (i % 2 == 0 ? Math.cos(tickCount * 0.05D) : Math.cos((tickCount + 10) * 0.05D)) + getY() + 3.0D;
-            level.sendParticles(ParticleTypes.FLAME, x, y, z, 1, 0.0D, 0.0D, 0.0D, 0.0D);
+    private void spawnBossBeetleVolleyChargeParticles(ServerLevel level) {
+        double chargeProgress = 1.0D - (double) bossVolleyChargeTicks / (double) BOSS_VOLLEY_CHARGE_DURATION;
+        double centerY = getY() + 3.0D + chargeProgress * 0.2D;
+        double spiralSpin = tickCount * 0.38D;
+        double maxRadius = 0.55D + chargeProgress * 0.95D;
+
+        for (int i = 0; i < 24; i++) {
+            double step = i / 23.0D;
+            double radius = 0.12D + maxRadius * step;
+            double waveY = Math.sin(spiralSpin + i * 0.5D) * 0.055D;
+
+            for (int arm = 0; arm < 2; arm++) {
+                double angle = spiralSpin * (arm == 0 ? 1.0D : -1.0D) + i * 0.42D + arm * Math.PI;
+                double x = getX() + Math.cos(angle) * radius;
+                double z = getZ() + Math.sin(angle) * radius;
+                DustParticleOptions particle = (i + arm) % 3 == 0 ? BOSS_BEETLE_CANDY_SWIRL : BOSS_BEETLE_LICORICE_SWIRL;
+                level.sendParticles(particle, x, centerY + waveY, z, 1, 0.0D, 0.0D, 0.0D, 0.0D);
+            }
+        }
+
+        for (int i = 0; i < 10; i++) {
+            double angle = tickCount * 0.22D + i * Math.PI * 2.0D / 10.0D;
+            double petalRadius = maxRadius * (0.72D + Math.sin(angle * 3.0D + tickCount * 0.12D) * 0.18D);
+            double x = getX() + Math.cos(angle) * petalRadius;
+            double z = getZ() + Math.sin(angle) * petalRadius;
+            level.sendParticles(BOSS_BEETLE_SUGAR_GLEAM, x, centerY + 0.05D, z, 1, 0.0D, 0.0D, 0.0D, 0.0D);
+        }
+
+        if (tickCount % 3 == 0) {
+            level.sendParticles(ParticleTypes.REVERSE_PORTAL, getX(), centerY, getZ(), 3, 0.2D, 0.04D, 0.2D, 0.02D);
         }
     }
 
