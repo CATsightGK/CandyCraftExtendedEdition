@@ -424,6 +424,7 @@ public class BasicCandySpiderEntity extends Monster {
             shootBossBall(target, 3, true);
         }
         if (bossSpinTicks > 0) {
+            spawnBossBeetleSpinParticles((ServerLevel) level());
             bossSpinTicks--;
             if (bossSpinTicks < 100 && tickCount % 4 == 0) {
                 shootBossBall(target, 2, false);
@@ -482,6 +483,18 @@ public class BasicCandySpiderEntity extends Monster {
 
         if (tickCount % 3 == 0) {
             level.sendParticles(ParticleTypes.REVERSE_PORTAL, getX(), centerY, getZ(), 3, 0.2D, 0.04D, 0.2D, 0.02D);
+        }
+    }
+
+    private void spawnBossBeetleSpinParticles(ServerLevel level) {
+        for (int i = 0; i <= 16; i++) {
+            double angle = (i * 11.25D + tickCount) / 90.0D * Math.PI;
+            double radius = Math.cos(tickCount * 0.05D) * 2.5D;
+            double x = -Math.sin(angle) * radius + getX();
+            double z = Math.cos(angle) * radius + getZ();
+            double yWave = i % 2 == 0 ? Math.cos(tickCount * 0.05D) : Math.cos((tickCount + 10) * 0.05D);
+            double y = yWave + getY() + 3.0D;
+            level.sendParticles(ParticleTypes.FLAME, x, y, z, 1, 0.0D, 0.0D, 0.0D, 0.0D);
         }
     }
 
