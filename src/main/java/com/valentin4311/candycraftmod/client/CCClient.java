@@ -8,7 +8,9 @@ import com.valentin4311.candycraftmod.client.model.BeeModel;
 import com.valentin4311.candycraftmod.client.model.BeetleModel;
 import com.valentin4311.candycraftmod.client.model.DragonModel;
 import com.valentin4311.candycraftmod.client.model.GummyBunnyModel;
+import com.valentin4311.candycraftmod.client.model.GummyBearModel;
 import com.valentin4311.candycraftmod.client.model.GummyMouseModel;
+import com.valentin4311.candycraftmod.client.model.GummyMouseOuterModel;
 import com.valentin4311.candycraftmod.client.model.MermaidModel;
 import com.valentin4311.candycraftmod.client.model.NessieModel;
 import com.valentin4311.candycraftmod.client.model.NougatGolemModel;
@@ -86,8 +88,7 @@ public final class CCClient {
     private static final ResourceLocation FLOUR_LOADING_BACKGROUND = new ResourceLocation(CandyCraft.MODID, "textures/block/flour.png");
     private static final ResourceLocation JAWBREAKER_LOADING_BACKGROUND = new ResourceLocation(CandyCraft.MODID, "textures/block/jaw_breaker_block.png");
     private static final ResourceLocation JAWBREAKER_RUNE_BACKGROUND = new ResourceLocation(CandyCraft.MODID, "textures/block/jaw_breaker_light.png");
-    private static final ResourceLocation CARAMEL_PORTAL_OVERLAY = new ResourceLocation(CandyCraft.MODID, "textures/block/caramel_portal.png");
-    private static final ResourceLocation LIQUID_CANDY_PORTAL_OVERLAY = new ResourceLocation(CandyCraft.MODID, "textures/block/liquid_candy_portal.png");
+    private static final ResourceLocation VANILLA_PORTAL_OVERLAY = new ResourceLocation("textures/misc/nausea.png");
     private static final ResourceLocation CANDY_WORLD_EFFECTS = new ResourceLocation(CandyCraft.MODID, "candy_world_effects");
     private static final int CANDY_WORLD_FOG_FALLBACK = 0xEEAABB;
     private static final int CANDY_WORLD_SKY_FALLBACK = 0xFDD8D7;
@@ -97,7 +98,6 @@ public final class CCClient {
     private static int jellyWandModeUntilTick;
     private static String activeJellyWandModeKey = "";
     private static int portalOverlayTicks;
-    private static ResourceLocation portalOverlayTexture = CARAMEL_PORTAL_OVERLAY;
     private static boolean dungeonLoadingActive;
     private static int dungeonLoadingTimeoutTicks;
     private static boolean candyWorldLoadingActive;
@@ -158,20 +158,21 @@ public final class CCClient {
             return;
         }
         float progress = Mth.clamp((portalOverlayTicks + partialTick) / 80.0F, 0.0F, 1.0F);
-        float alpha = Mth.clamp(0.12F + progress * progress * 0.78F, 0.0F, 0.9F);
-        int tile = Math.max(24, Math.round(96.0F - progress * 48.0F));
-        int scroll = Math.round((Minecraft.getInstance().player == null ? 0 : Minecraft.getInstance().player.tickCount + partialTick) * (2.0F + progress * 4.0F));
+        if (progress < 1.0F) {
+            progress *= progress;
+            progress = progress * 0.8F + 0.2F;
+        }
 
+        RenderSystem.disableDepthTest();
+        RenderSystem.depthMask(false);
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, alpha);
-        for (int x = -tile + Math.floorMod(scroll, tile); x < screenWidth + tile; x += tile) {
-            for (int y = -tile + Math.floorMod(scroll / 2, tile); y < screenHeight + tile; y += tile) {
-                graphics.blit(portalOverlayTexture, x, y, 0, 0, tile, tile, tile, tile);
-            }
-        }
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, Mth.clamp(progress, 0.0F, 1.0F));
+        graphics.blit(VANILLA_PORTAL_OVERLAY, 0, 0, -90, 0.0F, 0.0F, screenWidth, screenHeight, screenWidth, screenHeight);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
         RenderSystem.disableBlend();
+        RenderSystem.depthMask(true);
+        RenderSystem.enableDepthTest();
     }
 
     private static void renderDragonMountPowerOverlay(net.minecraftforge.client.gui.overlay.ForgeGui gui, GuiGraphics graphics,
@@ -671,6 +672,8 @@ public final class CCClient {
         event.registerLayerDefinition(PingouinModel.LAYER, PingouinModel::createBodyLayer);
         event.registerLayerDefinition(GummyBunnyModel.LAYER, GummyBunnyModel::createBodyLayer);
         event.registerLayerDefinition(GummyMouseModel.LAYER, GummyMouseModel::createBodyLayer);
+        event.registerLayerDefinition(GummyMouseOuterModel.LAYER, GummyMouseOuterModel::createBodyLayer);
+        event.registerLayerDefinition(GummyBearModel.LAYER, GummyBearModel::createBodyLayer);
         event.registerLayerDefinition(GingerbreadManModel.LAYER, GingerbreadManModel::createBodyLayer);
         event.registerLayerDefinition(SuguardModel.LAYER, SuguardModel::createBodyLayer);
         event.registerLayerDefinition(WaffleSheepModel.LAYER, WaffleSheepModel::createBodyLayer);
@@ -935,7 +938,6 @@ public final class CCClient {
             if (state.is(CCBlocks.CANDY_PORTAL.get()) || state.is(CCBlocks.LIQUID_CANDY_PORTAL.get())) {
                 portalOverlayTicks = Math.min(80, portalOverlayTicks + 1);
                 beginCandyWorldLoadingScreen();
-                portalOverlayTexture = state.is(CCBlocks.LIQUID_CANDY_PORTAL.get()) ? LIQUID_CANDY_PORTAL_OVERLAY : CARAMEL_PORTAL_OVERLAY;
             } else {
                 portalOverlayTicks = Math.max(0, portalOverlayTicks - 4);
             }

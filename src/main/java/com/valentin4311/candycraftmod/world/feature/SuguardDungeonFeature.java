@@ -254,7 +254,7 @@ public class SuguardDungeonFeature extends Feature<NoneFeatureConfiguration> {
 
     private void barrierRoom(WorldGenLevel level, RandomSource random, int x, int y, int z) {
         hollowBox(level, x - 11, y - 18, z, x + 11, y + 10, z + 52, yFastCheckerPattern(chocolate(), cobble()));
-        checkerBox(level, x - 11, y + 2, z, x + 11, y + 2, z + 52, chocolate(), honeyLamp());
+        wallBox(level, x - 11, y + 2, z, x + 11, y + 2, z + 52, fastCheckerPattern(chocolate(), honeyLamp()));
         box(level, x - 10, y - 17, z + 1, x + 10, y - 7, z + 51, CCBlocks.GRENADINE.get().defaultBlockState());
         for (int dx = -9; dx < 10; dx++) {
             for (int dz = 1; dz < 52; dz++) {
@@ -336,7 +336,7 @@ public class SuguardDungeonFeature extends Feature<NoneFeatureConfiguration> {
         box(level, x - 2, 11, z + 13, x + 2, 11, z + 18, CCBlocks.JELLY_SHOCK_ABSORBER.get().defaultBlockState());
         box(level, x, 12, z + 2, x, 13, z + 4, Blocks.AIR.defaultBlockState());
         box(level, x - 1, 240, z + 9, x + 1, 249, z + 12, Blocks.AIR.defaultBlockState());
-        hollowBox(level, x - 1, 239, z + 11, x + 1, 249, z + 11, jumpWallPattern());
+        zPipe(level, x - 1, 239, z + 11, x + 1, 249, z + 11, jumpWallPattern());
         box(level, x - 1, 239, z + 10, x + 1, 239, z + 12, CCBlocks.JELLY_SHOCK_ABSORBER.get().defaultBlockState());
         box(level, x - 4, 250, z + 3, x + 4, 251, z + 19, caramelBrick());
         box(level, x - 3, 250, z + 4, x + 3, 250, z + 18, jumpWallPattern());
@@ -719,6 +719,24 @@ public class SuguardDungeonFeature extends Feature<NoneFeatureConfiguration> {
             for (int x = minX; x <= maxX; x++) {
                 set(level, x, y, minZ, pattern.get(x, y, minZ));
                 set(level, x, y, maxZ, pattern.get(x, y, maxZ));
+            }
+        }
+    }
+
+    private void zPipe(WorldGenLevel level, int x1, int y1, int z1, int x2, int y2, int z2, StatePattern pattern) {
+        int minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+        int minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
+        int minZ = Math.min(z1, z2), maxZ = Math.max(z1, z2);
+        for (int y = minY; y <= maxY; y++) {
+            for (int z = minZ; z <= maxZ; z++) {
+                set(level, minX, y, z, pattern.get(minX, y, z));
+                set(level, maxX, y, z, pattern.get(maxX, y, z));
+            }
+        }
+        for (int x = minX; x <= maxX; x++) {
+            for (int z = minZ; z <= maxZ; z++) {
+                set(level, x, minY, z, pattern.get(x, minY, z));
+                set(level, x, maxY, z, pattern.get(x, maxY, z));
             }
         }
     }

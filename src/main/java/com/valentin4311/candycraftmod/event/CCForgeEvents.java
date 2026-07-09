@@ -175,6 +175,8 @@ public final class CCForgeEvents {
         if (type != CCEntityTypes.CANDY_PIG.get() && type != CCEntityTypes.WAFFLE_SHEEP.get()
             && type != CCEntityTypes.SUGUARD.get() && type != CCEntityTypes.PINGOUIN.get()
             && type != CCEntityTypes.GUMMY_BUNNY.get() && type != CCEntityTypes.CANDY_WOLF.get()
+            && type != CCEntityTypes.COTTON_CANDY_SHEEP.get() && type != CCEntityTypes.EASTER_CHICKEN.get()
+            && type != CCEntityTypes.GUMMY_MOUSE.get() && type != CCEntityTypes.GUMMY_BEAR.get()
             && type != CCEntityTypes.JELLY_QUEEN.get() && type != CCEntityTypes.CARAMEL_BEE.get()
             && type != CCEntityTypes.NOUGAT_GOLEM.get() && type != CCEntityTypes.BEETLE.get()
             && type != CCEntityTypes.BOSS_BEETLE.get()
@@ -232,7 +234,16 @@ public final class CCForgeEvents {
             return event.getSpawnType() == MobSpawnType.STRUCTURE;
         }
         if (type == CCEntityTypes.PINGOUIN.get()) {
-            return "ice_cream_plains".equals(path);
+            return "ice_cream_plains".equals(path) || "ice_cream_sky_mountains".equals(path);
+        }
+        if (type == CCEntityTypes.COTTON_CANDY_SHEEP.get()) {
+            return "cotton_candy_plains".equals(path);
+        }
+        if (type == CCEntityTypes.EASTER_CHICKEN.get()) {
+            return "chocolate_forest".equals(path);
+        }
+        if (type == CCEntityTypes.GUMMY_MOUSE.get() || type == CCEntityTypes.GUMMY_BEAR.get()) {
+            return "gummy_swamp".equals(path);
         }
         if (type == CCEntityTypes.CANDY_WOLF.get()) {
             return switch (path) {
@@ -483,11 +494,44 @@ public final class CCForgeEvents {
     private static boolean isCandySpawnSurface(BlockState state) {
         return state.is(CCBlocks.PUDDING.get())
             || state.is(CCBlocks.FLOUR.get())
+            || state.is(CCBlocks.CANDY_GRASS_BLOCK.get())
+            || state.is(CCBlocks.DARK_CANDY_GRASS_BLOCK.get())
+            || state.is(CCBlocks.SUGAR_SAND.get())
+            || state.is(CCBlocks.CRYSTALLIZED_SUGAR.get())
+            || state.is(CCBlocks.MILK_BROWNIE_BLOCK.get())
+            || state.is(CCBlocks.WHITE_BROWNIE_BLOCK.get())
+            || state.is(CCBlocks.DARK_BROWNIE_BLOCK.get())
+            || state.is(CCBlocks.MILK_BROWNIE_CAKE_ROLL_BLOCK.get())
+            || state.is(CCBlocks.WHITE_BROWNIE_CAKE_ROLL_BLOCK.get())
+            || state.is(CCBlocks.DARK_BROWNIE_CAKE_ROLL_BLOCK.get())
+            || state.is(CCBlocks.CHOCOLATE_COVERED_WHITE_BROWNIE.get())
+            || isGummySpawnSurface(state)
+            || state.is(CCBlocks.ICE_CREAM.get())
+            || state.is(CCBlocks.STRAWBERRY_ICE_CREAM.get())
+            || state.is(CCBlocks.MINT_ICE_CREAM.get())
+            || state.is(CCBlocks.BLUEBERRY_ICE_CREAM.get())
             || state.is(CCBlocks.MARSHMALLOW_PLANKS.get())
             || state.is(CCBlocks.MARSHMALLOW_LOG.get())
             || state.is(CCBlocks.MARSHMALLOW_LOG_DARK.get())
-            || state.is(CCBlocks.MARSHMALLOW_LOG_LIGHT.get())
-            || state.is(CCBlocks.COTTON_CANDY_BLOCK.get());
+            || state.is(CCBlocks.MARSHMALLOW_LOG_LIGHT.get());
+    }
+
+    private static boolean isGummySpawnSurface(BlockState state) {
+        return state.is(CCBlocks.RED_GUMMY_BLOCK.get())
+            || state.is(CCBlocks.ORANGE_GUMMY_BLOCK.get())
+            || state.is(CCBlocks.YELLOW_GUMMY_BLOCK.get())
+            || state.is(CCBlocks.WHITE_GUMMY_BLOCK.get())
+            || state.is(CCBlocks.GREEN_GUMMY_BLOCK.get())
+            || state.is(CCBlocks.RED_HARDENED_GUMMY_BLOCK.get())
+            || state.is(CCBlocks.ORANGE_HARDENED_GUMMY_BLOCK.get())
+            || state.is(CCBlocks.YELLOW_HARDENED_GUMMY_BLOCK.get())
+            || state.is(CCBlocks.WHITE_HARDENED_GUMMY_BLOCK.get())
+            || state.is(CCBlocks.GREEN_HARDENED_GUMMY_BLOCK.get())
+            || state.is(CCBlocks.RED_GUMMY_WORM_BLOCK.get())
+            || state.is(CCBlocks.ORANGE_GUMMY_WORM_BLOCK.get())
+            || state.is(CCBlocks.YELLOW_GUMMY_WORM_BLOCK.get())
+            || state.is(CCBlocks.WHITE_GUMMY_WORM_BLOCK.get())
+            || state.is(CCBlocks.GREEN_GUMMY_WORM_BLOCK.get());
     }
 
     private static boolean isCandyLeafSurface(BlockState state) {
@@ -500,7 +544,8 @@ public final class CCForgeEvents {
             || state.is(CCBlocks.CANDY_LEAVES_ENCHANT.get())
             || state.is(CCBlocks.MILK_CHOCOLATE_LEAVES.get())
             || state.is(CCBlocks.WHITE_CHOCOLATE_LEAVES.get())
-            || state.is(CCBlocks.DARK_CHOCOLATE_LEAVES.get());
+            || state.is(CCBlocks.DARK_CHOCOLATE_LEAVES.get())
+            || state.is(CCBlocks.COTTON_CANDY_BLOCK.get());
     }
 }
 

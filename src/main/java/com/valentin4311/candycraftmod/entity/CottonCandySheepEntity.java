@@ -54,6 +54,11 @@ public class CottonCandySheepEntity extends Sheep {
     }
 
     @Override
+    protected void customServerAiStep() {
+        // Cotton candy sheep use the vanilla sheep body, but not Sheep's grass-eating tick.
+    }
+
+    @Override
     public InteractionResult mobInteract(Player player, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
         if (!isBaby() && !isSheared() && stack.is(Tags.Items.RODS_WOODEN)) {

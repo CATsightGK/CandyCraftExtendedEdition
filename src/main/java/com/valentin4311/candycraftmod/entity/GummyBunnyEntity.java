@@ -27,6 +27,7 @@ public class GummyBunnyEntity extends Rabbit {
     private static final EntityDataAccessor<Integer> RED = SynchedEntityData.defineId(GummyBunnyEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Integer> GREEN = SynchedEntityData.defineId(GummyBunnyEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Integer> BLUE = SynchedEntityData.defineId(GummyBunnyEntity.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Boolean> SWAMP_GUMMY_VARIANT = SynchedEntityData.defineId(GummyBunnyEntity.class, EntityDataSerializers.BOOLEAN);
     private static final int[][] GUMMY_SWAMP_COLORS = {
         { 224, 52, 72 },
         { 244, 151, 42 },
@@ -50,6 +51,7 @@ public class GummyBunnyEntity extends Rabbit {
         entityData.define(RED, 255);
         entityData.define(GREEN, 255);
         entityData.define(BLUE, 255);
+        entityData.define(SWAMP_GUMMY_VARIANT, false);
     }
 
     public int getRed() {
@@ -159,6 +161,7 @@ public class GummyBunnyEntity extends Rabbit {
         GummyBunnyEntity bunny = CCEntityTypes.GUMMY_BUNNY.get().create(level);
         if (bunny != null) {
             bunny.randomizeColor();
+            bunny.entityData.set(SWAMP_GUMMY_VARIANT, false);
             bunny.setVariant(Variant.WHITE);
         }
         return bunny;
@@ -171,14 +174,16 @@ public class GummyBunnyEntity extends Rabbit {
             return;
         }
         int count = 1 + random.nextInt(3) + random.nextInt(looting + 1);
-        spawnAtLocation(new ItemStack(CCItems.GUMMY.get(), count));
+        spawnAtLocation(new ItemStack(dropItemForCurrentColor(), count));
     }
 
     @Nullable
     @Override
     public net.minecraft.world.entity.SpawnGroupData finalizeSpawn(net.minecraft.world.level.ServerLevelAccessor level, net.minecraft.world.DifficultyInstance difficulty, net.minecraft.world.entity.MobSpawnType spawnType, @Nullable net.minecraft.world.entity.SpawnGroupData spawnGroupData, @Nullable CompoundTag tag) {
         net.minecraft.world.entity.SpawnGroupData data = super.finalizeSpawn(level, difficulty, spawnType, spawnGroupData, tag);
-        if (isGummySwamp(level)) {
+        boolean swampVariant = isGummySwamp(level);
+        entityData.set(SWAMP_GUMMY_VARIANT, swampVariant);
+        if (swampVariant) {
             randomizeSwampColor();
         } else {
             randomizeColor();
@@ -193,12 +198,14 @@ public class GummyBunnyEntity extends Rabbit {
         tag.putInt("red", getRed());
         tag.putInt("green", getGreen());
         tag.putInt("blue", getBlue());
+        tag.putBoolean("SwampGummyVariant", entityData.get(SWAMP_GUMMY_VARIANT));
     }
 
     @Override
     public void readAdditionalSaveData(CompoundTag tag) {
         super.readAdditionalSaveData(tag);
         setColor(tag.getInt("red"), tag.getInt("green"), tag.getInt("blue"));
+        entityData.set(SWAMP_GUMMY_VARIANT, tag.getBoolean("SwampGummyVariant"));
         setVariant(Variant.WHITE);
     }
 
@@ -206,7 +213,34 @@ public class GummyBunnyEntity extends Rabbit {
         return Math.abs(getDeltaMovement().x) > 0.003D || Math.abs(getDeltaMovement().z) > 0.003D;
     }
 
-    private boolean isGummySwamp(ServerLevelAccessor level) {
+    private net.minecraft.world.item.Item dropItemForCurrentColor() {
+        if (!entityData.get(SWAMP_GUMMY_VARIANT)) {
+            return CCItems.GUMMY.get();
+        }
+        return GummyMouseEntity.itemForColor(currentGummyColor());
+    }
+
+    private SweetscapeGummyColor currentGummyColor() {
+        int red = getRed();
+        int green = getGreen();
+        int blue = getBlue();
+        SweetscapeGummyColor closest = SweetscapeGummyColor.RED;
+        int closestDistance = Integer.MAX_VALUE;
+        for (SweetscapeGummyColor color : SweetscapeGummyColor.values()) {
+            int rgb = color.color();
+            int dr = red - ((rgb >> 16) & 0xFF);
+            int dg = green - ((rgb >> 8) & 0xFF);
+            int db = blue - (rgb & 0xFF);
+            int distance = dr * dr + dg * dg + db * db;
+            if (distance < closestDistance) {
+                closest = color;
+                closestDistance = distance;
+            }
+        }
+        return closest;
+    }
+
+    private boolean isGummySwamp(net.minecraft.world.level.LevelAccessor level) {
         return level.getBiome(blockPosition()).unwrapKey()
             .map(key -> key.location())
             .filter(id -> CandyCraft.MODID.equals(id.getNamespace()))

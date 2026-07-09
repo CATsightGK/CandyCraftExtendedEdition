@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:ore",
+  "config": {
+    "size": 4,
+    "discard_chance_on_air_exposure": 0,
+    "targets": [
+      {
+        "target": {
+          "predicate_type": "minecraft:tag_match",
+          "tag": "candycraftmod:sweetscape_ore_replaceables"
+        },
+        "state": {
+          "Name": "candycraftmod:dark_brownie_cake_roll_block",
+          "Properties": {
+            "axis": "z"
+          }
+        }
+      }
+    ]
+  }
+}

@@ -44,20 +44,9 @@ public class GummyBearEntity extends PolarBear {
     @Override
     public SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty, MobSpawnType reason,
             @Nullable SpawnGroupData spawnData, @Nullable CompoundTag tag) {
-        if (spawnData instanceof GroupData group) {
-            setColor(group.color);
-            if (group.madeParent) {
-                if (!group.madeSecondParent && random.nextInt(3) == 0) {
-                    group.madeSecondParent = true;
-                } else {
-                    setAge(-24000);
-                }
-            }
-            return group;
-        }
-        GroupData group = new GroupData(SweetscapeGummyColor.random(random));
-        setColor(group.color);
-        return group;
+        SpawnGroupData data = super.finalizeSpawn(level, difficulty, reason, spawnData, tag);
+        setColor(SweetscapeGummyColor.random(random));
+        return data;
     }
 
     @Nullable
@@ -93,19 +82,13 @@ public class GummyBearEntity extends PolarBear {
         return PolarBear.createAttributes();
     }
 
+    @Override
+    public int getMaxSpawnClusterSize() {
+        return 5;
+    }
+
     public static boolean canSpawn(EntityType<? extends Animal> type, ServerLevelAccessor level,
             MobSpawnType reason, BlockPos pos, net.minecraft.util.RandomSource random) {
         return level.getRawBrightness(pos, 0) > 8 && GummyMouseEntity.isGummySurface(level.getBlockState(pos.below()));
-    }
-
-    private static final class GroupData extends AgeableMob.AgeableMobGroupData {
-        private boolean madeParent = true;
-        private boolean madeSecondParent;
-        private final SweetscapeGummyColor color;
-
-        private GroupData(SweetscapeGummyColor color) {
-            super(false);
-            this.color = color;
-        }
     }
 }

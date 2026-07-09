@@ -217,7 +217,14 @@ public class EasterChickenEntity extends Animal {
 
     public static boolean canSpawn(EntityType<? extends EasterChickenEntity> type, ServerLevelAccessor level,
             MobSpawnType reason, BlockPos pos, net.minecraft.util.RandomSource random) {
-        return level.getRawBrightness(pos, 0) > 8 && level.getBlockState(pos.below()).is(CCBlocks.CANDY_GRASS_BLOCK.get());
+        BlockState below = level.getBlockState(pos.below());
+        return level.getRawBrightness(pos, 0) > 8
+            && (below.is(CCBlocks.CANDY_GRASS_BLOCK.get())
+                || below.is(CCBlocks.DARK_CANDY_GRASS_BLOCK.get())
+                || below.is(CCBlocks.CHOCOLATE_COVERED_WHITE_BROWNIE.get())
+                || below.is(CCBlocks.WHITE_BROWNIE_BLOCK.get())
+                || below.is(CCBlocks.MILK_BROWNIE_BLOCK.get())
+                || below.is(CCBlocks.DARK_BROWNIE_BLOCK.get()));
     }
 
     private void firePanic() {

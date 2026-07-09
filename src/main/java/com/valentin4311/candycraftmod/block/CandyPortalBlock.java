@@ -20,7 +20,6 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
-import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.Rotation;
@@ -241,62 +240,6 @@ public class CandyPortalBlock extends Block {
                 level.getChunk(chunkX, chunkZ);
             }
         }
-    }
-
-    private static BlockPos findCandySurface(ServerLevel target, int x, int z) {
-        target.getChunk(Mth.floorDiv(x, 16), Mth.floorDiv(z, 16));
-        BlockPos best = findLandSurface(target, x, z, 0);
-        if (best == null) {
-            for (int radius = 4; radius <= 32; radius += 4) {
-                for (int dx = -radius; dx <= radius; dx += 4) {
-                    for (int dz = -radius; dz <= radius; dz += 4) {
-                        if (Math.abs(dx) != radius && Math.abs(dz) != radius) {
-                            continue;
-                        }
-                        best = findLandSurface(target, x + dx, z + dz, 0);
-                        if (best != null) {
-                            return best;
-                        }
-                    }
-                }
-            }
-        }
-        if (best != null) {
-            return best;
-        }
-        int surface = Math.max(
-            target.getHeight(Heightmap.Types.WORLD_SURFACE, x, z),
-            target.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z)
-        );
-        int y = Math.max(target.getMinBuildHeight() + 2, Math.min(surface + 1, target.getMaxBuildHeight() - 4));
-        return new BlockPos(x, y, z);
-    }
-
-    private static BlockPos findLandSurface(ServerLevel target, int x, int z, int extraClearance) {
-        int surface = Math.max(
-            target.getHeight(Heightmap.Types.WORLD_SURFACE, x, z),
-            target.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z)
-        );
-        int y = Math.max(target.getMinBuildHeight() + 2, Math.min(surface, target.getMaxBuildHeight() - 4));
-
-        for (int scanY = y; scanY >= target.getMinBuildHeight() + 2; --scanY) {
-            BlockPos floorPos = new BlockPos(x, scanY - 1, z);
-            BlockPos feetPos = new BlockPos(x, scanY, z);
-            BlockPos headPos = new BlockPos(x, scanY + 1, z);
-            BlockState floor = target.getBlockState(floorPos);
-            BlockState feet = target.getBlockState(feetPos);
-            BlockState head = target.getBlockState(headPos);
-            if (floor.isFaceSturdy(target, floorPos, Direction.UP)
-                && floor.getFluidState().isEmpty()
-                && feet.getFluidState().isEmpty()
-                && head.getFluidState().isEmpty()
-                && feet.getCollisionShape(target, feetPos).isEmpty()
-                && head.getCollisionShape(target, headPos).isEmpty()) {
-                return new BlockPos(x, scanY + extraClearance, z);
-            }
-        }
-
-        return null;
     }
 
     private static void prepareArrivalPlatform(ServerLevel level, BlockPos pos) {

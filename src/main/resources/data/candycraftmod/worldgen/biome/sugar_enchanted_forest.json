@@ -1,7 +1,8 @@
-﻿{
+{
   "has_precipitation": true,
   "temperature": 0.7,
   "downfall": 0.6,
+  "creature_spawn_probability": 0.18,
   "effects": {
     "sky_color": 14207743,
     "fog_color": 11587794,
@@ -37,12 +38,6 @@
         "maxCount": 4
       },
       {
-        "type": "candycraftmod:caramel_bee",
-        "weight": 60,
-        "minCount": 4,
-        "maxCount": 6
-      },
-      {
         "type": "candycraftmod:candy_pig",
         "weight": 50,
         "minCount": 4,
@@ -56,6 +51,12 @@
       }
     ],
     "monster": [
+      {
+        "type": "candycraftmod:caramel_bee",
+        "weight": 60,
+        "minCount": 4,
+        "maxCount": 6
+      },
       {
         "type": "candycraftmod:cotton_candy_spider",
         "weight": 100,
@@ -116,6 +117,15 @@
       "candycraftmod:ore_sweetscape_milk_brownie",
       "candycraftmod:ore_sweetscape_white_brownie",
       "candycraftmod:ore_sweetscape_dark_brownie",
+      "candycraftmod:ore_sweetscape_milk_brownie_cake_roll_x",
+      "candycraftmod:ore_sweetscape_milk_brownie_cake_roll_y",
+      "candycraftmod:ore_sweetscape_milk_brownie_cake_roll_z",
+      "candycraftmod:ore_sweetscape_white_brownie_cake_roll_x",
+      "candycraftmod:ore_sweetscape_white_brownie_cake_roll_y",
+      "candycraftmod:ore_sweetscape_white_brownie_cake_roll_z",
+      "candycraftmod:ore_sweetscape_dark_brownie_cake_roll_x",
+      "candycraftmod:ore_sweetscape_dark_brownie_cake_roll_y",
+      "candycraftmod:ore_sweetscape_dark_brownie_cake_roll_z",
       "candycraftmod:ore_sweetscape_cake_block",
       "candycraftmod:ore_sweetscape_sugar_cookie",
       "candycraftmod:ore_sweetscape_teleporter",

@@ -71,7 +71,7 @@ public final class CCEntityTypes {
     public static final RegistryObject<EntityType<GummyBallEntity>> GUMMY_BALL = ENTITY_TYPES.register("gummy_ball", () ->
         EntityType.Builder.<GummyBallEntity>of(GummyBallEntity::new, MobCategory.MISC)
             .sized(0.25F, 0.25F)
-            .clientTrackingRange(4)
+            .clientTrackingRange(8)
             .updateInterval(10)
             .build(CandyCraft.MODID + ":gummy_ball")
     );

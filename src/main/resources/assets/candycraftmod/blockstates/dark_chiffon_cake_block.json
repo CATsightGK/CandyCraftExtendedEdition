@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "axis=y": {
+      "model": "candycraftmod:block/chocolate/dark_chiffon_cake_block"
+    },
+    "axis=z": {
+      "model": "candycraftmod:block/chocolate/dark_chiffon_cake_block",
+      "x": 90
+    },
+    "axis=x": {
+      "model": "candycraftmod:block/chocolate/dark_chiffon_cake_block",
+      "x": 90,
+      "y": 90
+    }
+  }
+}

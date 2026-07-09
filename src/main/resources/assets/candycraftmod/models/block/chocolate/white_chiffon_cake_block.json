@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "end": "candycraftmod:block/white_chiffon_cake",
+    "side": "candycraftmod:block/white_chiffon_cake_side"
+  }
+}

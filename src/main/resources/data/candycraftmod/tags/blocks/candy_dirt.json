@@ -7,10 +7,13 @@
     "candycraftmod:candy_farmland",
     "candycraftmod:candy_grass_block",
     "candycraftmod:milk_brownie_block",
+    "candycraftmod:milk_brownie_cake_roll_block",
     "candycraftmod:chocolate_covered_white_brownie",
     "candycraftmod:white_brownie_block",
+    "candycraftmod:white_brownie_cake_roll_block",
     "candycraftmod:dark_candy_grass_block",
     "candycraftmod:dark_brownie_block",
+    "candycraftmod:dark_brownie_cake_roll_block",
     "candycraftmod:red_gummy_block",
     "candycraftmod:red_hardened_gummy_block"
   ]

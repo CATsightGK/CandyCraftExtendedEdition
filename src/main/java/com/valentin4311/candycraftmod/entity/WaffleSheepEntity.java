@@ -50,6 +50,11 @@ public class WaffleSheepEntity extends Sheep {
     }
 
     @Override
+    public int getMaxSpawnClusterSize() {
+        return 6;
+    }
+
+    @Override
     public boolean hurt(DamageSource source, float amount) {
         if (!level().isClientSide && source.getEntity() != null && random.nextInt(4) == 0) {
             spawnAtLocation(CCItems.WAFFLE_NUGGET.get());

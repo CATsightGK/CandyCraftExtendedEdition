@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "end": "candycraftmod:block/milk_brownie_cake_roll",
+    "side": "candycraftmod:block/milk_brownie_cake_roll_side"
+  }
+}

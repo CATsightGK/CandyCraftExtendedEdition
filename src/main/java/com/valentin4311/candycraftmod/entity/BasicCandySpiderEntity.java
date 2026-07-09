@@ -17,9 +17,11 @@ import net.minecraft.server.level.ServerBossEvent;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
+import net.minecraft.util.Mth;
 import net.minecraft.world.BossEvent;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.EntityType;
@@ -46,9 +48,18 @@ import org.joml.Vector3f;
 public class BasicCandySpiderEntity extends Monster {
     private static final EntityDataAccessor<Boolean> ANGRY = SynchedEntityData.defineId(BasicCandySpiderEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Boolean> CHILD = SynchedEntityData.defineId(BasicCandySpiderEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Boolean> BOSS_AWAKE = SynchedEntityData.defineId(BasicCandySpiderEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Boolean> BOSS_MELEE_MODE = SynchedEntityData.defineId(BasicCandySpiderEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Integer> BOSS_ATTACK_STATE = SynchedEntityData.defineId(BasicCandySpiderEntity.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Integer> BOSS_SHOOT_TICKS = SynchedEntityData.defineId(BasicCandySpiderEntity.class, EntityDataSerializers.INT);
     private static final EntityDimensions BEETLE_DIMENSIONS = EntityDimensions.scalable(1.0F, 0.8F);
     private static final EntityDimensions CHILD_BEETLE_DIMENSIONS = EntityDimensions.scalable(0.5F, 0.4F);
     private static final int BOSS_VOLLEY_CHARGE_DURATION = 45;
+    private static final int BOSS_NO_TARGET_SLEEP_DELAY = 20 * 12;
+    public static final int BOSS_ATTACK_NONE = 0;
+    public static final int BOSS_ATTACK_VOLLEY_CHARGE = 1;
+    public static final int BOSS_ATTACK_VOLLEY = 2;
+    public static final int BOSS_ATTACK_SPIN = 3;
     private static final DustParticleOptions BOSS_BEETLE_LICORICE_SWIRL = new DustParticleOptions(new Vector3f(0.09F, 0.02F, 0.06F), 1.25F);
     private static final DustParticleOptions BOSS_BEETLE_CANDY_SWIRL = new DustParticleOptions(new Vector3f(0.92F, 0.34F, 0.55F), 0.95F);
     private static final DustParticleOptions BOSS_BEETLE_SUGAR_GLEAM = new DustParticleOptions(new Vector3f(1.0F, 0.74F, 0.88F), 0.65F);
@@ -58,6 +69,12 @@ public class BasicCandySpiderEntity extends Monster {
     private int bossVolleyChargeTicks;
     private int bossVolleyTicks;
     private int bossSpinTicks;
+    private int bossMeleeCooldown;
+    private int bossNoTargetTicks;
+    private int bossDormantShootCooldown;
+    private int bossQueuedForcedVolleys;
+    private boolean bossVolley75Triggered;
+    private boolean bossVolley45Triggered;
     private final ServerBossEvent bossEvent = new ServerBossEvent(getDisplayName(), BossEvent.BossBarColor.RED, BossEvent.BossBarOverlay.PROGRESS);
 
     public BasicCandySpiderEntity(EntityType<? extends BasicCandySpiderEntity> type, Level level) {
@@ -72,6 +89,10 @@ public class BasicCandySpiderEntity extends Monster {
         super.defineSynchedData();
         entityData.define(ANGRY, false);
         entityData.define(CHILD, false);
+        entityData.define(BOSS_AWAKE, false);
+        entityData.define(BOSS_MELEE_MODE, false);
+        entityData.define(BOSS_ATTACK_STATE, BOSS_ATTACK_NONE);
+        entityData.define(BOSS_SHOOT_TICKS, 0);
     }
 
     @Override
@@ -105,7 +126,27 @@ public class BasicCandySpiderEntity extends Monster {
     }
 
     public boolean isBossAwake() {
-        return bossAwake;
+        return entityData.get(BOSS_AWAKE);
+    }
+
+    public int getBossAttackState() {
+        return entityData.get(BOSS_ATTACK_STATE);
+    }
+
+    public int getBossShootTicks() {
+        return entityData.get(BOSS_SHOOT_TICKS);
+    }
+
+    public boolean isBossMeleeMode() {
+        return entityData.get(BOSS_MELEE_MODE);
+    }
+
+    private void setBossAwake(boolean awake) {
+        bossAwake = awake;
+        entityData.set(BOSS_AWAKE, awake);
+        if (!awake) {
+            bossNoTargetTicks = 0;
+        }
     }
 
     public void setChildBeetle(boolean child) {
@@ -137,6 +178,9 @@ public class BasicCandySpiderEntity extends Monster {
         updateBossBar();
         if (isBossBeetle()) {
             setNoGravity(false);
+            if (!level().isClientSide && !getActiveEffects().isEmpty()) {
+                removeAllEffects();
+            }
             tickBossBeetleBehavior();
         } else {
             setNoGravity(false);
@@ -160,15 +204,31 @@ public class BasicCandySpiderEntity extends Monster {
         }
         if (isBossBeetle()) {
             Entity directEntity = source.getDirectEntity();
-            if (!level().isClientSide && source.getEntity() instanceof LivingEntity) {
+            if (!level().isClientSide && source.getEntity() instanceof LivingEntity attacker && canBossTarget(attacker)) {
                 bossHealthBarRevealed = true;
+                setBossAwake(true);
+                setTarget(attacker);
+            }
+            if (isBossMeleeHealth()) {
+                boolean hurt = super.hurt(source, Math.min(amount, 3.0F));
+                if (hurt && source.getEntity() instanceof LivingEntity attacker && canBossTarget(attacker)) {
+                    setTarget(attacker);
+                }
+                if (hurt) {
+                    checkBossVolleyHealthTriggers();
+                }
+                return hurt;
             }
             if (directEntity instanceof GummyBallEntity ball && ball.getPower() == 3) {
-                bossAwake = true;
-                return super.hurt(source, 8.0F);
+                setBossAwake(true);
+                boolean hurt = super.hurt(source, 8.0F);
+                if (hurt) {
+                    checkBossVolleyHealthTriggers();
+                }
+                return hurt;
             }
-            if (source.getEntity() instanceof Player && !level().isClientSide) {
-                bossAwake = true;
+            if (source.getEntity() instanceof LivingEntity && !level().isClientSide) {
+                setBossAwake(true);
             }
             return false;
         }
@@ -217,12 +277,26 @@ public class BasicCandySpiderEntity extends Monster {
     public void knockback(double strength, double x, double z) {
         if (!isBossBeetle()) {
             super.knockback(strength, x, z);
+            return;
+        }
+        if (isBossMeleeMode() && hasSafeKnockbackLanding(strength, x, z)) {
+            super.knockback(strength * 0.6D, x, z);
         }
     }
 
     @Override
     public boolean removeWhenFarAway(double distanceToClosestPlayer) {
         return !isBossBeetle() && super.removeWhenFarAway(distanceToClosestPlayer);
+    }
+
+    @Override
+    public boolean canBeAffected(MobEffectInstance effect) {
+        return !isBossBeetle() && super.canBeAffected(effect);
+    }
+
+    @Override
+    public boolean isAffectedByPotions() {
+        return !isBossBeetle() && super.isAffectedByPotions();
     }
 
     @Override
@@ -277,6 +351,10 @@ public class BasicCandySpiderEntity extends Monster {
         tag.putBoolean("Child", isChildBeetle());
         tag.putBoolean("BossAwake", bossAwake);
         tag.putBoolean("BossHealthBarRevealed", bossHealthBarRevealed);
+        tag.putBoolean("BossVolley75Triggered", bossVolley75Triggered);
+        tag.putBoolean("BossVolley45Triggered", bossVolley45Triggered);
+        tag.putInt("BossNoTargetTicks", bossNoTargetTicks);
+        tag.putInt("BossQueuedForcedVolleys", bossQueuedForcedVolleys);
     }
 
     @Override
@@ -284,8 +362,12 @@ public class BasicCandySpiderEntity extends Monster {
         super.readAdditionalSaveData(tag);
         setAngry(tag.getBoolean("Angry"));
         setChildBeetle(tag.getBoolean("Child"));
-        bossAwake = tag.getBoolean("BossAwake");
+        setBossAwake(tag.getBoolean("BossAwake"));
         bossHealthBarRevealed = tag.getBoolean("BossHealthBarRevealed");
+        bossVolley75Triggered = tag.getBoolean("BossVolley75Triggered");
+        bossVolley45Triggered = tag.getBoolean("BossVolley45Triggered");
+        bossNoTargetTicks = tag.getInt("BossNoTargetTicks");
+        bossQueuedForcedVolleys = tag.getInt("BossQueuedForcedVolleys");
     }
 
     @Override
@@ -373,45 +455,67 @@ public class BasicCandySpiderEntity extends Monster {
 
     private void tickBossBeetleBehavior() {
         if (level().isClientSide) {
-            if (bossSpinTicks > 0 || random.nextInt(20) == 0) {
-                for (int i = 0; i < 4; i++) {
-                    double angle = (tickCount + i * 18) * 0.18D;
-                    level().addParticle(ParticleTypes.FLAME, getX() + Math.sin(angle) * 2.5D, getY() + 2.5D, getZ() + Math.cos(angle) * 2.5D, 0.0D, 0.0D, 0.0D);
-                }
-            }
             return;
         }
 
-        Player close = CandyTargeting.nearestAttackablePlayer(level(), this, 10.0D);
-        if (close != null) {
-            bossAwake = true;
+        if (getBossShootTicks() > 0) {
+            entityData.set(BOSS_SHOOT_TICKS, getBossShootTicks() - 1);
         }
         if (!bossAwake) {
-            heal(5.0F);
+            entityData.set(BOSS_MELEE_MODE, false);
+            entityData.set(BOSS_ATTACK_STATE, BOSS_ATTACK_NONE);
+            entityData.set(BOSS_SHOOT_TICKS, 0);
+            healBossBeetleWithoutTarget();
             setDeltaMovement(0.0D, getDeltaMovement().y, 0.0D);
             if (getAttribute(Attributes.MOVEMENT_SPEED) != null) {
                 getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(0.0D);
             }
+            tickDormantBossBeetleShooting();
             return;
         }
         if (getAttribute(Attributes.MOVEMENT_SPEED) != null) {
             getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(0.35D);
         }
 
-        Player target = CandyTargeting.nearestAttackablePlayer(level(), this, 48.0D);
+        LivingEntity target = getTarget();
+        if (!canBossTarget(target) || distanceToSqr(target) > 48.0D * 48.0D) {
+            target = null;
+        }
         if (target == null) {
-            bossAwake = false;
+            bossNoTargetTicks++;
+            healBossBeetleWithoutTarget();
             bossVolleyChargeTicks = 0;
             bossVolleyTicks = 0;
             bossSpinTicks = 0;
+            bossMeleeCooldown = 0;
+            entityData.set(BOSS_MELEE_MODE, false);
+            entityData.set(BOSS_ATTACK_STATE, BOSS_ATTACK_NONE);
+            entityData.set(BOSS_SHOOT_TICKS, 0);
+            setDeltaMovement(0.0D, getDeltaMovement().y, 0.0D);
+            getNavigation().stop();
+            if (bossNoTargetTicks >= BOSS_NO_TARGET_SLEEP_DELAY) {
+                setBossAwake(false);
+            }
             return;
         }
+        bossNoTargetTicks = 0;
         setTarget(target);
         getLookControl().setLookAt(target, 10.0F, getMaxHeadXRot());
+        if (!isBossMeleeHealth()) {
+            faceBossBeetleTarget(target);
+        }
+        checkBossVolleyHealthTriggers();
+        if (tryStartForcedBossVolley()) {
+            entityData.set(BOSS_MELEE_MODE, false);
+            entityData.set(BOSS_ATTACK_STATE, BOSS_ATTACK_VOLLEY_CHARGE);
+            return;
+        }
         if (bossCooldown > 0) {
             bossCooldown--;
         }
         if (bossVolleyChargeTicks > 0) {
+            entityData.set(BOSS_MELEE_MODE, false);
+            entityData.set(BOSS_ATTACK_STATE, BOSS_ATTACK_VOLLEY_CHARGE);
             spawnBossBeetleVolleyChargeParticles((ServerLevel) level());
             bossVolleyChargeTicks--;
             if (bossVolleyChargeTicks <= 0) {
@@ -420,27 +524,148 @@ public class BasicCandySpiderEntity extends Monster {
             return;
         }
         if (bossVolleyTicks > 0 && tickCount % 2 == 0) {
+            entityData.set(BOSS_MELEE_MODE, false);
+            entityData.set(BOSS_ATTACK_STATE, BOSS_ATTACK_VOLLEY);
             bossVolleyTicks--;
             shootBossBall(target, 3, true);
         }
         if (bossSpinTicks > 0) {
-            spawnBossBeetleSpinParticles((ServerLevel) level());
+            entityData.set(BOSS_MELEE_MODE, false);
+            entityData.set(BOSS_ATTACK_STATE, BOSS_ATTACK_SPIN);
             bossSpinTicks--;
-            if (bossSpinTicks < 100 && tickCount % 4 == 0) {
+            if (bossSpinTicks < 100) {
                 shootBossBall(target, 2, false);
             }
+        }
+        if (bossVolleyChargeTicks <= 0 && bossVolleyTicks <= 0 && bossSpinTicks <= 0 && isBossMeleeHealth()) {
+            tickBossMeleeMode(target);
+            return;
+        }
+        if (bossVolleyTicks <= 0 && bossSpinTicks <= 0) {
+            entityData.set(BOSS_MELEE_MODE, false);
+            entityData.set(BOSS_ATTACK_STATE, BOSS_ATTACK_NONE);
         }
         if (bossCooldown <= 0) {
             double healthPercent = getHealth() / getMaxHealth();
             bossCooldown = (int)(40 - (35 - healthPercent * 35));
             if (healthPercent < 0.5D && random.nextInt(6) == 0) {
-                bossVolleyChargeTicks = BOSS_VOLLEY_CHARGE_DURATION;
+                beginBossVolley();
             } else if (healthPercent < 0.84D && random.nextInt(10) == 0) {
                 bossSpinTicks = 200;
             } else {
                 shootBossBall(target, 3, false);
             }
         }
+    }
+
+    private boolean tryStartForcedBossVolley() {
+        if (bossVolleyChargeTicks > 0 || bossVolleyTicks > 0) {
+            return false;
+        }
+        if (bossQueuedForcedVolleys > 0) {
+            bossQueuedForcedVolleys--;
+            beginBossVolley();
+            return true;
+        }
+        checkBossVolleyHealthTriggers();
+        if (bossQueuedForcedVolleys > 0) {
+            bossQueuedForcedVolleys--;
+            beginBossVolley();
+            return true;
+        }
+        return false;
+    }
+
+    private void checkBossVolleyHealthTriggers() {
+        if (!isBossBeetle()) {
+            return;
+        }
+        if (!bossVolley75Triggered && getHealth() <= 75.0F) {
+            bossVolley75Triggered = true;
+            bossQueuedForcedVolleys++;
+        }
+        if (!bossVolley45Triggered && getHealth() <= 45.0F) {
+            bossVolley45Triggered = true;
+            bossQueuedForcedVolleys++;
+        }
+    }
+
+    private void beginBossVolley() {
+        bossVolleyChargeTicks = BOSS_VOLLEY_CHARGE_DURATION;
+        bossVolleyTicks = 0;
+        bossSpinTicks = 0;
+        bossCooldown = 80;
+    }
+
+    private void healBossBeetleWithoutTarget() {
+        heal(5.0F);
+    }
+
+    private void tickBossMeleeMode(LivingEntity target) {
+        entityData.set(BOSS_MELEE_MODE, true);
+        entityData.set(BOSS_ATTACK_STATE, BOSS_ATTACK_NONE);
+        if (getAttribute(Attributes.MOVEMENT_SPEED) != null) {
+            getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(0.46D);
+        }
+        getLookControl().setLookAt(target, 10.0F, getMaxHeadXRot());
+        getNavigation().moveTo(target, 0.46D);
+        if (bossCooldown <= 0) {
+            shootBossBall(target, 3, false, true);
+            double healthPercent = getHealth() / getMaxHealth();
+            bossCooldown = (int)(40 - (35 - healthPercent * 35));
+        }
+        if (bossMeleeCooldown > 0) {
+            bossMeleeCooldown--;
+        }
+        if (distanceToSqr(target) <= 9.0D && hasLineOfSight(target) && bossMeleeCooldown <= 0) {
+            target.hurt(damageSources().mobAttack(this), 4.0F);
+            target.knockback(1.15D, getX() - target.getX(), getZ() - target.getZ());
+            bossMeleeCooldown = 28;
+            swing(net.minecraft.world.InteractionHand.MAIN_HAND);
+        }
+    }
+
+    private boolean isBossMeleeHealth() {
+        return isBossBeetle() && getHealth() <= getMaxHealth() * 0.3F;
+    }
+
+    private boolean hasSafeKnockbackLanding(double strength, double x, double z) {
+        double length = Math.sqrt(x * x + z * z);
+        if (length < 1.0E-4D) {
+            return true;
+        }
+        double distance = Math.min(2.5D, Math.max(0.4D, strength * 1.8D));
+        double dx = x / length * distance;
+        double dz = z / length * distance;
+        BlockPos landing = BlockPos.containing(getX() - dx, getY() - 0.1D, getZ() - dz);
+        for (int yOffset = 0; yOffset <= 2; yOffset++) {
+            BlockPos feet = landing.below(yOffset);
+            if (level().getBlockState(feet).isFaceSturdy(level(), feet, net.minecraft.core.Direction.UP)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void faceBossBeetleTarget(LivingEntity target) {
+        float[] aim = bossBeetleAimTo(target);
+        setYRot(aim[0]);
+        setXRot(aim[1]);
+        yBodyRot = aim[0];
+        yHeadRot = aim[0];
+    }
+
+    private float[] bossBeetleAimTo(LivingEntity target) {
+        double dx = target.getX() - getX();
+        double dy = target.getEyeY() - getEyeY();
+        double dz = target.getZ() - getZ();
+        double horizontal = Math.sqrt(dx * dx + dz * dz);
+        if (horizontal < 1.0E-4D) {
+            return new float[] { getYRot(), getXRot() };
+        }
+        float yaw = (float)(Mth.atan2(dz, dx) * 180.0D / Math.PI) - 90.0F;
+        float pitch = (float)(-(Mth.atan2(dy, horizontal) * 180.0D / Math.PI));
+        return new float[] { yaw, pitch };
     }
 
     private void updateBossBar() {
@@ -470,6 +695,9 @@ public class BasicCandySpiderEntity extends Monster {
                 double z = getZ() + Math.sin(angle) * radius;
                 DustParticleOptions particle = (i + arm) % 3 == 0 ? BOSS_BEETLE_CANDY_SWIRL : BOSS_BEETLE_LICORICE_SWIRL;
                 level.sendParticles(particle, x, centerY + waveY, z, 1, 0.0D, 0.0D, 0.0D, 0.0D);
+                if ((i + arm + tickCount) % 4 == 0) {
+                    level.sendParticles(ParticleTypes.FLAME, x, centerY + waveY, z, 1, 0.0D, 0.02D, 0.0D, 0.0D);
+                }
             }
         }
 
@@ -486,35 +714,100 @@ public class BasicCandySpiderEntity extends Monster {
         }
     }
 
-    private void spawnBossBeetleSpinParticles(ServerLevel level) {
-        for (int i = 0; i <= 16; i++) {
-            double angle = (i * 11.25D + tickCount) / 90.0D * Math.PI;
-            double radius = Math.cos(tickCount * 0.05D) * 2.5D;
-            double x = -Math.sin(angle) * radius + getX();
-            double z = Math.cos(angle) * radius + getZ();
-            double yWave = i % 2 == 0 ? Math.cos(tickCount * 0.05D) : Math.cos((tickCount + 10) * 0.05D);
-            double y = yWave + getY() + 3.0D;
-            level.sendParticles(ParticleTypes.FLAME, x, y, z, 1, 0.0D, 0.0D, 0.0D, 0.0D);
-        }
+    private void shootBossBall(LivingEntity target, int power, boolean lob) {
+        shootBossBall(target, power, lob, true);
     }
 
-    private void shootBossBall(Player target, int power, boolean lob) {
+    private void shootBossBall(LivingEntity target, int power, boolean lob, boolean turnBody) {
         if (!(level() instanceof ServerLevel serverLevel)) {
             return;
         }
+        float[] aim = bossBeetleAimTo(target);
+        if (turnBody) {
+            faceBossBeetleTarget(target);
+        }
         GummyBallEntity ball = new GummyBallEntity(serverLevel, this, power);
         ball.setBossBeetleProjectile(true);
-        if (power == 3) {
-            ball.setVisualVariant(GummyBallEntity.BOSS_BEETLE_GUMMY_VISUAL);
-        }
-        ball.setPos(getX(), getY() + 1.2D, getZ());
         if (lob) {
-            ball.setDeltaMovement((random.nextBoolean() ? -1 : 1) * (0.075D + random.nextDouble() * 0.15D), 1.5D, (random.nextBoolean() ? -1 : 1) * (0.075D + random.nextDouble() * 0.15D));
+            ball.setAirState(1);
+            ball.setPower(3);
+            ball.setPos(getX(), getY() + 2.0D, getZ());
+            ball.setDeltaMovement(((random.nextBoolean() ? -1.0D : 1.0D) * 3.0D + random.nextDouble() * 6.0D) / 40.0D,
+                1.5D,
+                ((random.nextBoolean() ? -1.0D : 1.0D) * 3.0D + random.nextDouble() * 6.0D) / 40.0D);
         } else {
-            ball.shoot(target.getX() - getX(), target.getEyeY() - ball.getY(), target.getZ() - getZ(), 1.25F, 8.0F);
+            float velocity = power == 3 ? 0.8F : 1.5F;
+            ball.shootFromCandySource(this, aim[0], aim[1], velocity);
+            if (power == 2) {
+                ball.setAirState(3);
+            }
         }
         serverLevel.addFreshEntity(ball);
+        if (power == 3 && getBossShootTicks() <= 2) {
+            entityData.set(BOSS_SHOOT_TICKS, 6);
+        }
         playSound(net.minecraft.sounds.SoundEvents.ARROW_SHOOT, 1.0F, 0.8F + random.nextFloat() * 0.4F);
+    }
+
+    private void tickDormantBossBeetleShooting() {
+        LivingEntity target = nearestDormantBossPlayer(5.0D);
+        if (target == null) {
+            if (bossDormantShootCooldown > 0) {
+                bossDormantShootCooldown--;
+            }
+            return;
+        }
+        faceBossBeetleTarget(target);
+        getLookControl().setLookAt(target, 10.0F, getMaxHeadXRot());
+        if (bossDormantShootCooldown > 0) {
+            bossDormantShootCooldown--;
+            return;
+        }
+        shootBossBall(target, 3, false, true);
+        bossDormantShootCooldown = 36 + random.nextInt(18);
+    }
+
+    @Nullable
+    private LivingEntity nearestDormantBossPlayer(double range) {
+        return level().getEntitiesOfClass(Player.class, getBoundingBox().inflate(range),
+                player -> CandyTargeting.canAttackPlayer(player) && isDormantBossPlayerInFront(player))
+            .stream()
+            .min(java.util.Comparator.comparingDouble(this::distanceToSqr))
+            .orElse(null);
+    }
+
+    private boolean isDormantBossPlayerInFront(Player player) {
+        if (!hasLineOfSight(player) || Math.abs(player.getY() - getY()) > 2.25D || player.getEyeY() < getY() + 0.45D) {
+            return false;
+        }
+        double dx = player.getX() - getX();
+        double dz = player.getZ() - getZ();
+        double horizontal = Math.sqrt(dx * dx + dz * dz);
+        if (horizontal < 1.0E-4D || horizontal > 5.0D) {
+            return false;
+        }
+        float yawRad = getYRot() * ((float)Math.PI / 180.0F);
+        double lookX = -Mth.sin(yawRad);
+        double lookZ = Mth.cos(yawRad);
+        double dot = lookX * (dx / horizontal) + lookZ * (dz / horizontal);
+        return dot >= 0.35D;
+    }
+
+    private LivingEntity nearestBossTarget(double range) {
+        return level().getEntitiesOfClass(LivingEntity.class, getBoundingBox().inflate(range), this::canBossTarget)
+            .stream()
+            .min(java.util.Comparator.comparingDouble(this::distanceToSqr))
+            .orElse(null);
+    }
+
+    private boolean canBossTarget(@Nullable Entity entity) {
+        if (!(entity instanceof LivingEntity living) || entity == this || !living.isAlive()) {
+            return false;
+        }
+        if (entity instanceof BasicCandySpiderEntity spider && spider.isBossBeetle()) {
+            return false;
+        }
+        return CandyTargeting.canAttackEntity(entity);
     }
 
     private boolean isBeetle() {

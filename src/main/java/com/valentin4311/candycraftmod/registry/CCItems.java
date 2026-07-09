@@ -69,7 +69,8 @@ public final class CCItems {
         () -> Ingredient.of(
             BuiltInRegistries.ITEM.get(new ResourceLocation(CandyCraft.MODID, "milk_chocolate_bar")),
             BuiltInRegistries.ITEM.get(new ResourceLocation(CandyCraft.MODID, "white_chocolate_bar")),
-            BuiltInRegistries.ITEM.get(new ResourceLocation(CandyCraft.MODID, "dark_chocolate_bar"))
+            BuiltInRegistries.ITEM.get(new ResourceLocation(CandyCraft.MODID, "dark_chocolate_bar")),
+            BuiltInRegistries.ITEM.get(new ResourceLocation(CandyCraft.MODID, "ruby_chocolate_bar"))
         ));
     private static final Tier COTTON_CANDY_TIER = new ForgeTier(1, 5, 15.0F, 5.0F, 65,
         BlockTags.create(new ResourceLocation(CandyCraft.MODID, "needs_cotton_candy_tool")),
@@ -258,6 +259,7 @@ public final class CCItems {
     public static final RegistryObject<Item> MILK_CHOCOLATE_BAR = registerSweetscapeFood("milk_chocolate_bar", 6, 0.6F);
     public static final RegistryObject<Item> WHITE_CHOCOLATE_BAR = registerSweetscapeFood("white_chocolate_bar", 6, 0.6F);
     public static final RegistryObject<Item> DARK_CHOCOLATE_BAR = registerSweetscapeFood("dark_chocolate_bar", 6, 0.6F);
+    public static final RegistryObject<Item> RUBY_CHOCOLATE_BAR = registerSweetscapeFood("ruby_chocolate_bar", 6, 0.6F);
     public static final RegistryObject<Item> MILK_CHOCOLATE_EGG = registerSweetscapeFood("milk_chocolate_egg", 7, 0.8F);
     public static final RegistryObject<Item> WHITE_CHOCOLATE_EGG = registerSweetscapeFood("white_chocolate_egg", 7, 0.8F);
     public static final RegistryObject<Item> DARK_CHOCOLATE_EGG = registerSweetscapeFood("dark_chocolate_egg", 7, 0.8F);
@@ -308,7 +310,7 @@ public final class CCItems {
     private static Item createBlockItem(String name, Block block) {
         Item.Properties properties = new Item.Properties();
         return switch (name) {
-            case "marshmallow_door" -> new DoubleHighBlockItem(block, properties);
+            case "marshmallow_door", "marshmallow_door_dark", "marshmallow_door_light" -> new DoubleHighBlockItem(block, properties);
             case "cotton_candy_bed_block" -> new BedItem(block, properties.stacksTo(1));
             case "honey_torch" -> new StandingAndWallBlockItem(block, CCBlocks.HONEY_WALL_TORCH.get(), properties, Direction.DOWN);
             case "marshmallow_slice", "marshmallow_slice_block", "marshmallow_flower_block" -> new PlaceOnWaterBlockItem(block, properties);

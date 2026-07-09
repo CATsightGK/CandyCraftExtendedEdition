@@ -1,15 +1,21 @@
 package com.valentin4311.candycraftmod.client;
 
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.google.common.collect.Maps;
 import com.valentin4311.candycraftmod.CandyCraft;
 import com.valentin4311.candycraftmod.client.model.GummyMouseModel;
+import com.valentin4311.candycraftmod.client.model.GummyMouseOuterModel;
 import com.valentin4311.candycraftmod.entity.GummyMouseEntity;
 import com.valentin4311.candycraftmod.entity.SweetscapeGummyColor;
 import java.util.Map;
 import net.minecraft.Util;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
+import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.client.renderer.entity.MobRenderer;
+import net.minecraft.client.renderer.entity.layers.RenderLayer;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
 
@@ -24,6 +30,7 @@ public class GummyMouseRenderer extends MobRenderer<GummyMouseEntity, GummyMouse
 
     public GummyMouseRenderer(EntityRendererProvider.Context context) {
         super(context, new GummyMouseModel<>(context.bakeLayer(GummyMouseModel.LAYER)), 0.25F);
+        addLayer(new GummyShellLayer(this, context));
     }
 
     @Override
@@ -43,5 +50,26 @@ public class GummyMouseRenderer extends MobRenderer<GummyMouseEntity, GummyMouse
 
     private static ResourceLocation texture(String name) {
         return new ResourceLocation(CandyCraft.MODID, "textures/entity/gummy_mouse/" + name + ".png");
+    }
+
+    private static final class GummyShellLayer extends RenderLayer<GummyMouseEntity, GummyMouseModel<GummyMouseEntity>> {
+        private final GummyMouseOuterModel<GummyMouseEntity> model;
+
+        private GummyShellLayer(GummyMouseRenderer renderer, EntityRendererProvider.Context context) {
+            super(renderer);
+            model = new GummyMouseOuterModel<>(context.bakeLayer(GummyMouseOuterModel.LAYER));
+        }
+
+        @Override
+        public void render(PoseStack poseStack, MultiBufferSource buffer, int packedLight, GummyMouseEntity mouse,
+                float limbSwing, float limbSwingAmount, float partialTick, float ageInTicks, float netHeadYaw, float headPitch) {
+            if (mouse.isInvisible()) {
+                return;
+            }
+            model.prepareMobModel(mouse, limbSwing, limbSwingAmount, partialTick);
+            model.setupAnim(mouse, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
+            VertexConsumer consumer = buffer.getBuffer(RenderType.entityTranslucent(getTextureLocation(mouse)));
+            model.renderToBuffer(poseStack, consumer, packedLight, LivingEntityRenderer.getOverlayCoords(mouse, 0.0F), 1.0F, 1.0F, 1.0F, 0.6F);
+        }
     }
 }

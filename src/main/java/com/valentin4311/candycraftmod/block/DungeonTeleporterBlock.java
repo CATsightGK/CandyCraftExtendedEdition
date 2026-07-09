@@ -110,7 +110,7 @@ public class DungeonTeleporterBlock extends Block {
 
     private static void enterSuguardDungeon(ServerPlayer player, BlockPos sourcePos) {
         ServerLevel source = player.serverLevel();
-        ServerLevel target = player.server.getLevel(CCDimensions.SUGUARD_DUNGEON);
+        ServerLevel target = player.server.getLevel(CCDimensions.JELLY_DUNGEON);
         if (target == null) {
             return;
         }

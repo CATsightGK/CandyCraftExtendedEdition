@@ -23,6 +23,7 @@ import net.minecraft.server.level.WorldGenRegion;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.LevelHeightAccessor;
+import net.minecraft.world.level.NaturalSpawner;
 import net.minecraft.world.level.NoiseColumn;
 import net.minecraft.world.level.StructureManager;
 import net.minecraft.world.level.biome.Biome;
@@ -38,6 +39,7 @@ import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.RandomState;
 import net.minecraft.world.level.levelgen.blending.Blender;
 import net.minecraft.world.level.material.FluidState;
+import net.minecraft.util.RandomSource;
 
 public class CandyWorldChunkGenerator extends ChunkGenerator {
     public static final Codec<CandyWorldChunkGenerator> CODEC = RecordCodecBuilder.create(instance -> instance.group(
@@ -422,6 +424,11 @@ public class CandyWorldChunkGenerator extends ChunkGenerator {
 
     @Override
     public void spawnOriginalMobs(WorldGenRegion region) {
+        ChunkPos chunkPos = region.getCenter();
+        BlockPos center = new BlockPos(chunkPos.getMinBlockX() + 8, SEA_LEVEL, chunkPos.getMinBlockZ() + 8);
+        Holder<Biome> biome = region.getBiome(center);
+        RandomSource random = RandomSource.create(region.getSeed() ^ Mth.getSeed(center));
+        NaturalSpawner.spawnMobsForChunkGeneration(region, biome, chunkPos, random);
     }
 
     @Override
@@ -527,6 +534,16 @@ public class CandyWorldChunkGenerator extends ChunkGenerator {
         depth /= totalWeight;
         scale = scale * 0.9D + 0.1D;
         depth = (depth * 4.0D - 1.0D) / 8.0D;
+
+        double blockX = noiseX * CELL_WIDTH;
+        double blockZ = noiseZ * CELL_WIDTH;
+        double spawnIsland = CandyBiomeSource.spawnIslandInfluence(blockX, blockZ, worldSeed(randomState));
+        if (spawnIsland > 0.0D) {
+            double islandNoise = octaveNoise2D(blockX * 0.018D, blockZ * 0.018D, 4, worldSeed(randomState) ^ 0x5A51A7D15A4EL);
+            double detailNoise = octaveNoise2D(blockX * 0.055D, blockZ * 0.055D, 2, worldSeed(randomState) ^ 0x51A7D15A4E1CL);
+            depth += spawnIsland * (0.045D + islandNoise * 0.035D + detailNoise * 0.012D);
+            scale += spawnIsland * (0.035D + Math.abs(islandNoise) * 0.025D);
+        }
 
         return new HeightConfig(depth, scale);
     }

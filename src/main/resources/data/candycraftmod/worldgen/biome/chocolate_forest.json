@@ -1,7 +1,8 @@
-﻿{
+{
   "has_precipitation": true,
   "temperature": 0.8,
   "downfall": 0.3,
+  "creature_spawn_probability": 0.18,
   "effects": {
     "sky_color": 15784376,
     "fog_color": 15784376,
@@ -121,6 +122,15 @@
       "candycraftmod:ore_sweetscape_milk_brownie",
       "candycraftmod:ore_sweetscape_white_brownie",
       "candycraftmod:ore_sweetscape_dark_brownie",
+      "candycraftmod:ore_sweetscape_milk_brownie_cake_roll_x",
+      "candycraftmod:ore_sweetscape_milk_brownie_cake_roll_y",
+      "candycraftmod:ore_sweetscape_milk_brownie_cake_roll_z",
+      "candycraftmod:ore_sweetscape_white_brownie_cake_roll_x",
+      "candycraftmod:ore_sweetscape_white_brownie_cake_roll_y",
+      "candycraftmod:ore_sweetscape_white_brownie_cake_roll_z",
+      "candycraftmod:ore_sweetscape_dark_brownie_cake_roll_x",
+      "candycraftmod:ore_sweetscape_dark_brownie_cake_roll_y",
+      "candycraftmod:ore_sweetscape_dark_brownie_cake_roll_z",
       "candycraftmod:ore_sweetscape_cake_block",
       "candycraftmod:ore_sweetscape_sugar_cookie",
       "candycraftmod:ore_sweetscape_teleporter",

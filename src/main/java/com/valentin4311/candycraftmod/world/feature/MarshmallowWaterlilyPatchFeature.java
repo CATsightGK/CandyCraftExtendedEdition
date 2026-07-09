@@ -66,7 +66,7 @@ public class MarshmallowWaterlilyPatchFeature extends Feature<NoneFeatureConfigu
         if (!isWaterSurface(level, pos)) {
             return false;
         }
-        return CCBlocks.MARSHMALLOW_SLICE.get().defaultBlockState().canSurvive(level, pos);
+        return hasNearbyDryShore(level, pos) && CCBlocks.MARSHMALLOW_SLICE.get().defaultBlockState().canSurvive(level, pos);
     }
 
     private static boolean isWaterSurface(WorldGenLevel level, BlockPos pos) {
@@ -112,6 +112,28 @@ public class MarshmallowWaterlilyPatchFeature extends Feature<NoneFeatureConfigu
                 for (int dy = -2; dy <= 1; dy++) {
                     cursor.set(pos.getX() + dx, pos.getY() + dy, pos.getZ() + dz);
                     if (level.getBlockState(cursor).is(CCBlocks.CANDY_GRASS_BLOCK.get())) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    private static boolean hasNearbyDryShore(WorldGenLevel level, BlockPos pos) {
+        BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
+        for (int dz = -8; dz <= 8; dz++) {
+            for (int dx = -8; dx <= 8; dx++) {
+                if (dx * dx + dz * dz > 64) {
+                    continue;
+                }
+                for (int dy = -2; dy <= 2; dy++) {
+                    cursor.set(pos.getX() + dx, pos.getY() + dy, pos.getZ() + dz);
+                    BlockState state = level.getBlockState(cursor);
+                    if (state.getFluidState().isEmpty()
+                        && !state.isAir()
+                        && state.isFaceSturdy(level, cursor, net.minecraft.core.Direction.UP)
+                        && level.getFluidState(cursor.above()).isEmpty()) {
                         return true;
                     }
                 }

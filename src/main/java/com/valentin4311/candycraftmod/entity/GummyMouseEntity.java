@@ -78,6 +78,11 @@ public class GummyMouseEntity extends Animal {
         return false;
     }
 
+    @Override
+    public int getMaxSpawnClusterSize() {
+        return 8;
+    }
+
     @Nullable
     @Override
     protected SoundEvent getAmbientSound() {
@@ -137,23 +142,43 @@ public class GummyMouseEntity extends Animal {
             || state.is(CCBlocks.ORANGE_GUMMY_BLOCK.get())
             || state.is(CCBlocks.YELLOW_GUMMY_BLOCK.get())
             || state.is(CCBlocks.WHITE_GUMMY_BLOCK.get())
-            || state.is(CCBlocks.GREEN_GUMMY_BLOCK.get());
+            || state.is(CCBlocks.GREEN_GUMMY_BLOCK.get())
+            || state.is(CCBlocks.RED_HARDENED_GUMMY_BLOCK.get())
+            || state.is(CCBlocks.ORANGE_HARDENED_GUMMY_BLOCK.get())
+            || state.is(CCBlocks.YELLOW_HARDENED_GUMMY_BLOCK.get())
+            || state.is(CCBlocks.WHITE_HARDENED_GUMMY_BLOCK.get())
+            || state.is(CCBlocks.GREEN_HARDENED_GUMMY_BLOCK.get())
+            || state.is(CCBlocks.RED_GUMMY_WORM_BLOCK.get())
+            || state.is(CCBlocks.ORANGE_GUMMY_WORM_BLOCK.get())
+            || state.is(CCBlocks.YELLOW_GUMMY_WORM_BLOCK.get())
+            || state.is(CCBlocks.WHITE_GUMMY_WORM_BLOCK.get())
+            || state.is(CCBlocks.GREEN_GUMMY_WORM_BLOCK.get());
     }
 
     static SweetscapeGummyColor colorFromGround(BlockState state, net.minecraft.util.RandomSource random) {
-        if (state.is(CCBlocks.ORANGE_GUMMY_BLOCK.get())) {
+        if (state.is(CCBlocks.ORANGE_GUMMY_BLOCK.get())
+            || state.is(CCBlocks.ORANGE_HARDENED_GUMMY_BLOCK.get())
+            || state.is(CCBlocks.ORANGE_GUMMY_WORM_BLOCK.get())) {
             return SweetscapeGummyColor.ORANGE;
         }
-        if (state.is(CCBlocks.YELLOW_GUMMY_BLOCK.get())) {
+        if (state.is(CCBlocks.YELLOW_GUMMY_BLOCK.get())
+            || state.is(CCBlocks.YELLOW_HARDENED_GUMMY_BLOCK.get())
+            || state.is(CCBlocks.YELLOW_GUMMY_WORM_BLOCK.get())) {
             return SweetscapeGummyColor.YELLOW;
         }
-        if (state.is(CCBlocks.WHITE_GUMMY_BLOCK.get())) {
+        if (state.is(CCBlocks.WHITE_GUMMY_BLOCK.get())
+            || state.is(CCBlocks.WHITE_HARDENED_GUMMY_BLOCK.get())
+            || state.is(CCBlocks.WHITE_GUMMY_WORM_BLOCK.get())) {
             return SweetscapeGummyColor.WHITE;
         }
-        if (state.is(CCBlocks.GREEN_GUMMY_BLOCK.get())) {
+        if (state.is(CCBlocks.GREEN_GUMMY_BLOCK.get())
+            || state.is(CCBlocks.GREEN_HARDENED_GUMMY_BLOCK.get())
+            || state.is(CCBlocks.GREEN_GUMMY_WORM_BLOCK.get())) {
             return SweetscapeGummyColor.GREEN;
         }
-        if (state.is(CCBlocks.RED_GUMMY_BLOCK.get())) {
+        if (state.is(CCBlocks.RED_GUMMY_BLOCK.get())
+            || state.is(CCBlocks.RED_HARDENED_GUMMY_BLOCK.get())
+            || state.is(CCBlocks.RED_GUMMY_WORM_BLOCK.get())) {
             return SweetscapeGummyColor.RED;
         }
         return SweetscapeGummyColor.random(random);

@@ -8,6 +8,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
@@ -29,11 +30,11 @@ public class GummyBallEntity extends ThrowableItemProjectile {
     public static final int PEZ_JELLY_VISUAL = 104;
     public static final int CARAMEL_KING_JELLY_VISUAL = 105;
     public static final int STRAWBERRY_QUEEN_JELLY_VISUAL = 106;
-    public static final int BOSS_BEETLE_GUMMY_VISUAL = 201;
     private static final EntityDataAccessor<Integer> POWER = SynchedEntityData.defineId(GummyBallEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Integer> VISUAL_VARIANT = SynchedEntityData.defineId(GummyBallEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Float> BONUS_DAMAGE = SynchedEntityData.defineId(GummyBallEntity.class, EntityDataSerializers.FLOAT);
     private static final EntityDataAccessor<Boolean> BOSS_BEETLE_PROJECTILE = SynchedEntityData.defineId(GummyBallEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Integer> AIR_STATE = SynchedEntityData.defineId(GummyBallEntity.class, EntityDataSerializers.INT);
 
     public GummyBallEntity(EntityType<? extends GummyBallEntity> entityType, Level level) {
         super(entityType, level);
@@ -57,7 +58,7 @@ public class GummyBallEntity extends ThrowableItemProjectile {
     }
 
     public void setVisualVariant(int variant) {
-        if ((variant >= LEMON_JELLY_VISUAL && variant <= STRAWBERRY_QUEEN_JELLY_VISUAL) || variant == BOSS_BEETLE_GUMMY_VISUAL) {
+        if (variant >= LEMON_JELLY_VISUAL && variant <= STRAWBERRY_QUEEN_JELLY_VISUAL) {
             entityData.set(VISUAL_VARIANT, variant);
         } else {
             entityData.set(VISUAL_VARIANT, 0);
@@ -83,8 +84,40 @@ public class GummyBallEntity extends ThrowableItemProjectile {
     public boolean isBossBeetleProjectile() {
         Entity owner = getOwner();
         return entityData.get(BOSS_BEETLE_PROJECTILE)
-            || getVisualVariant() == BOSS_BEETLE_GUMMY_VISUAL
             || owner != null && owner.getType() == CCEntityTypes.BOSS_BEETLE.get();
+    }
+
+    public void setAirState(int airState) {
+        entityData.set(AIR_STATE, airState);
+    }
+
+    public int getAirState() {
+        return entityData.get(AIR_STATE);
+    }
+
+    public void shootFromCandySource(LivingEntity owner, float velocityOverride) {
+        shootFromCandySource(owner, owner.getYRot(), owner.getXRot(), velocityOverride);
+    }
+
+    public void shootFromCandySource(LivingEntity owner, float yaw, float pitch, float velocityOverride) {
+        float yawRad = yaw / 180.0F * (float)Math.PI;
+        float pitchRad = pitch / 180.0F * (float)Math.PI;
+        float offsetX = random.nextFloat() / 20.0F - 0.05F;
+        float offsetZ = random.nextFloat() / 20.0F - 0.05F;
+        if (getPower() == 0 || getPower() == 3) {
+            offsetX = 0.0F;
+            offsetZ = 0.0F;
+        }
+
+        setPos(owner.getX() - Mth.cos(yawRad) * 0.16D,
+            owner.getY() + owner.getEyeHeight() - 0.10000000149011612D,
+            owner.getZ() - Mth.sin(yawRad) * 0.16D);
+
+        float baseVelocity = getPower() == 3 ? 0.002F : 0.4F;
+        double motionX = -Mth.sin(yawRad) * Mth.cos(pitchRad) * baseVelocity;
+        double motionZ = Mth.cos(yawRad) * Mth.cos(pitchRad) * baseVelocity;
+        double motionY = -Mth.sin((pitch + 1.0F) / 180.0F * (float)Math.PI) * baseVelocity;
+        shoot(motionX + offsetX, motionY, motionZ + offsetZ, velocityOverride, 1.0F);
     }
 
     @Override
@@ -94,6 +127,7 @@ public class GummyBallEntity extends ThrowableItemProjectile {
         entityData.define(VISUAL_VARIANT, 0);
         entityData.define(BONUS_DAMAGE, 0.0F);
         entityData.define(BOSS_BEETLE_PROJECTILE, false);
+        entityData.define(AIR_STATE, 0);
     }
 
     @Override
@@ -122,25 +156,64 @@ public class GummyBallEntity extends ThrowableItemProjectile {
         if (variant == STRAWBERRY_QUEEN_JELLY_VISUAL) {
             return new ItemStack(CCItems.STRAWBERRY_QUEEN_JELLY_BALL.get());
         }
-        if (variant == BOSS_BEETLE_GUMMY_VISUAL) {
-            return new ItemStack(CCItems.BOSS_BEETLE_GUMMY_BALL.get());
+        if (getPower() == 2) {
+            return gummyBallVariant(1);
+        }
+        if (getPower() == 3) {
+            return gummyBallVariant(2);
         }
         return new ItemStack(getDefaultItem());
+    }
+
+    private ItemStack gummyBallVariant(int customModelData) {
+        ItemStack stack = new ItemStack(CCItems.GUMMY_BALL.get());
+        stack.getOrCreateTag().putInt("CustomModelData", customModelData);
+        return stack;
     }
 
     @Override
     public void tick() {
         super.tick();
-        if (level().isClientSide && (getPower() == 1 || getPower() >= 3) && tickCount % 2 == 0) {
+        if (level().isClientSide && (getPower() == 1 || getPower() >= 3)) {
             spawnBreakParticle();
         } else if (level().isClientSide && getPower() == 2) {
-            level().addParticle(ParticleTypes.FLAME, getX(), getY(), getZ(), 0.0D, 0.0D, 0.0D);
+            Vec3 motion = getDeltaMovement();
+            for (int i = 0; i < 2; i++) {
+                double step = i * 0.45D + random.nextDouble() * 0.2D;
+                level().addParticle(ParticleTypes.FLAME,
+                    getX() - motion.x * step + (random.nextDouble() - 0.5D) * 0.12D,
+                    getY() - motion.y * step + (random.nextDouble() - 0.5D) * 0.12D,
+                    getZ() - motion.z * step + (random.nextDouble() - 0.5D) * 0.12D,
+                    0.0D, 0.0D, 0.0D);
+            }
         }
     }
 
     @Override
     protected float getGravity() {
-        return 0.03F;
+        if (isBossBeetleProjectile() && getAirState() != 1) {
+            return 0.0F;
+        }
+        return getAirState() == 1 ? 0.05F : 0.03F;
+    }
+
+    @Override
+    public void shoot(double x, double y, double z, float velocity, float inaccuracy) {
+        Vec3 direction = new Vec3(x, y, z).normalize();
+        if (getPower() > 0 && getPower() != 3) {
+            direction = direction.add(
+                random.nextGaussian() * 0.007499999832361937D * inaccuracy,
+                random.nextGaussian() * 0.007499999832361937D * inaccuracy,
+                random.nextGaussian() * 0.007499999832361937D * inaccuracy
+            ).normalize();
+        }
+        setDeltaMovement(direction.scale(velocity));
+        hasImpulse = true;
+        double horizontal = direction.horizontalDistance();
+        setYRot((float)(Mth.atan2(direction.x, direction.z) * 180.0D / Math.PI));
+        setXRot((float)(Mth.atan2(direction.y, horizontal) * 180.0D / Math.PI));
+        yRotO = getYRot();
+        xRotO = getXRot();
     }
 
     @Override
@@ -200,7 +273,8 @@ public class GummyBallEntity extends ThrowableItemProjectile {
         }
         Entity entity = result.getEntity();
         int power = getPower();
-        float damage = getBonusDamage() > 0.0F ? getBonusDamage() : power == 1 ? 6.0F : power == 2 ? 4.0F : power == 3 ? 3.0F : power == 4 ? 8.0F : 0.1F;
+        boolean bossBeetleProjectile = isBossBeetleProjectile();
+        float damage = getBonusDamage() > 0.0F ? getBonusDamage() : getSourceDamage(power, bossBeetleProjectile);
         if (entity instanceof BasicCandySlimeEntity candy && (candy.isPezJelly() || candy.isKingSlime() || candy.isJellyQueen())) {
             entity.hurt(damageSources().thrown(this, getOwner()), damage);
             return false;
@@ -209,7 +283,13 @@ public class GummyBallEntity extends ThrowableItemProjectile {
         if (power == 5) {
             return true;
         }
-        if (entity instanceof LivingEntity living && (power == 3 || power == 4)) {
+        if (power == 3 && bossBeetleProjectile && !(entity instanceof BasicCandySpiderEntity beetle && beetle.getType() == CCEntityTypes.BOSS_BEETLE.get())) {
+            Vec3 motion = getDeltaMovement();
+            double horizontal = motion.horizontalDistance();
+            if (horizontal > 1.0E-4D) {
+                entity.push(motion.x * 0.6000000238418579D / horizontal, 0.1D, motion.z * 0.6000000238418579D / horizontal);
+            }
+        } else if (entity instanceof LivingEntity living && (power == 3 || power == 4)) {
             living.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 5 * 20, 0));
         } else if (entity instanceof LivingEntity living && power < 2) {
             living.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 5 * 20, 2));
@@ -217,6 +297,22 @@ public class GummyBallEntity extends ThrowableItemProjectile {
             entity.setSecondsOnFire(7);
         }
         return true;
+    }
+
+    private float getSourceDamage(int power, boolean bossBeetleProjectile) {
+        if (power == 1) {
+            return 6.0F;
+        }
+        if (power == 2) {
+            return 4.0F;
+        }
+        if (power == 3) {
+            return bossBeetleProjectile ? 3.0F : 3.0F;
+        }
+        if (power == 4) {
+            return 8.0F;
+        }
+        return 0.1F;
     }
 
     private void spawnBreakParticle() {
@@ -248,6 +344,7 @@ public class GummyBallEntity extends ThrowableItemProjectile {
         tag.putInt("VisualVariant", getVisualVariant());
         tag.putFloat("BonusDamage", getBonusDamage());
         tag.putBoolean("BossBeetleProjectile", entityData.get(BOSS_BEETLE_PROJECTILE));
+        tag.putInt("AirState", getAirState());
     }
 
     @Override
@@ -257,5 +354,6 @@ public class GummyBallEntity extends ThrowableItemProjectile {
         setVisualVariant(tag.getInt("VisualVariant"));
         setBonusDamage(tag.getFloat("BonusDamage"));
         setBossBeetleProjectile(tag.getBoolean("BossBeetleProjectile"));
+        setAirState(tag.getInt("AirState"));
     }
 }

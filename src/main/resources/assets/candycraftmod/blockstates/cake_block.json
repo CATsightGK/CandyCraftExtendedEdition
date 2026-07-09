@@ -1,7 +1,10 @@
 {
   "variants": {
-    "": {
-      "model": "candycraftmod:block/cake_block"
-    }
+    "": [
+      { "model": "candycraftmod:block/cake_block" },
+      { "model": "candycraftmod:block/cake_block", "y": 90 },
+      { "model": "candycraftmod:block/cake_block", "y": 180 },
+      { "model": "candycraftmod:block/cake_block", "y": 270 }
+    ]
   }
 }

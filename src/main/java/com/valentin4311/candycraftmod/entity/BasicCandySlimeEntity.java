@@ -25,6 +25,7 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.SpawnGroupData;
+import net.minecraft.world.entity.TamableAnimal;
 import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -114,6 +115,8 @@ public class BasicCandySlimeEntity extends Slime {
     private int bossSlamStrafeSide = 1;
     private boolean pezDeathSplitSpawned;
     private final ServerBossEvent bossEvent = new ServerBossEvent(getDisplayName(), BossEvent.BossBarColor.PURPLE, BossEvent.BossBarOverlay.PROGRESS);
+    @Nullable
+    private LivingEntity bossRetaliationTarget;
 
     public BasicCandySlimeEntity(EntityType<? extends BasicCandySlimeEntity> type, Level level) {
         super(type, level);
@@ -232,21 +235,25 @@ public class BasicCandySlimeEntity extends Slime {
 
     @Override
     public boolean hurt(DamageSource source, float amount) {
-        LivingEntity livingAttacker = source.getEntity() instanceof LivingEntity attacker ? attacker : null;
+        LivingEntity livingAttacker = getLivingAttacker(source);
         if (isInGrenadine() && source.getEntity() == null && source.getDirectEntity() == null) {
             return false;
         }
         if (isCandyBoss() && source.is(DamageTypeTags.IS_PROJECTILE)) {
-            if (!level().isClientSide && livingAttacker != null) {
+            boolean wasAwake = isBossAwake();
+            if (!level().isClientSide && livingAttacker != null && (wasAwake || shouldDormantBossWakeFromMobAttack(livingAttacker))) {
                 activateBossFromDamage(livingAttacker);
             }
             reflectProjectile(source);
+            if (!wasAwake) {
+                return false;
+            }
             if (isBossAwake() && random.nextInt(4) != 0) {
                 return false;
             }
             return super.hurt(source, amount * 0.5F);
         }
-        if (source.getEntity() instanceof BasicCandySlimeEntity slimeAttacker && !isPezJelly() && !isForcedJellyConflict(slimeAttacker, this)) {
+        if (source.getEntity() instanceof BasicCandySlimeEntity slimeAttacker && !isCandyBoss() && !isPezJelly() && !isForcedJellyConflict(slimeAttacker, this)) {
             return false;
         }
         if (!level().isClientSide && livingAttacker != null) {
@@ -260,12 +267,11 @@ public class BasicCandySlimeEntity extends Slime {
             return false;
         }
         if (isJellyQueen()) {
-            if (!level().isClientSide && source.getEntity() != null) {
-                if (!isBossAwake()) {
-                    setDeltaMovement(getDeltaMovement().x, 2.0D, getDeltaMovement().z);
+            if (!level().isClientSide && livingAttacker != null) {
+                activateBossFromDamage(livingAttacker);
+                if (isBossAwake()) {
+                    updateJellyQueenMode();
                 }
-                setBossAwake(true);
-                updateJellyQueenMode();
                 if (source.getEntity() instanceof Player player && amount > 1.0F && !player.getAbilities().instabuild) {
                     knockbackAttackingPlayer(player);
                 }
@@ -280,8 +286,6 @@ public class BasicCandySlimeEntity extends Slime {
             shrinkKingSlimeFromHealth();
         }
         if (isCandyBoss() && !level().isClientSide && source.getEntity() != null) {
-            setBossAwake(true);
-            setDeltaMovement(getDeltaMovement().add(0.0D, 0.9D, 0.0D));
             if (source.getEntity() instanceof Player player && amount > 1.0F && !player.getAbilities().instabuild) {
                 knockbackAttackingPlayer(player);
             }
@@ -291,6 +295,17 @@ public class BasicCandySlimeEntity extends Slime {
             activateBossFromDamage(livingAttacker);
         }
         return hurt;
+    }
+
+    @Nullable
+    private static LivingEntity getLivingAttacker(DamageSource source) {
+        if (source.getEntity() instanceof LivingEntity attacker) {
+            return attacker;
+        }
+        if (source.getDirectEntity() instanceof LivingEntity attacker) {
+            return attacker;
+        }
+        return null;
     }
 
     @Override
@@ -1687,6 +1702,7 @@ public class BasicCandySlimeEntity extends Slime {
     private void activateBossFromDamage(LivingEntity attacker) {
         if (canBossWakeFrom(attacker)) {
             bossLostTargetTicks = BOSS_LOST_TARGET_TICKS;
+            bossRetaliationTarget = attacker;
             setBossAwake(true);
             updateJellyQueenMode();
             if (CandyTargeting.canAttackEntity(attacker)) {
@@ -1706,14 +1722,18 @@ public class BasicCandySlimeEntity extends Slime {
     private boolean canBossTarget(Entity target) {
         return target instanceof LivingEntity
             && target.isAlive()
-            && (!(target instanceof BasicCandySlimeEntity slimeTarget) || isForcedJellyConflict(this, slimeTarget))
+            && (!(target instanceof BasicCandySlimeEntity slimeTarget) || isBossRetaliationTarget(slimeTarget) || isForcedJellyConflict(this, slimeTarget))
             && CandyTargeting.canAttackEntity(target);
+    }
+
+    private boolean isBossRetaliationTarget(Entity target) {
+        return bossRetaliationTarget != null && bossRetaliationTarget == target;
     }
 
     private boolean canBossWakeFrom(Entity source) {
         return source instanceof LivingEntity
             && source.isAlive()
-            && (!(source instanceof BasicCandySlimeEntity slimeSource) || isForcedJellyConflict(slimeSource, this));
+            && (!(source instanceof BasicCandySlimeEntity slimeSource) || isCandyBoss() || isForcedJellyConflict(slimeSource, this));
     }
 
     private boolean canRetaliateAgainst(Entity target) {
@@ -1727,6 +1747,22 @@ public class BasicCandySlimeEntity extends Slime {
         return attacker.getTarget() == victim || victim.getTarget() == attacker;
     }
 
+    private boolean shouldDormantBossWakeFromMobAttack(LivingEntity attacker) {
+        return isCandyBoss()
+            && !isBossAwake()
+            && !(attacker instanceof Player)
+            && !isPlayerAlliedEntity(attacker)
+            && canBossWakeFrom(attacker)
+            && CandyTargeting.canAttackEntity(attacker);
+    }
+
+    private static boolean isPlayerAlliedEntity(Entity entity) {
+        if (entity instanceof TamableAnimal tamable && tamable.isTame() && tamable.getOwner() instanceof Player) {
+            return true;
+        }
+        return false;
+    }
+
     private LivingEntity findBossAttackTarget() {
         LivingEntity target = getTarget();
         if (target != null) {
@@ -1737,6 +1773,18 @@ public class BasicCandySlimeEntity extends Slime {
             double range = isPezJelly() ? 96.0D : BOSS_TARGET_RANGE;
             if (distanceToSqr(target) <= range * range) {
                 return target;
+            }
+        }
+        LivingEntity retaliationTarget = bossRetaliationTarget;
+        if (retaliationTarget != null) {
+            if (!canBossTarget(retaliationTarget)) {
+                bossRetaliationTarget = null;
+            } else {
+                double range = isPezJelly() ? 96.0D : BOSS_TARGET_RANGE;
+                if (distanceToSqr(retaliationTarget) <= range * range) {
+                    setTarget(retaliationTarget);
+                    return retaliationTarget;
+                }
             }
         }
         if (isPezJelly() && level() instanceof ServerLevel serverLevel) {
@@ -2036,6 +2084,7 @@ public class BasicCandySlimeEntity extends Slime {
 
     private void putBossToSleep() {
         setBossAwake(false);
+        bossRetaliationTarget = null;
         bossLostTargetTicks = 0;
         bossSlamAttackActive = false;
         bossSlamDamageReady = false;

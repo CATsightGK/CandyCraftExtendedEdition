@@ -31,23 +31,14 @@ public class GummyMouseModel<T extends GummyMouseEntity> extends EntityModel<T> 
         PartDefinition root = mesh.getRoot();
         PartDefinition body = root.addOrReplaceChild("body",
             CubeListBuilder.create()
-                .texOffs(0, 0).addBox(-2.0F, 0.0F, 0.0F, 4.0F, 3.0F, 6.0F)
                 .texOffs(16, 15).addBox(-1.5F, 0.5F, 0.5F, 3.0F, 2.0F, 5.0F),
             PartPose.offset(0.0F, 21.0F, -3.0F));
         PartDefinition head = body.addOrReplaceChild("head",
             CubeListBuilder.create()
-                .texOffs(0, 9).addBox(-1.5F, 0.0F, -3.0F, 3.0F, 2.0F, 3.0F)
                 .texOffs(22, 4).addBox(-1.0F, 0.5F, -3.1F, 2.0F, 1.0F, 3.0F),
             PartPose.offset(0.0F, 1.0F, 0.0F));
-        head.addOrReplaceChild("left_ear",
-            CubeListBuilder.create().texOffs(0, 14).addBox(0.0F, 0.0F, 0.0F, 1.0F, 1.0F, 2.0F),
-            PartPose.offset(0.3F, -0.6F, -2.5F));
-        head.addOrReplaceChild("right_ear",
-            CubeListBuilder.create().texOffs(0, 17).addBox(-1.0F, 0.0F, 0.0F, 1.0F, 1.0F, 2.0F),
-            PartPose.offset(-0.3F, -0.6F, -2.5F));
         body.addOrReplaceChild("tail",
             CubeListBuilder.create()
-                .texOffs(0, 14).addBox(-1.0F, 0.0F, 0.0F, 2.0F, 2.0F, 6.0F)
                 .texOffs(18, 8).addBox(-0.5F, 0.5F, -1.0F, 1.0F, 1.0F, 6.0F),
             PartPose.offset(0.0F, 1.0F, 6.0F));
         return LayerDefinition.create(mesh, 32, 32);

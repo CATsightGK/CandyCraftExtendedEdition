@@ -1,20 +1,20 @@
 package com.valentin4311.candycraftmod.client;
 
 import com.google.common.collect.Maps;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.valentin4311.candycraftmod.CandyCraft;
+import com.valentin4311.candycraftmod.client.model.GummyBearModel;
 import com.valentin4311.candycraftmod.entity.GummyBearEntity;
 import com.valentin4311.candycraftmod.entity.SweetscapeGummyColor;
 import java.util.Map;
 import net.minecraft.Util;
-import net.minecraft.client.model.PolarBearModel;
-import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
 
-public class GummyBearRenderer extends MobRenderer<GummyBearEntity, PolarBearModel<GummyBearEntity>> {
+public class GummyBearRenderer extends MobRenderer<GummyBearEntity, GummyBearModel<GummyBearEntity>> {
     private static final Map<SweetscapeGummyColor, ResourceLocation> TEXTURES = Util.make(Maps.newEnumMap(SweetscapeGummyColor.class), map -> {
         map.put(SweetscapeGummyColor.RED, texture("red_gummy_bear"));
         map.put(SweetscapeGummyColor.ORANGE, texture("orange_gummy_bear"));
@@ -24,7 +24,12 @@ public class GummyBearRenderer extends MobRenderer<GummyBearEntity, PolarBearMod
     });
 
     public GummyBearRenderer(EntityRendererProvider.Context context) {
-        super(context, new PolarBearModel<>(context.bakeLayer(ModelLayers.POLAR_BEAR)), 0.9F);
+        super(context, new GummyBearModel<>(context.bakeLayer(GummyBearModel.LAYER)), 0.7F);
+    }
+
+    @Override
+    protected void scale(GummyBearEntity entity, PoseStack poseStack, float partialTickTime) {
+        poseStack.scale(1.2F, 1.2F, 1.2F);
     }
 
     @Override

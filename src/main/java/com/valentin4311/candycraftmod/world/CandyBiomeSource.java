@@ -27,9 +27,13 @@ public class CandyBiomeSource extends BiomeSource {
     ).apply(instance, CandyBiomeSource::new));
 
     private static final long LEGACY_BIOME_SEED_SALT = 1122L;
+    private static final int SPAWN_LAND_RADIUS_BLOCKS = 100;
+    private static final int SPAWN_LAND_MAX_RADIUS_BLOCKS = 148;
+    private static final long SPAWN_ISLAND_NOISE_SALT = 0x534957454554534CL;
     private final List<Holder<Biome>> biomes;
     private final Map<String, Holder<Biome>> byPath;
     private final Map<Long, Layer> legacyLayers = new ConcurrentHashMap<>();
+    private final Map<Long, Boolean> spawnLandNeeded = new ConcurrentHashMap<>();
     private volatile long worldSeedOverride = Long.MIN_VALUE;
 
     public CandyBiomeSource(List<Holder<Biome>> biomes) {
@@ -56,7 +60,11 @@ public class CandyBiomeSource extends BiomeSource {
         long worldSeed = worldSeedOverride == Long.MIN_VALUE ? samplerSeed(sampler) : worldSeedOverride;
         Layer legacyLayer = legacyLayers.computeIfAbsent(worldSeed, seed -> Layer.getLayer(seed, create1122Settings()));
         BiomeInfo legacyBiome = legacyLayer.getBiomes(quartX, quartZ, 1, 1)[0];
-        String path = mapLegacyBiome(legacyBiome, quartX, quartZ, worldSeed).getPath();
+        boolean needsSpawnLand = spawnLandNeeded.computeIfAbsent(worldSeed, seed -> isOceanLike(legacyLayer.getBiomes(0, 0, 1, 1)[0]));
+        ResourceLocation mapped = needsSpawnLand && isSpawnLandRadius(quartX, quartZ, worldSeed) && isOceanLike(legacyBiome)
+            ? candy("sugar_plains")
+            : mapLegacyBiome(legacyBiome, quartX, quartZ, worldSeed);
+        String path = mapped.getPath();
         return byPath.getOrDefault(path, biomes.get(0));
     }
 
@@ -143,6 +151,54 @@ public class CandyBiomeSource extends BiomeSource {
         }
 
         return candy("sugar_plains");
+    }
+
+    private static boolean isSpawnLandRadius(int quartX, int quartZ, long worldSeed) {
+        long blockX = (long)quartX << 2;
+        long blockZ = (long)quartZ << 2;
+        return isWithinSpawnIsland(blockX, blockZ, worldSeed);
+    }
+
+    static boolean isWithinSpawnIsland(double blockX, double blockZ, long worldSeed) {
+        double distance = Math.sqrt(blockX * blockX + blockZ * blockZ);
+        if (distance <= SPAWN_LAND_RADIUS_BLOCKS) {
+            return true;
+        }
+        if (distance > SPAWN_LAND_MAX_RADIUS_BLOCKS) {
+            return false;
+        }
+        return distance <= spawnIslandRadius(blockX, blockZ, worldSeed);
+    }
+
+    static double spawnIslandInfluence(double blockX, double blockZ, long worldSeed) {
+        double distance = Math.sqrt(blockX * blockX + blockZ * blockZ);
+        if (distance <= SPAWN_LAND_RADIUS_BLOCKS) {
+            return 1.0D;
+        }
+
+        double radius = spawnIslandRadius(blockX, blockZ, worldSeed);
+        if (distance >= radius) {
+            return 0.0D;
+        }
+
+        double blend = (radius - distance) / Math.max(radius - SPAWN_LAND_RADIUS_BLOCKS, 1.0D);
+        blend = Math.max(0.0D, Math.min(1.0D, blend));
+        return blend * blend * (3.0D - 2.0D * blend);
+    }
+
+    private static double spawnIslandRadius(double blockX, double blockZ, long worldSeed) {
+        double broad = octaveNoise2D(blockX * 0.016D, blockZ * 0.016D, 4, worldSeed ^ SPAWN_ISLAND_NOISE_SALT);
+        double detail = octaveNoise2D(blockX * 0.045D, blockZ * 0.045D, 2, worldSeed ^ 0x1C1A2D5E7B9A531FL);
+        double radius = 124.0D + broad * 22.0D + detail * 7.0D;
+        return Math.max(SPAWN_LAND_RADIUS_BLOCKS + 2.0D, Math.min(SPAWN_LAND_MAX_RADIUS_BLOCKS, radius));
+    }
+
+    private static boolean isWaterLike(BiomeInfo biome) {
+        return biome != null && (biome.isOcean() || biome.is(BiomeIds.RIVER) || biome.is(BiomeIds.FROZEN_RIVER));
+    }
+
+    private static boolean isOceanLike(BiomeInfo biome) {
+        return biome != null && biome.isOcean();
     }
 
     private static boolean gummyRegion(int quartX, int quartZ, long worldSeed) {

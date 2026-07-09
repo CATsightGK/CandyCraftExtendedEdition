@@ -94,6 +94,11 @@ public class PingouinEntity extends Animal {
     }
 
     @Override
+    public int getMaxSpawnClusterSize() {
+        return 6;
+    }
+
+    @Override
     public InteractionResult mobInteract(Player player, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
         if (stack.is(CCItems.MARSHMALLOW_FLOWER.get())) {
