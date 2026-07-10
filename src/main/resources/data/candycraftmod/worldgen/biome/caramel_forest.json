@@ -2,7 +2,7 @@
   "has_precipitation": false,
   "temperature": 1,
   "downfall": 0,
-  "creature_spawn_probability": 0.18,
+  "creature_spawn_probability": 0.1,
   "effects": {
     "sky_color": 16764032,
     "fog_color": 16764032,
@@ -13,30 +13,6 @@
   },
   "spawners": {
     "creature": [
-      {
-        "type": "candycraftmod:candy_pig",
-        "weight": 12,
-        "minCount": 4,
-        "maxCount": 6
-      },
-      {
-        "type": "candycraftmod:gummy_bunny",
-        "weight": 12,
-        "minCount": 4,
-        "maxCount": 6
-      },
-      {
-        "type": "candycraftmod:waffle_sheep",
-        "weight": 12,
-        "minCount": 4,
-        "maxCount": 4
-      },
-      {
-        "type": "candycraftmod:gummy_bunny",
-        "weight": 12,
-        "minCount": 4,
-        "maxCount": 4
-      },
       {
         "type": "candycraftmod:candy_wolf",
         "weight": 50,

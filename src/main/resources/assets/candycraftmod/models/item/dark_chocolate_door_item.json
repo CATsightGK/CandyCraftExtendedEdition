@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "candycraftmod:item/dark_chocolate_door_item"
+  }
+}

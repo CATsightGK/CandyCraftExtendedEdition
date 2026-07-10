@@ -310,7 +310,8 @@ public final class CCItems {
     private static Item createBlockItem(String name, Block block) {
         Item.Properties properties = new Item.Properties();
         return switch (name) {
-            case "marshmallow_door", "marshmallow_door_dark", "marshmallow_door_light" -> new DoubleHighBlockItem(block, properties);
+            case "marshmallow_door", "marshmallow_door_dark", "marshmallow_door_light",
+                "milk_chocolate_door", "white_chocolate_door", "dark_chocolate_door" -> new DoubleHighBlockItem(block, properties);
             case "cotton_candy_bed_block" -> new BedItem(block, properties.stacksTo(1));
             case "honey_torch" -> new StandingAndWallBlockItem(block, CCBlocks.HONEY_WALL_TORCH.get(), properties, Direction.DOWN);
             case "marshmallow_slice", "marshmallow_slice_block", "marshmallow_flower_block" -> new PlaceOnWaterBlockItem(block, properties);

@@ -134,6 +134,12 @@ public final class CCBlocks {
     public static final RegistryObject<Block> MARSHMALLOW_DOOR = cutout(register("marshmallow_door", () -> new DoorBlock(oakDoor(MapColor.COLOR_PINK), BlockSetType.OAK)));
     public static final RegistryObject<Block> MARSHMALLOW_DOOR_DARK = cutout(register("marshmallow_door_dark", () -> new DoorBlock(oakDoor(MapColor.COLOR_BROWN), BlockSetType.OAK)));
     public static final RegistryObject<Block> MARSHMALLOW_DOOR_LIGHT = cutout(register("marshmallow_door_light", () -> new DoorBlock(oakDoor(MapColor.TERRACOTTA_WHITE), BlockSetType.OAK)));
+    public static final RegistryObject<Block> MILK_CHOCOLATE_DOOR = cutout(register("milk_chocolate_door", () -> new DoorBlock(oakDoor(MapColor.COLOR_BROWN), BlockSetType.OAK)));
+    public static final RegistryObject<Block> WHITE_CHOCOLATE_DOOR = cutout(register("white_chocolate_door", () -> new DoorBlock(oakDoor(MapColor.SAND), BlockSetType.OAK)));
+    public static final RegistryObject<Block> DARK_CHOCOLATE_DOOR = cutout(register("dark_chocolate_door", () -> new DoorBlock(oakDoor(MapColor.TERRACOTTA_BROWN), BlockSetType.OAK)));
+    public static final RegistryObject<Block> MILK_CHOCOLATE_TRAPDOOR = cutout(register("milk_chocolate_trapdoor", () -> new TrapDoorBlock(oakTrapdoor(MapColor.COLOR_BROWN), BlockSetType.OAK)));
+    public static final RegistryObject<Block> WHITE_CHOCOLATE_TRAPDOOR = cutout(register("white_chocolate_trapdoor", () -> new TrapDoorBlock(oakTrapdoor(MapColor.SAND), BlockSetType.OAK)));
+    public static final RegistryObject<Block> DARK_CHOCOLATE_TRAPDOOR = cutout(register("dark_chocolate_trapdoor", () -> new TrapDoorBlock(oakTrapdoor(MapColor.TERRACOTTA_BROWN), BlockSetType.OAK)));
     public static final RegistryObject<Block> FRAISE_TAGADA_FLOWER = cutout(register("fraise_tagada_flower", () -> new LegacyMetadataBlock.Plant(plant())));
     public static final RegistryObject<Block> MARSHMALLOW_CHEST = register("marshmallow_chest", () -> new MarshmallowChestBlock(wood(MapColor.COLOR_PINK).strength(2.5F).noOcclusion()));
     public static final RegistryObject<Block> HONEY_ORE = register("honey_ore", () -> new Block(stone().strength(3.0F, 5.0F).requiresCorrectToolForDrops()));

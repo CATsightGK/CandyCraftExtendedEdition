@@ -247,17 +247,21 @@ public final class CCForgeEvents {
         }
         if (type == CCEntityTypes.CANDY_WOLF.get()) {
             return switch (path) {
-                case "sugar_cold_forest", "caramel_forest" -> true;
+                case "sugar_forest", "sugar_cold_forest", "caramel_forest", "chocolate_forest", "sugar_mountains" -> true;
                 default -> false;
             };
         }
         if (type == CCEntityTypes.JELLY_QUEEN.get()) {
             return event.getSpawnType() == MobSpawnType.CHUNK_GENERATION;
         }
-        if (type == CCEntityTypes.CANDY_PIG.get()
-            || type == CCEntityTypes.GUMMY_BUNNY.get()
-            || type == CCEntityTypes.WAFFLE_SHEEP.get()) {
-            return isRegularCandyCreatureBiome(path);
+        if (type == CCEntityTypes.CANDY_PIG.get()) {
+            return isCandyPigBiome(path);
+        }
+        if (type == CCEntityTypes.GUMMY_BUNNY.get()) {
+            return isGummyBunnyBiome(path);
+        }
+        if (type == CCEntityTypes.WAFFLE_SHEEP.get()) {
+            return isWaffleSheepBiome(path);
         }
         return switch (path) {
             case "sugar_plains", "sugar_forest", "sugar_cold_forest", "sugar_enchanted_forest", "sugar_mountains", "ice_cream_plains", "ice_cream_sky_mountains", "caramel_forest" -> true;
@@ -265,11 +269,23 @@ public final class CCForgeEvents {
         };
     }
 
-    private static boolean isRegularCandyCreatureBiome(String path) {
+    private static boolean isCandyPigBiome(String path) {
         return switch (path) {
-            case "sugar_plains", "sugar_forest", "sugar_cold_forest", "sugar_enchanted_forest", "sugar_mountains",
-                "ice_cream_plains", "ice_cream_sky_mountains", "caramel_forest", "chocolate_forest",
-                "cotton_candy_plains", "gummy_swamp" -> true;
+            case "sugar_plains", "sugar_forest", "sugar_enchanted_forest", "caramel_forest", "chocolate_forest" -> true;
+            default -> false;
+        };
+    }
+
+    private static boolean isGummyBunnyBiome(String path) {
+        return switch (path) {
+            case "sugar_plains", "sugar_forest", "sugar_enchanted_forest", "caramel_forest", "chocolate_forest", "gummy_swamp" -> true;
+            default -> false;
+        };
+    }
+
+    private static boolean isWaffleSheepBiome(String path) {
+        return switch (path) {
+            case "sugar_plains", "sugar_cold_forest", "sugar_mountains" -> true;
             default -> false;
         };
     }
