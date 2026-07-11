@@ -62,7 +62,7 @@ public class CandyCraft {
                     .findResource("resourcepacks", "candycraft_classic");
             Pack pack = Pack.readMetaAndCreate(
                     MODID + ":classic_textures",
-                    Component.literal("CandyCraft 经典材质"),
+                    Component.literal("CandyCraft \u7ecf\u5178\u6750\u8d28"),
                     false,
                     id -> new PathPackResources(id, false, packPath),
                     PackType.CLIENT_RESOURCES,

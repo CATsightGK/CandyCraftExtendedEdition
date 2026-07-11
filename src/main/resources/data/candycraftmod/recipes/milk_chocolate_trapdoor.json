@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "###",
+    "###"
+  ],
+  "key": {
+    "#": {
+      "item": "candycraftmod:milk_chocolate_brick"
+    }
+  },
+  "result": {
+    "item": "candycraftmod:milk_chocolate_trapdoor",
+    "count": 2
+  }
+}
