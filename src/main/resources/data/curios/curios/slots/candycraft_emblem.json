@@ -1,6 +1,6 @@
 {
   "order": 200,
-  "icon": "curios:slot/empty_charm_slot",
+  "icon": "candycraftmod:slot/candycraft_emblem",
   "size": 1,
   "validators": [
     "curios:tag"

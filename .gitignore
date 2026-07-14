@@ -4,6 +4,9 @@ run/
 out/
 bin/
 output/
+_generated/
+generated_textures/
+tools/desktop-shell/
 
 *.class
 *.log

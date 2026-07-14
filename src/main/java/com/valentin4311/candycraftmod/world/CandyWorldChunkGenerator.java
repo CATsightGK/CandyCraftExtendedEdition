@@ -17,7 +17,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
-import net.minecraft.core.Direction.Axis;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.WorldGenRegion;
 import net.minecraft.util.Mth;
@@ -30,7 +29,6 @@ import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.BiomeManager;
 import net.minecraft.world.level.biome.BiomeSource;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.RotatedPillarBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkGenerator;
@@ -233,7 +231,7 @@ public class CandyWorldChunkGenerator extends ChunkGenerator {
                     }
 
                     BlockState replacement = underwater ? underwaterMaterial(replaced) : replaced > 0 ? materials.under() : materials.top();
-                    chunk.setBlockState(mutable, orientNaturalBrownie(replacement, worldX, y, worldZ, randomState), false);
+                    chunk.setBlockState(mutable, replacement, false);
                     replaced++;
                 }
             }
@@ -936,20 +934,6 @@ public class CandyWorldChunkGenerator extends ChunkGenerator {
 
     private static boolean isBaseStone(BlockState state) {
         return state.is(CCBlocks.CRYSTALLIZED_SUGAR.get());
-    }
-
-    private static BlockState orientNaturalBrownie(BlockState state, int worldX, int y, int worldZ, RandomState randomState) {
-        if (!state.hasProperty(RotatedPillarBlock.AXIS) || !isBrownieBlock(state)) {
-            return state;
-        }
-        int axis = Math.floorMod(hash(worldX, y, worldZ) ^ (int)worldSeed(randomState), 3);
-        return state.setValue(RotatedPillarBlock.AXIS, axis == 0 ? Axis.X : axis == 1 ? Axis.Y : Axis.Z);
-    }
-
-    private static boolean isBrownieBlock(BlockState state) {
-        return state.is(CCBlocks.MILK_BROWNIE_BLOCK.get())
-            || state.is(CCBlocks.WHITE_BROWNIE_BLOCK.get())
-            || state.is(CCBlocks.DARK_BROWNIE_BLOCK.get());
     }
 
     private static SurfaceMaterials surfaceMaterials(ResourceLocation biomeId, int worldX, int worldZ, RandomState randomState) {

@@ -40,6 +40,7 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
 import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
+import net.minecraft.world.entity.ai.goal.PanicGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.ai.goal.RandomStrollGoal;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
@@ -71,6 +72,7 @@ public class BasicCandyZombieEntity extends Zombie {
     private static final EntityDataAccessor<Boolean> BABY_DRAGON = SynchedEntityData.defineId(BasicCandyZombieEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Integer> MOUNT_POWER = SynchedEntityData.defineId(BasicCandyZombieEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Boolean> DRAGON_FALLING = SynchedEntityData.defineId(BasicCandyZombieEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Boolean> DRAGON_FLYING = SynchedEntityData.defineId(BasicCandyZombieEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Integer> BOSS_BOW_DRAW_TICKS = SynchedEntityData.defineId(BasicCandyZombieEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Boolean> BOSS_SUGUARD_AWAKE = SynchedEntityData.defineId(BasicCandyZombieEntity.class, EntityDataSerializers.BOOLEAN);
     private boolean angry;
@@ -97,6 +99,9 @@ public class BasicCandyZombieEntity extends Zombie {
         if (isBossSuguard()) {
             bossEvent.setVisible(false);
         }
+        if (isDragon()) {
+            setMountPower(getMountMaxPower());
+        }
     }
 
     public static AttributeSupplier.Builder createAttributes() {
@@ -114,6 +119,7 @@ public class BasicCandyZombieEntity extends Zombie {
         entityData.define(BABY_DRAGON, false);
         entityData.define(MOUNT_POWER, 0);
         entityData.define(DRAGON_FALLING, false);
+        entityData.define(DRAGON_FLYING, false);
         entityData.define(BOSS_BOW_DRAW_TICKS, 0);
         entityData.define(BOSS_SUGUARD_AWAKE, false);
     }
@@ -121,6 +127,13 @@ public class BasicCandyZombieEntity extends Zombie {
     @Override
     protected void registerGoals() {
         goalSelector.addGoal(1, new FloatGoal(this));
+        if (isPassiveCreature()) {
+            goalSelector.addGoal(2, new PanicGoal(this, 1.1D));
+            goalSelector.addGoal(5, new RandomStrollGoal(this, 0.2D));
+            goalSelector.addGoal(6, new LookAtPlayerGoal(this, Player.class, 8.0F));
+            goalSelector.addGoal(7, new RandomLookAroundGoal(this));
+            return;
+        }
         goalSelector.addGoal(4, new SuguardAttackGoal(this));
         goalSelector.addGoal(5, new RandomStrollGoal(this, 0.2D));
         goalSelector.addGoal(6, new LookAtPlayerGoal(this, Player.class, 8.0F));
@@ -207,6 +220,9 @@ public class BasicCandyZombieEntity extends Zombie {
     @Override
     public void aiStep() {
         ensureDefaultEquipment();
+        if (isPassiveCreature() && getTarget() != null) {
+            setTarget(null);
+        }
         if (isBossSuguard() && !isBossSuguardAwake()) {
             tickDormantBossSuguard();
             updateBossBar();
@@ -284,30 +300,72 @@ public class BasicCandyZombieEntity extends Zombie {
     }
 
     private void travelDragon(LivingEntity rider, float strafe, float forward) {
-        Vec3 motion = getDeltaMovement();
-        if (forward > 0.0F && !isDragonFalling()) {
-            double yaw = Math.toRadians(rider.getYRot());
-            double push = 0.20D * forward;
-            double side = 0.08D * strafe;
-            motion = motion.add(
-                -Math.sin(yaw) * push + Math.cos(yaw) * side,
-                0.0D,
-                Math.cos(yaw) * push + Math.sin(yaw) * side
-            );
-            if (rider.getXRot() < -8.0F && getMountPower() > getMountMaxPower() / 10) {
-                double lift = Mth.clamp(-rider.getXRot() / 900.0D, 0.015D, 0.085D);
-                motion = motion.add(0.0D, lift + (onGround() ? 0.32D : 0.0D), 0.0D);
-            } else if (!onGround()) {
-                motion = motion.add(0.0D, Mth.clamp(-rider.getXRot() / 1300.0D, -0.04D, 0.06D), 0.0D);
+        getNavigation().stop();
+        setTarget(null);
+
+        boolean exhausted = isDragonFalling();
+        boolean airborne = !onGround();
+        Vec3 look = rider.getLookAngle();
+        Vec3 horizontalLook = new Vec3(look.x, 0.0D, look.z);
+        if (horizontalLook.lengthSqr() < 1.0E-4D) {
+            horizontalLook = Vec3.directionFromRotation(0.0F, rider.getYRot()).multiply(1.0D, 0.0D, 1.0D);
+        }
+        horizontalLook = horizontalLook.normalize();
+
+        if (exhausted) {
+            if (airborne) {
+                travelExhaustedDragonGlide(horizontalLook, forward, strafe);
+            } else {
+                setNoGravity(false);
+                setDragonFlying(false);
+                setSpeed(0.15F);
+                super.travel(new Vec3(strafe * 0.35F, 0.0D, forward * 0.45F));
             }
+            return;
         }
-        if (isDragonFalling()) {
-            motion = motion.add(0.0D, -0.08D, 0.0D);
+
+        double forwardInput = Mth.clamp(forward, -0.35F, 1.0F);
+        double strafeInput = Mth.clamp(strafe, -0.35F, 0.35F);
+        Vec3 side = new Vec3(horizontalLook.z, 0.0D, -horizontalLook.x).scale(strafeInput * 0.42D);
+        Vec3 desired = look.normalize().scale(forwardInput * 0.52D).add(side);
+        Vec3 current = getDeltaMovement();
+
+        if (onGround() && forwardInput > 0.05D && look.y > 0.12D) {
+            desired = desired.add(0.0D, 0.34D, 0.0D);
+            airborne = true;
+        } else if (airborne && Math.abs(forwardInput) < 0.05D) {
+            desired = new Vec3(current.x * 0.72D, current.y * 0.45D, current.z * 0.72D).add(side);
         }
+
+        double response = airborne ? 0.32D : 0.45D;
+        Vec3 motion = current.scale(1.0D - response).add(desired.scale(response));
+        motion = new Vec3(
+            Mth.clamp(motion.x, -0.62D, 0.62D),
+            Mth.clamp(motion.y, -0.48D, 0.48D),
+            Mth.clamp(motion.z, -0.62D, 0.62D)
+        );
+        setNoGravity(airborne);
+        setDragonFlying(airborne);
         setDeltaMovement(motion);
-        move(MoverType.SELF, getDeltaMovement());
-        double drag = isInWater() ? 0.8D : 0.86D;
-        setDeltaMovement(getDeltaMovement().multiply(drag, isDragonFalling() ? 0.98D : 0.90D, drag));
+        move(MoverType.SELF, motion);
+        hasImpulse = true;
+        calculateEntityAnimation(false);
+    }
+
+    private void travelExhaustedDragonGlide(Vec3 horizontalLook, float forward, float strafe) {
+        Vec3 current = getDeltaMovement();
+        double forwardSpeed = Mth.clamp(forward, 0.0F, 1.0F) * 0.26D;
+        double strafeSpeed = Mth.clamp(strafe, -0.35F, 0.35F) * 0.16D;
+        Vec3 side = new Vec3(horizontalLook.z, 0.0D, -horizontalLook.x).scale(strafeSpeed);
+        Vec3 desiredHorizontal = horizontalLook.scale(forwardSpeed).add(side);
+        Vec3 horizontal = new Vec3(current.x, 0.0D, current.z).scale(0.94D).add(desiredHorizontal.scale(0.06D));
+        double descent = Mth.clamp(current.y - 0.012D, -0.16D, -0.035D);
+        Vec3 motion = new Vec3(horizontal.x, descent, horizontal.z);
+        setNoGravity(true);
+        setDragonFlying(true);
+        setDeltaMovement(motion);
+        move(MoverType.SELF, motion);
+        hasImpulse = true;
         calculateEntityAnimation(false);
     }
 
@@ -421,6 +479,10 @@ public class BasicCandyZombieEntity extends Zombie {
 
     @Override
     public boolean doHurtTarget(Entity target) {
+        if (isPassiveCreature()) {
+            setTarget(null);
+            return false;
+        }
         if (!CandyTargeting.canAttackEntity(target)) {
             setTarget(null);
             return false;
@@ -579,9 +641,6 @@ public class BasicCandyZombieEntity extends Zombie {
             tickDragonGrowth();
             tickDragonStamina();
             tickDragonPower();
-            if (!onGround() && getDeltaMovement().y < -0.4D) {
-                setDeltaMovement(getDeltaMovement().multiply(0.8D, 0.85D, 0.8D));
-            }
         } else if (isKingBeetle()) {
             if (getMountPower() < getMountMaxPower()) {
                 setMountPower(getMountPower() + 1);
@@ -766,7 +825,7 @@ public class BasicCandyZombieEntity extends Zombie {
     }
 
     private int getMountPowerUsed() {
-        return isKingBeetle() ? 1200 : 300;
+        return 1200;
     }
 
     public int getMountPower() {
@@ -781,24 +840,51 @@ public class BasicCandyZombieEntity extends Zombie {
         return isDragon() && entityData.get(DRAGON_FALLING);
     }
 
+    public boolean isDragonFlying() {
+        return isDragon() && entityData.get(DRAGON_FLYING);
+    }
+
     private void setDragonFalling(boolean falling) {
         if (isDragon()) {
             entityData.set(DRAGON_FALLING, falling);
         }
     }
 
+    private void setDragonFlying(boolean flying) {
+        if (isDragon()) {
+            entityData.set(DRAGON_FLYING, flying);
+        }
+    }
+
     private void tickDragonStamina() {
+        if (level().isClientSide) {
+            return;
+        }
         LivingEntity controller = getControllingPassenger();
+        if (controller == null) {
+            setDragonFlying(false);
+            setNoGravity(false);
+            if (onGround()) {
+                setDragonFalling(false);
+                setMountPower(Math.min(getMountMaxPower(), getMountPower() + 8));
+            }
+            return;
+        }
+        if (!onGround()) {
+            setDragonFlying(true);
+        }
         if (controller != null && !onGround() && !isDragonFalling()) {
             setMountPower(getMountPower() - 2);
             if (getMountPower() <= 0) {
                 setDragonFalling(true);
             }
-        } else if (getMountPower() < getMountMaxPower() && (!isDragonFalling() || onGround())) {
-            setMountPower(getMountPower() + 1);
-        }
-        if (isDragonFalling() && onGround()) {
-            setDragonFalling(false);
+        } else if (onGround()) {
+            setDragonFlying(false);
+            setNoGravity(false);
+            setMountPower(Math.min(getMountMaxPower(), getMountPower() + 8));
+            if (isDragonFalling() && getMountPower() >= getMountMaxPower() / 5) {
+                setDragonFalling(false);
+            }
         }
     }
 
@@ -806,10 +892,7 @@ public class BasicCandyZombieEntity extends Zombie {
         if (getMountPower() < getMountPowerUsed()) {
             return;
         }
-        if (isDragon()) {
-            setMountPower(getMountPower() - getMountPowerUsed());
-            dragonShootTicks += 10 + random.nextInt(8);
-        } else if (isKingBeetle()) {
+        if (isKingBeetle()) {
             setMountPower(0);
             kingBeetleExplosionCount = 8 + random.nextInt(8);
         }
@@ -826,7 +909,7 @@ public class BasicCandyZombieEntity extends Zombie {
             return;
         }
         if (controller.swinging && dragonShootTicks <= 0) {
-            tryUnleashMountPower();
+            dragonShootTicks = 10 + random.nextInt(8);
         }
         if (dragonShootTicks > 0 && tickCount % 2 == 0 && !level().isClientSide && level() instanceof ServerLevel serverLevel) {
             setYRot(controller.getYRot());
@@ -892,7 +975,7 @@ public class BasicCandyZombieEntity extends Zombie {
     }
 
     private boolean hasBossBar() {
-        return isBossSuguard() || isKingBeetle();
+        return isBossSuguard();
     }
 
     private Component getBossBarName() {
@@ -1113,6 +1196,10 @@ public class BasicCandyZombieEntity extends Zombie {
         return getType() == CCEntityTypes.KING_BEETLE.get();
     }
 
+    private boolean isPassiveCreature() {
+        return isNessie() || isDragon() || isKingBeetle();
+    }
+
     private boolean usesLegacySilentSounds() {
         return isSuguard() || isMageSuguard() || isBossSuguard() || isMermaid() || isDragon() || isKingBeetle();
     }
@@ -1136,7 +1223,17 @@ public class BasicCandyZombieEntity extends Zombie {
     }
 
     private boolean shouldActHostile() {
-        return angry || isHostileBiome() || level().isNight();
+        return !isPassiveCreature() && (angry || isHostileBiome() || level().isNight());
+    }
+
+    @Override
+    public boolean shouldDespawnInPeaceful() {
+        return !isPassiveCreature() && super.shouldDespawnInPeaceful();
+    }
+
+    @Override
+    public boolean removeWhenFarAway(double distanceToClosestPlayer) {
+        return !isPassiveCreature() && super.removeWhenFarAway(distanceToClosestPlayer);
     }
 
     private double getSuguardAttackDamage() {

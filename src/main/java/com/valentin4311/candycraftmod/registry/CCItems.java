@@ -135,7 +135,7 @@ public final class CCItems {
     public static final RegistryObject<Item> HONEY_BOLT = registerPortItem("honey_bolt", () -> new HoneyBoltItem(new Item.Properties()));
     public static final RegistryObject<Item> CARAMEL_BOW = registerPortItem("caramel_bow", () -> new CaramelBowItem(new Item.Properties().durability(384)));
     public static final RegistryObject<Item> CARAMEL_CROSSBOW = registerPortItem("caramel_crossbow", () -> new CaramelCrossbowItem(new Item.Properties().durability(465)));
-    public static final RegistryObject<Item> FORK = registerPortItem("fork", () -> new ForkItem(CCItemTiers.MARSHMALLOW, -1, -1.0F, new Item.Properties().durability(64)));
+    public static final RegistryObject<Item> FORK = registerPortItem("fork", () -> new ForkItem(CCItemTiers.MARSHMALLOW, 5, -2.8F, new Item.Properties().durability(326)));
     public static final RegistryObject<Item> LICORICE_SPEAR = registerPortItem("licorice_spear", () -> new SwordItem(CCItemTiers.LICORICE, 2, -2.2F, new Item.Properties()));
     public static final RegistryObject<Item> GUMMY_BALL = registerPortItem("gummy_ball", () -> new GummyBallItem(new Item.Properties().stacksTo(16)));
     public static final RegistryObject<Item> LEMON_JELLY_BALL = registerPortItem("lemon_jelly_ball");

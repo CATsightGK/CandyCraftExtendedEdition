@@ -1,11 +1,16 @@
 package com.valentin4311.candycraftmod.compat;
 
 import com.valentin4311.candycraftmod.inventory.EmblemBasketContainer;
+import com.valentin4311.candycraftmod.item.EmblemItem;
 import com.valentin4311.candycraftmod.menu.EmblemBasketMenu;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -15,6 +20,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.IItemHandler;
+import net.minecraftforge.items.IItemHandlerModifiable;
 
 public final class CuriosCompat {
     private static final String CURIOS_MODID = "curios";
@@ -32,8 +38,12 @@ public final class CuriosCompat {
     private CuriosCompat() {
     }
 
+    public static boolean isLoaded() {
+        return ModList.get().isLoaded(CURIOS_MODID);
+    }
+
     public static boolean isEquipped(LivingEntity entity, Item item) {
-        if (!ModList.get().isLoaded(CURIOS_MODID) || entity == null || item == null) {
+        if (!isLoaded() || entity == null || item == null) {
             return false;
         }
         try {
@@ -57,7 +67,7 @@ public final class CuriosCompat {
     }
 
     public static void syncEmblemSlots(Player player) {
-        if (!ModList.get().isLoaded(CURIOS_MODID) || player == null) {
+        if (!isLoaded() || player == null) {
             return;
         }
         try {
@@ -74,11 +84,12 @@ public final class CuriosCompat {
                 return;
             }
             Object inventory = handler.get();
-            int currentSlots = countCuriosEmblems(inventory);
-            int targetSlots = Math.min(EmblemBasketContainer.MAX_EMBLEMS, currentSlots + 1);
+            int currentSlots = normalizeCuriosEmblems(player, inventory);
+            int maxSlots = EmblemItem.getRegisteredCount();
+            int targetSlots = Math.min(maxSlots, currentSlots + 1);
             int modifierAmount = Math.max(0, targetSlots - 1);
             int previousAmount = syncedEmblemSlots.getOrDefault(player.getUUID(), -1);
-            if (modifierAmount == previousAmount && player.tickCount % 20 != 0) {
+            if (modifierAmount == previousAmount) {
                 return;
             }
             removeSlotModifier.invoke(inventory, EMBLEM_SLOT, SLOT_MODIFIER_UUID);
@@ -97,7 +108,13 @@ public final class CuriosCompat {
         }
     }
 
-    private static int countCuriosEmblems(Object inventory) throws ReflectiveOperationException {
+    public static void clearPlayerCache(Player player) {
+        if (player != null) {
+            syncedEmblemSlots.remove(player.getUUID());
+        }
+    }
+
+    private static int normalizeCuriosEmblems(Player player, Object inventory) throws ReflectiveOperationException {
         Object found = getStacksHandler.invoke(inventory, EMBLEM_SLOT);
         if (!(found instanceof Optional<?> optional) || optional.isEmpty()) {
             return 0;
@@ -106,14 +123,53 @@ public final class CuriosCompat {
         if (!(stackHandler instanceof IItemHandler itemHandler)) {
             return 0;
         }
-        int occupied = 0;
+        Set<Item> seen = new HashSet<>();
+        List<ItemStack> unique = new ArrayList<>();
+        List<ItemStack> duplicates = new ArrayList<>();
+        List<Integer> duplicateSlots = new ArrayList<>();
+        boolean needsCompaction = false;
         for (int slot = 0; slot < itemHandler.getSlots(); slot++) {
             ItemStack stack = itemHandler.getStackInSlot(slot);
             if (!stack.isEmpty() && EmblemBasketMenu.isEmblem(stack)) {
-                occupied++;
+                if (seen.add(stack.getItem())) {
+                    if (slot != unique.size()) {
+                        needsCompaction = true;
+                    }
+                    ItemStack copy = stack.copy();
+                    copy.setCount(1);
+                    unique.add(copy);
+                } else {
+                    ItemStack copy = stack.copy();
+                    copy.setCount(1);
+                    duplicates.add(copy);
+                    duplicateSlots.add(slot);
+                    needsCompaction = true;
+                }
             }
         }
-        return occupied;
+
+        if (needsCompaction && itemHandler instanceof IItemHandlerModifiable modifiable) {
+            for (int slot = 0; slot < itemHandler.getSlots(); slot++) {
+                modifiable.setStackInSlot(slot, ItemStack.EMPTY);
+            }
+            for (int slot = 0; slot < unique.size(); slot++) {
+                modifiable.setStackInSlot(slot, unique.get(slot));
+            }
+        } else if (!duplicateSlots.isEmpty()) {
+            duplicates.clear();
+            for (int index = duplicateSlots.size() - 1; index >= 0; index--) {
+                int slot = duplicateSlots.get(index);
+                ItemStack extracted = itemHandler.extractItem(slot, itemHandler.getStackInSlot(slot).getCount(), false);
+                if (!extracted.isEmpty()) {
+                    extracted.setCount(1);
+                    duplicates.add(extracted);
+                }
+            }
+        }
+        for (ItemStack duplicate : duplicates) {
+            player.getInventory().placeItemBackInInventory(duplicate);
+        }
+        return unique.size();
     }
 
     private static void ensureLookedUp() throws ReflectiveOperationException {

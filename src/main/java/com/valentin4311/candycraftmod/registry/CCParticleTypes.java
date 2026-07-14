@@ -14,6 +14,10 @@ public final class CCParticleTypes {
 
     public static final RegistryObject<SimpleParticleType> CHOCOLATE_SPLASH =
         PARTICLE_TYPES.register("chocolate_splash", () -> new SimpleParticleType(false));
+    public static final RegistryObject<SimpleParticleType> MILK_RAIN_DROP =
+        PARTICLE_TYPES.register("milk_rain_drop", () -> new SimpleParticleType(false));
+    public static final RegistryObject<SimpleParticleType> MILK_RAIN_SPLASH =
+        PARTICLE_TYPES.register("milk_rain_splash", () -> new SimpleParticleType(false));
 
     private CCParticleTypes() {
     }

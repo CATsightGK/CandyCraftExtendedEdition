@@ -34,6 +34,7 @@ import com.valentin4311.candycraftmod.block.LicoriceFurnaceBlock;
 import com.valentin4311.candycraftmod.block.LollipopBlock;
 import com.valentin4311.candycraftmod.block.LollipopPlantBlock;
 import com.valentin4311.candycraftmod.block.MarshmallowChestBlock;
+import com.valentin4311.candycraftmod.block.MilkCauldronBlock;
 import com.valentin4311.candycraftmod.block.NougatHeadBlock;
 import com.valentin4311.candycraftmod.block.PuddingBlock;
 import com.valentin4311.candycraftmod.block.SeaweedBlock;
@@ -147,6 +148,8 @@ public final class CCBlocks {
     public static final RegistryObject<Block> HONEY_WALL_TORCH = cutout(registerNoItem("honey_wall_torch", () -> new WallTorchBlock(BlockBehaviour.Properties.copy(Blocks.WALL_TORCH).lightLevel(state -> 15), ParticleTypes.FLAME)));
     public static final RegistryObject<Block> HONEYCOMB_BLOCK = register("honeycomb_block", () -> new Block(stone().mapColor(MapColor.COLOR_YELLOW).strength(2.0F)));
     public static final RegistryObject<Block> HONEY_LAMP = register("honey_lamp", () -> new Block(metal(MapColor.COLOR_YELLOW).strength(1.0F).sound(SoundType.GLASS).lightLevel(state -> 15)));
+    public static final RegistryObject<Block> MILK_CAULDRON = registerNoItem("milk_cauldron", () ->
+        new MilkCauldronBlock(BlockBehaviour.Properties.copy(Blocks.CAULDRON).mapColor(MapColor.SNOW).noOcclusion()));
     public static final RegistryObject<Block> PEZ_ORE = register("pez_ore", () -> new Block(stone().strength(3.0F, 5.0F).requiresCorrectToolForDrops()));
     public static final RegistryObject<Block> PEZ_BLOCK = register("pez_block", () -> new Block(metal(MapColor.COLOR_RED).strength(5.0F, 10.0F)));
     public static final RegistryObject<LiquidBlock> CARAMEL = translucent(registerNoItem("caramel", () -> new CandyLiquidBlock(CCFluids.SOURCE_CARAMEL, liquid(MapColor.COLOR_ORANGE), CandyLiquidBlock.Kind.CARAMEL)));

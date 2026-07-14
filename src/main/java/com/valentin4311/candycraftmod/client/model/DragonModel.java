@@ -97,13 +97,25 @@ public class DragonModel<T extends BasicCandyZombieEntity> extends EntityModel<T
 
     @Override
     public void setupAnim(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
-        boolean ridden = entity.getControllingPassenger() != null;
-        if (ridden) {
-            float flap = (Mth.sin(ageInTicks * 0.3F) + 1.0F) * 0.72F;
-            rightWing.zRot = flap - 1.570796F;
-            leftWing.zRot = -flap + 1.570796F;
-            rightScaleWing.zRot = flap;
-            leftScaleWing.zRot = -flap;
+        boolean flying = entity.isDragonFlying();
+        leftWing.visible = flying;
+        rightWing.visible = flying;
+        leftScaleWing.visible = flying;
+        rightScaleWing.visible = flying;
+        if (flying) {
+            if (entity.isDragonFalling()) {
+                float glideSway = Mth.sin(ageInTicks * 0.16F) * 0.04F;
+                rightWing.zRot = -0.35F + glideSway;
+                leftWing.zRot = 0.35F - glideSway;
+                rightScaleWing.zRot = 1.15F + glideSway;
+                leftScaleWing.zRot = -1.15F - glideSway;
+            } else {
+                float flap = (Mth.sin(ageInTicks * 0.85F) + 1.0F) * 0.68F;
+                rightWing.zRot = flap - 1.570796F;
+                leftWing.zRot = -flap + 1.570796F;
+                rightScaleWing.zRot = flap;
+                leftScaleWing.zRot = -flap;
+            }
             float tuckedLeg = entity.isDragonFalling() ? 1.05F : 0.785398F;
             leftFrontLegTop.xRot = tuckedLeg;
             rightFrontLegTop.xRot = tuckedLeg;
@@ -114,10 +126,6 @@ public class DragonModel<T extends BasicCandyZombieEntity> extends EntityModel<T
             leftBackLegBase.xRot = 0.0F;
             rightBackLegBase.xRot = 0.0F;
         } else {
-            leftWing.visible = false;
-            rightWing.visible = false;
-            leftScaleWing.visible = false;
-            rightScaleWing.visible = false;
             leftFrontLegTop.xRot = ((Mth.sin(limbSwing) + 1.0F) * -limbSwingAmount) + 0.4059698F;
             rightFrontLegTop.xRot = ((Mth.cos(limbSwing) + 1.0F) * -limbSwingAmount) + 0.4059698F;
             rightBackLegTop.xRot = ((Mth.sin(limbSwing) + 1.0F) * -limbSwingAmount) + 0.4059698F;
@@ -126,12 +134,7 @@ public class DragonModel<T extends BasicCandyZombieEntity> extends EntityModel<T
             rightFrontLegBase.xRot = -((Mth.cos(limbSwing) + 1.0F) * -limbSwingAmount) - 0.7550357F;
             leftBackLegBase.xRot = -((Mth.cos(limbSwing) + 1.0F) * -limbSwingAmount) - 0.7550357F;
             leftFrontLegBase.xRot = -((Mth.sin(limbSwing) + 1.0F) * -limbSwingAmount) - 0.7550357F;
-            return;
         }
-        leftWing.visible = true;
-        rightWing.visible = true;
-        leftScaleWing.visible = true;
-        rightScaleWing.visible = true;
     }
 
     @Override

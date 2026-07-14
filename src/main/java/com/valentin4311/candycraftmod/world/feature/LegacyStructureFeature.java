@@ -635,22 +635,23 @@ public class LegacyStructureFeature extends Feature<NoneFeatureConfiguration> {
             return false;
         }
         BlockPos base = origin.offset(-32, 0, -32);
+        boolean lamp = false;
         for (int x = 0; x < 64; x++) {
-            boolean lamp = (x & 1) == 0;
-            for (int z = 0; z < 64; z++) {
-                for (int y = 0; y < 7; y++) {
+            lamp = !lamp;
+            for (int y = 0; y < 7; y++) {
+                for (int z = 0; z < 64; z++) {
                     BlockPos pos = base.offset(x, y, z);
                     if (y < 2) {
-                        set(level, pos, CCBlocks.CRYSTALLIZED_SUGAR.get().defaultBlockState());
+                        set(level, pos, Blocks.STONE.defaultBlockState());
                     } else if (x == 0 || z == 0 || x == 63 || z == 63) {
                         set(level, pos, CCBlocks.CHOCOLATE_COBBLESTONE.get().defaultBlockState());
                     } else if ((y == 2 || y == 5) && (x == 1 || z == 1 || x == 62 || z == 62)) {
                         set(level, pos, CCBlocks.CANDY_CANE_BLOCK.get().defaultBlockState());
-                    } else if (y == 6) {
-                        set(level, pos, lamp ? CCBlocks.HONEY_LAMP.get().defaultBlockState() : CCBlocks.CHOCOLATE_COBBLESTONE.get().defaultBlockState());
-                        lamp = !lamp;
                     } else {
-                        set(level, pos, Blocks.AIR.defaultBlockState());
+                        set(level, pos, y < 6
+                            ? Blocks.AIR.defaultBlockState()
+                            : lamp ? CCBlocks.HONEY_LAMP.get().defaultBlockState() : CCBlocks.CHOCOLATE_COBBLESTONE.get().defaultBlockState());
+                        lamp = !lamp;
                     }
                 }
             }
@@ -717,7 +718,7 @@ public class LegacyStructureFeature extends Feature<NoneFeatureConfiguration> {
             set(level, base.offset(post[0], 2, post[1]), CCBlocks.CANDY_CANE_FENCE.get().defaultBlockState());
         }
 
-        buildVillageCenter(level, random, base);
+        buildVillageCenter(level, base);
         decorateVillageLeaves(level, random, base);
         scatterVillageSweetGrass(level, random, base);
         spawnBossSuguard(level, base.offset(32, 3, 32));
@@ -744,7 +745,9 @@ public class LegacyStructureFeature extends Feature<NoneFeatureConfiguration> {
         if (entity == null) {
             return;
         }
-        entity.moveTo(pos.getX() + 0.5D, pos.getY(), pos.getZ() + 0.5D, 0.0F, 0.0F);
+        set(level, pos, Blocks.AIR.defaultBlockState());
+        set(level, pos.above(), Blocks.AIR.defaultBlockState());
+        entity.moveTo(pos.getX(), pos.getY(), pos.getZ(), 0.0F, 0.0F);
         entity.finalizeSpawn(region, region.getCurrentDifficultyAt(pos), MobSpawnType.STRUCTURE, null, null);
         region.addFreshEntity(entity);
     }
@@ -762,7 +765,7 @@ public class LegacyStructureFeature extends Feature<NoneFeatureConfiguration> {
         return x == 20 || x == 24 || x == 39 || x == 43 || z == 20 || z == 24 || z == 39 || z == 43;
     }
 
-    private static void buildVillageCenter(WorldGenLevel level, RandomSource random, BlockPos base) {
+    private static void buildVillageCenter(WorldGenLevel level, BlockPos base) {
         int[][] pudding = {
             {31, 31}, {32, 31}, {31, 32}, {32, 32}, {30, 31}, {30, 32}, {33, 31}, {33, 32},
             {31, 30}, {32, 30}, {31, 33}, {32, 33}

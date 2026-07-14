@@ -3,6 +3,8 @@ package com.valentin4311.candycraftmod.client;
 import com.valentin4311.candycraftmod.CandyCraft;
 import com.valentin4311.candycraftmod.block.PuddingBlock;
 import com.valentin4311.candycraftmod.client.particle.ChocolateSplashParticle;
+import com.valentin4311.candycraftmod.client.particle.MilkRainDropParticle;
+import com.valentin4311.candycraftmod.client.particle.MilkRainSplashParticle;
 import com.valentin4311.candycraftmod.client.model.CandyFishModel;
 import com.valentin4311.candycraftmod.client.model.BeeModel;
 import com.valentin4311.candycraftmod.client.model.BeetleModel;
@@ -69,6 +71,7 @@ import net.minecraftforge.client.event.ScreenEvent;
 import net.minecraftforge.client.event.ViewportEvent;
 import net.minecraftforge.client.event.ModelEvent;
 import net.minecraftforge.client.event.RegisterParticleProvidersEvent;
+import net.minecraftforge.client.event.RegisterClientTooltipComponentFactoriesEvent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RegisterDimensionSpecialEffectsEvent;
 import net.minecraftforge.client.event.RegisterColorHandlersEvent;
@@ -133,11 +136,22 @@ public final class CCClient {
     @SubscribeEvent
     public static void registerParticles(RegisterParticleProvidersEvent event) {
         event.registerSpriteSet(CCParticleTypes.CHOCOLATE_SPLASH.get(), ChocolateSplashParticle.Provider::new);
+        event.registerSpriteSet(CCParticleTypes.MILK_RAIN_DROP.get(), MilkRainDropParticle.Provider::new);
+        event.registerSpriteSet(CCParticleTypes.MILK_RAIN_SPLASH.get(), MilkRainSplashParticle.Provider::new);
+    }
+
+    @SubscribeEvent
+    public static void registerTooltipComponents(RegisterClientTooltipComponentFactoriesEvent event) {
+        event.register(
+            com.valentin4311.candycraftmod.inventory.tooltip.ForkHeldBlockTooltip.class,
+            com.valentin4311.candycraftmod.client.tooltip.ForkHeldBlockClientTooltip::new
+        );
     }
 
     @SubscribeEvent
     public static void registerAdditionalModels(ModelEvent.RegisterAdditional event) {
         event.register(AlchemyTableRenderer.MIX_MODEL);
+        event.register(ForkItemRenderer.INVENTORY_MODEL);
     }
 
     @SubscribeEvent
@@ -339,6 +353,15 @@ public final class CCClient {
     }
 
     private static void registerProjectileItemProperties() {
+        ItemProperties.register(CCItems.FORK.get(), new ResourceLocation(CandyCraft.MODID, "eating"),
+            (stack, level, entity, seed) -> com.valentin4311.candycraftmod.item.ForkItem.getEatAnimationTicks(stack) > 0
+                ? 1.0F : 0.0F
+        );
+        ItemProperties.register(CCItems.FORK.get(), new ResourceLocation(CandyCraft.MODID, "throwing"),
+            (stack, level, entity, seed) -> entity != null
+                && entity.isUsingItem()
+                && entity.getUseItem() == stack ? 1.0F : 0.0F
+        );
         ItemProperties.register(CCItems.DYNAMITE.get(), new ResourceLocation("stage"), (stack, level, entity, seed) ->
             entity != null ? DynamiteItem.modelStage(stack, entity) : 0.0F
         );
@@ -632,7 +655,8 @@ public final class CCClient {
         event.registerEntityRenderer(CCEntityTypes.HONEY_BOLT.get(), HoneyBoltRenderer::new);
         event.registerEntityRenderer(CCEntityTypes.DYNAMITE.get(), context -> new FixedThrownItemRenderer<>(context, new net.minecraft.world.item.ItemStack(CCItems.DYNAMITE.get()), 0.5F));
         event.registerEntityRenderer(CCEntityTypes.GLUE_DYNAMITE.get(), context -> new FixedThrownItemRenderer<>(context, new net.minecraft.world.item.ItemStack(CCItems.GLUE_DYNAMITE.get()), 0.5F));
-        event.registerEntityRenderer(CCEntityTypes.THROWN_FORK.get(), context -> new FixedThrownItemRenderer<>(context, new net.minecraft.world.item.ItemStack(CCItems.FORK.get()), 0.9F));
+        event.registerEntityRenderer(CCEntityTypes.THROWN_FORK.get(), ThrownForkRenderer::new);
+        event.registerEntityRenderer(CCEntityTypes.THROWN_FORK_BLOCK.get(), ThrownForkBlockRenderer::new);
         event.registerEntityRenderer(CCEntityTypes.GUMMY_BALL.get(), GummyBallRenderer::new);
         event.registerEntityRenderer(CCEntityTypes.CANDY_PIG.get(), CandyPigRenderer::new);
         event.registerEntityRenderer(CCEntityTypes.WAFFLE_SHEEP.get(), WaffleSheepRenderer::new);
@@ -1126,6 +1150,19 @@ public final class CCClient {
             RenderSystem.disableBlend();
             RenderSystem.depthMask(true);
             RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+            return true;
+        }
+
+        @Override
+        public boolean renderSnowAndRain(ClientLevel level, int ticks, float partialTick,
+                net.minecraft.client.renderer.LightTexture lightTexture, double cameraX, double cameraY, double cameraZ) {
+            MilkRainRenderer.render(level, ticks, partialTick, cameraX, cameraY, cameraZ);
+            return true;
+        }
+
+        @Override
+        public boolean tickRain(ClientLevel level, int ticks, Camera camera) {
+            MilkRainRenderer.tick(level, camera);
             return true;
         }
 

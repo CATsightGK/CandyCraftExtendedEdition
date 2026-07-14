@@ -83,6 +83,10 @@ public class MermaidModel<T extends BasicCandyZombieEntity> extends EntityModel<
         fin.yRot = sway * 1.55F;
     }
 
+    public void translateToRightArm(PoseStack poseStack) {
+        rightArm.translateAndRotate(poseStack);
+    }
+
     @Override
     public void renderToBuffer(PoseStack poseStack, VertexConsumer buffer, int packedLight, int packedOverlay, float red, float green, float blue, float alpha) {
         root.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);

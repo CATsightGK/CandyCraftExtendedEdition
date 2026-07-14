@@ -1,6 +1,7 @@
 package com.valentin4311.candycraftmod.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Axis;
 import com.valentin4311.candycraftmod.CandyCraft;
 import com.valentin4311.candycraftmod.client.model.DragonModel;
 import com.valentin4311.candycraftmod.entity.BasicCandyZombieEntity;
@@ -17,9 +18,17 @@ public class DragonRenderer extends MobRenderer<BasicCandyZombieEntity, DragonMo
     }
 
     @Override
+    protected void setupRotations(BasicCandyZombieEntity entity, PoseStack poseStack, float ageInTicks, float rotationYaw, float partialTicks) {
+        super.setupRotations(entity, poseStack, ageInTicks, rotationYaw, partialTicks);
+        if (entity.isDragonFlying()) {
+            poseStack.mulPose(Axis.XP.rotationDegrees(entity.getXRot() * 0.55F));
+        }
+    }
+
+    @Override
     protected void scale(BasicCandyZombieEntity entity, PoseStack poseStack, float partialTickTime) {
         poseStack.translate(-0.0625F, 0.0F, 0.0F);
-        if (entity.getControllingPassenger() != null) {
+        if (entity.isDragonFlying()) {
             poseStack.translate(0.0F, Math.sin((entity.tickCount + partialTickTime) * 0.05F) / 6.0D, 0.0F);
         }
         if (entity.isBabyDragon()) {

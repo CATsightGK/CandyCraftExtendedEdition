@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.valentin4311.candycraftmod.mixin",
+  "refmap": "candycraftmod.refmap.json",
+  "compatibilityLevel": "JAVA_17",
+  "mixins": [
+    "BiomeMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

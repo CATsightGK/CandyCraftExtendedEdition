@@ -1,5 +1,6 @@
 package com.valentin4311.candycraftmod.network;
 
+import com.valentin4311.candycraftmod.compat.CuriosCompat;
 import com.valentin4311.candycraftmod.menu.EmblemBasketMenu;
 import java.util.function.Supplier;
 import net.minecraft.network.FriendlyByteBuf;
@@ -24,7 +25,7 @@ public record OpenEmblemBasketPacket() {
         NetworkEvent.Context context = contextSupplier.get();
         context.enqueueWork(() -> {
             ServerPlayer player = context.getSender();
-            if (player != null) {
+            if (player != null && !CuriosCompat.isLoaded()) {
                 NetworkHooks.openScreen(player, new MenuProvider() {
                     @Override
                     public Component getDisplayName() {

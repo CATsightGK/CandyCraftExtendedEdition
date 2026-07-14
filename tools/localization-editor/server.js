@@ -3,7 +3,9 @@ const http = require("http");
 const path = require("path");
 const url = require("url");
 
-const root = path.resolve(__dirname, "..", "..");
+const root = process.env.CANDYCRAFT_ROOT
+  ? path.resolve(process.env.CANDYCRAFT_ROOT)
+  : path.resolve(__dirname, "..", "..");
 const assetsRoot = path.join(root, "src", "main", "resources", "assets", "candycraftmod");
 const dataRoot = path.join(root, "src", "main", "resources", "data", "candycraftmod");
 const classicAssetsRoot = path.join(root, "src", "main", "resources", "resourcepacks", "candycraft_classic", "assets", "candycraftmod");
@@ -11,7 +13,7 @@ const zhPath = path.join(assetsRoot, "lang", "zh_cn.json");
 const enPath = path.join(assetsRoot, "lang", "en_us.json");
 const classicZhPath = path.join(classicAssetsRoot, "lang", "zh_cn.json");
 const classicEnPath = path.join(classicAssetsRoot, "lang", "en_us.json");
-const port = Number(process.env.PORT || 4312);
+const defaultPort = Number(process.env.PORT || 4312);
 
 function readText(file) {
   return fs.existsSync(file) ? fs.readFileSync(file, "utf8") : "";
@@ -290,6 +292,25 @@ const server = http.createServer((req, res) => {
   res.end("not found");
 });
 
-server.listen(port, "127.0.0.1", () => {
-  console.log(`CandyCraft localization editor: http://127.0.0.1:${port}`);
-});
+function startServer(port = defaultPort) {
+  return new Promise((resolve, reject) => {
+    const onError = error => reject(error);
+    server.once("error", onError);
+    server.listen(port, "127.0.0.1", () => {
+      server.removeListener("error", onError);
+      const address = server.address();
+      const actualPort = address && typeof address === "object" ? address.port : port;
+      console.log(`CandyCraft localization editor: http://127.0.0.1:${actualPort}`);
+      resolve({ server, port: actualPort });
+    });
+  });
+}
+
+if (require.main === module) {
+  startServer().catch(error => {
+    console.error(error);
+    process.exitCode = 1;
+  });
+}
+
+module.exports = { startServer };

@@ -59,23 +59,51 @@ public class PingouinModel<T extends PingouinEntity> extends EntityModel<T> {
     public void setupAnim(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
         float pitch = headPitch * ((float)Math.PI / 180F);
         float yaw = netHeadYaw * ((float)Math.PI / 180F);
-        beak.xRot = pitch;
-        beak.yRot = yaw;
-        head.xRot = pitch;
+        float movement = Mth.clamp(limbSwingAmount * 1.8F, 0.0F, 1.0F);
+        float step = limbSwing * 0.6662F;
+        float waddle = Mth.sin(step) * 0.18F * movement;
+        float bounce = Math.abs(Mth.cos(step)) * 0.45F * movement;
+
+        body.y = 14.0F - bounce;
+        body.xRot = 0.06F * movement;
+        body.zRot = waddle;
+        head.y = 14.0F - bounce;
+        beak.y = 14.0F - bounce;
+        crest.y = 14.0F - bounce;
+        head.xRot = pitch - 0.04F * movement;
         head.yRot = yaw;
+        head.zRot = waddle * 0.65F;
+        beak.xRot = pitch - 0.04F * movement;
+        beak.yRot = yaw;
+        beak.zRot = waddle * 0.65F;
+        crest.zRot = waddle * 0.65F;
 
-        footLeft.xRot = ((Mth.sin(limbSwing) + 1.0F) * 0.8F) * -limbSwingAmount;
-        footRight.xRot = ((Mth.cos(limbSwing) + 1.0F) * 0.8F) * -limbSwingAmount;
-        footLeft.yRot = ((Mth.sin(limbSwing) + 1.0F) * 0.5F) * limbSwingAmount + 0.3490659F;
-        footRight.yRot = ((Mth.cos(limbSwing) + 1.0F) * -0.5F) * limbSwingAmount - 0.3490659F;
+        footLeft.xRot = Mth.cos(step) * 0.85F * movement;
+        footRight.xRot = Mth.cos(step + (float)Math.PI) * 0.85F * movement;
+        footLeft.yRot = 0.3490659F - waddle * 0.8F;
+        footRight.yRot = -0.3490659F - waddle * 0.8F;
+        footLeft.zRot = -waddle * 0.35F;
+        footRight.zRot = -waddle * 0.35F;
 
-        crest.xRot = (Mth.cos(entity.tickCount * 0.1F) + 1.0F) * 0.2F;
+        float idleFlap = (Mth.sin(ageInTicks * 0.12F) + 1.0F) * 0.045F;
+        crest.xRot = 0.2230717F + Mth.sin(ageInTicks * 0.12F) * 0.08F + bounce * 0.08F;
+        tail.y = 21.0F - bounce;
+        tail.xRot = 0.1487144F + bounce * 0.08F;
+        tail.yRot = -waddle * 1.4F;
+        wingLeft.y = 14.0F - bounce;
+        wingRight.y = 14.0F - bounce;
         if (entity.onGround()) {
-            wingLeft.zRot = (Mth.cos(entity.tickCount * 0.1F) + 1.0F) * 0.1F + 0.2230717F;
-            wingRight.zRot = -((Mth.cos(entity.tickCount * 0.1F) + 1.0F) * 0.1F) - 0.2230717F;
+            float stepFlap = Math.abs(Mth.sin(step)) * 0.30F * movement;
+            wingLeft.xRot = -waddle * 0.8F;
+            wingRight.xRot = waddle * 0.8F;
+            wingLeft.zRot = 0.2230717F + idleFlap + stepFlap;
+            wingRight.zRot = -0.2230717F - idleFlap - stepFlap;
         } else {
-            wingLeft.zRot = (Mth.cos(entity.tickCount * 0.5F) + 1.0F) * 0.6F + 0.2230717F;
-            wingRight.zRot = -((Mth.cos(entity.tickCount * 0.5F) + 1.0F) * 0.6F) - 0.2230717F;
+            float airFlap = (Mth.sin(ageInTicks * 0.75F) + 1.0F) * 0.55F;
+            wingLeft.xRot = 0.0F;
+            wingRight.xRot = 0.0F;
+            wingLeft.zRot = 0.2230717F + airFlap;
+            wingRight.zRot = -0.2230717F - airFlap;
         }
         crest.visible = entity.isSuperPingouin();
     }

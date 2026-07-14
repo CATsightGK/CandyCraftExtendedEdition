@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.valentin4311.candycraftmod.CandyCraft;
 import com.valentin4311.candycraftmod.client.model.PingouinModel;
 import com.valentin4311.candycraftmod.entity.PingouinEntity;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.resources.ResourceLocation;
@@ -16,7 +17,14 @@ public class PingouinRenderer extends MobRenderer<PingouinEntity, PingouinModel<
     };
 
     public PingouinRenderer(EntityRendererProvider.Context context) {
-        super(context, new PingouinModel<>(context.bakeLayer(PingouinModel.LAYER)), 0.5F);
+        super(context, new PingouinModel<>(context.bakeLayer(PingouinModel.LAYER)), 0.28F);
+    }
+
+    @Override
+    public void render(PingouinEntity entity, float entityYaw, float partialTicks, PoseStack poseStack,
+            MultiBufferSource buffer, int packedLight) {
+        shadowRadius = entity.isBaby() ? 0.14F : 0.28F;
+        super.render(entity, entityYaw, partialTicks, poseStack, buffer, packedLight);
     }
 
     @Override

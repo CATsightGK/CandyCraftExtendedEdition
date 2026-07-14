@@ -3,10 +3,12 @@ const http = require("http");
 const path = require("path");
 const url = require("url");
 
-const root = path.resolve(__dirname, "..", "..");
+const root = process.env.CANDYCRAFT_ROOT
+  ? path.resolve(process.env.CANDYCRAFT_ROOT)
+  : path.resolve(__dirname, "..", "..");
 const assetsRoot = path.join(root, "src", "main", "resources", "assets", "candycraftmod");
 const orderPath = path.join(root, "src", "main", "resources", "data", "candycraftmod", "creative_tabs", "order.json");
-const port = Number(process.env.PORT || 4311);
+const defaultPort = Number(process.env.PORT || 4311);
 
 function readText(file) {
   return fs.existsSync(file) ? fs.readFileSync(file, "utf8") : "";
@@ -381,6 +383,25 @@ const server = http.createServer((req, res) => {
   res.end("not found");
 });
 
-server.listen(port, "127.0.0.1", () => {
-  console.log(`CandyCraft creative tab editor: http://127.0.0.1:${port}`);
-});
+function startServer(port = defaultPort) {
+  return new Promise((resolve, reject) => {
+    const onError = error => reject(error);
+    server.once("error", onError);
+    server.listen(port, "127.0.0.1", () => {
+      server.removeListener("error", onError);
+      const address = server.address();
+      const actualPort = address && typeof address === "object" ? address.port : port;
+      console.log(`CandyCraft creative tab editor: http://127.0.0.1:${actualPort}`);
+      resolve({ server, port: actualPort });
+    });
+  });
+}
+
+if (require.main === module) {
+  startServer().catch(error => {
+    console.error(error);
+    process.exitCode = 1;
+  });
+}
+
+module.exports = { startServer };

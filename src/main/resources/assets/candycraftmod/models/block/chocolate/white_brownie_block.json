@@ -1,9 +1,6 @@
 {
-  "parent": "block/cube_bottom_top",
+  "parent": "block/cube_all",
   "textures": {
-    "bottom": "candycraftmod:block/white_brownie_block_top",
-    "side": "candycraftmod:block/white_brownie_block_front",
-    "top": "candycraftmod:block/white_brownie_block_top",
-    "particle": "candycraftmod:block/white_brownie_block_front"
+    "all": "candycraftmod:block/candy_soil_white"
   }
 }

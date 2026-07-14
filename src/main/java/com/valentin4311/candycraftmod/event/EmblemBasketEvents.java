@@ -3,6 +3,7 @@ package com.valentin4311.candycraftmod.event;
 import com.valentin4311.candycraftmod.CandyCraft;
 import com.valentin4311.candycraftmod.compat.CuriosCompat;
 import com.valentin4311.candycraftmod.inventory.EmblemBasketContainer;
+import com.valentin4311.candycraftmod.util.EmblemHelper;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -21,11 +22,19 @@ public final class EmblemBasketEvents {
                 event.getOriginal().getPersistentData().get(EmblemBasketContainer.TAG_NAME).copy()
             );
         }
+        EmblemHelper.invalidate(event.getEntity());
+        CuriosCompat.clearPlayerCache(event.getEntity());
+    }
+
+    @SubscribeEvent
+    public static void onPlayerLogout(PlayerEvent.PlayerLoggedOutEvent event) {
+        EmblemHelper.invalidate(event.getEntity());
+        CuriosCompat.clearPlayerCache(event.getEntity());
     }
 
     @SubscribeEvent
     public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
-        if (event.phase == TickEvent.Phase.END && !event.player.level().isClientSide && event.player.tickCount % 20 == 0) {
+        if (event.phase == TickEvent.Phase.END && !event.player.level().isClientSide) {
             CuriosCompat.syncEmblemSlots(event.player);
         }
     }

@@ -1,6 +1,8 @@
 package com.valentin4311.candycraftmod.inventory;
 
 import java.util.function.Predicate;
+import com.valentin4311.candycraftmod.util.EmblemHelper;
+import com.valentin4311.candycraftmod.item.EmblemItem;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -12,20 +14,20 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
 public class EmblemBasketContainer implements Container {
-    public static final int MAX_EMBLEMS = 8;
     public static final String TAG_NAME = "CandyCraftEmblemBasket";
     private final Player player;
     private final Predicate<ItemStack> emblemPredicate;
-    private final NonNullList<ItemStack> items = NonNullList.withSize(MAX_EMBLEMS, ItemStack.EMPTY);
+    private final NonNullList<ItemStack> items;
 
     public EmblemBasketContainer(Player player, Predicate<ItemStack> emblemPredicate) {
         this.player = player;
         this.emblemPredicate = emblemPredicate;
+        this.items = NonNullList.withSize(EmblemItem.getRegisteredCount(), ItemStack.EMPTY);
         load();
     }
 
     public int getVisibleSlots() {
-        return Math.min(MAX_EMBLEMS, getOccupiedSlots() + 1);
+        return Math.min(items.size(), getOccupiedSlots() + 1);
     }
 
     public boolean isSlotVisible(int slot) {
@@ -72,15 +74,14 @@ public class EmblemBasketContainer implements Container {
             return;
         }
         ListTag list = player.getPersistentData().getList(TAG_NAME, Tag.TAG_COMPOUND);
+        int nextSlot = 0;
         for (int i = 0; i < list.size(); i++) {
             CompoundTag entry = list.getCompound(i);
-            int slot = entry.getByte("Slot") & 255;
-            if (slot >= 0 && slot < items.size()) {
-                ItemStack stack = ItemStack.of(entry);
-                if (!stack.isEmpty() && emblemPredicate.test(stack)) {
-                    stack.setCount(1);
-                    items.set(slot, stack);
-                }
+            ItemStack stack = ItemStack.of(entry);
+            if (!stack.isEmpty() && emblemPredicate.test(stack) && !hasEmblem(stack.getItem())
+                    && nextSlot < items.size()) {
+                stack.setCount(1);
+                items.set(nextSlot++, stack);
             }
         }
     }
@@ -123,6 +124,7 @@ public class EmblemBasketContainer implements Container {
     public ItemStack removeItem(int slot, int amount) {
         ItemStack result = ContainerHelper.removeItem(items, slot, amount);
         if (!result.isEmpty()) {
+            compact();
             setChanged();
         }
         return result;
@@ -131,6 +133,7 @@ public class EmblemBasketContainer implements Container {
     @Override
     public ItemStack removeItemNoUpdate(int slot) {
         ItemStack result = ContainerHelper.takeItem(items, slot);
+        compact();
         setChanged();
         return result;
     }
@@ -148,6 +151,7 @@ public class EmblemBasketContainer implements Container {
     @Override
     public void setChanged() {
         save();
+        EmblemHelper.invalidate(player);
     }
 
     @Override
@@ -161,5 +165,20 @@ public class EmblemBasketContainer implements Container {
             items.set(i, ItemStack.EMPTY);
         }
         setChanged();
+    }
+
+    private void compact() {
+        int writeIndex = 0;
+        for (int readIndex = 0; readIndex < items.size(); readIndex++) {
+            ItemStack stack = items.get(readIndex);
+            if (stack.isEmpty()) {
+                continue;
+            }
+            if (writeIndex != readIndex) {
+                items.set(writeIndex, stack);
+                items.set(readIndex, ItemStack.EMPTY);
+            }
+            writeIndex++;
+        }
     }
 }

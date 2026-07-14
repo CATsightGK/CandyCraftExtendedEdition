@@ -9,6 +9,7 @@ import com.valentin4311.candycraftmod.registry.CCFluids;
 import com.valentin4311.candycraftmod.registry.CCItems;
 import com.valentin4311.candycraftmod.registry.CCBlocks;
 import com.valentin4311.candycraftmod.util.EmblemHelper;
+import com.valentin4311.candycraftmod.world.CandyFluidTickRepairData;
 import com.valentin4311.candycraftmod.world.feature.CottonCandyTreeFeature;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
@@ -38,6 +39,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.chunk.LevelChunkSection;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraftforge.common.ForgeSpawnEggItem;
@@ -72,10 +74,10 @@ public final class CCForgeEvents {
         if (player.getItemBySlot(EquipmentSlot.HEAD).is(CCItems.WATER_MASK.get())) {
             player.setAirSupply(player.getMaxAirSupply());
         }
-        if (has(player, CCItems.WATER_EMBLEM.get()) && player.isInWater() && player.tickCount % 600 == 0) {
+        if (player.isInWater() && player.tickCount % 600 == 0 && has(player, CCItems.WATER_EMBLEM.get())) {
             player.heal(1.0F);
         }
-        if (has(player, CCItems.CRANBERRY_EMBLEM.get())) {
+        if (isDawn(player) && has(player, CCItems.CRANBERRY_EMBLEM.get())) {
             healAtDawn(player);
         }
     }
@@ -292,9 +294,6 @@ public final class CCForgeEvents {
 
     private static void healAtDawn(Player player) {
         long dayTime = player.level().getDayTime();
-        if (dayTime % 24000L > 20L) {
-            return;
-        }
         long day = dayTime / 24000L;
         CompoundTag data = player.getPersistentData();
         if (data.getLong(CRANBERRY_EMBLEM_DAY) == day) {
@@ -305,28 +304,48 @@ public final class CCForgeEvents {
         player.displayClientMessage(Component.translatable("message.candycraftmod.cranberry_emblem"), true);
     }
 
+    private static boolean isDawn(Player player) {
+        return player.level().getDayTime() % 24000L <= 20L;
+    }
+
     private static boolean isCandyWorld(Level level) {
         return level.dimension().equals(CANDY_WORLD);
     }
 
     private static void scheduleExposedCandyFluidTicks(ServerLevel level, ChunkAccess chunk) {
+        CandyFluidTickRepairData repairData = CandyFluidTickRepairData.get(level);
+        if (repairData.isRepaired(chunk.getPos())) {
+            return;
+        }
+
         BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
-        ChunkAccess actualChunk = chunk;
-        int minY = Math.max(63, actualChunk.getMinBuildHeight());
-        int maxY = Math.min(level.getMaxBuildHeight(), actualChunk.getMaxBuildHeight());
-        int minX = actualChunk.getPos().getMinBlockX();
-        int minZ = actualChunk.getPos().getMinBlockZ();
-        for (int x = 0; x < 16; x++) {
-            for (int z = 0; z < 16; z++) {
-                for (int y = minY; y < maxY; y++) {
-                    pos.set(minX + x, y, minZ + z);
-                    FluidState fluid = actualChunk.getFluidState(pos);
-                    if (isCandyFluid(fluid) && isExposedFluid(level, pos)) {
-                        level.scheduleTick(pos.immutable(), fluid.getType(), fluid.getType().getTickDelay(level));
+        int minY = Math.max(63, chunk.getMinBuildHeight());
+        int maxY = Math.min(level.getMaxBuildHeight(), chunk.getMaxBuildHeight());
+        int minX = chunk.getPos().getMinBlockX();
+        int minZ = chunk.getPos().getMinBlockZ();
+        LevelChunkSection[] sections = chunk.getSections();
+        for (int sectionIndex = 0; sectionIndex < sections.length; sectionIndex++) {
+            LevelChunkSection section = sections[sectionIndex];
+            int sectionMinY = chunk.getSectionYFromSectionIndex(sectionIndex) << 4;
+            int scanMinY = Math.max(minY, sectionMinY);
+            int scanMaxY = Math.min(maxY, sectionMinY + 16);
+            if (scanMinY >= scanMaxY || section.hasOnlyAir()
+                || !section.maybeHas(state -> isCandyFluid(state.getFluidState()))) {
+                continue;
+            }
+            for (int x = 0; x < 16; x++) {
+                for (int z = 0; z < 16; z++) {
+                    for (int y = scanMinY; y < scanMaxY; y++) {
+                        pos.set(minX + x, y, minZ + z);
+                        FluidState fluid = chunk.getFluidState(pos);
+                        if (isCandyFluid(fluid) && isExposedFluid(level, pos)) {
+                            level.scheduleTick(pos.immutable(), fluid.getType(), fluid.getType().getTickDelay(level));
+                        }
                     }
                 }
             }
         }
+        repairData.markRepaired(chunk.getPos());
     }
 
     private static boolean isExposedFluid(ServerLevel level, BlockPos pos) {

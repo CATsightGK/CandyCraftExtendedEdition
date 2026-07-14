@@ -179,6 +179,18 @@
     "candycraftmod:orange_gummy_workbench",
     "candycraftmod:yellow_gummy_workbench",
     "candycraftmod:white_gummy_workbench",
-    "candycraftmod:green_gummy_workbench"
+    "candycraftmod:green_gummy_workbench",
+    "candycraftmod:marshmallow_door",
+    "candycraftmod:marshmallow_door_dark",
+    "candycraftmod:marshmallow_door_light",
+    "candycraftmod:milk_chocolate_door",
+    "candycraftmod:white_chocolate_door",
+    "candycraftmod:dark_chocolate_door",
+    "candycraftmod:marshmallow_trapdoor",
+    "candycraftmod:marshmallow_trapdoor_dark",
+    "candycraftmod:marshmallow_trapdoor_light",
+    "candycraftmod:milk_chocolate_trapdoor",
+    "candycraftmod:white_chocolate_trapdoor",
+    "candycraftmod:dark_chocolate_trapdoor"
   ]
 }

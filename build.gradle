@@ -4,6 +4,7 @@ plugins {
     id 'maven-publish'
     id 'net.minecraftforge.gradle' version '[6.0,6.2)'
     id 'org.parchmentmc.librarian.forgegradle' version '1.+'
+    id 'org.spongepowered.mixin' version '0.7-SNAPSHOT'
 }
 
 version = mod_version
@@ -53,8 +54,14 @@ repositories {
 
 dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
     compileOnly fg.deobf("mezz.jei:jei-${minecraft_version}-common-api:15.20.0.132")
     compileOnly fg.deobf("mezz.jei:jei-${minecraft_version}-forge-api:15.20.0.132")
+}
+
+mixin {
+    add sourceSets.main, 'candycraftmod.refmap.json'
+    config 'candycraftmod.mixins.json'
 }
 
 tasks.withType(ProcessResources).configureEach {
@@ -86,7 +93,8 @@ tasks.named('jar', Jar).configure {
             'Specification-Version'   : '1',
             'Implementation-Title'    : project.name,
             'Implementation-Version'  : project.version,
-            'Implementation-Vendor'   : mod_authors
+            'Implementation-Vendor'   : mod_authors,
+            'MixinConfigs'            : 'candycraftmod.mixins.json'
         ])
     }
 }

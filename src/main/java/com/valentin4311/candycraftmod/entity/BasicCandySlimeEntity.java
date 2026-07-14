@@ -4,6 +4,9 @@ import com.valentin4311.candycraftmod.registry.CCEntityTypes;
 import com.valentin4311.candycraftmod.registry.CCFluids;
 import com.valentin4311.candycraftmod.registry.CCItems;
 import com.valentin4311.candycraftmod.registry.CCSoundEvents;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ItemParticleOption;
@@ -38,6 +41,8 @@ import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
@@ -61,6 +66,8 @@ public class BasicCandySlimeEntity extends Slime {
     private static final int PEZ_ROLL_ATTACK_TICKS = 30;
     private static final int PEZ_ROLL_REST_TICKS = 60;
     private static final int PEZ_ROLL_TOTAL_TICKS = PEZ_ROLLING_TICKS + PEZ_ROLL_ATTACH_WAIT_TICKS + PEZ_ROLL_ATTACK_TICKS + PEZ_ROLL_REST_TICKS;
+    private static final int PEZ_OPEN_ROLL_DIRECTION_TICKS = 40;
+    private static final double PEZ_ENCLOSURE_PROBE_DISTANCE = 32.0D;
     private static final double PEZ_ROLL_ANIMATION_SECONDS = 0.50251D;
     private static final double PEZ_ROLL_MIN_WAYPOINT_DISTANCE = 18.0D;
     private static final double PEZ_ROLL_MAX_WAYPOINT_DISTANCE = 56.0D;
@@ -105,6 +112,8 @@ public class BasicCandySlimeEntity extends Slime {
     private Vec3 pezRollWaypoint = Vec3.ZERO;
     private Vec3 pezRollNextWaypoint = Vec3.ZERO;
     private boolean pezRollAttackReleased;
+    private boolean pezOpenGroundRoll;
+    private final Set<Integer> pezOpenRollHitTargets = new HashSet<>();
     @Nullable
     private LivingEntity pezRollTarget;
     private boolean bossWasOnGround = true;
@@ -117,6 +126,8 @@ public class BasicCandySlimeEntity extends Slime {
     private final ServerBossEvent bossEvent = new ServerBossEvent(getDisplayName(), BossEvent.BossBarColor.PURPLE, BossEvent.BossBarOverlay.PROGRESS);
     @Nullable
     private LivingEntity bossRetaliationTarget;
+    @Nullable
+    private UUID jellySummonerUuid;
 
     public BasicCandySlimeEntity(EntityType<? extends BasicCandySlimeEntity> type, Level level) {
         super(type, level);
@@ -236,6 +247,9 @@ public class BasicCandySlimeEntity extends Slime {
     @Override
     public boolean hurt(DamageSource source, float amount) {
         LivingEntity livingAttacker = getLivingAttacker(source);
+        if (livingAttacker instanceof BasicCandySlimeEntity slimeAttacker && isSummonedAlly(slimeAttacker)) {
+            return false;
+        }
         if (isInGrenadine() && source.getEntity() == null && source.getDirectEntity() == null) {
             return false;
         }
@@ -396,6 +410,9 @@ public class BasicCandySlimeEntity extends Slime {
         tag.putInt("BossMultiTargetSlamCount", bossMultiTargetSlamCount);
         tag.putInt("PezSlamCount", pezSlamCount);
         tag.putInt("PezRollCooldown", pezRollCooldown);
+        if (jellySummonerUuid != null) {
+            tag.putUUID("JellySummoner", jellySummonerUuid);
+        }
         if (isJellyQueen()) {
             tag.putInt("JellyQueenMode", getJellyQueenMode());
         }
@@ -412,6 +429,7 @@ public class BasicCandySlimeEntity extends Slime {
         bossMultiTargetSlamCount = tag.getInt("BossMultiTargetSlamCount");
         pezSlamCount = tag.getInt("PezSlamCount");
         pezRollCooldown = tag.getInt("PezRollCooldown");
+        jellySummonerUuid = tag.hasUUID("JellySummoner") ? tag.getUUID("JellySummoner") : null;
         if (isJellyQueen()) {
             setJellyQueenMode(tag.contains("JellyQueenMode") ? tag.getInt("JellyQueenMode") : isBossAwake() ? JELLY_QUEEN_PINK_MODE : JELLY_QUEEN_SLEEP_MODE);
         }
@@ -994,11 +1012,19 @@ public class BasicCandySlimeEntity extends Slime {
         int elapsed = PEZ_ROLL_TOTAL_TICKS - ticks;
         LivingEntity target = pezRollTarget != null && pezRollTarget.isAlive() ? pezRollTarget : findBossAttackTarget();
         if (target == null) {
-            setPezRollTicks(0);
-            setNoGravity(false);
+            finishPezRollSkill();
             return;
         }
         pezRollTarget = target;
+
+        if (pezOpenGroundRoll) {
+            if (elapsed < PEZ_ROLLING_TICKS) {
+                rollPezTowardTarget(target, elapsed);
+            } else {
+                finishPezRollSkill();
+            }
+            return;
+        }
 
         if (elapsed < PEZ_ROLLING_TICKS) {
             rollPezThroughRoom(target, elapsed);
@@ -1014,10 +1040,7 @@ public class BasicCandySlimeEntity extends Slime {
         }
 
         if (ticks - 1 <= 0) {
-            setNoGravity(false);
-            pezRollAttackReleased = false;
-            pezRollTarget = null;
-            pezRollCooldown = 120;
+            finishPezRollSkill();
         }
     }
 
@@ -1035,11 +1058,101 @@ public class BasicCandySlimeEntity extends Slime {
         pezRollNextWaypoint = Vec3.ZERO;
         pezRollTarget = target;
         pezRollAttackReleased = false;
+        pezOpenGroundRoll = !isPezInEnclosedRollSpace();
+        pezOpenRollHitTargets.clear();
         pezRollCooldown = 240;
         bossSlamAttackActive = false;
         bossSlamDamageReady = false;
         getNavigation().stop();
         playSound(SoundEvents.SLIME_SQUISH, 1.4F, 0.62F);
+    }
+
+    private boolean isPezInEnclosedRollSpace() {
+        Vec3 center = position().add(0.0D, getBbHeight() * 0.55D, 0.0D);
+        int walls = 0;
+        for (Direction direction : Direction.Plane.HORIZONTAL) {
+            if (hasPezRollBoundary(center, direction)) {
+                walls++;
+            }
+        }
+        Vec3 ceilingProbe = position().add(0.0D, getBbHeight() + 0.1D, 0.0D);
+        return walls >= 3 && hasPezRollBoundary(ceilingProbe, Direction.UP);
+    }
+
+    private boolean hasPezRollBoundary(Vec3 start, Direction direction) {
+        Vec3 normal = Vec3.atLowerCornerOf(direction.getNormal());
+        HitResult hit = level().clip(new ClipContext(
+            start,
+            start.add(normal.scale(PEZ_ENCLOSURE_PROBE_DISTANCE)),
+            ClipContext.Block.COLLIDER,
+            ClipContext.Fluid.NONE,
+            this
+        ));
+        return hit.getType() != HitResult.Type.MISS;
+    }
+
+    private void rollPezTowardTarget(LivingEntity target, int elapsed) {
+        setNoGravity(false);
+        getNavigation().stop();
+        getLookControl().setLookAt(target);
+
+        Vec3 previousPosition = position();
+        if (elapsed % PEZ_OPEN_ROLL_DIRECTION_TICKS == 0 || pezRollTangent.lengthSqr() < 1.0E-4D) {
+            Vec3 toTarget = target.position().subtract(position()).multiply(1.0D, 0.0D, 1.0D);
+            if (toTarget.lengthSqr() < 1.0E-4D) {
+                toTarget = getLookAngle().multiply(1.0D, 0.0D, 1.0D);
+            }
+            pezRollTangent = toTarget.lengthSqr() > 1.0E-4D ? toTarget.normalize() : Vec3.ZERO;
+            pezOpenRollHitTargets.clear();
+        }
+        Vec3 rollDirection = pezRollTangent;
+        double speed = Mth.clamp(pezRollMatchedSpeed() * 0.78D, 0.95D, 1.45D);
+        double vertical = getDeltaMovement().y;
+        if (horizontalCollision && onGround()) {
+            vertical = 0.36D;
+        }
+        Vec3 movement = rollDirection.scale(speed).add(0.0D, vertical, 0.0D);
+        move(MoverType.SELF, movement);
+        setDeltaMovement(rollDirection.scale(speed * 0.82D).add(0.0D, vertical, 0.0D));
+        hasImpulse = true;
+
+        if (rollDirection.lengthSqr() > 1.0E-4D) {
+            Direction visualDirection = Direction.getNearest(rollDirection.x, 0.0D, rollDirection.z);
+            setPezAttachFace(Direction.UP);
+            setPezRollDirection(visualDirection);
+        }
+        damagePezOpenRollTargets(rollDirection, previousPosition);
+        if (tickCount % 3 == 0) {
+            spawnPezRollBreakParticles(rollDirection.scale(-1.0D));
+        }
+    }
+
+    private void damagePezOpenRollTargets(Vec3 rollDirection, Vec3 previousPosition) {
+        if (!(level() instanceof ServerLevel serverLevel)) {
+            return;
+        }
+        AABB sweptBox = getBoundingBox().minmax(getBoundingBox().move(previousPosition.subtract(position()))).inflate(0.55D);
+        for (LivingEntity target : serverLevel.getEntitiesOfClass(LivingEntity.class, sweptBox, this::canBossTarget)) {
+            if (target == this || !pezOpenRollHitTargets.add(target.getId())) {
+                continue;
+            }
+            if (target.hurt(damageSources().mobAttack(this), Math.max(12.0F, getSize() * 1.5F))) {
+                Vec3 push = rollDirection.lengthSqr() > 1.0E-4D ? rollDirection.normalize() : target.position().subtract(position()).normalize();
+                target.push(push.x * 0.9D, 0.3D, push.z * 0.9D);
+                target.hurtMarked = true;
+                playSound(SoundEvents.SLIME_ATTACK, 1.35F, 0.58F);
+            }
+        }
+    }
+
+    private void finishPezRollSkill() {
+        setPezRollTicks(0);
+        setNoGravity(false);
+        pezRollAttackReleased = false;
+        pezOpenGroundRoll = false;
+        pezOpenRollHitTargets.clear();
+        pezRollTarget = null;
+        pezRollCooldown = 120;
     }
 
     public boolean debugStartPezRoll(LivingEntity target) {
@@ -1621,6 +1734,7 @@ public class BasicCandySlimeEntity extends Slime {
         if (isPezJelly() && random.nextInt(5) == 0) {
             BasicCandySlimeEntity tornado = CCEntityTypes.TORNADO_JELLY.get().create(serverLevel);
             if (tornado != null) {
+                tornado.setJellySummoner(this);
                 tornado.moveTo(getX(), getY() + 0.5D, getZ(), random.nextFloat() * 360.0F, 0.0F);
                 serverLevel.addFreshEntity(tornado);
             }
@@ -1722,7 +1836,9 @@ public class BasicCandySlimeEntity extends Slime {
     private boolean canBossTarget(Entity target) {
         return target instanceof LivingEntity
             && target.isAlive()
-            && (!(target instanceof BasicCandySlimeEntity slimeTarget) || isBossRetaliationTarget(slimeTarget) || isForcedJellyConflict(this, slimeTarget))
+            && (!isPezJelly() || target == bossRetaliationTarget)
+            && !(target instanceof BasicCandySlimeEntity slimeTarget && isSummonedAlly(slimeTarget))
+            && (!(target instanceof BasicCandySlimeEntity bossSlimeTarget) || isBossRetaliationTarget(bossSlimeTarget) || isForcedJellyConflict(this, bossSlimeTarget))
             && CandyTargeting.canAttackEntity(target);
     }
 
@@ -1733,13 +1849,15 @@ public class BasicCandySlimeEntity extends Slime {
     private boolean canBossWakeFrom(Entity source) {
         return source instanceof LivingEntity
             && source.isAlive()
-            && (!(source instanceof BasicCandySlimeEntity slimeSource) || isCandyBoss() || isForcedJellyConflict(slimeSource, this));
+            && !(source instanceof BasicCandySlimeEntity slimeSource && isSummonedAlly(slimeSource))
+            && (!(source instanceof BasicCandySlimeEntity wakeSlimeSource) || isCandyBoss() || isForcedJellyConflict(wakeSlimeSource, this));
     }
 
     private boolean canRetaliateAgainst(Entity target) {
         return target instanceof LivingEntity
             && target.isAlive()
-            && (!(target instanceof BasicCandySlimeEntity slimeTarget) || isForcedJellyConflict(this, slimeTarget))
+            && !(target instanceof BasicCandySlimeEntity slimeTarget && isSummonedAlly(slimeTarget))
+            && (!(target instanceof BasicCandySlimeEntity retaliationSlimeTarget) || isForcedJellyConflict(this, retaliationSlimeTarget))
             && CandyTargeting.canAttackEntity(target);
     }
 
@@ -1787,23 +1905,19 @@ public class BasicCandySlimeEntity extends Slime {
                 }
             }
         }
-        if (isPezJelly() && level() instanceof ServerLevel serverLevel) {
-            if (bossTargetSearchCooldown > 0) {
-                return null;
-            }
-            bossTargetSearchCooldown = 10;
-            LivingEntity nearest = serverLevel.getEntitiesOfClass(LivingEntity.class, getBoundingBox().inflate(96.0D), this::canBossTarget)
-                .stream()
-                .filter(entity -> entity != this)
-                .min((a, b) -> Double.compare(distanceToSqr(a), distanceToSqr(b)))
-                .orElse(null);
-            if (nearest != null) {
-                bossTargetSearchCooldown = 4;
-                setTarget(nearest);
-                return nearest;
-            }
-        }
         return null;
+    }
+
+    private void setJellySummoner(BasicCandySlimeEntity summoner) {
+        jellySummonerUuid = summoner.getUUID();
+    }
+
+    private boolean isSummonedAlly(BasicCandySlimeEntity other) {
+        UUID thisId = getUUID();
+        UUID otherId = other.getUUID();
+        return (jellySummonerUuid != null && (jellySummonerUuid.equals(otherId)
+            || jellySummonerUuid.equals(other.jellySummonerUuid)))
+            || (other.jellySummonerUuid != null && other.jellySummonerUuid.equals(thisId));
     }
 
     private void tickBossLostTarget(@Nullable AttributeInstance speed) {
@@ -2066,6 +2180,8 @@ public class BasicCandySlimeEntity extends Slime {
         pezRollTurnLockTicks = 0;
         pezRollTarget = null;
         pezRollAttackReleased = false;
+        pezOpenGroundRoll = false;
+        pezOpenRollHitTargets.clear();
         bossSlamAttackActive = false;
         bossSlamDamageReady = false;
         setBossSlamTicks(0);
@@ -2092,6 +2208,8 @@ public class BasicCandySlimeEntity extends Slime {
         kingDashChargeTicks = 0;
         pezRollTarget = null;
         pezRollAttackReleased = false;
+        pezOpenGroundRoll = false;
+        pezOpenRollHitTargets.clear();
         pezRollTurnLockTicks = 0;
         pezRollBrushDamageCooldown = 0;
         setPezRollTicks(0);
