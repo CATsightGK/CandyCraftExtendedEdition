@@ -18,6 +18,7 @@ import net.minecraft.world.level.block.entity.BaseContainerBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.properties.ChestType;
 
 public class MarshmallowChestBlockEntity extends BaseContainerBlockEntity {
     private NonNullList<ItemStack> items = NonNullList.withSize(27, ItemStack.EMPTY);
@@ -88,7 +89,7 @@ public class MarshmallowChestBlockEntity extends BaseContainerBlockEntity {
         if (level == null || player.isSpectator()) {
             return;
         }
-        if (openCount++ == 0) {
+        if (openCount++ == 0 && shouldPlaySound()) {
             level.playSound(null, worldPosition, SoundEvents.CHEST_OPEN, SoundSource.BLOCKS, 0.5F,
                 level.random.nextFloat() * 0.1F + 0.9F);
         }
@@ -101,7 +102,7 @@ public class MarshmallowChestBlockEntity extends BaseContainerBlockEntity {
             return;
         }
         openCount = Math.max(0, openCount - 1);
-        if (openCount == 0) {
+        if (openCount == 0 && shouldPlaySound()) {
             level.playSound(null, worldPosition, SoundEvents.CHEST_CLOSE, SoundSource.BLOCKS, 0.5F,
                 level.random.nextFloat() * 0.1F + 0.9F);
         }
@@ -125,6 +126,11 @@ public class MarshmallowChestBlockEntity extends BaseContainerBlockEntity {
         return getBlockState().getBlock() instanceof MarshmallowChestBlock chest
             ? chest.theme()
             : MarshmallowChestBlock.Theme.NORMAL;
+    }
+
+    private boolean shouldPlaySound() {
+        return !getBlockState().hasProperty(MarshmallowChestBlock.TYPE)
+            || getBlockState().getValue(MarshmallowChestBlock.TYPE) != ChestType.RIGHT;
     }
 
     public static void lidAnimateTick(Level level, BlockPos pos, BlockState state, MarshmallowChestBlockEntity chest) {

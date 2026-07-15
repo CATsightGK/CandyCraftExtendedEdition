@@ -1,0 +1,11 @@
+{
+  "type": "forge:remove_spawns",
+  "biomes": [
+    "candycraftmod:sugar_oceans",
+    "candycraftmod:ice_cream_plains",
+    "candycraftmod:ice_cream_sky_mountains"
+  ],
+  "entity_types": [
+    "candycraftmod:caramel_bee"
+  ]
+}

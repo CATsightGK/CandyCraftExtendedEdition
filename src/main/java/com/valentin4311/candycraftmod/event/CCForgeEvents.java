@@ -67,10 +67,14 @@ public final class CCForgeEvents {
 
     @SubscribeEvent
     public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
-        if (event.phase != TickEvent.Phase.END || event.player.level().isClientSide) {
+        if (event.phase != TickEvent.Phase.END) {
             return;
         }
         Player player = event.player;
+        applyThickFluidDrag(player);
+        if (player.level().isClientSide) {
+            return;
+        }
         if (player.getItemBySlot(EquipmentSlot.HEAD).is(CCItems.WATER_MASK.get())) {
             player.setAirSupply(player.getMaxAirSupply());
         }
@@ -80,6 +84,17 @@ public final class CCForgeEvents {
         if (isDawn(player) && has(player, CCItems.CRANBERRY_EMBLEM.get())) {
             healAtDawn(player);
         }
+    }
+
+    private static void applyThickFluidDrag(Player player) {
+        double drag = player.getFluidTypeHeight(CCFluids.LIQUID_CANDY_TYPE.get()) > 0.0D ? 0.72D
+            : player.getFluidTypeHeight(CCFluids.LIQUID_CHOCOLATE_TYPE.get()) > 0.0D ? 0.82D
+            : 1.0D;
+        if (drag >= 1.0D) {
+            return;
+        }
+        net.minecraft.world.phys.Vec3 movement = player.getDeltaMovement();
+        player.setDeltaMovement(movement.x * drag, movement.y * 0.92D, movement.z * drag);
     }
 
     @SubscribeEvent

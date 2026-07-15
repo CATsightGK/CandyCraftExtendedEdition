@@ -12,7 +12,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.monster.Slime;
 
 public class BasicCandySlimeRenderer extends SlimeRenderer {
-    private static final float PEZ_ROLL_ANIMATION_SECONDS = 0.50251F;
     private static final float PEZ_ROLL_VISUAL_END = 0.5F;
     private static final float PEZ_ATTACH_VISUAL_END = 0.71875F;
     private static final float PEZ_ATTACK_VISUAL_END = 0.8125F;
@@ -203,10 +202,15 @@ public class BasicCandySlimeRenderer extends SlimeRenderer {
     }
 
     private static void applyPezBbmodelRollAnimation(BasicCandySlimeEntity pez, Direction face, Direction direction, PoseStack poseStack, float partialTicks) {
-        float angle = pezBbmodelRollAngle(pez.tickCount + partialTicks);
+        float angle = pezBbmodelRollAngle(pez, partialTicks);
         float centerY = pez.getBbHeight() * 0.5F;
         poseStack.translate(0.0F, centerY, 0.0F);
-        if (direction == Direction.EAST || direction == Direction.WEST) {
+        net.minecraft.world.phys.Vec3 movement = pez.getDeltaMovement().multiply(1.0D, 0.0D, 1.0D);
+        if (face == Direction.UP && movement.lengthSqr() > 1.0E-4D) {
+            movement = movement.normalize();
+            org.joml.Vector3f axis = new org.joml.Vector3f((float)movement.z, 0.0F, (float)-movement.x).normalize();
+            poseStack.mulPose(new org.joml.Quaternionf().rotationAxis((float)Math.toRadians(angle), axis.x, axis.y, axis.z));
+        } else if (direction == Direction.EAST || direction == Direction.WEST) {
             poseStack.mulPose(Axis.ZP.rotationDegrees(direction == Direction.EAST ? -angle : angle));
         } else if (direction == Direction.NORTH || direction == Direction.SOUTH) {
             poseStack.mulPose(Axis.XP.rotationDegrees(direction == Direction.NORTH ? -angle : angle));
@@ -218,13 +222,10 @@ public class BasicCandySlimeRenderer extends SlimeRenderer {
         poseStack.translate(0.0F, -centerY, 0.0F);
     }
 
-    private static float pezBbmodelRollAngle(float timeTicks) {
-        float cycleTicks = PEZ_ROLL_ANIMATION_SECONDS * 20.0F;
-        float cycle = timeTicks / cycleTicks;
-        float wholeTurns = (float)Math.floor(cycle);
-        float progress = cycle - wholeTurns;
-        float eased = smootherStep(progress);
-        return wholeTurns * 360.0F + eased * 360.0F;
+    private static float pezBbmodelRollAngle(BasicCandySlimeEntity pez, float partialTicks) {
+        double circumference = Math.max(0.25D, pez.getBbWidth()) * Math.PI;
+        double predictedDistance = pez.getPezRollDistance() + pez.getDeltaMovement().length() * partialTicks;
+        return (float)(predictedDistance / circumference * 360.0D);
     }
 
     private static void applyBossRestPose(BasicCandySlimeEntity candy, PoseStack poseStack, float partialTicks) {

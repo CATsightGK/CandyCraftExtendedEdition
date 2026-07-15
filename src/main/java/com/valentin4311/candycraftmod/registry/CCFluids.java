@@ -46,6 +46,7 @@ public final class CCFluids {
     public static final RegistryObject<FluidType> GRENADINE_TYPE = FLUID_TYPES.register("grenadine", () -> new FluidType(
         FluidType.Properties.create()
             .descriptionId("fluid." + CandyCraft.MODID + ".grenadine")
+            .canSwim(true)
             .density(1000)
             .viscosity(1000)
             .rarity(Rarity.COMMON)
@@ -94,6 +95,7 @@ public final class CCFluids {
     public static final RegistryObject<FluidType> CARAMEL_TYPE = FLUID_TYPES.register("caramel", () -> new FluidType(
         FluidType.Properties.create()
             .descriptionId("fluid." + CandyCraft.MODID + ".caramel")
+            .canSwim(true)
             .density(1000)
             .viscosity(1000)
             .rarity(Rarity.COMMON)
@@ -141,6 +143,7 @@ public final class CCFluids {
     public static final RegistryObject<FluidType> LIQUID_CHOCOLATE_TYPE = FLUID_TYPES.register("liquid_chocolate", () -> new FluidType(
         FluidType.Properties.create()
             .descriptionId("fluid." + CandyCraft.MODID + ".liquid_chocolate")
+            .canSwim(true)
             .density(1030)
             .viscosity(1000)
             .temperature(315)
@@ -184,6 +187,7 @@ public final class CCFluids {
     public static final RegistryObject<FluidType> LIQUID_CANDY_TYPE = FLUID_TYPES.register("liquid_candy", () -> new FluidType(
         FluidType.Properties.create()
             .descriptionId("fluid." + CandyCraft.MODID + ".liquid_candy")
+            .canSwim(true)
             .density(2000)
             .viscosity(3000)
             .temperature(1000)

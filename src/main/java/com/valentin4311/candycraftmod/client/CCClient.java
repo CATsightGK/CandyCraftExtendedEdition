@@ -846,12 +846,7 @@ public final class CCClient {
             int height = minecraft.getWindow().getGuiScaledHeight();
             renderDungeonLoadingBackground(graphics, width, height);
 
-            int dotCount = (int)((net.minecraft.Util.getMillis() / 400L) % 3L) + 1;
-            Component message = Component.translatable("chat.generating")
-                .copy()
-                .append("  ")
-                .append(Component.translatable("multiplayer.downloadingTerrain"))
-                .append("  " + ".".repeat(dotCount));
+            Component message = Component.translatable("multiplayer.downloadingTerrain");
             graphics.drawCenteredString(minecraft.font, message, width / 2, height / 2 - 4, 0xFFFFFF);
         }
 

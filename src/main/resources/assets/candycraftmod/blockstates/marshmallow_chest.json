@@ -1,8 +1,16 @@
 {
   "variants": {
-    "facing=north": { "model": "candycraftmod:block/marshmallow_chest" },
-    "facing=east": { "model": "candycraftmod:block/marshmallow_chest", "y": 90 },
-    "facing=south": { "model": "candycraftmod:block/marshmallow_chest", "y": 180 },
-    "facing=west": { "model": "candycraftmod:block/marshmallow_chest", "y": 270 }
+    "facing=north,type=single": { "model": "candycraftmod:block/marshmallow_chest" },
+    "facing=east,type=single": { "model": "candycraftmod:block/marshmallow_chest", "y": 90 },
+    "facing=south,type=single": { "model": "candycraftmod:block/marshmallow_chest", "y": 180 },
+    "facing=west,type=single": { "model": "candycraftmod:block/marshmallow_chest", "y": 270 },
+    "facing=north,type=left": { "model": "candycraftmod:block/marshmallow_chest" },
+    "facing=east,type=left": { "model": "candycraftmod:block/marshmallow_chest", "y": 90 },
+    "facing=south,type=left": { "model": "candycraftmod:block/marshmallow_chest", "y": 180 },
+    "facing=west,type=left": { "model": "candycraftmod:block/marshmallow_chest", "y": 270 },
+    "facing=north,type=right": { "model": "candycraftmod:block/marshmallow_chest" },
+    "facing=east,type=right": { "model": "candycraftmod:block/marshmallow_chest", "y": 90 },
+    "facing=south,type=right": { "model": "candycraftmod:block/marshmallow_chest", "y": 180 },
+    "facing=west,type=right": { "model": "candycraftmod:block/marshmallow_chest", "y": 270 }
   }
 }

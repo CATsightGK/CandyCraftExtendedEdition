@@ -13,15 +13,15 @@ public class MarshmallowChestScreen extends AbstractContainerScreen<MarshmallowC
     public MarshmallowChestScreen(MarshmallowChestMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
         imageWidth = 176;
-        imageHeight = 166;
-        inventoryLabelY = 72;
+        imageHeight = menu.rows() == 6 ? 220 : 166;
+        inventoryLabelY = 18 + menu.rows() * 18;
     }
 
     @Override
     protected void renderBg(GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
         ResourceLocation texture = new ResourceLocation(CandyCraft.MODID,
-            "textures/gui/container/" + menu.theme().textureName() + ".png");
+            "textures/gui/container/" + menu.theme().textureName() + (menu.rows() == 6 ? "_large" : "") + ".png");
         graphics.blit(texture, leftPos, topPos, 0, 0, imageWidth, imageHeight, imageWidth, imageHeight);
     }
 

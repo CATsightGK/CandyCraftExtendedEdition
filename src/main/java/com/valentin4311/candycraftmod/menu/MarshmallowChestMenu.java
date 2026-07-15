@@ -11,39 +11,43 @@ import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 
 public class MarshmallowChestMenu extends AbstractContainerMenu {
-    private static final int ROWS = 3;
-    private static final int CHEST_SIZE = 9 * ROWS;
+    private final int rows;
     private final Container container;
     private final MarshmallowChestBlock.Theme theme;
 
     public MarshmallowChestMenu(int id, Inventory inventory, MarshmallowChestBlock.Theme theme) {
-        this(id, inventory, new SimpleContainer(CHEST_SIZE), theme);
+        this(id, inventory, new SimpleContainer(27), theme);
     }
 
     public MarshmallowChestMenu(int id, Inventory inventory, Container container, MarshmallowChestBlock.Theme theme) {
         super(CCMenus.MARSHMALLOW_CHEST.get(), id);
-        checkContainerSize(container, CHEST_SIZE);
+        this.rows = container.getContainerSize() / 9;
+        checkContainerSize(container, rows * 9);
         this.container = container;
         this.theme = theme;
         container.startOpen(inventory.player);
 
-        for (int row = 0; row < ROWS; ++row) {
+        for (int row = 0; row < rows; ++row) {
             for (int column = 0; column < 9; ++column) {
                 addSlot(new Slot(container, column + row * 9, 8 + column * 18, 18 + row * 18));
             }
         }
         for (int row = 0; row < 3; ++row) {
             for (int column = 0; column < 9; ++column) {
-                addSlot(new Slot(inventory, column + row * 9 + 9, 8 + column * 18, 85 + row * 18));
+                addSlot(new Slot(inventory, column + row * 9 + 9, 8 + column * 18, 31 + rows * 18 + row * 18));
             }
         }
         for (int column = 0; column < 9; ++column) {
-            addSlot(new Slot(inventory, column, 8 + column * 18, 143));
+            addSlot(new Slot(inventory, column, 8 + column * 18, 89 + rows * 18));
         }
     }
 
     public MarshmallowChestBlock.Theme theme() {
         return theme;
+    }
+
+    public int rows() {
+        return rows;
     }
 
     @Override
@@ -58,11 +62,12 @@ public class MarshmallowChestMenu extends AbstractContainerMenu {
         if (slot != null && slot.hasItem()) {
             ItemStack stack = slot.getItem();
             result = stack.copy();
-            if (index < CHEST_SIZE) {
-                if (!moveItemStackTo(stack, CHEST_SIZE, slots.size(), true)) {
+            int chestSize = rows * 9;
+            if (index < chestSize) {
+                if (!moveItemStackTo(stack, chestSize, slots.size(), true)) {
                     return ItemStack.EMPTY;
                 }
-            } else if (!moveItemStackTo(stack, 0, CHEST_SIZE, false)) {
+            } else if (!moveItemStackTo(stack, 0, chestSize, false)) {
                 return ItemStack.EMPTY;
             }
             if (stack.isEmpty()) {

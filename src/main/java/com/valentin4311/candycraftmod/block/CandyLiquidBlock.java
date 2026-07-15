@@ -5,8 +5,6 @@ import com.valentin4311.candycraftmod.registry.CCBlocks;
 import java.util.function.Supplier;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.particles.BlockParticleOption;
-import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -18,7 +16,6 @@ import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FlowingFluid;
 import net.minecraft.world.level.material.FluidState;
-import net.minecraft.world.phys.Vec3;
 
 public class CandyLiquidBlock extends LiquidBlock {
     public enum Kind {
@@ -54,11 +51,6 @@ public class CandyLiquidBlock extends LiquidBlock {
     @Override
     public void entityInside(BlockState state, Level level, BlockPos pos, Entity entity) {
         super.entityInside(state, level, pos, entity);
-        if (kind == Kind.LIQUID_CHOCOLATE) {
-            handleLiquidChocolateMovement(level, pos, entity);
-            return;
-        }
-
         if (kind != Kind.LIQUID_CANDY || !(entity instanceof LivingEntity living) || level.isClientSide) {
             return;
         }
@@ -150,67 +142,5 @@ public class CandyLiquidBlock extends LiquidBlock {
             && !state.is(com.valentin4311.candycraftmod.registry.CCFluids.FLOWING_LIQUID_CANDY.get());
     }
 
-    private static void handleLiquidChocolateMovement(Level level, BlockPos pos, Entity entity) {
-        Vec3 movement = entity.getDeltaMovement();
-        double horizontalSpeed = movement.horizontalDistance();
-        double fluidSurface = pos.getY() + 0.92D;
-        boolean headInChocolate = isHeadInLiquidChocolate(level, entity);
-
-        if (headInChocolate && movement.y > 0.005D) {
-            entity.setDeltaMovement(movement.x * 0.84D, Math.max(movement.y, 0.28D), movement.z * 0.84D);
-            entity.resetFallDistance();
-            spawnChocolateStepParticles(level, pos, entity, horizontalSpeed);
-            return;
-        }
-
-        if (horizontalSpeed > 0.025D) {
-            entity.setOnGround(true);
-            double y = movement.y < 0.0D ? (headInChocolate ? 0.05D : 0.0D) : Math.min(movement.y, headInChocolate ? 0.08D : 0.018D);
-            entity.setDeltaMovement(movement.x * 0.88D, y, movement.z * 0.88D);
-            entity.resetFallDistance();
-            spawnChocolateStepParticles(level, pos, entity, horizontalSpeed);
-            return;
-        }
-
-        entity.makeStuckInBlock(Blocks.HONEY_BLOCK.defaultBlockState(), new Vec3(0.70D, 0.62D, 0.70D));
-        Vec3 sunkMovement = entity.getDeltaMovement();
-        double y = sunkMovement.y;
-        if (headInChocolate && y > 0.005D) {
-            y = 0.18D;
-        } else if (y > -0.12D) {
-            y -= 0.038D;
-        }
-        entity.setDeltaMovement(sunkMovement.x, y, sunkMovement.z);
-    }
-
-    private static boolean isHeadInLiquidChocolate(Level level, Entity entity) {
-        FluidState state = level.getFluidState(BlockPos.containing(entity.getX(), entity.getEyeY(), entity.getZ()));
-        return state.is(com.valentin4311.candycraftmod.registry.CCFluids.SOURCE_LIQUID_CHOCOLATE.get())
-            || state.is(com.valentin4311.candycraftmod.registry.CCFluids.FLOWING_LIQUID_CHOCOLATE.get());
-    }
-
-    private static void spawnChocolateStepParticles(Level level, BlockPos pos, Entity entity, double horizontalSpeed) {
-        if (!level.isClientSide || entity.tickCount % 3 != 0) {
-            return;
-        }
-
-        double fluidSurface = pos.getY() + 0.92D;
-        if (Math.abs(entity.getY() - fluidSurface) > 0.8D) {
-            return;
-        }
-
-        int count = horizontalSpeed > 0.12D ? 5 : 3;
-        for (int i = 0; i < count; i++) {
-            double x = entity.getX() + (level.random.nextDouble() - 0.5D) * entity.getBbWidth();
-            double z = entity.getZ() + (level.random.nextDouble() - 0.5D) * entity.getBbWidth();
-            double angle = level.random.nextDouble() * Math.PI * 2.0D;
-            double spread = 0.018D + level.random.nextDouble() * 0.045D;
-            double vx = Math.cos(angle) * spread;
-            double vz = Math.sin(angle) * spread;
-            double vy = 0.035D + level.random.nextDouble() * 0.035D;
-            level.addParticle(new BlockParticleOption(ParticleTypes.BLOCK, CCBlocks.LIQUID_CHOCOLATE.get().defaultBlockState()),
-                x, fluidSurface + 0.01D, z, vx, vy, vz);
-        }
-    }
 }
 

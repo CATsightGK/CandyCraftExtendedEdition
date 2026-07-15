@@ -81,6 +81,7 @@ public class BasicCandySlimeEntity extends Slime {
     private static final EntityDataAccessor<Integer> PEZ_ATTACH_FACE = SynchedEntityData.defineId(BasicCandySlimeEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Integer> PEZ_ROLL_DIRECTION = SynchedEntityData.defineId(BasicCandySlimeEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Integer> PEZ_ROLL_STEPS = SynchedEntityData.defineId(BasicCandySlimeEntity.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Float> PEZ_ROLL_DISTANCE = SynchedEntityData.defineId(BasicCandySlimeEntity.class, EntityDataSerializers.FLOAT);
     private static final EntityDataAccessor<Integer> BOSS_BOUNCE_TICKS = SynchedEntityData.defineId(BasicCandySlimeEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Integer> BOSS_RESTING_TICKS = SynchedEntityData.defineId(BasicCandySlimeEntity.class, EntityDataSerializers.INT);
     private int specialAttackCooldown;
@@ -144,6 +145,7 @@ public class BasicCandySlimeEntity extends Slime {
         entityData.define(PEZ_ATTACH_FACE, Direction.UP.ordinal());
         entityData.define(PEZ_ROLL_DIRECTION, Direction.NORTH.ordinal());
         entityData.define(PEZ_ROLL_STEPS, 0);
+        entityData.define(PEZ_ROLL_DISTANCE, 0.0F);
         entityData.define(BOSS_BOUNCE_TICKS, 0);
         entityData.define(BOSS_RESTING_TICKS, 0);
     }
@@ -1046,8 +1048,12 @@ public class BasicCandySlimeEntity extends Slime {
     private void startPezRollSkill(LivingEntity target) {
         setPezRollTicks(PEZ_ROLL_TOTAL_TICKS);
         setPezAttachFace(Direction.UP);
-        setPezRollDirection(Direction.NORTH);
+        Vec3 initialDirection = target.position().subtract(position()).multiply(1.0D, 0.0D, 1.0D);
+        setPezRollDirection(initialDirection.lengthSqr() > 1.0E-4D
+            ? Direction.getNearest(initialDirection.x, 0.0D, initialDirection.z)
+            : Direction.NORTH);
         setPezRollSteps(0);
+        setPezRollDistance(0.0F);
         pezRollDirectionTicks = 0;
         pezRollTargetBiasTicks = 0;
         pezRollTurnLockTicks = 0;
@@ -1093,8 +1099,6 @@ public class BasicCandySlimeEntity extends Slime {
     private void rollPezTowardTarget(LivingEntity target, int elapsed) {
         setNoGravity(false);
         getNavigation().stop();
-        getLookControl().setLookAt(target);
-
         Vec3 previousPosition = position();
         if (elapsed % PEZ_OPEN_ROLL_DIRECTION_TICKS == 0 || pezRollTangent.lengthSqr() < 1.0E-4D) {
             Vec3 toTarget = target.position().subtract(position()).multiply(1.0D, 0.0D, 1.0D);
@@ -1105,7 +1109,8 @@ public class BasicCandySlimeEntity extends Slime {
             pezOpenRollHitTargets.clear();
         }
         Vec3 rollDirection = pezRollTangent;
-        double speed = Mth.clamp(pezRollMatchedSpeed() * 0.78D, 0.95D, 1.45D);
+        double acceleration = Mth.clamp((elapsed + 1) / 8.0D, 0.38D, 1.0D);
+        double speed = Mth.clamp(pezRollMatchedSpeed() * 0.78D, 0.95D, 1.45D) * acceleration;
         double vertical = getDeltaMovement().y;
         if (horizontalCollision && onGround()) {
             vertical = 0.36D;
@@ -1114,6 +1119,8 @@ public class BasicCandySlimeEntity extends Slime {
         move(MoverType.SELF, movement);
         setDeltaMovement(rollDirection.scale(speed * 0.82D).add(0.0D, vertical, 0.0D));
         hasImpulse = true;
+        addPezRollDistance(previousPosition.distanceTo(position()));
+        alignPezBodyToRoll(rollDirection);
 
         if (rollDirection.lengthSqr() > 1.0E-4D) {
             Direction visualDirection = Direction.getNearest(rollDirection.x, 0.0D, rollDirection.z);
@@ -1262,13 +1269,32 @@ public class BasicCandySlimeEntity extends Slime {
         move(MoverType.SELF, desired);
         setDeltaMovement(desired.scale(0.75D));
         hasImpulse = true;
-        damagePezRollBrushTargets(tangent, beforeRollPosition);
+        addPezRollDistance(beforeRollPosition.distanceTo(position()));
+        if (moveTangent.lengthSqr() > 1.0E-4D) {
+            Direction visualDirection = Direction.getNearest(moveTangent.x, moveTangent.y, moveTangent.z);
+            if (visualDirection.getAxis() != face.getAxis()) {
+                setPezRollDirection(visualDirection);
+            }
+            alignPezBodyToRoll(moveTangent);
+        }
+        damagePezRollBrushTargets(moveTangent, beforeRollPosition);
     }
 
     private double pezRollMatchedSpeed() {
         double cycleTicks = PEZ_ROLL_ANIMATION_SECONDS * 20.0D;
         double circumference = Math.max(0.25D, getBbWidth()) * Math.PI;
         return circumference / cycleTicks;
+    }
+
+    private void alignPezBodyToRoll(Vec3 direction) {
+        Vec3 horizontal = direction.multiply(1.0D, 0.0D, 1.0D);
+        if (horizontal.lengthSqr() < 1.0E-4D) {
+            return;
+        }
+        float yaw = (float)(Mth.atan2(horizontal.z, horizontal.x) * Mth.RAD_TO_DEG) - 90.0F;
+        setYRot(yaw);
+        setYHeadRot(yaw);
+        yBodyRot = yaw;
     }
 
     private boolean canPezSlide(Direction face, Vec3 tangent) {
@@ -1994,6 +2020,16 @@ public class BasicCandySlimeEntity extends Slime {
         entityData.set(PEZ_ROLL_STEPS, Math.max(0, steps));
     }
 
+    private void setPezRollDistance(float distance) {
+        entityData.set(PEZ_ROLL_DISTANCE, Math.max(0.0F, distance));
+    }
+
+    private void addPezRollDistance(double distance) {
+        if (distance > 1.0E-4D) {
+            setPezRollDistance(getPezRollDistance() + (float)distance);
+        }
+    }
+
     private void setBossBounceTicks(int ticks) {
         entityData.set(BOSS_BOUNCE_TICKS, Mth.clamp(ticks, 0, BOSS_BOUNCE_POSE_TICKS));
     }
@@ -2034,6 +2070,10 @@ public class BasicCandySlimeEntity extends Slime {
 
     public int getPezRollSteps() {
         return entityData.get(PEZ_ROLL_STEPS);
+    }
+
+    public float getPezRollDistance() {
+        return entityData.get(PEZ_ROLL_DISTANCE);
     }
 
     public int getBossBounceTicks() {
@@ -2186,6 +2226,7 @@ public class BasicCandySlimeEntity extends Slime {
         setPezRollTicks(0);
         setPezAttachFace(Direction.UP);
         setPezRollSteps(0);
+        setPezRollDistance(0.0F);
         setBossBounceTicks(0);
         setBossRestingTicks(0);
         setDeltaMovement(0.0D, 0.0D, 0.0D);
@@ -2210,6 +2251,7 @@ public class BasicCandySlimeEntity extends Slime {
         pezRollBrushDamageCooldown = 0;
         setPezRollTicks(0);
         setPezRollSteps(0);
+        setPezRollDistance(0.0F);
         setBossBounceTicks(0);
         setBossRestingTicks(0);
         setNoGravity(false);

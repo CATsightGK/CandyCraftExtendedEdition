@@ -1,3 +1,9 @@
 {
-  "parent": "candycraftmod:block/marshmallow_chest_light"
+  "parent": "candycraftmod:item/marshmallow_chest",
+  "textures": {
+    "side": "candycraftmod:block/chest_side_light",
+    "top": "candycraftmod:block/chest_top_light",
+    "lock_side": "candycraftmod:block/lock_side_light",
+    "lock_top": "candycraftmod:block/lock_top_light"
+  }
 }

@@ -64,8 +64,17 @@ public final class CCMenus {
             MarshmallowChestBlock.Theme theme = MarshmallowChestBlock.Theme.NORMAL;
             if (data != null) {
                 BlockPos pos = data.readBlockPos();
-                if (inventory.player.level().getBlockState(pos).getBlock() instanceof MarshmallowChestBlock chest) {
+                int size = data.readableBytes() > 0 && data.readVarInt() == 54 ? 54 : 27;
+                if (data.readableBytes() > 0) {
+                    int themeId = net.minecraft.util.Mth.clamp(data.readVarInt(), 0, MarshmallowChestBlock.Theme.values().length - 1);
+                    theme = MarshmallowChestBlock.Theme.values()[themeId];
+                    return new MarshmallowChestMenu(id, inventory, new net.minecraft.world.SimpleContainer(size), theme);
+                }
+                net.minecraft.world.level.block.state.BlockState state = inventory.player.level().getBlockState(pos);
+                if (state.getBlock() instanceof MarshmallowChestBlock chest) {
                     theme = chest.theme();
+                    size = state.getValue(MarshmallowChestBlock.TYPE) == net.minecraft.world.level.block.state.properties.ChestType.SINGLE ? 27 : 54;
+                    return new MarshmallowChestMenu(id, inventory, new net.minecraft.world.SimpleContainer(size), theme);
                 }
             }
             return new MarshmallowChestMenu(id, inventory, theme);
