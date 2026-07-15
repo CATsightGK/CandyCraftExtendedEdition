@@ -142,7 +142,9 @@ public final class CCBlocks {
     public static final RegistryObject<Block> WHITE_CHOCOLATE_TRAPDOOR = cutout(register("white_chocolate_trapdoor", () -> new TrapDoorBlock(oakTrapdoor(MapColor.SAND), BlockSetType.OAK)));
     public static final RegistryObject<Block> DARK_CHOCOLATE_TRAPDOOR = cutout(register("dark_chocolate_trapdoor", () -> new TrapDoorBlock(oakTrapdoor(MapColor.TERRACOTTA_BROWN), BlockSetType.OAK)));
     public static final RegistryObject<Block> FRAISE_TAGADA_FLOWER = cutout(register("fraise_tagada_flower", () -> new LegacyMetadataBlock.Plant(plant())));
-    public static final RegistryObject<Block> MARSHMALLOW_CHEST = register("marshmallow_chest", () -> new MarshmallowChestBlock(wood(MapColor.COLOR_PINK).strength(2.5F).noOcclusion()));
+    public static final RegistryObject<Block> MARSHMALLOW_CHEST = register("marshmallow_chest", () -> new MarshmallowChestBlock(MarshmallowChestBlock.Theme.NORMAL, wood(MapColor.COLOR_PINK).strength(2.5F).noOcclusion()));
+    public static final RegistryObject<Block> MARSHMALLOW_CHEST_DARK = register("marshmallow_chest_dark", () -> new MarshmallowChestBlock(MarshmallowChestBlock.Theme.DARK, wood(MapColor.COLOR_BROWN).strength(2.5F).noOcclusion()));
+    public static final RegistryObject<Block> MARSHMALLOW_CHEST_LIGHT = register("marshmallow_chest_light", () -> new MarshmallowChestBlock(MarshmallowChestBlock.Theme.LIGHT, wood(MapColor.TERRACOTTA_WHITE).strength(2.5F).noOcclusion()));
     public static final RegistryObject<Block> HONEY_ORE = register("honey_ore", () -> new Block(stone().strength(3.0F, 5.0F).requiresCorrectToolForDrops()));
     public static final RegistryObject<Block> HONEY_TORCH = cutout(register("honey_torch", () -> new TorchBlock(BlockBehaviour.Properties.copy(Blocks.TORCH).lightLevel(state -> 15), ParticleTypes.FLAME)));
     public static final RegistryObject<Block> HONEY_WALL_TORCH = cutout(registerNoItem("honey_wall_torch", () -> new WallTorchBlock(BlockBehaviour.Properties.copy(Blocks.WALL_TORCH).lightLevel(state -> 15), ParticleTypes.FLAME)));

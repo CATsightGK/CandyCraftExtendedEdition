@@ -14,12 +14,6 @@
   "spawners": {
     "creature": [
       {
-        "type": "candycraftmod:candy_wolf",
-        "weight": 50,
-        "minCount": 4,
-        "maxCount": 4
-      },
-      {
         "type": "candycraftmod:candy_pig",
         "weight": 21,
         "minCount": 4,

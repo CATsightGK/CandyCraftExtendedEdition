@@ -165,7 +165,7 @@ public class LegacyStructureFeature extends Feature<NoneFeatureConfiguration> {
             -1, -2, 2, 0, -2, 2, 1, -2, 2);
 
         BlockPos chest = center.offset(1, -2, 2);
-        set(level, chest, Blocks.CHEST.defaultBlockState());
+        set(level, chest, biomeChestState(level, chest));
         loot(level, random, chest, CANDY_HOUSE_LOOT);
         set(level, center.below(), CCBlocks.HONEY_LAMP.get().defaultBlockState());
         return true;
@@ -245,7 +245,7 @@ public class LegacyStructureFeature extends Feature<NoneFeatureConfiguration> {
         }
 
         BlockPos chest = pos.offset(3, 3, 3);
-        set(level, chest, Blocks.CHEST.defaultBlockState());
+        set(level, chest, biomeChestState(level, chest));
         loot(level, random, chest, ICE_TOWER_LOOT);
         return true;
     }
@@ -269,7 +269,7 @@ public class LegacyStructureFeature extends Feature<NoneFeatureConfiguration> {
         }
         if (random.nextInt(12) == 0) {
             BlockPos chest = pos.above(5);
-            set(level, chest, Blocks.CHEST.defaultBlockState());
+            set(level, chest, biomeChestState(level, chest));
             loot(level, random, chest, ICE_TOWER_LOOT);
             set(level, pos.above(4), CCBlocks.HONEY_LAMP.get().defaultBlockState());
         }
@@ -348,7 +348,7 @@ public class LegacyStructureFeature extends Feature<NoneFeatureConfiguration> {
             }
         }
 
-        setTemple(level, center, CCBlocks.MARSHMALLOW_CHEST.get().defaultBlockState(), 2);
+        setTemple(level, center, biomeChestState(level, center), 2);
         placeTemple(level, center, stone, 2, 0, -1, 0, -1, -1, -1, -1, -1, 1, 1, -1, -1, 1, -1, 1);
         placeTemple(level, center, cobble, 2, -1, -1, 0, 1, -1, 0, 0, -1, -1, 0, -1, 1,
             -2, -1, 1, -2, -1, -1, 2, -1, -1, 2, -1, 1, -1, -1, 2, -1, -1, -2,
@@ -968,8 +968,9 @@ public class LegacyStructureFeature extends Feature<NoneFeatureConfiguration> {
         set(level, base.offset(2, 1, 0), Blocks.AIR.defaultBlockState());
         set(level, base.offset(2, 2, 0), Blocks.AIR.defaultBlockState());
         if (chest) {
-            set(level, base.offset(2, 1, 2), Blocks.CHEST.defaultBlockState());
-            loot(level, random, base.offset(2, 1, 2), CANDY_HOUSE_LOOT);
+            BlockPos chestPos = base.offset(2, 1, 2);
+            set(level, chestPos, biomeChestState(level, chestPos));
+            loot(level, random, chestPos, CANDY_HOUSE_LOOT);
         }
     }
 
@@ -1022,6 +1023,21 @@ public class LegacyStructureFeature extends Feature<NoneFeatureConfiguration> {
                 .create(LootContextParamSets.CHEST);
             lootTable.fill(container, params, random.nextLong());
         }
+    }
+
+    private static BlockState biomeChestState(WorldGenLevel level, BlockPos pos) {
+        String biome = level.getBiome(pos).unwrapKey()
+            .map(key -> key.location().getPath())
+            .orElse("");
+        if (biome.equals("chocolate_forest") || biome.equals("caramel_forest")
+                || biome.equals("sugar_hell_mountains")) {
+            return CCBlocks.MARSHMALLOW_CHEST_DARK.get().defaultBlockState();
+        }
+        if (biome.equals("ice_cream_plains") || biome.equals("ice_cream_sky_mountains")
+                || biome.equals("sugar_cold_forest") || biome.equals("cotton_candy_plains")) {
+            return CCBlocks.MARSHMALLOW_CHEST_LIGHT.get().defaultBlockState();
+        }
+        return CCBlocks.MARSHMALLOW_CHEST.get().defaultBlockState();
     }
 
     private static void clear(WorldGenLevel level, BlockPos min, BlockPos max) {

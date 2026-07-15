@@ -47,7 +47,7 @@ public final class CCBlockEntities {
     public static final RegistryObject<BlockEntityType<MarshmallowChestBlockEntity>> MARSHMALLOW_CHEST =
         BLOCK_ENTITY_TYPES.register("marshmallow_chest", () -> new BlockEntityType<>(
             MarshmallowChestBlockEntity::new,
-            java.util.Set.of(CCBlocks.MARSHMALLOW_CHEST.get()),
+            java.util.Set.of(CCBlocks.MARSHMALLOW_CHEST.get(), CCBlocks.MARSHMALLOW_CHEST_DARK.get(), CCBlocks.MARSHMALLOW_CHEST_LIGHT.get()),
             null
         ));
 

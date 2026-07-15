@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": ["###", "# #", "###"],
+  "key": {
+    "#": { "item": "candycraftmod:marshmallow_planks_dark" }
+  },
+  "result": { "item": "candycraftmod:marshmallow_chest_dark" }
+}

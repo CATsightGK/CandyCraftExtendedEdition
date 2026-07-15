@@ -1,5 +1,6 @@
 {
   "textures": {
+    "particle": "#side",
     "side": "candycraftmod:block/chest_side",
     "top": "candycraftmod:block/chest_top",
     "lock_side": "candycraftmod:block/lock_side",

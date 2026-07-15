@@ -34,7 +34,6 @@ import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.monster.Slime;
-import net.minecraft.world.entity.projectile.AbstractArrow;
 import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
@@ -519,7 +518,7 @@ public class BasicCandySlimeEntity extends Slime {
             tickBossLostTarget(speed);
             return;
         }
-        bossLostTargetTicks = isPezJelly() ? BOSS_LOST_TARGET_TICKS * 2 : BOSS_LOST_TARGET_TICKS;
+        bossLostTargetTicks = BOSS_LOST_TARGET_TICKS;
         if (isBossResting()) {
             if (speed != null) {
                 speed.setBaseValue(0.0D);
@@ -1836,7 +1835,6 @@ public class BasicCandySlimeEntity extends Slime {
     private boolean canBossTarget(Entity target) {
         return target instanceof LivingEntity
             && target.isAlive()
-            && (!isPezJelly() || target == bossRetaliationTarget)
             && !(target instanceof BasicCandySlimeEntity slimeTarget && isSummonedAlly(slimeTarget))
             && (!(target instanceof BasicCandySlimeEntity bossSlimeTarget) || isBossRetaliationTarget(bossSlimeTarget) || isForcedJellyConflict(this, bossSlimeTarget))
             && CandyTargeting.canAttackEntity(target);
@@ -1888,8 +1886,7 @@ public class BasicCandySlimeEntity extends Slime {
                 setTarget(null);
                 return null;
             }
-            double range = isPezJelly() ? 96.0D : BOSS_TARGET_RANGE;
-            if (distanceToSqr(target) <= range * range) {
+            if (distanceToSqr(target) <= BOSS_TARGET_RANGE * BOSS_TARGET_RANGE) {
                 return target;
             }
         }
@@ -1898,8 +1895,7 @@ public class BasicCandySlimeEntity extends Slime {
             if (!canBossTarget(retaliationTarget)) {
                 bossRetaliationTarget = null;
             } else {
-                double range = isPezJelly() ? 96.0D : BOSS_TARGET_RANGE;
-                if (distanceToSqr(retaliationTarget) <= range * range) {
+                if (distanceToSqr(retaliationTarget) <= BOSS_TARGET_RANGE * BOSS_TARGET_RANGE) {
                     setTarget(retaliationTarget);
                     return retaliationTarget;
                 }
@@ -2296,10 +2292,6 @@ public class BasicCandySlimeEntity extends Slime {
         projectile.setYRot((float)(Mth.atan2(reflected.x, reflected.z) * (180.0D / Math.PI)));
         projectile.setXRot((float)(Mth.atan2(reflected.y, reflected.horizontalDistance()) * (180.0D / Math.PI)));
         projectile.hasImpulse = true;
-        if (projectile instanceof AbstractArrow arrow) {
-            arrow.setOwner(this);
-            arrow.pickup = AbstractArrow.Pickup.DISALLOWED;
-        }
     }
 
     private void updateBossBar() {

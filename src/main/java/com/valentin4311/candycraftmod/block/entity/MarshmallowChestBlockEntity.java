@@ -1,6 +1,8 @@
 package com.valentin4311.candycraftmod.block.entity;
 
 import com.valentin4311.candycraftmod.registry.CCBlockEntities;
+import com.valentin4311.candycraftmod.block.MarshmallowChestBlock;
+import com.valentin4311.candycraftmod.menu.MarshmallowChestMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
@@ -11,14 +13,17 @@ import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.ChestMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BaseContainerBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.util.Mth;
+import net.minecraft.world.level.Level;
 
 public class MarshmallowChestBlockEntity extends BaseContainerBlockEntity {
     private NonNullList<ItemStack> items = NonNullList.withSize(27, ItemStack.EMPTY);
     private int openCount;
+    private float openness;
+    private float oldOpenness;
 
     public MarshmallowChestBlockEntity(BlockPos pos, BlockState state) {
         super(CCBlockEntities.MARSHMALLOW_CHEST.get(), pos, state);
@@ -26,12 +31,12 @@ public class MarshmallowChestBlockEntity extends BaseContainerBlockEntity {
 
     @Override
     protected Component getDefaultName() {
-        return Component.translatable("container.candycraftmod.marshmallow_chest");
+        return Component.translatable("container.candycraftmod." + theme().serializedName());
     }
 
     @Override
     protected AbstractContainerMenu createMenu(int id, Inventory inventory) {
-        return ChestMenu.threeRows(id, inventory, this);
+        return new MarshmallowChestMenu(id, inventory, this, theme());
     }
 
     @Override
@@ -87,6 +92,7 @@ public class MarshmallowChestBlockEntity extends BaseContainerBlockEntity {
             level.playSound(null, worldPosition, SoundEvents.CHEST_OPEN, SoundSource.BLOCKS, 0.5F,
                 level.random.nextFloat() * 0.1F + 0.9F);
         }
+        level.blockEvent(worldPosition, getBlockState().getBlock(), 1, openCount);
     }
 
     @Override
@@ -99,6 +105,32 @@ public class MarshmallowChestBlockEntity extends BaseContainerBlockEntity {
             level.playSound(null, worldPosition, SoundEvents.CHEST_CLOSE, SoundSource.BLOCKS, 0.5F,
                 level.random.nextFloat() * 0.1F + 0.9F);
         }
+        level.blockEvent(worldPosition, getBlockState().getBlock(), 1, openCount);
+    }
+
+    @Override
+    public boolean triggerEvent(int id, int data) {
+        if (id == 1) {
+            openCount = data;
+            return true;
+        }
+        return super.triggerEvent(id, data);
+    }
+
+    public float getOpenNess(float partialTick) {
+        return Mth.lerp(partialTick, oldOpenness, openness);
+    }
+
+    public MarshmallowChestBlock.Theme theme() {
+        return getBlockState().getBlock() instanceof MarshmallowChestBlock chest
+            ? chest.theme()
+            : MarshmallowChestBlock.Theme.NORMAL;
+    }
+
+    public static void lidAnimateTick(Level level, BlockPos pos, BlockState state, MarshmallowChestBlockEntity chest) {
+        chest.oldOpenness = chest.openness;
+        float target = chest.openCount > 0 ? 1.0F : 0.0F;
+        chest.openness = Mth.clamp(chest.openness + Math.signum(target - chest.openness) * 0.1F, 0.0F, 1.0F);
     }
 
     @Override

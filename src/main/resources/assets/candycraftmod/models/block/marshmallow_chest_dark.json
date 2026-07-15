@@ -1,0 +1,9 @@
+{
+  "parent": "candycraftmod:block/marshmallow_chest",
+  "textures": {
+    "side": "candycraftmod:block/chest_side_dark",
+    "top": "candycraftmod:block/chest_top_dark",
+    "lock_side": "candycraftmod:block/lock_side_dark",
+    "lock_top": "candycraftmod:block/lock_top_dark"
+  }
+}

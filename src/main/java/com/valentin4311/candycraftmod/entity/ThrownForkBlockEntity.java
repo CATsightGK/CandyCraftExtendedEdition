@@ -34,19 +34,29 @@ public class ThrownForkBlockEntity extends ThrowableProjectile {
         ThrownForkBlockEntity.class,
         EntityDataSerializers.BLOCK_STATE
     );
+    private static final EntityDataAccessor<Boolean> SHATTERS_ON_IMPACT = SynchedEntityData.defineId(
+        ThrownForkBlockEntity.class,
+        EntityDataSerializers.BOOLEAN
+    );
 
     public ThrownForkBlockEntity(EntityType<? extends ThrownForkBlockEntity> entityType, Level level) {
         super(entityType, level);
     }
 
     public ThrownForkBlockEntity(Level level, LivingEntity owner, BlockState state) {
+        this(level, owner, state, false);
+    }
+
+    public ThrownForkBlockEntity(Level level, LivingEntity owner, BlockState state, boolean shattersOnImpact) {
         super(CCEntityTypes.THROWN_FORK_BLOCK.get(), owner, level);
         setBlockState(state);
+        entityData.set(SHATTERS_ON_IMPACT, shattersOnImpact);
     }
 
     @Override
     protected void defineSynchedData() {
         entityData.define(BLOCK_STATE, Blocks.AIR.defaultBlockState());
+        entityData.define(SHATTERS_ON_IMPACT, false);
     }
 
     public BlockState getBlockState() {
@@ -76,7 +86,9 @@ public class ThrownForkBlockEntity extends ThrowableProjectile {
             return;
         }
         BlockState state = getBlockState();
-        if (state.getBlock() instanceof BushBlock || !placeBlock(state, hitResult)) {
+        if (entityData.get(SHATTERS_ON_IMPACT)
+                || state.getBlock() instanceof BushBlock
+                || !placeBlock(state, hitResult)) {
             shatter();
             return;
         }
@@ -133,6 +145,7 @@ public class ThrownForkBlockEntity extends ThrowableProjectile {
     public void addAdditionalSaveData(CompoundTag tag) {
         super.addAdditionalSaveData(tag);
         tag.put("BlockState", NbtUtils.writeBlockState(getBlockState()));
+        tag.putBoolean("ShattersOnImpact", entityData.get(SHATTERS_ON_IMPACT));
     }
 
     @Override
@@ -141,5 +154,6 @@ public class ThrownForkBlockEntity extends ThrowableProjectile {
         if (tag.contains("BlockState", Tag.TAG_COMPOUND)) {
             setBlockState(NbtUtils.readBlockState(BuiltInRegistries.BLOCK.asLookup(), tag.getCompound("BlockState")));
         }
+        entityData.set(SHATTERS_ON_IMPACT, tag.getBoolean("ShattersOnImpact"));
     }
 }

@@ -1,6 +1,7 @@
 package com.valentin4311.candycraftmod.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Axis;
 import com.valentin4311.candycraftmod.item.ForkItem;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.util.Mth;
@@ -22,7 +23,16 @@ public final class ForkClientAnimations {
             return false;
         }
 
-        poseStack.translate(0.0F, animation.bob, 0.0F);
+        float handSign = arm == HumanoidArm.RIGHT ? 1.0F : -1.0F;
+        float chew = animation.chew * animation.amount;
+        poseStack.translate(
+            -handSign * 0.22F * animation.amount,
+            0.31F * animation.amount + animation.bob,
+            0.38F * animation.amount
+        );
+        poseStack.mulPose(Axis.XP.rotationDegrees(-48.0F * animation.amount + chew * 4.0F));
+        poseStack.mulPose(Axis.YP.rotationDegrees(handSign * 13.0F * animation.amount));
+        poseStack.mulPose(Axis.ZP.rotationDegrees(handSign * (9.0F * animation.amount + chew * 3.0F)));
         return false;
     }
 
@@ -46,15 +56,16 @@ public final class ForkClientAnimations {
         float approach = smoothStep(Mth.clamp(elapsed / 4.0F, 0.0F, 1.0F));
         float retreat = smoothStep(Mth.clamp((ForkItem.EAT_ANIMATION_TICKS - elapsed) / 3.0F, 0.0F, 1.0F));
         float amount = approach * retreat;
-        float bob = Mth.sin(elapsed * 2.8F) * 0.035F * amount;
-        return new Animation(amount, bob);
+        float chew = Mth.sin(elapsed * Mth.PI) * 0.5F + 0.5F;
+        float bob = -Mth.abs(Mth.sin(elapsed * Mth.PI)) * 0.028F * amount;
+        return new Animation(amount, bob, chew);
     }
 
     private static float smoothStep(float value) {
         return value * value * (3.0F - 2.0F * value);
     }
 
-    private record Animation(float amount, float bob) {
-        private static final Animation NONE = new Animation(0.0F, 0.0F);
+    private record Animation(float amount, float bob, float chew) {
+        private static final Animation NONE = new Animation(0.0F, 0.0F, 0.0F);
     }
 }

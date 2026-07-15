@@ -340,6 +340,9 @@ public class SuguardDungeonFeature extends Feature<NoneFeatureConfiguration> {
         box(level, x - 1, 239, z + 10, x + 1, 239, z + 12, CCBlocks.JELLY_SHOCK_ABSORBER.get().defaultBlockState());
         box(level, x - 4, 250, z + 3, x + 4, 251, z + 19, caramelBrick());
         box(level, x - 3, 250, z + 4, x + 3, 250, z + 18, jumpWallPattern());
+        // Keep both shafts sealed while joining only their top few blocks into one room.
+        box(level, x - 4, 251, z + 3, x + 4, 251, z + 19, caramelBrick());
+        box(level, x - 3, 244, z + 11, x + 3, 249, z + 11, Blocks.AIR.defaultBlockState());
         box(level, x, 12, z + 17, x, 14, z + 19, Blocks.AIR.defaultBlockState());
         keyChest(level, x + 3, 12, z + 17, CCItems.SUGUARD_SENTRY_KEY.get());
     }
@@ -363,7 +366,10 @@ public class SuguardDungeonFeature extends Feature<NoneFeatureConfiguration> {
         box(level, sx - 1, 10, z + 3, sx - 1, 249, z + 3, yCheckerPattern(chocolate(), cobble(), honeyLamp()));
         box(level, sx - 7, 10, z - 3, sx - 7, 249, z - 3, yCheckerPattern(chocolate(), cobble(), honeyLamp()));
         box(level, sx - 7, 10, z + 3, sx - 7, 249, z + 3, yCheckerPattern(chocolate(), cobble(), honeyLamp()));
-        box(level, sx - 2, 248, z, sx + 1, 249, z, Blocks.AIR.defaultBlockState());
+        // The fall shaft and its return channel share a wide connection only at the top.
+        box(level, sx, 244, z - 1, sx + 1, 249, z + 1, Blocks.AIR.defaultBlockState());
+        box(level, x - 3, 250, z - 1, x, 250, z + 1, fastCheckerPattern(chocolate(), cobble(), chocolate(), honeyLamp()));
+        box(level, sx - 8, 250, z - 4, sx, 250, z + 4, yCheckerPattern(chocolate(), cobble(), honeyLamp()));
         for (int yy = 230; yy > 13; yy -= 8) {
             if (random.nextBoolean()) {
                 int ox = random.nextInt(6);
@@ -560,8 +566,10 @@ public class SuguardDungeonFeature extends Feature<NoneFeatureConfiguration> {
     }
 
     private void keyChest(WorldGenLevel level, int x, int y, int z, net.minecraft.world.item.Item item) {
-        set(level, x, y, z, Blocks.CHEST.defaultBlockState());
-        if (level.getBlockEntity(new BlockPos(x, y, z)) instanceof ChestBlockEntity chest) {
+        BlockPos chestPos = new BlockPos(x, y, z);
+        set(level, chestPos, Blocks.CHEST.defaultBlockState());
+        set(level, chestPos.above(), Blocks.AIR.defaultBlockState());
+        if (level.getBlockEntity(chestPos) instanceof ChestBlockEntity chest) {
             chest.setItem(13, new ItemStack(item));
         }
     }

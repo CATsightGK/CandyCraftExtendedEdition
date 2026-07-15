@@ -29,6 +29,7 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -50,6 +51,7 @@ import net.minecraft.world.level.block.DoorBlock;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.gameevent.GameEvent;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.client.extensions.common.IClientItemExtensions;
 
 import java.util.function.Consumer;
@@ -141,6 +143,9 @@ public class ForkItem extends TieredItem {
         if (player == null) {
             return InteractionResult.PASS;
         }
+        if (isEatAnimationPlaying(stack)) {
+            return InteractionResult.FAIL;
+        }
         if (stack.getDamageValue() >= stack.getMaxDamage() - 1) {
             return InteractionResult.FAIL;
         }
@@ -159,6 +164,9 @@ public class ForkItem extends TieredItem {
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
+        if (isEatAnimationPlaying(stack)) {
+            return InteractionResultHolder.fail(stack);
+        }
         if (stack.getDamageValue() >= stack.getMaxDamage() - 1) {
             return InteractionResultHolder.fail(stack);
         }
@@ -170,6 +178,9 @@ public class ForkItem extends TieredItem {
     @Override
     public void releaseUsing(ItemStack stack, Level level, LivingEntity entity, int timeLeft) {
         if (!(entity instanceof Player player)) {
+            return;
+        }
+        if (isEatAnimationPlaying(stack)) {
             return;
         }
         int usedTicks = getUseDuration(stack) - timeLeft;
@@ -301,6 +312,10 @@ public class ForkItem extends TieredItem {
         return tag == null ? 0 : Math.max(0, tag.getInt(EAT_ANIMATION_TAG));
     }
 
+    public static boolean isEatAnimationPlaying(ItemStack stack) {
+        return getEatAnimationTicks(stack) > 0;
+    }
+
     public static boolean tryPickUpBlock(ItemStack stack, Level level, BlockPos pos, Player player, BlockState state) {
         if (stack.getDamageValue() >= stack.getMaxDamage() - 1
                 || !player.isShiftKeyDown()
@@ -318,7 +333,8 @@ public class ForkItem extends TieredItem {
 
     public static boolean beginForkingBlock(ItemStack stack, Level level, BlockPos pos, Player player,
             InteractionHand hand, BlockState state) {
-        if (stack.getDamageValue() >= stack.getMaxDamage() - 1
+        if (isEatAnimationPlaying(stack)
+                || stack.getDamageValue() >= stack.getMaxDamage() - 1
                 || !player.isShiftKeyDown()
                 || hasHeldBlock(stack)
                 || !player.mayBuild()
@@ -335,7 +351,7 @@ public class ForkItem extends TieredItem {
         int bites = getEatBites(stack) + 1;
         stack.getOrCreateTag().putInt(EAT_BITES_TAG, bites);
         player.level().playSound(null, player.blockPosition(), SoundEvents.GENERIC_EAT, SoundSource.PLAYERS, 0.45F, 0.9F + player.getRandom().nextFloat() * 0.2F);
-        spawnHeldBlockParticles(stack, player, 10);
+        spawnHeldBlockParticles(stack, player, hand, 10);
         if (bites >= BITES_TO_EAT) {
             finishEating(stack, player, hand);
         }
@@ -347,12 +363,15 @@ public class ForkItem extends TieredItem {
 
     private static void throwHeldBlock(ItemStack stack, Player player, InteractionHand hand) {
         BlockState state = getHeldBlockState(stack);
+        boolean shattersOnImpact = getEatBites(stack) > 0;
         clearHeldBlock(stack);
         if (state.isAir()) {
             return;
         }
 
-        ThrownForkBlockEntity projectile = new ThrownForkBlockEntity(player.level(), player, state);
+        ThrownForkBlockEntity projectile = new ThrownForkBlockEntity(
+            player.level(), player, state, shattersOnImpact
+        );
         projectile.shootFromRotation(player, player.getXRot(), player.getYRot(), 0.0F, 1.5F, 0.25F);
         player.level().addFreshEntity(projectile);
         player.level().playSound(null, projectile, SoundEvents.TRIDENT_THROW, SoundSource.PLAYERS, 0.8F, 1.15F);
@@ -363,7 +382,7 @@ public class ForkItem extends TieredItem {
 
     private static void finishEating(ItemStack stack, Player player, InteractionHand hand) {
         if (player.level() instanceof ServerLevel) {
-            spawnHeldBlockParticles(stack, player, 18);
+            spawnHeldBlockParticles(stack, player, hand, 18);
             player.getFoodData().eat(1, 0.0F);
             if (player instanceof ServerPlayer serverPlayer) {
                 CCCriteriaTriggers.EAT_BLOCK.trigger(serverPlayer);
@@ -377,21 +396,34 @@ public class ForkItem extends TieredItem {
         player.getCooldowns().addCooldown(stack.getItem(), 8);
     }
 
-    private static void spawnHeldBlockParticles(ItemStack stack, Player player, int count) {
+    private static void spawnHeldBlockParticles(ItemStack stack, Player player, InteractionHand hand, int count) {
         BlockState state = getHeldBlockState(stack);
         if (state.isAir() || !(player.level() instanceof ServerLevel serverLevel)) {
             return;
         }
+        Vec3 view = player.getViewVector(1.0F);
+        Vec3 horizontalRight = new Vec3(view.z, 0.0D, -view.x);
+        if (horizontalRight.lengthSqr() > 1.0E-6D) {
+            horizontalRight = horizontalRight.normalize();
+        }
+        HumanoidArm usedArm = hand == InteractionHand.MAIN_HAND
+            ? player.getMainArm()
+            : player.getMainArm().getOpposite();
+        double handSide = usedArm == HumanoidArm.RIGHT ? 1.0D : -1.0D;
+        Vec3 particlePos = player.getEyePosition()
+            .add(view.scale(0.42D))
+            .add(horizontalRight.scale(0.08D * handSide))
+            .add(0.0D, -0.12D, 0.0D);
         serverLevel.sendParticles(
             new BlockParticleOption(ParticleTypes.BLOCK, state),
-            player.getX(),
-            player.getEyeY() - 0.25D,
-            player.getZ(),
+            particlePos.x,
+            particlePos.y,
+            particlePos.z,
             count,
-            0.22D,
-            0.18D,
-            0.22D,
-            0.045D
+            0.12D,
+            0.06D,
+            0.12D,
+            0.025D
         );
     }
 

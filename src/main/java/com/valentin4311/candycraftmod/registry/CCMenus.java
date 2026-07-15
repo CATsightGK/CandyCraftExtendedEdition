@@ -7,6 +7,8 @@ import com.valentin4311.candycraftmod.menu.CandyWorkbenchMenu;
 import com.valentin4311.candycraftmod.menu.EmblemBasketMenu;
 import com.valentin4311.candycraftmod.menu.LicoriceFurnaceMenu;
 import com.valentin4311.candycraftmod.menu.SugarFactoryMenu;
+import com.valentin4311.candycraftmod.menu.MarshmallowChestMenu;
+import com.valentin4311.candycraftmod.block.MarshmallowChestBlock;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.inventory.MenuType;
@@ -55,6 +57,18 @@ public final class CCMenus {
                 }
             }
             return new CandyWorkbenchMenu(id, inventory, access, theme);
+        }));
+
+    public static final RegistryObject<MenuType<MarshmallowChestMenu>> MARSHMALLOW_CHEST =
+        MENU_TYPES.register("marshmallow_chest", () -> IForgeMenuType.create((id, inventory, data) -> {
+            MarshmallowChestBlock.Theme theme = MarshmallowChestBlock.Theme.NORMAL;
+            if (data != null) {
+                BlockPos pos = data.readBlockPos();
+                if (inventory.player.level().getBlockState(pos).getBlock() instanceof MarshmallowChestBlock chest) {
+                    theme = chest.theme();
+                }
+            }
+            return new MarshmallowChestMenu(id, inventory, theme);
         }));
 
     private CCMenus() {

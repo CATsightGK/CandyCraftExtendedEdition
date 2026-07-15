@@ -129,6 +129,7 @@ public final class CCClient {
             MenuScreens.register(CCMenus.LICORICE_FURNACE.get(), LicoriceFurnaceScreen::new);
             MenuScreens.register(CCMenus.EMBLEM_BASKET.get(), EmblemBasketScreen::new);
             MenuScreens.register(CCMenus.CANDY_WORKBENCH.get(), CandyWorkbenchScreen::new);
+            MenuScreens.register(CCMenus.MARSHMALLOW_CHEST.get(), MarshmallowChestScreen::new);
             registerProjectileItemProperties();
         });
     }
@@ -651,6 +652,7 @@ public final class CCClient {
     @SubscribeEvent
     public static void registerEntityRenderers(EntityRenderersEvent.RegisterRenderers event) {
         event.registerBlockEntityRenderer(com.valentin4311.candycraftmod.registry.CCBlockEntities.ALCHEMY_TABLE.get(), AlchemyTableRenderer::new);
+        event.registerBlockEntityRenderer(com.valentin4311.candycraftmod.registry.CCBlockEntities.MARSHMALLOW_CHEST.get(), MarshmallowChestRenderer::new);
         event.registerEntityRenderer(CCEntityTypes.HONEY_ARROW.get(), HoneyArrowRenderer::new);
         event.registerEntityRenderer(CCEntityTypes.HONEY_BOLT.get(), HoneyBoltRenderer::new);
         event.registerEntityRenderer(CCEntityTypes.DYNAMITE.get(), context -> new FixedThrownItemRenderer<>(context, new net.minecraft.world.item.ItemStack(CCItems.DYNAMITE.get()), 0.5F));
@@ -812,16 +814,45 @@ public final class CCClient {
 
         @SubscribeEvent
         public static void beforeLoadingScreenRender(ScreenEvent.Render.Pre event) {
-            if (isLevelLoadingScreen(event.getScreen())) {
-                loadingBackgroundDrawnThisFrame = false;
+            Screen screen = event.getScreen();
+            if (!isLevelLoadingScreen(screen)) {
+                return;
+            }
+            loadingBackgroundDrawnThisFrame = false;
+            if (isDungeonLoadingContext()) {
+                loadingBackgroundDrawnThisFrame = true;
+                renderDungeonLoadingFrame(event.getGuiGraphics());
+                event.setCanceled(true);
             }
         }
 
         @SubscribeEvent
         public static void afterLoadingScreenRender(ScreenEvent.Render.Post event) {
-            if (!loadingBackgroundDrawnThisFrame && isLevelLoadingScreen(event.getScreen())) {
+            if (!loadingBackgroundDrawnThisFrame
+                    && isLevelLoadingScreen(event.getScreen())
+                    && !isDungeonLoadingContext()) {
                 renderCustomLoadingBackground(event.getGuiGraphics(), event.getScreen());
             }
+        }
+
+        private static boolean isDungeonLoadingContext() {
+            Minecraft minecraft = Minecraft.getInstance();
+            return dungeonLoadingActive || isDungeonLevel(minecraft.level);
+        }
+
+        private static void renderDungeonLoadingFrame(GuiGraphics graphics) {
+            Minecraft minecraft = Minecraft.getInstance();
+            int width = minecraft.getWindow().getGuiScaledWidth();
+            int height = minecraft.getWindow().getGuiScaledHeight();
+            renderDungeonLoadingBackground(graphics, width, height);
+
+            int dotCount = (int)((net.minecraft.Util.getMillis() / 400L) % 3L) + 1;
+            Component message = Component.translatable("chat.generating")
+                .copy()
+                .append("  ")
+                .append(Component.translatable("multiplayer.downloadingTerrain"))
+                .append("  " + ".".repeat(dotCount));
+            graphics.drawCenteredString(minecraft.font, message, width / 2, height / 2 - 4, 0xFFFFFF);
         }
 
         private static void renderCustomLoadingBackground(GuiGraphics graphics, Screen screen) {

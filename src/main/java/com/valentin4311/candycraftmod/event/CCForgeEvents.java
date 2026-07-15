@@ -180,7 +180,7 @@ public final class CCForgeEvents {
             && type != CCEntityTypes.COTTON_CANDY_SHEEP.get() && type != CCEntityTypes.EASTER_CHICKEN.get()
             && type != CCEntityTypes.GUMMY_MOUSE.get() && type != CCEntityTypes.GUMMY_BEAR.get()
             && type != CCEntityTypes.JELLY_QUEEN.get() && type != CCEntityTypes.CARAMEL_BEE.get()
-            && type != CCEntityTypes.NOUGAT_GOLEM.get() && type != CCEntityTypes.BEETLE.get()
+            && type != CCEntityTypes.BEETLE.get()
             && type != CCEntityTypes.BOSS_BEETLE.get()
             && type != CCEntityTypes.CANDY_CREEPER.get() && type != CCEntityTypes.COTTON_CANDY_SPIDER.get()
             && type != CCEntityTypes.MAGE_SUGUARD.get() && type != CCEntityTypes.CANDY_FISH.get()
@@ -223,9 +223,6 @@ public final class CCForgeEvents {
         if (type == CCEntityTypes.NESSIE.get()) {
             return "sugar_oceans".equals(path);
         }
-        if (type == CCEntityTypes.NOUGAT_GOLEM.get()) {
-            return "sugar_plains".equals(path);
-        }
         if (type == CCEntityTypes.BEETLE.get()) {
             return switch (path) {
                 case "sugar_plains", "gummy_swamp" -> true;
@@ -248,10 +245,7 @@ public final class CCForgeEvents {
             return "gummy_swamp".equals(path);
         }
         if (type == CCEntityTypes.CANDY_WOLF.get()) {
-            return switch (path) {
-                case "sugar_forest", "sugar_cold_forest", "caramel_forest", "chocolate_forest", "sugar_mountains" -> true;
-                default -> false;
-            };
+            return "caramel_forest".equals(path) || "sugar_cold_forest".equals(path);
         }
         if (type == CCEntityTypes.JELLY_QUEEN.get()) {
             return event.getSpawnType() == MobSpawnType.CHUNK_GENERATION;
