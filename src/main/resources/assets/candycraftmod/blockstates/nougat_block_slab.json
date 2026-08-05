@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "type=bottom": { "model": "candycraftmod:block/nougat_block_slab" },
+    "type=double": { "model": "candycraftmod:block/nougat_block" },
+    "type=top": { "model": "candycraftmod:block/nougat_block_slab_top" }
+  }
+}

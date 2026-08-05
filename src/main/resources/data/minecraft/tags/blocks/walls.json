@@ -5,6 +5,8 @@
     "candycraftmod:chocolate_cobblestone_wall",
     "candycraftmod:milk_chocolate_brick_wall",
     "candycraftmod:white_chocolate_brick_wall",
-    "candycraftmod:dark_chocolate_brick_wall"
+    "candycraftmod:dark_chocolate_brick_wall",
+    "candycraftmod:sugar_block_wall",
+    "candycraftmod:sugar_brick_wall"
   ]
 }

@@ -13,6 +13,7 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher;
 import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
@@ -39,8 +40,8 @@ public class ForkItemRenderer extends BlockEntityWithoutLevelRenderer {
     private static final float MODEL_CENTER_Y = 13.875F / 16.0F;
     private static final float HELD_BLOCK_CENTER_Y = 36.0F / 16.0F;
     private static final float MAX_HELD_BLOCK_SIZE = 1.12F;
-    private static final int SHINE_FRAME_COUNT = 8;
-    private static final long SHINE_SWEEP_MILLIS = 750L;
+    private static final int SHINE_FRAME_COUNT = 24;
+    private static final long SHINE_SWEEP_MILLIS = 2400L;
     private static final ResourceLocation[] SHINE_FRAMES = createShineFrames();
     private final ItemRenderer itemRenderer;
 
@@ -108,7 +109,11 @@ public class ForkItemRenderer extends BlockEntityWithoutLevelRenderer {
 
     private static void renderInventoryShine(PoseStack poseStack, MultiBufferSource buffer) {
         int frame = (int)((Util.getMillis() % SHINE_SWEEP_MILLIS) * SHINE_FRAME_COUNT / SHINE_SWEEP_MILLIS);
-        VertexConsumer consumer = buffer.getBuffer(RenderType.entityTranslucent(SHINE_FRAMES[frame]));
+        ResourceLocation texture = SHINE_FRAMES[frame];
+        if (Minecraft.getInstance().getResourceManager().getResource(texture).isEmpty()) {
+            return;
+        }
+        VertexConsumer consumer = buffer.getBuffer(RenderType.entityTranslucent(texture));
         PoseStack.Pose pose = poseStack.last();
         shineVertex(pose, consumer, 0.0F, 0.0F, 0.6F, 0.0F, 1.0F);
         shineVertex(pose, consumer, 1.0F, 0.0F, 0.6F, 1.0F, 1.0F);
@@ -138,7 +143,7 @@ public class ForkItemRenderer extends BlockEntityWithoutLevelRenderer {
         return frames;
     }
 
-    private static void renderHeldBlock(ItemStack stack, PoseStack poseStack, MultiBufferSource buffer, int packedLight) {
+    private void renderHeldBlock(ItemStack stack, PoseStack poseStack, MultiBufferSource buffer, int packedLight) {
         if (!ForkItem.hasHeldBlock(stack)) {
             return;
         }
@@ -172,30 +177,58 @@ public class ForkItemRenderer extends BlockEntityWithoutLevelRenderer {
             -scale * (bounds.minZ + bounds.maxZ) * 0.5D
         );
         poseStack.scale(scale, scale, scale);
-        if (plant) {
-            renderPlantPlane(lowerState, poseStack, buffer, packedLight);
-        } else {
-            Minecraft.getInstance().getBlockRenderer().renderSingleBlock(
-                lowerState,
-                poseStack,
-                buffer,
-                packedLight,
-                OverlayTexture.NO_OVERLAY
-            );
-        }
+        renderHeldState(lowerState, plant, poseStack, buffer, packedLight);
         if (upperState != null) {
             poseStack.pushPose();
             poseStack.translate(0.0F, 1.0F, 0.0F);
-            Minecraft.getInstance().getBlockRenderer().renderSingleBlock(
-                upperState,
-                poseStack,
-                buffer,
-                packedLight,
-                OverlayTexture.NO_OVERLAY
-            );
+            renderHeldState(upperState, false, poseStack, buffer, packedLight);
             poseStack.popPose();
         }
         poseStack.popPose();
+    }
+
+    private void renderHeldState(BlockState state, boolean plant, PoseStack poseStack,
+            MultiBufferSource buffer, int packedLight) {
+        Minecraft minecraft = Minecraft.getInstance();
+        TextureAtlasSprite particle = minecraft.getBlockRenderer().getBlockModel(state).getParticleIcon();
+        if (isMissingSprite(particle)) {
+            renderHeldItemFallback(state, poseStack, buffer, packedLight);
+            return;
+        }
+        if (plant) {
+            renderPlantPlane(state, poseStack, buffer, packedLight);
+            return;
+        }
+        minecraft.getBlockRenderer().renderSingleBlock(
+            state,
+            poseStack,
+            buffer,
+            packedLight,
+            OverlayTexture.NO_OVERLAY
+        );
+    }
+
+    private void renderHeldItemFallback(BlockState state, PoseStack poseStack,
+            MultiBufferSource buffer, int packedLight) {
+        ItemStack item = new ItemStack(state.getBlock().asItem());
+        if (item.isEmpty()) {
+            return;
+        }
+        Minecraft minecraft = Minecraft.getInstance();
+        itemRenderer.renderStatic(
+            item,
+            ItemDisplayContext.GROUND,
+            packedLight,
+            OverlayTexture.NO_OVERLAY,
+            poseStack,
+            buffer,
+            minecraft.level,
+            0
+        );
+    }
+
+    private static boolean isMissingSprite(TextureAtlasSprite sprite) {
+        return sprite == null || MissingTextureAtlasSprite.getLocation().equals(sprite.contents().name());
     }
 
     private static void renderPlantPlane(BlockState state, PoseStack poseStack, MultiBufferSource buffer, int packedLight) {

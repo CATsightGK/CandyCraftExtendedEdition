@@ -2,26 +2,26 @@ package com.valentin4311.candycraftmod.event;
 
 import com.valentin4311.candycraftmod.CandyCraft;
 import com.valentin4311.candycraftmod.block.LegacySaplingBlock;
+import com.valentin4311.candycraftmod.entity.BasicCandyZombieEntity;
 import com.valentin4311.candycraftmod.entity.CandyFishEntity;
 import com.valentin4311.candycraftmod.registry.CCBlocks;
 import com.valentin4311.candycraftmod.registry.CCEntityTypes;
 import com.valentin4311.candycraftmod.registry.CCFluids;
 import com.valentin4311.candycraftmod.registry.CCItems;
-import com.valentin4311.candycraftmod.registry.CCBlocks;
+import com.valentin4311.candycraftmod.registry.CCToolProperties;
 import com.valentin4311.candycraftmod.util.EmblemHelper;
-import com.valentin4311.candycraftmod.world.CandyFluidTickRepairData;
 import com.valentin4311.candycraftmod.world.feature.CottonCandyTreeFeature;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.DamageTypeTags;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -35,34 +35,94 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.HoeItem;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.block.BedBlock;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.chunk.ChunkAccess;
-import net.minecraft.world.level.chunk.LevelChunkSection;
 import net.minecraft.world.level.levelgen.Heightmap;
-import net.minecraft.world.level.material.FluidState;
 import net.minecraftforge.common.ForgeSpawnEggItem;
 import net.minecraftforge.event.entity.SpawnPlacementRegisterEvent;
 import net.minecraftforge.event.entity.EntityJoinLevelEvent;
 import net.minecraftforge.event.level.BlockEvent;
-import net.minecraftforge.event.level.ChunkEvent;
+import net.minecraftforge.event.level.SleepFinishedTimeEvent;
 import net.minecraftforge.event.entity.living.MobSpawnEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
+import net.minecraftforge.event.ItemAttributeModifierEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.ForgeRegistries;
 
 @Mod.EventBusSubscriber(modid = CandyCraft.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public final class CCForgeEvents {
+    // Item keeps these UUIDs protected, but the tooltip recognizes them to display final main-hand values.
+    private static final java.util.UUID BASE_ATTACK_DAMAGE_UUID = java.util.UUID.fromString("CB3F55D3-645C-4F38-A497-9C13A33DB5CF");
+    private static final java.util.UUID BASE_ATTACK_SPEED_UUID = java.util.UUID.fromString("FA233E1C-4180-4865-B01B-BCCE9785ACA3");
     private static final String CRANBERRY_EMBLEM_DAY = CandyCraft.MODID + ".cranberry_emblem_day";
     private static final ResourceKey<Level> CANDY_WORLD = dimensionKey("candy_world");
     private static final ResourceKey<Level> JELLY_DUNGEON = dimensionKey("jelly_dungeon");
     private static final ResourceKey<Level> SUGUARD_DUNGEON = dimensionKey("suguard_dungeon");
+    private static final TagKey<Block> CANDY_WORLD_BEDS = TagKey.create(
+        Registries.BLOCK, new ResourceLocation(CandyCraft.MODID, "candy_world_beds"));
 
     private CCForgeEvents() {
+    }
+
+    @SubscribeEvent
+    public static void onItemAttributes(ItemAttributeModifierEvent event) {
+        CCToolProperties.Profile profile = CCToolProperties.get(event.getItemStack());
+        if (profile == null) {
+            return;
+        }
+
+        if (event.getSlotType() == EquipmentSlot.MAINHAND) {
+            if (profile.attackDamage() != null) {
+                event.removeAttribute(Attributes.ATTACK_DAMAGE);
+                event.addModifier(Attributes.ATTACK_DAMAGE, new AttributeModifier(
+                    BASE_ATTACK_DAMAGE_UUID, "CandyCraft configured attack damage",
+                    profile.attackDamage() - 1.0D, AttributeModifier.Operation.ADDITION));
+            }
+            if (profile.attackSpeed() != null) {
+                event.removeAttribute(Attributes.ATTACK_SPEED);
+                event.addModifier(Attributes.ATTACK_SPEED, new AttributeModifier(
+                    BASE_ATTACK_SPEED_UUID, "CandyCraft configured attack speed",
+                    profile.attackSpeed() - 4.0D, AttributeModifier.Operation.ADDITION));
+            }
+        }
+
+        if (isConfiguredArmorSlot(profile.toolType(), event.getSlotType())) {
+            applyEquipmentAttribute(event, Attributes.ARMOR, profile.armor(), "armor");
+            applyEquipmentAttribute(event, Attributes.ARMOR_TOUGHNESS, profile.armorToughness(), "armor_toughness");
+            applyEquipmentAttribute(event, Attributes.KNOCKBACK_RESISTANCE, profile.knockbackResistance(), "knockback_resistance");
+        }
+    }
+
+    private static boolean isConfiguredArmorSlot(String toolType, EquipmentSlot slot) {
+        return switch (toolType) {
+            case "helmet" -> slot == EquipmentSlot.HEAD;
+            case "chestplate" -> slot == EquipmentSlot.CHEST;
+            case "leggings" -> slot == EquipmentSlot.LEGS;
+            case "boots" -> slot == EquipmentSlot.FEET;
+            default -> false;
+        };
+    }
+
+    private static void applyEquipmentAttribute(ItemAttributeModifierEvent event,
+            net.minecraft.world.entity.ai.attributes.Attribute attribute, Double value, String key) {
+        if (value == null) {
+            return;
+        }
+        event.removeAttribute(attribute);
+        ResourceLocation itemId = ForgeRegistries.ITEMS.getKey(event.getItemStack().getItem());
+        java.util.UUID uuid = java.util.UUID.nameUUIDFromBytes(
+            (CandyCraft.MODID + ":" + itemId + ":" + event.getSlotType() + ":" + key)
+                .getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        event.addModifier(attribute, new AttributeModifier(
+            uuid, "CandyCraft configured " + key, value, AttributeModifier.Operation.ADDITION));
     }
 
     @SubscribeEvent
@@ -100,17 +160,9 @@ public final class CCForgeEvents {
     @SubscribeEvent
     public static void onEntityJoinLevel(EntityJoinLevelEvent event) {
         if (!event.getLevel().isClientSide
-            && (isBlockedCandyWorldMob(event.getEntity()) || isBlockedDungeonMob(event.getEntity()))) {
+            && isBlockedDungeonMob(event.getEntity())) {
             event.setCanceled(true);
         }
-    }
-
-    @SubscribeEvent
-    public static void onChunkLoad(ChunkEvent.Load event) {
-        if (!(event.getLevel() instanceof ServerLevel level) || !isCandyWorld(level)) {
-            return;
-        }
-        scheduleExposedCandyFluidTicks(level, event.getChunk());
     }
 
     @SubscribeEvent
@@ -136,10 +188,45 @@ public final class CCForgeEvents {
         if (isProtectedDungeonInteraction(event.getLevel(), event.getEntity())) {
             return;
         }
+        if (tryRejectVanillaBed(event)) {
+            event.setCancellationResult(InteractionResult.sidedSuccess(event.getLevel().isClientSide));
+            event.setCanceled(true);
+            return;
+        }
         if (tryTillCandySoil(event) || tryGrowCandySapling(event)) {
             event.setCancellationResult(InteractionResult.sidedSuccess(event.getLevel().isClientSide));
             event.setCanceled(true);
         }
+    }
+
+    private static boolean tryRejectVanillaBed(PlayerInteractEvent.RightClickBlock event) {
+        Level level = event.getLevel();
+        BlockState state = level.getBlockState(event.getPos());
+        if (!isCandyWorld(level) || !(state.getBlock() instanceof BedBlock)) {
+            return false;
+        }
+        if (state.is(CANDY_WORLD_BEDS)) {
+            return false;
+        }
+        if (!level.isClientSide) {
+            event.getEntity().displayClientMessage(
+                Component.translatable("message.candycraftmod.vanilla_bed_unresponsive"), true);
+        }
+        return true;
+    }
+
+    @SubscribeEvent
+    public static void onSleepFinished(SleepFinishedTimeEvent event) {
+        ServerLevel level = (ServerLevel) event.getLevel();
+        if (!isCandyWorld(level)) {
+            return;
+        }
+        ServerLevel overworld = level.getServer().overworld();
+        long dayTime = overworld.getDayTime();
+        long nextMorning = dayTime - Math.floorMod(dayTime, 24000L) + 24000L;
+        // Custom dimensions use derived level data, whose setDayTime is a no-op.
+        overworld.setDayTime(nextMorning);
+        event.setTimeAddition(nextMorning);
     }
 
     @SubscribeEvent
@@ -195,7 +282,6 @@ public final class CCForgeEvents {
             && type != CCEntityTypes.COTTON_CANDY_SHEEP.get() && type != CCEntityTypes.EASTER_CHICKEN.get()
             && type != CCEntityTypes.GUMMY_MOUSE.get() && type != CCEntityTypes.GUMMY_BEAR.get()
             && type != CCEntityTypes.JELLY_QUEEN.get() && type != CCEntityTypes.CARAMEL_BEE.get()
-            && type != CCEntityTypes.BEETLE.get()
             && type != CCEntityTypes.BOSS_BEETLE.get()
             && type != CCEntityTypes.CANDY_CREEPER.get() && type != CCEntityTypes.COTTON_CANDY_SPIDER.get()
             && type != CCEntityTypes.MAGE_SUGUARD.get() && type != CCEntityTypes.CANDY_FISH.get()
@@ -211,6 +297,9 @@ public final class CCForgeEvents {
         }
         String path = biomeId.getPath();
         if (type == CCEntityTypes.SUGUARD.get()) {
+            if (event.getEntity() instanceof BasicCandyZombieEntity suguard) {
+                suguard.setChocolateForestSuguard("chocolate_forest".equals(path));
+            }
             if ("sugar_enchanted_forest".equals(path) || "caramel_forest".equals(path)) {
                 return true;
             }
@@ -229,20 +318,17 @@ public final class CCForgeEvents {
             return brightness <= 7;
         }
         if (type == CCEntityTypes.CARAMEL_BEE.get()) {
+            if ("gummy_swamp".equals(path)) {
+                return false;
+            }
             int brightness = event.getLevel().getLevel().getMaxLocalRawBrightness(event.getEntity().blockPosition());
             return brightness <= 7;
         }
         if (type == CCEntityTypes.CANDY_FISH.get()) {
-            return "sugar_oceans".equals(path);
+            return "sugar_oceans".equals(path) || "sugar_river".equals(path);
         }
         if (type == CCEntityTypes.NESSIE.get()) {
             return "sugar_oceans".equals(path);
-        }
-        if (type == CCEntityTypes.BEETLE.get()) {
-            return switch (path) {
-                case "sugar_plains", "gummy_swamp" -> true;
-                default -> false;
-            };
         }
         if (type == CCEntityTypes.BOSS_BEETLE.get()) {
             return event.getSpawnType() == MobSpawnType.STRUCTURE;
@@ -251,7 +337,7 @@ public final class CCForgeEvents {
             return "ice_cream_plains".equals(path) || "ice_cream_sky_mountains".equals(path);
         }
         if (type == CCEntityTypes.COTTON_CANDY_SHEEP.get()) {
-            return "cotton_candy_plains".equals(path);
+            return isCottonCandySheepBiome(path);
         }
         if (type == CCEntityTypes.EASTER_CHICKEN.get()) {
             return "chocolate_forest".equals(path);
@@ -282,14 +368,26 @@ public final class CCForgeEvents {
 
     private static boolean isCandyPigBiome(String path) {
         return switch (path) {
-            case "sugar_plains", "sugar_forest", "sugar_enchanted_forest", "caramel_forest", "chocolate_forest" -> true;
+            case "sugar_plains", "sugar_forest", "sugar_cold_forest", "sugar_enchanted_forest",
+                "sugar_mountains", "caramel_forest" -> true;
+            default -> false;
+        };
+    }
+
+    private static boolean isCottonCandySheepBiome(String path) {
+        return switch (path) {
+            case "cotton_candy_plains", "sugar_plains", "sugar_forest", "sugar_cold_forest",
+                "sugar_enchanted_forest", "sugar_mountains", "sugar_hell_mountains",
+                "ice_cream_plains", "ice_cream_sky_mountains", "caramel_forest",
+                "chocolate_forest", "gummy_swamp" -> true;
             default -> false;
         };
     }
 
     private static boolean isGummyBunnyBiome(String path) {
         return switch (path) {
-            case "sugar_plains", "sugar_forest", "sugar_enchanted_forest", "caramel_forest", "chocolate_forest", "gummy_swamp" -> true;
+            case "sugar_plains", "sugar_forest", "sugar_cold_forest", "sugar_enchanted_forest",
+                "sugar_mountains", "caramel_forest", "chocolate_forest", "gummy_swamp" -> true;
             default -> false;
         };
     }
@@ -321,61 +419,6 @@ public final class CCForgeEvents {
         return level.dimension().equals(CANDY_WORLD);
     }
 
-    private static void scheduleExposedCandyFluidTicks(ServerLevel level, ChunkAccess chunk) {
-        CandyFluidTickRepairData repairData = CandyFluidTickRepairData.get(level);
-        if (repairData.isRepaired(chunk.getPos())) {
-            return;
-        }
-
-        BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
-        int minY = Math.max(63, chunk.getMinBuildHeight());
-        int maxY = Math.min(level.getMaxBuildHeight(), chunk.getMaxBuildHeight());
-        int minX = chunk.getPos().getMinBlockX();
-        int minZ = chunk.getPos().getMinBlockZ();
-        LevelChunkSection[] sections = chunk.getSections();
-        for (int sectionIndex = 0; sectionIndex < sections.length; sectionIndex++) {
-            LevelChunkSection section = sections[sectionIndex];
-            int sectionMinY = chunk.getSectionYFromSectionIndex(sectionIndex) << 4;
-            int scanMinY = Math.max(minY, sectionMinY);
-            int scanMaxY = Math.min(maxY, sectionMinY + 16);
-            if (scanMinY >= scanMaxY || section.hasOnlyAir()
-                || !section.maybeHas(state -> isCandyFluid(state.getFluidState()))) {
-                continue;
-            }
-            for (int x = 0; x < 16; x++) {
-                for (int z = 0; z < 16; z++) {
-                    for (int y = scanMinY; y < scanMaxY; y++) {
-                        pos.set(minX + x, y, minZ + z);
-                        FluidState fluid = chunk.getFluidState(pos);
-                        if (isCandyFluid(fluid) && isExposedFluid(level, pos)) {
-                            level.scheduleTick(pos.immutable(), fluid.getType(), fluid.getType().getTickDelay(level));
-                        }
-                    }
-                }
-            }
-        }
-        repairData.markRepaired(chunk.getPos());
-    }
-
-    private static boolean isExposedFluid(ServerLevel level, BlockPos pos) {
-        if (level.getBlockState(pos.below()).isAir()) {
-            return true;
-        }
-        for (Direction direction : Direction.Plane.HORIZONTAL) {
-            if (level.getBlockState(pos.relative(direction)).isAir()) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private static boolean isCandyFluid(FluidState state) {
-        return state.is(CCFluids.SOURCE_GRENADINE.get()) || state.is(CCFluids.FLOWING_GRENADINE.get())
-            || state.is(CCFluids.SOURCE_LIQUID_CANDY.get()) || state.is(CCFluids.FLOWING_LIQUID_CANDY.get())
-            || state.is(CCFluids.SOURCE_CARAMEL.get()) || state.is(CCFluids.FLOWING_CARAMEL.get())
-            || state.is(CCFluids.SOURCE_LIQUID_CHOCOLATE.get()) || state.is(CCFluids.FLOWING_LIQUID_CHOCOLATE.get());
-    }
-
     private static boolean isDungeonLevel(Level level) {
         return level.dimension().equals(JELLY_DUNGEON) || level.dimension().equals(SUGUARD_DUNGEON);
     }
@@ -400,14 +443,6 @@ public final class CCForgeEvents {
 
     private static ResourceKey<Level> dimensionKey(String path) {
         return ResourceKey.create(Registries.DIMENSION, new ResourceLocation(CandyCraft.MODID, path));
-    }
-
-    private static boolean isBlockedCandyWorldMob(Entity entity) {
-        if (!(entity instanceof Mob) || !isCandyWorld(entity.level())) {
-            return false;
-        }
-        ResourceLocation id = ForgeRegistries.ENTITY_TYPES.getKey(entity.getType());
-        return id != null && "minecraft".equals(id.getNamespace());
     }
 
     private static boolean isBlockedDungeonMob(Entity entity) {
@@ -488,11 +523,13 @@ public final class CCForgeEvents {
             event.register(CCEntityTypes.CANDY_PIG.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, CCForgeEvents::canSpawnOnCandySurface, SpawnPlacementRegisterEvent.Operation.REPLACE);
             event.register(CCEntityTypes.WAFFLE_SHEEP.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, CCForgeEvents::canSpawnOnCandySurface, SpawnPlacementRegisterEvent.Operation.REPLACE);
             event.register(CCEntityTypes.CANDY_WOLF.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, CCForgeEvents::canSpawnOnCandySurface, SpawnPlacementRegisterEvent.Operation.REPLACE);
-            event.register(CCEntityTypes.GUMMY_BUNNY.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, CCForgeEvents::canSpawnOnCandySurface, SpawnPlacementRegisterEvent.Operation.REPLACE);
+            // Gummy terrain is 15.92/16 blocks tall, so vanilla ON_GROUND rejects it
+            // before our candy-surface predicate can run.
+            event.register(CCEntityTypes.GUMMY_BUNNY.get(), SpawnPlacements.Type.NO_RESTRICTIONS, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, CCForgeEvents::canSpawnOnCandySurface, SpawnPlacementRegisterEvent.Operation.REPLACE);
             event.register(CCEntityTypes.COTTON_CANDY_SHEEP.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, com.valentin4311.candycraftmod.entity.CottonCandySheepEntity::canSpawn, SpawnPlacementRegisterEvent.Operation.REPLACE);
             event.register(CCEntityTypes.EASTER_CHICKEN.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, com.valentin4311.candycraftmod.entity.EasterChickenEntity::canSpawn, SpawnPlacementRegisterEvent.Operation.REPLACE);
-            event.register(CCEntityTypes.GUMMY_MOUSE.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, com.valentin4311.candycraftmod.entity.GummyMouseEntity::canSpawn, SpawnPlacementRegisterEvent.Operation.REPLACE);
-            event.register(CCEntityTypes.GUMMY_BEAR.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, com.valentin4311.candycraftmod.entity.GummyBearEntity::canSpawn, SpawnPlacementRegisterEvent.Operation.REPLACE);
+            event.register(CCEntityTypes.GUMMY_MOUSE.get(), SpawnPlacements.Type.NO_RESTRICTIONS, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, com.valentin4311.candycraftmod.entity.GummyMouseEntity::canSpawn, SpawnPlacementRegisterEvent.Operation.REPLACE);
+            event.register(CCEntityTypes.GUMMY_BEAR.get(), SpawnPlacements.Type.NO_RESTRICTIONS, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, com.valentin4311.candycraftmod.entity.GummyBearEntity::canSpawn, SpawnPlacementRegisterEvent.Operation.REPLACE);
             event.register(CCEntityTypes.PINGOUIN.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, CCForgeEvents::canSpawnOnCandySurface, SpawnPlacementRegisterEvent.Operation.REPLACE);
             event.register(CCEntityTypes.SUGUARD.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, CCForgeEvents::canSpawnOnCandySurface, SpawnPlacementRegisterEvent.Operation.REPLACE);
             event.register(CCEntityTypes.MAGE_SUGUARD.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, CCForgeEvents::canSpawnOnCandySurface, SpawnPlacementRegisterEvent.Operation.REPLACE);
@@ -530,9 +567,15 @@ public final class CCForgeEvents {
     }
 
     private static boolean canNessieSpawn(EntityType<? extends Mob> type, LevelAccessor level, MobSpawnType reason, BlockPos pos, net.minecraft.util.RandomSource random) {
-        return level.getLevelData().getDifficulty() != net.minecraft.world.Difficulty.PEACEFUL
-            && pos.getY() > 45 && pos.getY() < 63
-            && level.getFluidState(pos).is(net.minecraft.tags.FluidTags.WATER);
+        if (pos.getY() <= 45 || pos.getY() >= 63 || !level.getFluidState(pos).is(net.minecraft.tags.FluidTags.WATER)) {
+            return false;
+        }
+        if (level instanceof ServerLevel serverLevel) {
+            int nearby = serverLevel.getEntitiesOfClass(com.valentin4311.candycraftmod.entity.NessieEntity.class,
+                new net.minecraft.world.phys.AABB(pos).inflate(32.0D)).size();
+            return nearby <= 2;
+        }
+        return true;
     }
 
     private static boolean isCandySpawnSurface(BlockState state) {
@@ -554,6 +597,8 @@ public final class CCForgeEvents {
             || state.is(CCBlocks.STRAWBERRY_ICE_CREAM.get())
             || state.is(CCBlocks.MINT_ICE_CREAM.get())
             || state.is(CCBlocks.BLUEBERRY_ICE_CREAM.get())
+            || state.is(CCBlocks.CHOCOLATE_ICE_CREAM.get())
+            || state.is(CCBlocks.BANANA_ICE_CREAM.get())
             || state.is(CCBlocks.MARSHMALLOW_PLANKS.get())
             || state.is(CCBlocks.MARSHMALLOW_LOG.get())
             || state.is(CCBlocks.MARSHMALLOW_LOG_DARK.get())
@@ -579,9 +624,7 @@ public final class CCForgeEvents {
     }
 
     private static boolean isCandyLeafSurface(BlockState state) {
-        return state.is(CCBlocks.CANDY_LEAVE.get())
-            || state.is(CCBlocks.CANDY_LEAVE2.get())
-            || state.is(CCBlocks.CANDY_LEAVES.get())
+        return state.is(CCBlocks.CANDY_LEAVES.get())
             || state.is(CCBlocks.CANDY_LEAVES_DARK.get())
             || state.is(CCBlocks.CANDY_LEAVES_LIGHT.get())
             || state.is(CCBlocks.CANDY_LEAVES_CHERRY.get())

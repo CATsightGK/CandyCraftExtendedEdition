@@ -21,19 +21,26 @@ import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.entity.npc.VillagerData;
 import net.minecraft.world.entity.npc.VillagerProfession;
 import net.minecraft.world.entity.npc.VillagerType;
-import net.minecraft.world.entity.ai.goal.AvoidEntityGoal;
+import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
 import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.ai.goal.TradeWithPlayerGoal;
 import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
 import net.minecraft.world.entity.ai.goal.LookAtTradingPlayerGoal;
+import net.minecraft.world.entity.ai.memory.MemoryModuleType;
+import net.minecraft.world.entity.ai.util.DefaultRandomPos;
+import net.minecraft.world.level.pathfinder.Path;
+import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.trading.MerchantOffer;
 import net.minecraft.world.item.trading.MerchantOffers;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
+import net.minecraft.world.phys.Vec3;
+
+import java.util.EnumSet;
 
 public class GingerbreadManEntity extends Villager {
     public static final int BLACKSMITH = 0;
@@ -42,6 +49,7 @@ public class GingerbreadManEntity extends Villager {
     public static final int ELDER = 3;
     private static final int MAX_TRADE_USES = 999999;
     private static final EntityDataAccessor<Integer> PROFESSION_VARIANT = SynchedEntityData.defineId(GingerbreadManEntity.class, EntityDataSerializers.INT);
+    private GingerbreadAvoidPlayerGoal avoidPlayerGoal;
 
     public GingerbreadManEntity(EntityType<? extends GingerbreadManEntity> type, Level level) {
         super(type, level);
@@ -54,7 +62,8 @@ public class GingerbreadManEntity extends Villager {
         goalSelector.addGoal(0, new FloatGoal(this));
         goalSelector.addGoal(1, new TradeWithPlayerGoal(this));
         goalSelector.addGoal(1, new LookAtTradingPlayerGoal(this));
-        goalSelector.addGoal(2, new GingerbreadAvoidPlayerGoal(this));
+        avoidPlayerGoal = new GingerbreadAvoidPlayerGoal(this);
+        goalSelector.addGoal(2, avoidPlayerGoal);
         goalSelector.addGoal(6, new WaterAvoidingRandomStrollGoal(this, 0.25D));
         goalSelector.addGoal(8, new LookAtPlayerGoal(this, Player.class, 3.0F, 1.0F));
         goalSelector.addGoal(8, new LookAtPlayerGoal(this, GingerbreadManEntity.class, 5.0F, 0.02F));
@@ -109,11 +118,20 @@ public class GingerbreadManEntity extends Villager {
         ensureGingerbreadVillagerData();
         super.customServerAiStep();
         ensureGingerbreadVillagerData();
+        if (avoidPlayerGoal != null && avoidPlayerGoal.isActive()) {
+            getBrain().eraseMemory(MemoryModuleType.WALK_TARGET);
+            avoidPlayerGoal.resumeAfterBrainTick();
+        }
     }
 
     private boolean shouldAvoidPlayer(Player player) {
         return getGingerProfession() != ELDER && !isTrading() && !player.isSpectator()
             && !EmblemHelper.has(player, CCItems.GINGERBREAD_EMBLEM.get());
+    }
+
+    @Override
+    public float getVoicePitch() {
+        return (getRandom().nextFloat() - getRandom().nextFloat()) * 0.2F + 0.2F;
     }
 
     @Override
@@ -298,28 +316,92 @@ public class GingerbreadManEntity extends Villager {
         return Component.translatable(key);
     }
 
-    private static final class GingerbreadAvoidPlayerGoal extends AvoidEntityGoal<Player> {
+    private static final class GingerbreadAvoidPlayerGoal extends Goal {
         private final GingerbreadManEntity gingerbread;
+        private final PathNavigation navigation;
+        @Nullable
+        private Player threat;
+        @Nullable
+        private Path escapePath;
+        private boolean active;
 
         private GingerbreadAvoidPlayerGoal(GingerbreadManEntity gingerbread) {
-            super(gingerbread, Player.class, player -> player instanceof Player target && gingerbread.shouldAvoidPlayer(target), 16.0F, 0.8D, 1.33D, player -> true);
             this.gingerbread = gingerbread;
+            this.navigation = gingerbread.getNavigation();
+            setFlags(EnumSet.of(Flag.MOVE));
+        }
+
+        @Override
+        public boolean canUse() {
+            Player nearest = gingerbread.level().getNearestPlayer(gingerbread, 16.0D);
+            if (nearest == null || !gingerbread.shouldAvoidPlayer(nearest)) {
+                return false;
+            }
+
+            Vec3 escape = DefaultRandomPos.getPosAway(gingerbread, 16, 7, nearest.position());
+            if (escape == null || nearest.distanceToSqr(escape) < nearest.distanceToSqr(gingerbread)) {
+                return false;
+            }
+
+            Path path = navigation.createPath(escape.x, escape.y, escape.z, 0);
+            if (path == null) {
+                return false;
+            }
+            threat = nearest;
+            escapePath = path;
+            return true;
+        }
+
+        @Override
+        public boolean canContinueToUse() {
+            return active && threat != null && gingerbread.shouldAvoidPlayer(threat) && !navigation.isDone();
+        }
+
+        @Override
+        public void start() {
+            active = true;
+            if (escapePath != null) {
+                navigation.moveTo(escapePath, speed());
+            }
+        }
+
+        @Override
+        public void stop() {
+            active = false;
+            threat = null;
+            escapePath = null;
+            navigation.stop();
         }
 
         @Override
         public void tick() {
-            super.tick();
-            Player threat = getNearestPlayer();
-            if (threat != null && gingerbread.distanceToSqr(threat) < 49.0D) {
-                gingerbread.getNavigation().setSpeedModifier(1.33D);
-            } else {
-                gingerbread.getNavigation().setSpeedModifier(0.8D);
+            if (threat == null || !gingerbread.shouldAvoidPlayer(threat)) {
+                stop();
+                return;
             }
+            navigation.setSpeedModifier(speed());
         }
 
-        @Nullable
-        private Player getNearestPlayer() {
-            return gingerbread.level().getNearestPlayer(gingerbread, 16.0D);
+        private boolean isActive() {
+            return active;
+        }
+
+        private void resumeAfterBrainTick() {
+            if (!active || threat == null) {
+                return;
+            }
+            if (!gingerbread.shouldAvoidPlayer(threat)) {
+                stop();
+                return;
+            }
+            if (escapePath == null || escapePath.isDone()) {
+                return;
+            }
+            navigation.moveTo(escapePath, speed());
+        }
+
+        private double speed() {
+            return threat != null && gingerbread.distanceToSqr(threat) < 49.0D ? 1.33D : 0.8D;
         }
     }
 }

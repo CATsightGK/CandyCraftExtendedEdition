@@ -80,11 +80,9 @@ public class CaramelCrossbowItem extends CrossbowItem {
         int multishot = EnchantmentHelper.getItemEnchantmentLevel(Enchantments.MULTISHOT, crossbow);
         int projectileCount = multishot == 0 ? 1 : 3;
         boolean creative = entity instanceof Player player && player.getAbilities().instabuild;
-        ItemStack ammo = entity.getProjectile(crossbow);
-
-        if (ammo.isEmpty() && creative) {
-            ammo = new ItemStack(CCItems.HONEY_BOLT.get());
-        }
+        ItemStack ammo = creative
+            ? new ItemStack(CCItems.HONEY_BOLT.get())
+            : entity.getProjectile(crossbow);
 
         if (ammo.isEmpty() || !ammo.is(CCItems.HONEY_BOLT.get())) {
             return false;

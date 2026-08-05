@@ -18,7 +18,7 @@
     "apply": { "model": "candycraftmod:block/caramel_pane_round_noside" }
   }, {
     "when": { "east": false },
-    "apply": { "model": "candycraftmod:block/caramel_pane_round_noside" }
+    "apply": { "model": "candycraftmod:block/caramel_pane_round_noside_alt" }
   }, {
     "when": { "south": false },
     "apply": { "model": "candycraftmod:block/caramel_pane_round_noside_alt", "y": 90 }

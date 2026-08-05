@@ -158,6 +158,7 @@ public class JellyWandItem extends Item {
 
     @Override
     public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tooltip, TooltipFlag flag) {
+        tooltip.add(Component.translatable("tooltip.candycraftmod.jelly_wand.controls").withStyle(ChatFormatting.GRAY));
         tooltip.add(Component.translatable("tooltip.candycraftmod.wand_uses", getUses(stack), MAX_USES).withStyle(ChatFormatting.GRAY));
     }
 

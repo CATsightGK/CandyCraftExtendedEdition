@@ -226,7 +226,10 @@ public class CaramelBeeEntity extends Monster {
 
     @Override
     protected void dropCustomDeathLoot(DamageSource source, int looting, boolean recentlyHit) {
-        spawnAtLocation(CCItems.HONEY_SHARD.get());
+        int count = random.nextInt(3) + random.nextInt(looting + 1);
+        for (int i = 0; i < count; i++) {
+            spawnAtLocation(CCItems.HONEY_SHARD.get());
+        }
     }
 
     @Override
@@ -234,9 +237,7 @@ public class CaramelBeeEntity extends Monster {
     public SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty, MobSpawnType reason,
             @Nullable SpawnGroupData spawnData, @Nullable CompoundTag tag) {
         SpawnGroupData data = super.finalizeSpawn(level, difficulty, reason, spawnData, tag);
-        if (reason != MobSpawnType.COMMAND) {
-            setAngry(true);
-        }
+        setAngry(reason == MobSpawnType.SPAWNER);
         return data;
     }
 

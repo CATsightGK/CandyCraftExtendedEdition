@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    "candycraftmod:cotton_candy_bed_block",
+    "candycraftmod:mint_bed_block",
+    "candycraftmod:banana_seaweed_bed_block",
+    "candycraftmod:chewing_gum_bed_block"
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "type": "candycraftmod:alchemy_mixing",
+  "liquid": "milk",
+  "mixing_time": 400,
+  "sugar_mixing_time": 200,
+  "ingredients": [
+    {
+      "ingredient": {
+        "item": "minecraft:sugar"
+      },
+      "count": 1
+    },
+    {
+      "ingredient": {
+        "item": "minecraft:sugar"
+      },
+      "count": 1
+    },
+    {
+      "ingredient": {
+        "item": "minecraft:sugar"
+      },
+      "count": 1
+    },
+    {
+      "ingredient": {
+        "item": "minecraft:sugar"
+      },
+      "count": 1
+    }
+  ],
+  "result": {
+    "type": "item",
+    "count": 1,
+    "item": "candycraftmod:butter"
+  }
+}

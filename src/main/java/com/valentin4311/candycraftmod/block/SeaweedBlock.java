@@ -1,7 +1,6 @@
 package com.valentin4311.candycraftmod.block;
 
 import com.valentin4311.candycraftmod.registry.CCBlocks;
-import com.valentin4311.candycraftmod.registry.CCBlocks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.tags.FluidTags;

@@ -1,8 +1,8 @@
 {
-  "has_precipitation": true,
+  "has_precipitation": false,
   "temperature": 0.9,
   "downfall": 0.8,
-  "creature_spawn_probability": 0.1,
+  "creature_spawn_probability": 0.1764706,
   "effects": {
     "sky_color": 16776684,
     "fog_color": 16767130,
@@ -22,14 +22,20 @@
       {
         "type": "candycraftmod:gummy_mouse",
         "weight": 85,
-        "minCount": 2,
-        "maxCount": 5
+        "minCount": 3,
+        "maxCount": 6
       },
       {
         "type": "candycraftmod:gummy_bear",
         "weight": 45,
+        "minCount": 2,
+        "maxCount": 3
+      },
+      {
+        "type": "candycraftmod:cotton_candy_sheep",
+        "weight": 1,
         "minCount": 1,
-        "maxCount": 2
+        "maxCount": 1
       }
     ],
     "monster": [
@@ -52,7 +58,7 @@
         "maxCount": 4
       }
     ],
-    "water_creature": [
+    "water_ambient": [
       {
         "type": "candycraftmod:candy_fish",
         "weight": 50,
@@ -95,7 +101,6 @@
       "candycraftmod:ore_sweetscape_dark_brownie_cake_roll_x",
       "candycraftmod:ore_sweetscape_dark_brownie_cake_roll_y",
       "candycraftmod:ore_sweetscape_dark_brownie_cake_roll_z",
-      "candycraftmod:ore_sweetscape_cake_block",
       "candycraftmod:ore_sweetscape_sugar_cookie",
       "candycraftmod:ore_sweetscape_teleporter",
       "candycraftmod:ore_sweetscape_sugar_sand"

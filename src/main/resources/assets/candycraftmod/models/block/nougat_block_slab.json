@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/slab",
+  "textures": {
+    "bottom": "candycraftmod:block/nougat_block",
+    "side": "candycraftmod:block/nougat_block",
+    "top": "candycraftmod:block/nougat_block"
+  }
+}

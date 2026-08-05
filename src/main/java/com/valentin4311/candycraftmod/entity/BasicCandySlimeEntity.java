@@ -67,10 +67,14 @@ public class BasicCandySlimeEntity extends Slime {
     private static final int PEZ_ROLL_TOTAL_TICKS = PEZ_ROLLING_TICKS + PEZ_ROLL_ATTACH_WAIT_TICKS + PEZ_ROLL_ATTACK_TICKS + PEZ_ROLL_REST_TICKS;
     private static final int PEZ_OPEN_ROLL_DIRECTION_TICKS = 40;
     private static final double PEZ_ENCLOSURE_PROBE_DISTANCE = 32.0D;
-    private static final double PEZ_ROLL_ANIMATION_SECONDS = 0.50251D;
+    private static final int PEZ_ROLL_ACCELERATION_TICKS = 20;
+    private static final int PEZ_ROLL_DECELERATION_TICKS = 30;
+    private static final double PEZ_ROLL_ANIMATION_SECONDS = 0.9D;
     private static final double PEZ_ROLL_MIN_WAYPOINT_DISTANCE = 18.0D;
     private static final double PEZ_ROLL_MAX_WAYPOINT_DISTANCE = 56.0D;
     private static final int BOSS_LOST_TARGET_TICKS = 200;
+    private static final int BOSS_JELLY_BALL_MIN_DROP = 16;
+    private static final int BOSS_JELLY_BALL_MAX_DROP = 48;
     private static final double BOSS_TARGET_RANGE = 64.0D;
     private static final EntityDataAccessor<Boolean> BOSS_AWAKE = SynchedEntityData.defineId(BasicCandySlimeEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Integer> JELLY_QUEEN_MODE = SynchedEntityData.defineId(BasicCandySlimeEntity.class, EntityDataSerializers.INT);
@@ -393,11 +397,20 @@ public class BasicCandySlimeEntity extends Slime {
             spawnAtLocation(CCItems.RECORD_1.get());
             spawnAtLocation(CCItems.JELLY_KEY.get());
             spawnAtLocation(CCItems.JELLY_EMBLEM.get());
+            spawnAtLocation(CCItems.STRAWBERRY_QUEEN_JELLY_BALL.get(), bossJellyBallDropCount());
         } else if (isPezJelly() && getSize() <= 1) {
             spawnAtLocation(CCItems.JELLY_SENTRY_KEY.get());
-        } else if (isKingSlime() && getSize() <= 1) {
-            spawnAtLocation(CCItems.JELLY_BOSS_KEY.get());
+            spawnAtLocation(CCItems.PEZ_JELLY_BALL.get(), bossJellyBallDropCount());
+        } else if (isKingSlime()) {
+            if (getSize() <= 1) {
+                spawnAtLocation(CCItems.JELLY_BOSS_KEY.get());
+            }
+            spawnAtLocation(CCItems.CARAMEL_KING_JELLY_BALL.get(), bossJellyBallDropCount());
         }
+    }
+
+    private int bossJellyBallDropCount() {
+        return BOSS_JELLY_BALL_MIN_DROP + random.nextInt(BOSS_JELLY_BALL_MAX_DROP - BOSS_JELLY_BALL_MIN_DROP + 1);
     }
 
     @Override
@@ -488,11 +501,13 @@ public class BasicCandySlimeEntity extends Slime {
         super.setSize(size, resetHealth);
         if (getAttribute(Attributes.MAX_HEALTH) != null) {
             if (isKingSlime()) {
+                xpReward = 800;
                 getAttribute(Attributes.MAX_HEALTH).setBaseValue(800.0D);
                 if (resetHealth) {
                     setHealth(getMaxHealth());
                 }
             } else if (isJellyQueen()) {
+                xpReward = 500;
                 getAttribute(Attributes.MAX_HEALTH).setBaseValue(300.0D);
                 if (resetHealth) {
                     setHealth(getMaxHealth());
@@ -1109,8 +1124,8 @@ public class BasicCandySlimeEntity extends Slime {
             pezOpenRollHitTargets.clear();
         }
         Vec3 rollDirection = pezRollTangent;
-        double acceleration = Mth.clamp((elapsed + 1) / 8.0D, 0.38D, 1.0D);
-        double speed = Mth.clamp(pezRollMatchedSpeed() * 0.78D, 0.95D, 1.45D) * acceleration;
+        double speed = Mth.clamp(pezRollMatchedSpeed() * 0.78D, 0.62D, 1.05D)
+            * pezRollSpeedEnvelope(elapsed);
         double vertical = getDeltaMovement().y;
         if (horizontalCollision && onGround()) {
             vertical = 0.36D;
@@ -1142,7 +1157,7 @@ public class BasicCandySlimeEntity extends Slime {
             if (target == this || !pezOpenRollHitTargets.add(target.getId())) {
                 continue;
             }
-            if (target.hurt(damageSources().mobAttack(this), Math.max(12.0F, getSize() * 1.5F))) {
+            if (target.hurt(damageSources().mobAttack(this), pezSourceContactDamage())) {
                 Vec3 push = rollDirection.lengthSqr() > 1.0E-4D ? rollDirection.normalize() : target.position().subtract(position()).normalize();
                 target.push(push.x * 0.9D, 0.3D, push.z * 0.9D);
                 target.hurtMarked = true;
@@ -1196,7 +1211,7 @@ public class BasicCandySlimeEntity extends Slime {
         setNoGravity(face != Direction.UP);
         Vec3 normal = Vec3.atLowerCornerOf(face.getNormal());
         Vec3 targetTangent = Vec3.atLowerCornerOf(rollDirection.getNormal());
-        double speed = pezRollMatchedSpeed();
+        double speed = pezRollMatchedSpeed() * pezRollSpeedEnvelope(elapsed);
         if (!canPezSlide(face, targetTangent)) {
             Direction climbFace = findPezClimbFace(face, rollDirection, speed);
             if (climbFace != null && climbFace != face) {
@@ -1284,6 +1299,13 @@ public class BasicCandySlimeEntity extends Slime {
         double cycleTicks = PEZ_ROLL_ANIMATION_SECONDS * 20.0D;
         double circumference = Math.max(0.25D, getBbWidth()) * Math.PI;
         return circumference / cycleTicks;
+    }
+
+    private static double pezRollSpeedEnvelope(int elapsed) {
+        float acceleration = smootherStep((elapsed + 1.0F) / PEZ_ROLL_ACCELERATION_TICKS);
+        float remaining = PEZ_ROLLING_TICKS - elapsed;
+        float deceleration = smootherStep(remaining / PEZ_ROLL_DECELERATION_TICKS);
+        return acceleration * deceleration;
     }
 
     private void alignPezBodyToRoll(Vec3 direction) {
@@ -1608,7 +1630,7 @@ public class BasicCandySlimeEntity extends Slime {
                 setPezRollTicks(Math.min(getPezRollTicks(), PEZ_ROLL_REST_TICKS));
                 continue;
             }
-            if (target.hurt(damageSources().mobAttack(this), getSize() * 2.35F)) {
+            if (target.hurt(damageSources().mobAttack(this), pezSourceContactDamage())) {
                 Vec3 velocity = getDeltaMovement();
                 double horizontal = Math.max(0.1D, velocity.horizontalDistance());
                 target.push(velocity.x / horizontal * 1.35D, 0.58D, velocity.z / horizontal * 1.35D);
@@ -1636,7 +1658,7 @@ public class BasicCandySlimeEntity extends Slime {
                 contact = tangent;
             }
             spawnPezRollBreakParticles(contact.normalize());
-            if (target.hurt(damageSources().mobAttack(this), getSize() * 0.9F)) {
+            if (target.hurt(damageSources().mobAttack(this), pezSourceContactDamage() * 0.5F)) {
                 target.push(tangent.x * 0.65D, 0.22D, tangent.z * 0.65D);
                 pezRollBrushDamageCooldown = 4;
             }
@@ -1664,6 +1686,10 @@ public class BasicCandySlimeEntity extends Slime {
             serverLevel.sendParticles(ParticleTypes.FALLING_WATER, getX(), getY() + getBbHeight() * 0.75D, getZ(),
                 10, getBbWidth() * 0.35D, getBbHeight() * 0.25D, getBbWidth() * 0.35D, 0.04D);
         }
+    }
+
+    private float pezSourceContactDamage() {
+        return getSize();
     }
 
     private static float smootherStep(float value) {
@@ -1949,10 +1975,10 @@ public class BasicCandySlimeEntity extends Slime {
         setDeltaMovement(0.0D, getDeltaMovement().y, 0.0D);
         getNavigation().stop();
         setJumping(false);
-        if (tickCount % 20 == 0) {
-            heal(5.0F);
-        }
         if (!isBossAwake()) {
+            if (tickCount % 20 == 0) {
+                heal(5.0F);
+            }
             if (isJellyQueen()) {
                 setJellyQueenMode(JELLY_QUEEN_SLEEP_MODE);
             }

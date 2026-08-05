@@ -1,0 +1,6 @@
+{
+  "parent": "candycraftmod:block/candy_bed_foot_base",
+  "textures": {
+    "bed": "candycraftmod:block/candy_beds/chewing_gum_bed"
+  }
+}

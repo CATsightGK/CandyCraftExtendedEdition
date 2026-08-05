@@ -76,13 +76,13 @@ public class MarshmallowChestRenderer implements BlockEntityRenderer<Marshmallow
             renderAnimatedGroup(poseStack, consumer, SINGLE_LID, SINGLE_LOCK,
                 8, 10, 16, null, openness, packedLight, packedOverlay);
         } else if (type == ChestType.RIGHT) {
-            renderBox(poseStack, consumer, DOUBLE_BODY_VISUAL_LEFT, Direction.EAST, true, packedLight, packedOverlay);
-            renderAnimatedGroup(poseStack, consumer, DOUBLE_LID_VISUAL_LEFT, DOUBLE_LOCK_VISUAL_LEFT,
-                16, 10, 15, Direction.EAST, openness, packedLight, packedOverlay);
-        } else {
             renderBox(poseStack, consumer, DOUBLE_BODY_VISUAL_RIGHT, Direction.WEST, true, packedLight, packedOverlay);
             renderAnimatedGroup(poseStack, consumer, DOUBLE_LID_VISUAL_RIGHT, DOUBLE_LOCK_VISUAL_RIGHT,
                 0, 10, 15, Direction.WEST, openness, packedLight, packedOverlay);
+        } else {
+            renderBox(poseStack, consumer, DOUBLE_BODY_VISUAL_LEFT, Direction.EAST, true, packedLight, packedOverlay);
+            renderAnimatedGroup(poseStack, consumer, DOUBLE_LID_VISUAL_LEFT, DOUBLE_LOCK_VISUAL_LEFT,
+                16, 10, 15, Direction.EAST, openness, packedLight, packedOverlay);
         }
         poseStack.popPose();
     }

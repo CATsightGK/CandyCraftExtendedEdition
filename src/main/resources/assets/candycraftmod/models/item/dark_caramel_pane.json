@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "candycraftmod:block/dark_caramel_glass_0"
+  }
+}

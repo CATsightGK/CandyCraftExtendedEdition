@@ -1,6 +1,10 @@
 {
     "variants": {
-        "dungeon=jelly": { "model": "candycraftmod:block/block_teleporter_0" },
-        "dungeon=suguard": { "model": "candycraftmod:block/block_teleporter_1" }
+        "dungeon=jelly,role=entry": { "model": "candycraftmod:block/block_teleporter_0" },
+        "dungeon=jelly,role=return": { "model": "candycraftmod:block/block_teleporter_0" },
+        "dungeon=jelly,role=end": { "model": "candycraftmod:block/block_teleporter_0" },
+        "dungeon=suguard,role=entry": { "model": "candycraftmod:block/block_teleporter_1" },
+        "dungeon=suguard,role=return": { "model": "candycraftmod:block/block_teleporter_1" },
+        "dungeon=suguard,role=end": { "model": "candycraftmod:block/block_teleporter_1" }
     }
 }

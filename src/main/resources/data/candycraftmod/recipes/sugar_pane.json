@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "###",
+    "###"
+  ],
+  "key": {
+    "#": {
+      "item": "candycraftmod:sugar_glass"
+    }
+  },
+  "result": {
+    "item": "candycraftmod:sugar_pane",
+    "count": 16
+  }
+}

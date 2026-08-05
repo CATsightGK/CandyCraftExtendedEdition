@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CandyCraft 箱子战利品表编辑器</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">C</span>
+        <div>
+          <h1>箱子战利品表</h1>
+          <p>CandyCraft 世界生成工具</p>
+        </div>
+      </div>
+      <div class="top-actions">
+        <span id="saveState" class="save-state">已同步</span>
+        <button id="duplicateButton" class="button secondary" type="button" title="复制当前战利品表">复制</button>
+        <button id="deleteButton" class="icon-button danger" type="button" title="删除当前战利品表" aria-label="删除当前战利品表">×</button>
+        <button id="saveButton" class="button primary" type="button">保存</button>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <aside class="sidebar">
+        <div class="sidebar-head">
+          <div>
+            <strong>战利品表</strong>
+            <span id="tableCount" class="count">0</span>
+          </div>
+          <button id="newButton" class="icon-button add" type="button" title="新建战利品表" aria-label="新建战利品表">+</button>
+        </div>
+        <label class="search-box">
+          <span aria-hidden="true">⌕</span>
+          <input id="tableSearch" type="search" placeholder="搜索 ID 或物品">
+        </label>
+        <nav id="tableList" class="table-list" aria-label="箱子战利品表列表"></nav>
+        <div class="workspace-path">
+          <span>工程</span>
+          <code id="workspacePath"></code>
+        </div>
+      </aside>
+
+      <section class="editor-pane">
+        <div class="editor-heading">
+          <label class="id-field">
+            <span>战利品表 ID</span>
+            <div><span>candycraftmod:chests/</span><input id="tableId" spellcheck="false"></div>
+          </label>
+          <div class="view-tabs" role="tablist">
+            <button class="active" data-view="visual" type="button">可视化</button>
+            <button data-view="json" type="button">JSON</button>
+          </div>
+        </div>
+
+        <div id="visualView" class="view active">
+          <div class="section-bar">
+            <div>
+              <h2>奖池</h2>
+              <span id="poolSummary"></span>
+            </div>
+            <button id="addPoolButton" class="button secondary" type="button">+ 添加奖池</button>
+          </div>
+          <div id="poolList" class="pool-list"></div>
+        </div>
+
+        <div id="jsonView" class="view json-view">
+          <div class="json-toolbar">
+            <span>直接编辑完整 Minecraft 战利品表 JSON</span>
+            <button id="applyJsonButton" class="button secondary" type="button">应用 JSON</button>
+          </div>
+          <textarea id="jsonEditor" spellcheck="false"></textarea>
+        </div>
+      </section>
+
+      <aside class="inspector">
+        <section class="inspector-section probability-section">
+          <div class="inspector-title">
+            <h2>生成概率</h2>
+            <span>幸运值 0</span>
+          </div>
+          <p class="calculation-note">整箱概率按各奖池抽取次数计算；期望数量包含堆叠数量。</p>
+          <div id="probabilityList" class="probability-list"></div>
+        </section>
+        <section class="inspector-section references-section">
+          <div class="inspector-title">
+            <h2>结构引用</h2>
+            <span id="referenceCount">0 处</span>
+          </div>
+          <div id="referenceList" class="reference-list"></div>
+        </section>
+      </aside>
+    </main>
+  </div>
+
+  <div id="itemPicker" class="picker" hidden>
+    <div class="picker-head">
+      <strong>选择物品</strong>
+      <button id="closePicker" class="icon-button" type="button" aria-label="关闭物品选择器">×</button>
+    </div>
+    <input id="itemSearch" type="search" placeholder="搜索中文名或资源 ID">
+    <div id="itemOptions" class="item-options"></div>
+  </div>
+  <div id="pickerBackdrop" class="picker-backdrop" hidden></div>
+  <div id="toast" class="toast" role="status"></div>
+  <script src="/app.js"></script>
+</body>
+</html>

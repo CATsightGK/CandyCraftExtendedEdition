@@ -1,7 +1,7 @@
 {
   "display": {
     "icon": {
-      "item": "candycraftmod:suguard_boss_key"
+      "item": "candycraftmod:suguard_key"
     },
     "title": {
       "translate": "advancements.candycraft.kill_suguard_boss.title"
@@ -9,7 +9,10 @@
     "description": {
       "translate": "advancements.candycraft.kill_suguard_boss.desc"
     },
-    "frame": "goal"
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
   },
   "parent": "candycraftmod:craft_honeycomb_sword",
   "criteria": {

@@ -1,0 +1,10 @@
+{
+  "replace": false,
+  "values": [
+    "candycraftmod:sugar_plains",
+    "candycraftmod:sugar_mountains",
+    "candycraftmod:sugar_forest",
+    "candycraftmod:sugar_enchanted_forest",
+    "candycraftmod:sugar_cold_forest"
+  ]
+}

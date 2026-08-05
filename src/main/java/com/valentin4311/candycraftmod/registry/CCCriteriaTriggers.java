@@ -15,6 +15,7 @@ public final class CCCriteriaTriggers {
     public static final CandyTrigger HEAL_CANDY_WOLF = register("heal_candy_wolf");
     public static final CandyTrigger STALL_CANDY_CREEPER = register("stall_candy_creeper");
     public static final CandyTrigger TAME_CANDY_WOLF = register("tame_candy_wolf");
+    public static final CandyTrigger THROW_FORK = register("throw_fork");
 
     private CCCriteriaTriggers() {
     }

@@ -39,18 +39,6 @@ public final class CCCreativeTabs {
         })
         .build());
 
-    public static final RegistryObject<CreativeModeTab> FOOD = TABS.register("food", () -> CreativeModeTab.builder()
-        .title(Component.translatable("itemGroup.candycraftmod.food"))
-        .icon(() -> new ItemStack(CCItems.CANDIED_CHERRY.get()))
-        .displayItems((parameters, output) -> {
-            if (acceptOrderedTab("food", output)) {
-                return;
-            }
-            CCItems.PORT_ITEMS.forEach(item -> output.accept(item.get()));
-            CCItems.SIMPLE_ITEMS.forEach(item -> output.accept(item.get()));
-        })
-        .build());
-
     public static final RegistryObject<CreativeModeTab> TOOLS_ARMOR = TABS.register("tools_armor", () -> CreativeModeTab.builder()
         .title(Component.translatable("itemGroup.candycraftmod.tools_armor"))
         .icon(() -> new ItemStack(CCItems.HONEY_SWORD.get()))
@@ -70,6 +58,7 @@ public final class CCCreativeTabs {
                 return;
             }
             CCItems.PORT_ITEMS.forEach(item -> output.accept(item.get()));
+            CCItems.SIMPLE_ITEMS.forEach(item -> output.accept(item.get()));
         })
         .build());
 

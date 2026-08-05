@@ -11,7 +11,9 @@
     },
     "background": "candycraftmod:textures/block/chocolate_stone.png",
     "show_toast": true,
-    "announce_to_chat": false
+    "announce_to_chat": false,
+    "frame": "task",
+    "hidden": false
   },
   "criteria": {
     "sugar_block": {

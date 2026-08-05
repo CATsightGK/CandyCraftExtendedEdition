@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": ["##", "##"],
+  "key": {
+    "#": { "item": "candycraftmod:pink_crystallized_sugar" }
+  },
+  "result": {
+    "item": "candycraftmod:smooth_pink_sugar",
+    "count": 3
+  }
+}

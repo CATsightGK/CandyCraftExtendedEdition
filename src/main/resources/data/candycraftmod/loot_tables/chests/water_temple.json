@@ -66,7 +66,7 @@
         {
           "type": "minecraft:item",
           "name": "candycraftmod:water_mask",
-          "weight": 2
+          "weight": 1
         },
         {
           "type": "minecraft:item",
@@ -76,7 +76,7 @@
         {
           "type": "minecraft:item",
           "name": "candycraftmod:caramel_bucket",
-          "weight": 1
+          "weight": 2
         }
       ]
     }

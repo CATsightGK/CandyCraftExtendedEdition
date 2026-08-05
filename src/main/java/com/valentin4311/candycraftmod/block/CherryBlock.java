@@ -92,9 +92,7 @@ public class CherryBlock extends Block {
     }
 
     public static boolean isValidLeafSupport(BlockState state) {
-        return state.is(CCBlocks.CANDY_LEAVE.get())
-            || state.is(CCBlocks.CANDY_LEAVE2.get())
-            || state.is(CCBlocks.CANDY_LEAVES.get())
+        return state.is(CCBlocks.CANDY_LEAVES.get())
             || state.is(CCBlocks.CANDY_LEAVES_DARK.get())
             || state.is(CCBlocks.CANDY_LEAVES_LIGHT.get())
             || state.is(CCBlocks.CANDY_LEAVES_CHERRY.get())

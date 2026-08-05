@@ -38,10 +38,27 @@ public class HoneyArrowEntity extends AbstractArrow {
     }
 
     @Override
+    public void tick() {
+        super.tick();
+        if (!inGround && !isInWater() && isInFluidType()) {
+            setDeltaMovement(getDeltaMovement().scale(0.6D));
+        }
+    }
+
+    @Override
+    protected float getWaterInertia() {
+        return 0.6F;
+    }
+
+    @Override
     protected void doPostHurtEffects(LivingEntity living) {
         super.doPostHurtEffects(living);
         if (slow) {
-            living.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 5 * 20, 0), getEffectSource());
+            living.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 15 * 20, 1), getEffectSource());
+        }
+        if (!level().isClientSide && getPierceLevel() <= 0 && living instanceof CandyStuckProjectileCarrier carrier) {
+            living.setArrowCount(Math.max(0, living.getArrowCount() - 1));
+            carrier.candycraft$setHoneyArrowCount(carrier.candycraft$getHoneyArrowCount() + 1);
         }
     }
 

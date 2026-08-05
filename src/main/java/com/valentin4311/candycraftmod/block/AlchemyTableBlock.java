@@ -5,11 +5,13 @@ import com.valentin4311.candycraftmod.block.entity.AlchemyLiquidKind;
 import com.valentin4311.candycraftmod.alchemy.AlchemyMixing;
 import com.valentin4311.candycraftmod.registry.CCBlockEntities;
 import com.valentin4311.candycraftmod.registry.CCItems;
-import com.valentin4311.candycraftmod.registry.CCItems;
+import com.valentin4311.candycraftmod.registry.CCParticleTypes;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.BlockGetter;
@@ -25,13 +27,13 @@ import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.util.RandomSource;
-import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import org.joml.Vector3f;
 
 public class AlchemyTableBlock extends BaseEntityBlock implements EntityBlock {
+    private static final double LIQUID_BOTTOM_Y = 3.05D / 16.0D;
+    private static final double LIQUID_TOP_Y = 12.50D / 16.0D;
     private static final VoxelShape SHAPE = Shapes.or(
         Block.box(0.0D, 0.0D, 0.0D, 4.0D, 16.0D, 4.0D),
         Block.box(12.0D, 0.0D, 0.0D, 16.0D, 16.0D, 4.0D),
@@ -94,7 +96,7 @@ public class AlchemyTableBlock extends BaseEntityBlock implements EntityBlock {
             return InteractionResult.sidedSuccess(level.isClientSide);
         }
 
-        if (!heldItem.isEmpty() && blockEntity.isTopFilled() && AlchemyMixing.isValidIngredient(heldItem)) {
+        if (!heldItem.isEmpty() && blockEntity.isTopFilled() && AlchemyMixing.isValidIngredient(level, heldItem, blockEntity.getLiquidKind())) {
             if (!level.isClientSide && blockEntity.addIngredient(heldItem)) {
                 if (heldItem.is(CCItems.CARAMEL_BUCKET.get())) {
                     player.setItemInHand(hand, new ItemStack(Items.BUCKET));
@@ -129,6 +131,37 @@ public class AlchemyTableBlock extends BaseEntityBlock implements EntityBlock {
     }
 
     @Override
+    public int getLightEmission(BlockState state, BlockGetter level, BlockPos pos) {
+        if (level.getBlockEntity(pos) instanceof AlchemyTableBlockEntity blockEntity) {
+            return blockEntity.getLiquidKind().lightLevel();
+        }
+        return 0;
+    }
+
+    @Override
+    public void entityInside(BlockState state, Level level, BlockPos pos, Entity entity) {
+        super.entityInside(state, level, pos, entity);
+        applyLiquidHeat(level, pos, entity);
+    }
+
+    @Override
+    public void stepOn(Level level, BlockPos pos, BlockState state, Entity entity) {
+        super.stepOn(level, pos, state, entity);
+        applyLiquidHeat(level, pos, entity);
+    }
+
+    private static void applyLiquidHeat(Level level, BlockPos pos, Entity entity) {
+        if (level.isClientSide || !(entity instanceof LivingEntity living)
+                || !(level.getBlockEntity(pos) instanceof AlchemyTableBlockEntity blockEntity)) {
+            return;
+        }
+        int temperature = blockEntity.getLiquidKind().temperature();
+        if (temperature >= 900) {
+            living.setSecondsOnFire(temperature >= 1200 ? 5 : 3);
+        }
+    }
+
+    @Override
     public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
         return new AlchemyTableBlockEntity(pos, state);
     }
@@ -148,20 +181,35 @@ public class AlchemyTableBlock extends BaseEntityBlock implements EntityBlock {
             return;
         }
 
-        boolean fast = blockEntity.isFastMixing();
-        if (random.nextInt(fast ? 2 : 5) != 0) {
+        float renderTime = level.getGameTime();
+        float mixerSpeed = blockEntity.getClientMixerSpeed(renderTime);
+        float speedFactor = Math.min(2.625F, mixerSpeed / 32.0F);
+        if (speedFactor < 0.05F || random.nextFloat() > Math.min(0.98F, 0.76F + speedFactor * 0.08F)) {
             return;
         }
 
-        double angle = random.nextDouble() * Math.PI * 2.0D;
-        double radius = 0.08D + random.nextDouble() * (fast ? 0.32D : 0.23D);
-        double motion = (fast ? 0.03D : 0.015D) + random.nextDouble() * 0.025D;
-        double x = pos.getX() + 0.5D + Math.cos(angle) * radius;
-        double y = pos.getY() + 0.58D + random.nextDouble() * 0.12D;
-        double z = pos.getZ() + 0.5D + Math.sin(angle) * radius;
-        float[] color = particleColor(blockEntity.getLiquidKind());
-        level.addParticle(new DustParticleOptions(new Vector3f(color[0], color[1], color[2]), fast ? 0.9F : 0.65F),
-            x, y, z, Math.cos(angle) * motion, 0.025D + random.nextDouble() * 0.025D, Math.sin(angle) * motion);
+        double surfaceY = pos.getY() + LIQUID_BOTTOM_Y
+            + (LIQUID_TOP_Y - LIQUID_BOTTOM_Y) * blockEntity.getLiquidFillFraction();
+        double mixerAngle = Math.toRadians(blockEntity.getClientMixerAngle(renderTime));
+        int particleCount = 3 + Math.max(2, Math.round(speedFactor * 2.0F));
+        for (int i = 0; i < particleCount; i++) {
+            double angle = mixerAngle + random.nextInt(4) * Math.PI * 0.5D
+                + (random.nextDouble() - 0.5D) * 0.55D;
+            double radius = 0.11D + random.nextDouble() * Math.min(0.25D, 0.15D + speedFactor * 0.04D);
+            double radialX = Math.cos(angle);
+            double radialZ = -Math.sin(angle);
+            double tangentX = -Math.sin(angle);
+            double tangentZ = -Math.cos(angle);
+            double tangentialSpeed = 0.022D + speedFactor * 0.022D + random.nextDouble() * 0.018D;
+            double outwardSpeed = 0.012D + random.nextDouble() * (0.018D + speedFactor * 0.009D);
+            double x = pos.getX() + 0.5D + radialX * radius;
+            double y = surfaceY - 0.006D + random.nextDouble() * 0.04D;
+            double z = pos.getZ() + 0.5D + radialZ * radius;
+            double velocityX = tangentX * tangentialSpeed + radialX * outwardSpeed;
+            double velocityY = 0.065D + random.nextDouble() * (0.065D + speedFactor * 0.025D);
+            double velocityZ = tangentZ * tangentialSpeed + radialZ * outwardSpeed;
+            level.addParticle(CCParticleTypes.ALCHEMY_SPLASH.get(), x, y, z, velocityX, velocityY, velocityZ);
+        }
     }
 
     private static void replaceHeldBucket(Player player, InteractionHand hand) {
@@ -206,19 +254,6 @@ public class AlchemyTableBlock extends BaseEntityBlock implements EntityBlock {
             return AlchemyLiquidKind.CARAMEL;
         }
         return AlchemyLiquidKind.NONE;
-    }
-
-    private static float[] particleColor(AlchemyLiquidKind kind) {
-        return switch (kind) {
-            case GRENADINE -> new float[] { 1.0F, 0.13F, 0.26F };
-            case WATER -> new float[] { 0.25F, 0.55F, 1.0F };
-            case MILK -> new float[] { 0.95F, 0.95F, 0.88F };
-            case CHOCOLATE -> new float[] { 0.45F, 0.20F, 0.08F };
-            case LIQUID_CANDY -> new float[] { 1.0F, 0.32F, 0.66F };
-            case LAVA -> new float[] { 1.0F, 0.32F, 0.02F };
-            case CARAMEL -> new float[] { 0.92F, 0.46F, 0.10F };
-            case NONE -> new float[] { 1.0F, 1.0F, 1.0F };
-        };
     }
 
     private static <E extends BlockEntity, A extends BlockEntity> BlockEntityTicker<A> createTicker(

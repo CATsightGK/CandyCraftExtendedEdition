@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "type=bottom": { "model": "candycraftmod:block/smooth_pink_sugar_slab" },
+    "type=double": { "model": "candycraftmod:block/smooth_pink_sugar" },
+    "type=top": { "model": "candycraftmod:block/smooth_pink_sugar_slab_top" }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "###",
+    "###"
+  ],
+  "key": {
+    "#": {
+      "item": "candycraftmod:dark_caramel_glass"
+    }
+  },
+  "result": {
+    "item": "candycraftmod:dark_caramel_pane",
+    "count": 16
+  }
+}

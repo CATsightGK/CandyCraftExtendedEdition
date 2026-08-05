@@ -1,22 +1,18 @@
 {
-    "replace":  false,
-    "values":  [
-                   "candycraftmod:candy_farmland",
-                   "candycraftmod:flour",
-                   "candycraftmod:ice_cream",
-                   "candycraftmod:ice_cream_double_slab.0",
-                   "candycraftmod:ice_cream_double_slab.1",
-                   "candycraftmod:ice_cream_double_slab.2",
-                   "candycraftmod:ice_cream_double_slab.3",
-                   "candycraftmod:ice_cream_slab.0",
-                   "candycraftmod:ice_cream_slab.1",
-                   "candycraftmod:ice_cream_slab.2",
-                   "candycraftmod:ice_cream_slab.3",
-                   "candycraftmod:ice_cream_stairs.0",
-                   "candycraftmod:ice_cream_stairs.1",
-                   "candycraftmod:ice_cream_stairs.2",
-                   "candycraftmod:ice_cream_stairs.3",
-                   "candycraftmod:pudding",
-                   "candycraftmod:sugar_block"
-               ]
+  "replace": false,
+  "values": [
+    "candycraftmod:candy_farmland",
+    "candycraftmod:flour",
+    "candycraftmod:ice_cream",
+    "candycraftmod:pudding",
+    "candycraftmod:strawberry_filled_pudding_block",
+    "candycraftmod:sugar_block",
+    "candycraftmod:sugar_block_stairs",
+    "candycraftmod:sugar_block_slab",
+    "candycraftmod:sugar_block_wall",
+    "candycraftmod:sugar_brick",
+    "candycraftmod:sugar_brick_stairs",
+    "candycraftmod:sugar_brick_slab",
+    "candycraftmod:sugar_brick_wall"
+  ]
 }

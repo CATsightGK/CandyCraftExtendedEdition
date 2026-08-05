@@ -1,8 +1,6 @@
 {
   "replace": false,
   "values": [
-    "candycraftmod:candy_leave",
-    "candycraftmod:candy_leave2",
     "candycraftmod:candy_leaves",
     "candycraftmod:candy_leaves_dark",
     "candycraftmod:candy_leaves_light",

@@ -1,6 +1,0 @@
-{
-    "textures":  {
-                     "all":  "candycraftmod:block/ice_cream.3"
-                 },
-    "parent":  "minecraft:block/cube_all"
-}

@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "###",
+    "PPP"
+  ],
+  "key": {
+    "#": { "item": "candycraftmod:chewing_gum_block" },
+    "P": { "tag": "candycraftmod:marshmallow_planks" }
+  },
+  "result": { "item": "candycraftmod:chewing_gum_bed_block" }
+}

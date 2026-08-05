@@ -1,10 +1,13 @@
 package com.valentin4311.candycraftmod.client;
 
 import com.valentin4311.candycraftmod.CandyCraft;
+import com.valentin4311.candycraftmod.block.DungeonTeleporterBlock;
 import com.valentin4311.candycraftmod.block.PuddingBlock;
 import com.valentin4311.candycraftmod.client.particle.ChocolateSplashParticle;
 import com.valentin4311.candycraftmod.client.particle.MilkRainDropParticle;
 import com.valentin4311.candycraftmod.client.particle.MilkRainSplashParticle;
+import com.valentin4311.candycraftmod.client.particle.AlchemySplashParticle;
+import com.valentin4311.candycraftmod.client.particle.JellyFragmentParticle;
 import com.valentin4311.candycraftmod.client.model.CandyFishModel;
 import com.valentin4311.candycraftmod.client.model.BeeModel;
 import com.valentin4311.candycraftmod.client.model.BeetleModel;
@@ -54,6 +57,7 @@ import net.minecraft.client.color.block.BlockColors;
 import net.minecraft.client.color.item.ItemColors;
 import net.minecraft.client.renderer.BiomeColors;
 import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.entity.player.PlayerRenderer;
 import net.minecraft.client.renderer.item.ItemProperties;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.RenderType;
@@ -76,6 +80,7 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RegisterDimensionSpecialEffectsEvent;
 import net.minecraftforge.client.event.RegisterColorHandlersEvent;
 import net.minecraftforge.client.event.EntityRenderersEvent;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -95,13 +100,10 @@ public final class CCClient {
     private static final ResourceLocation CANDY_WORLD_EFFECTS = new ResourceLocation(CandyCraft.MODID, "candy_world_effects");
     private static final int CANDY_WORLD_FOG_FALLBACK = 0xEEAABB;
     private static final int CANDY_WORLD_SKY_FALLBACK = 0xFDD8D7;
-    private static final int JELLY_WAND_MODE_FADE_TICKS = 28;
     private static final int CANDY_WORLD_CLIENT_CHUNK_RADIUS = 6;
-    private static String jellyWandModeKey = "";
-    private static int jellyWandModeUntilTick;
-    private static String activeJellyWandModeKey = "";
     private static int portalOverlayTicks;
     private static boolean dungeonLoadingActive;
+    private static boolean dungeonLoadingSuguard;
     private static int dungeonLoadingTimeoutTicks;
     private static boolean candyWorldLoadingActive;
     private static int candyWorldLoadingTimeoutTicks;
@@ -114,7 +116,10 @@ public final class CCClient {
 
     @SubscribeEvent
     public static void setup(FMLClientSetupEvent event) {
+        MinecraftForge.EVENT_BUS.addListener(EmblemBasketClientEvents::onScreenInit);
+        MinecraftForge.EVENT_BUS.addListener(CandyCraftUpdateChecker::onClientTick);
         event.enqueueWork(() -> {
+            com.valentin4311.candycraftmod.registry.CCWoodTypes.values().forEach(net.minecraft.client.renderer.Sheets::addWoodType);
             CCBlocks.CUTOUT_BLOCKS.forEach(block -> ItemBlockRenderTypes.setRenderLayer(block.get(), RenderType.cutoutMipped()));
             CCBlocks.TRANSLUCENT_BLOCKS.forEach(block -> ItemBlockRenderTypes.setRenderLayer(block.get(), RenderType.translucent()));
             ItemBlockRenderTypes.setRenderLayer(CCFluids.SOURCE_CARAMEL.get(), RenderType.translucent());
@@ -139,6 +144,17 @@ public final class CCClient {
         event.registerSpriteSet(CCParticleTypes.CHOCOLATE_SPLASH.get(), ChocolateSplashParticle.Provider::new);
         event.registerSpriteSet(CCParticleTypes.MILK_RAIN_DROP.get(), MilkRainDropParticle.Provider::new);
         event.registerSpriteSet(CCParticleTypes.MILK_RAIN_SPLASH.get(), MilkRainSplashParticle.Provider::new);
+        event.registerSpriteSet(CCParticleTypes.ALCHEMY_SPLASH.get(), AlchemySplashParticle.Provider::new);
+        event.registerSpriteSet(CCParticleTypes.STRAWBERRY_JELLY_FRAGMENT.get(),
+            sprites -> new JellyFragmentParticle.Provider(sprites, 1.0F, 0.47F, 0.63F));
+        event.registerSpriteSet(CCParticleTypes.CARAMEL_JELLY_FRAGMENT.get(),
+            sprites -> new JellyFragmentParticle.Provider(sprites, 0.93F, 0.43F, 0.08F));
+        event.registerSpriteSet(CCParticleTypes.ROYAL_RATIONS_FRAGMENT.get(),
+            sprites -> new JellyFragmentParticle.Provider(sprites, 0.72F, 0.77F, 0.84F));
+        event.registerSpriteSet(CCParticleTypes.LEMON_JELLY_FRAGMENT.get(),
+            sprites -> new JellyFragmentParticle.Provider(sprites, 0.85F, 0.86F, 0.40F));
+        event.registerSpriteSet(CCParticleTypes.MINT_JELLY_FRAGMENT.get(),
+            sprites -> new JellyFragmentParticle.Provider(sprites, 0.54F, 0.90F, 0.80F));
     }
 
     @SubscribeEvent
@@ -231,33 +247,20 @@ public final class CCClient {
         }
         net.minecraft.world.item.ItemStack stack = activeChargeStack(minecraft.player);
         if (stack.isEmpty()) {
-            activeJellyWandModeKey = "";
             return;
         }
 
         boolean jellyWand = stack.is(CCItems.JELLY_WAND.get());
         float tapProgress = jellyWand ? JellyWandItem.getTapChargeProgress(stack) : 0.0F;
         float aimProgress = jellyWand ? JellyWandItem.getAimProgress(minecraft.player) : JumpWandItem.getChargeProgress(minecraft.player);
-        String currentModeKey = "";
-        if (jellyWand && aimProgress >= 0.5F) {
-            currentModeKey = "overlay.candycraftmod.jelly_wand.snipe";
-        } else if (jellyWand && (tapProgress > 0.0F || aimProgress > 0.0F)) {
-            currentModeKey = "overlay.candycraftmod.jelly_wand.scatter";
-        }
-        if (!currentModeKey.equals(activeJellyWandModeKey)) {
-            activeJellyWandModeKey = currentModeKey;
-            if (!currentModeKey.isEmpty()) {
-                rememberJellyWandMode(currentModeKey, minecraft.player.tickCount);
-            }
-        }
-        if (tapProgress <= 0.0F && aimProgress <= 0.0F && (!jellyWand || jellyWandModeUntilTick <= minecraft.player.tickCount)) {
+        if (tapProgress <= 0.0F && aimProgress <= 0.0F) {
             return;
         }
 
         int width = 64;
         int height = 8;
         int x = screenWidth / 2 - width / 2;
-        int y = screenHeight - 49;
+        int y = screenHeight - 36;
         float progress = Math.max(tapProgress, aimProgress);
         int fillWidth = Math.round((width - 4) * progress);
 
@@ -281,17 +284,6 @@ public final class CCClient {
             graphics.fill(x, y, x + 1, y + height, 0xCCF4C2DA);
             graphics.fill(x + width - 1, y, x + width, y + height, 0xCC6D3456);
         }
-        if (jellyWand && !jellyWandModeKey.isEmpty() && jellyWandModeUntilTick > minecraft.player.tickCount) {
-            float modeFade = Mth.clamp((jellyWandModeUntilTick - minecraft.player.tickCount - partialTick) / (float)JELLY_WAND_MODE_FADE_TICKS, 0.0F, 1.0F);
-            int alpha = Mth.clamp((int)(255.0F * modeFade), 0, 255);
-            if (alpha > 4) {
-                Component text = Component.translatable(jellyWandModeKey);
-                int textX = screenWidth / 2 - minecraft.font.width(text) / 2;
-                int textY = y - 13;
-                graphics.drawString(minecraft.font, text, textX + 1, textY + 1, (alpha / 2) << 24, false);
-                graphics.drawString(minecraft.font, text, textX, textY, (alpha << 24) | 0xFFFCE6, false);
-            }
-        }
         RenderSystem.disableBlend();
 
         if (jellyWand && aimProgress >= 0.5F) {
@@ -303,11 +295,6 @@ public final class CCClient {
             graphics.fill(centerX, centerY - 7, centerX + 1, centerY - 2, color);
             graphics.fill(centerX, centerY + 3, centerX + 1, centerY + 8, color);
         }
-    }
-
-    private static void rememberJellyWandMode(String key, int playerTick) {
-        jellyWandModeKey = key;
-        jellyWandModeUntilTick = playerTick + JELLY_WAND_MODE_FADE_TICKS;
     }
 
     private static int jellyScatterChargeColor(float progress) {
@@ -370,14 +357,24 @@ public final class CCClient {
             entity != null ? DynamiteItem.modelStage(stack, entity) : 0.0F
         );
         ItemProperties.register(CCItems.CARAMEL_BOW.get(), new ResourceLocation("pull"), (stack, level, entity, seed) -> {
+            if (entity instanceof BasicCandyZombieEntity suguard
+                    && entity.getType() == CCEntityTypes.BOSS_SUGUARD.get()
+                    && entity.getMainHandItem() == stack) {
+                return suguard.getBossBowDrawProgress(0.0F);
+            }
             if (entity == null || entity.getUseItem() != stack) {
                 return 0.0F;
             }
             return (float)(stack.getUseDuration() - entity.getUseItemRemainingTicks()) / 10.0F;
         });
-        ItemProperties.register(CCItems.CARAMEL_BOW.get(), new ResourceLocation("pulling"), (stack, level, entity, seed) ->
-            entity != null && entity.isUsingItem() && entity.getUseItem() == stack ? 1.0F : 0.0F
-        );
+        ItemProperties.register(CCItems.CARAMEL_BOW.get(), new ResourceLocation("pulling"), (stack, level, entity, seed) -> {
+            if (entity instanceof BasicCandyZombieEntity suguard
+                    && entity.getType() == CCEntityTypes.BOSS_SUGUARD.get()
+                    && entity.getMainHandItem() == stack) {
+                return suguard.getBossBowDrawTicks() > 0 ? 1.0F : 0.0F;
+            }
+            return entity != null && entity.isUsingItem() && entity.getUseItem() == stack ? 1.0F : 0.0F;
+        });
         ItemProperties.register(CCItems.CARAMEL_CROSSBOW.get(), new ResourceLocation("pull"), (stack, level, entity, seed) -> {
             if (entity == null || CrossbowItem.isCharged(stack)) {
                 return 0.0F;
@@ -406,7 +403,7 @@ public final class CCClient {
                 return -1;
             }
             return level != null && pos != null ? enchantedLeavesColor(level, pos) : 0x8f8ac8;
-        }, CCBlocks.CANDY_LEAVES_ENCHANT.get(), CCBlocks.CANDY_LEAVE2.get());
+        }, CCBlocks.CANDY_LEAVES_ENCHANT.get());
         registerGummyBlockColors(colors);
     }
 
@@ -653,6 +650,7 @@ public final class CCClient {
     public static void registerEntityRenderers(EntityRenderersEvent.RegisterRenderers event) {
         event.registerBlockEntityRenderer(com.valentin4311.candycraftmod.registry.CCBlockEntities.ALCHEMY_TABLE.get(), AlchemyTableRenderer::new);
         event.registerBlockEntityRenderer(com.valentin4311.candycraftmod.registry.CCBlockEntities.MARSHMALLOW_CHEST.get(), MarshmallowChestRenderer::new);
+        event.registerBlockEntityRenderer(com.valentin4311.candycraftmod.registry.CCBlockEntities.CANDY_SIGN.get(), net.minecraft.client.renderer.blockentity.SignRenderer::new);
         event.registerEntityRenderer(CCEntityTypes.HONEY_ARROW.get(), HoneyArrowRenderer::new);
         event.registerEntityRenderer(CCEntityTypes.HONEY_BOLT.get(), HoneyBoltRenderer::new);
         event.registerEntityRenderer(CCEntityTypes.DYNAMITE.get(), context -> new FixedThrownItemRenderer<>(context, new net.minecraft.world.item.ItemStack(CCItems.DYNAMITE.get()), 0.5F));
@@ -690,6 +688,14 @@ public final class CCClient {
         event.registerEntityRenderer(CCEntityTypes.PEZ_JELLY.get(), BasicCandySlimeRenderer::new);
         event.registerEntityRenderer(CCEntityTypes.KING_SLIME.get(), BasicCandySlimeRenderer::new);
         event.registerEntityRenderer(CCEntityTypes.JELLY_QUEEN.get(), BasicCandySlimeRenderer::new);
+    }
+
+    @SubscribeEvent
+    public static void addPlayerRenderLayers(EntityRenderersEvent.AddLayers event) {
+        for (String skin : event.getSkins()) {
+            PlayerRenderer renderer = event.getSkin(skin);
+            renderer.addLayer(new CandyProjectileStuckLayer(event.getContext().getEntityRenderDispatcher(), renderer));
+        }
     }
 
     @SubscribeEvent
@@ -791,13 +797,17 @@ public final class CCClient {
             tickDungeonLoadingScreen(minecraft);
             tickCandyWorldLoadingScreen(minecraft);
             updateCandyPortalOverlay(minecraft);
-            applyPurpleJellyBob(minecraft);
         }
 
         @SubscribeEvent
         public static void onClientRightClickBlock(PlayerInteractEvent.RightClickBlock event) {
             if (event.getLevel().isClientSide() && event.getLevel().getBlockState(event.getPos()).is(CCBlocks.BLOCK_TELEPORTER.get())) {
-                beginDungeonLoadingScreen();
+                net.minecraft.world.level.block.state.BlockState portal = event.getLevel().getBlockState(event.getPos());
+                if (portal.getValue(DungeonTeleporterBlock.ROLE) == DungeonTeleporterBlock.PortalRole.ENTRY) {
+                    dungeonLoadingSuguard = portal.getValue(DungeonTeleporterBlock.DUNGEON)
+                        == DungeonTeleporterBlock.DungeonKind.SUGUARD;
+                    beginDungeonLoadingScreen();
+                }
             }
         }
 
@@ -845,9 +855,19 @@ public final class CCClient {
             int width = minecraft.getWindow().getGuiScaledWidth();
             int height = minecraft.getWindow().getGuiScaledHeight();
             renderDungeonLoadingBackground(graphics, width, height);
-
-            Component message = Component.translatable("multiplayer.downloadingTerrain");
-            graphics.drawCenteredString(minecraft.font, message, width / 2, height / 2 - 4, 0xFFFFFF);
+            boolean suguard = dungeonLoadingSuguard
+                || (minecraft.level != null && "suguard_dungeon".equals(minecraft.level.dimension().location().getPath()));
+            net.minecraft.world.item.ItemStack key = new net.minecraft.world.item.ItemStack(
+                suguard ? CCItems.SUGUARD_KEY.get() : CCItems.JELLY_KEY.get()
+            );
+            // Loading screens can pause game ticks, so drive the curve from wall-clock time.
+            double timeSeconds = System.nanoTime() / 1_000_000_000.0D;
+            float bob = (float)Math.sin(timeSeconds * 2.2D) * 4.0F;
+            graphics.pose().pushPose();
+            graphics.pose().translate(width * 0.5F, height * 0.5F + bob, 0.0F);
+            graphics.pose().scale(2.0F, 2.0F, 1.0F);
+            graphics.renderItem(key, -8, -8);
+            graphics.pose().popPose();
         }
 
         private static void renderCustomLoadingBackground(GuiGraphics graphics, Screen screen) {
@@ -1025,20 +1045,6 @@ public final class CCClient {
             RenderSystem.disableBlend();
         }
 
-        private static void applyPurpleJellyBob(Minecraft minecraft) {
-            if (minecraft.level == null || minecraft.player == null || minecraft.player.isSpectator()) {
-                return;
-            }
-            net.minecraft.core.BlockPos feet = minecraft.player.blockPosition();
-            if (!minecraft.level.getBlockState(feet.below()).is(CCBlocks.PURPLE_TRAMPOJELLY.get())
-                && !minecraft.level.getBlockState(feet).is(CCBlocks.PURPLE_TRAMPOJELLY.get())) {
-                return;
-            }
-            float wobble = (float)Math.sin((minecraft.player.tickCount + minecraft.getFrameTime()) * 0.85F) * 0.035F;
-            minecraft.player.oBob = minecraft.player.bob;
-            minecraft.player.bob = Math.max(0.0F, minecraft.player.bob * 0.72F + wobble);
-        }
-
         @SubscribeEvent
         public static void renderFog(ViewportEvent.RenderFog event) {
             int view = fluidView(event.getCamera());
@@ -1182,13 +1188,13 @@ public final class CCClient {
         @Override
         public boolean renderSnowAndRain(ClientLevel level, int ticks, float partialTick,
                 net.minecraft.client.renderer.LightTexture lightTexture, double cameraX, double cameraY, double cameraZ) {
-            MilkRainRenderer.render(level, ticks, partialTick, cameraX, cameraY, cameraZ);
+            MilkRainRenderer.render(level, ticks, partialTick, lightTexture, cameraX, cameraY, cameraZ);
             return true;
         }
 
         @Override
         public boolean tickRain(ClientLevel level, int ticks, Camera camera) {
-            MilkRainRenderer.tick(level, camera);
+            MilkRainRenderer.tick(level, ticks, camera);
             return true;
         }
 

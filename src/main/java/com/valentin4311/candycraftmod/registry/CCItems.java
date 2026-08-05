@@ -16,9 +16,12 @@ import com.valentin4311.candycraftmod.item.JellyDungeonKeyItem;
 import com.valentin4311.candycraftmod.item.JellyWandItem;
 import com.valentin4311.candycraftmod.item.JumpWandItem;
 import com.valentin4311.candycraftmod.item.LollipopItem;
+import com.valentin4311.candycraftmod.item.MagicCandyItem;
 import com.valentin4311.candycraftmod.item.NougatPowderItem;
+import com.valentin4311.candycraftmod.item.PlaceableJellyFoodItem;
 import com.valentin4311.candycraftmod.item.RawGummyItem;
 import com.valentin4311.candycraftmod.item.SugarPillItem;
+import com.valentin4311.candycraftmod.item.StrawberryJellyItem;
 import com.valentin4311.candycraftmod.item.WikiItem;
 import com.valentin4311.candycraftmod.CandyCraft;
 import java.util.ArrayList;
@@ -46,6 +49,7 @@ import net.minecraft.world.item.PlaceOnWaterBlockItem;
 import net.minecraft.world.item.Rarity;
 import net.minecraft.world.item.RecordItem;
 import net.minecraft.world.item.ShovelItem;
+import net.minecraft.world.item.SignItem;
 import net.minecraft.world.item.StandingAndWallBlockItem;
 import net.minecraft.world.item.SwordItem;
 import net.minecraft.world.item.Tier;
@@ -98,6 +102,8 @@ public final class CCItems {
     public static final RegistryObject<Item> MARSHMALLOW_FLOWER = registerPortItem("marshmallow_flower");
     public static final RegistryObject<Item> CANDIED_CHERRY = registerPortItem("candied_cherry", () -> new CandiedCherryItem(foodProperties(3, 0.6F, true)));
     public static final RegistryObject<Item> CANDY_CANE = registerFood("candy_cane", 4, 0.6F, true);
+    public static final RegistryObject<Item> WHITE_GREEN_CANDY_CANE = registerFood("white_green_candy_cane", 4, 0.6F, true);
+    public static final RegistryObject<Item> RED_GREEN_CANDY_CANE = registerFood("red_green_candy_cane", 4, 0.6F, true);
     public static final RegistryObject<Item> CHEWING_GUM = registerFood("chewing_gum", 1, 0.1F);
     public static final RegistryObject<Item> COTTON_CANDY = registerPortItem("raspberry_cotton_candy", () -> new Item(new Item.Properties().food(new FoodProperties.Builder()
         .nutrition(3)
@@ -117,26 +123,28 @@ public final class CCItems {
         .alwaysEat()
         .effect(() -> new MobEffectInstance(MobEffects.WATER_BREATHING, 60, 0), 0.9F)
         .build())));
-    public static final RegistryObject<Item> DRAGIBUS_STICK = registerPortItem("dragibus_stick", () -> new DragibusStickItem(new Item.Properties().stacksTo(1).durability(25)));
+    public static final RegistryObject<Item> DRAGIBUS_STICK = registerToolItem("dragibus_stick", () -> new DragibusStickItem(new Item.Properties().stacksTo(1).durability(25)));
     public static final RegistryObject<Item> GUMMY = registerPortItem("gummy", () -> new RawGummyItem(foodProperties(4, 0.6F)));
     public static final RegistryObject<Item> HOT_GUMMY = registerPortItem("hot_gummy", () -> new Item(new Item.Properties().food(new FoodProperties.Builder()
         .nutrition(7)
         .saturationMod(0.6F)
         .effect(() -> new MobEffectInstance(MobEffects.JUMP, 60, 1), 0.9F)
         .build())));
-    public static final RegistryObject<Item> ALCHEMY_MIXER_BLADE = ITEMS.register("alchemy_mixer_blade", () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> ALCHEMY_MIXER_BLADE = registerToolItem("alchemy_mixer_blade", () -> new Item(new Item.Properties()));
     public static final RegistryObject<Item> SUGAR_PILL = registerPortItem("sugar_pill", () -> new SugarPillItem(new Item.Properties().food(new FoodProperties.Builder()
         .nutrition(0)
         .saturationMod(0.0F)
         .alwaysEat()
         .build())));
     public static final RegistryObject<Item> WAFFLE = registerFood("waffle", 10, 0.6F, true);
-    public static final RegistryObject<Item> HONEY_ARROW = registerPortItem("honey_arrow", () -> new HoneyArrowItem(new Item.Properties()));
-    public static final RegistryObject<Item> HONEY_BOLT = registerPortItem("honey_bolt", () -> new HoneyBoltItem(new Item.Properties()));
-    public static final RegistryObject<Item> CARAMEL_BOW = registerPortItem("caramel_bow", () -> new CaramelBowItem(new Item.Properties().durability(384)));
-    public static final RegistryObject<Item> CARAMEL_CROSSBOW = registerPortItem("caramel_crossbow", () -> new CaramelCrossbowItem(new Item.Properties().durability(465)));
-    public static final RegistryObject<Item> FORK = registerPortItem("fork", () -> new ForkItem(CCItemTiers.MARSHMALLOW, 5, -2.8F, new Item.Properties().durability(326)));
-    public static final RegistryObject<Item> LICORICE_SPEAR = registerPortItem("licorice_spear", () -> new SwordItem(CCItemTiers.LICORICE, 2, -2.2F, new Item.Properties()));
+    public static final RegistryObject<Item> HONEY_ARROW = registerToolItem("honey_arrow", () -> new HoneyArrowItem(new Item.Properties()));
+    public static final RegistryObject<Item> HONEY_BOLT = registerToolItem("honey_bolt", () -> new HoneyBoltItem(new Item.Properties()));
+    public static final RegistryObject<Item> CARAMEL_BOW = registerToolItem("caramel_bow", () -> new CaramelBowItem(new Item.Properties().durability(384)));
+    public static final RegistryObject<Item> CARAMEL_CROSSBOW = registerToolItem("caramel_crossbow", () -> new CaramelCrossbowItem(new Item.Properties().durability(465)));
+    // Vanilla trident attack speed is 1.1 (player base 4.0 plus -2.9); use a
+    // 4.5 modifier so the fork's total melee damage is exactly 5.5.
+    public static final RegistryObject<Item> FORK = registerToolItem("fork", () -> new ForkItem(CCItemTiers.MARSHMALLOW, 4.5F, -2.9F, new Item.Properties().durability(326)));
+    public static final RegistryObject<Item> LICORICE_SPEAR = registerToolItem("licorice_spear", () -> new SwordItem(CCItemTiers.LICORICE, 2, -2.2F, new Item.Properties()));
     public static final RegistryObject<Item> GUMMY_BALL = registerPortItem("gummy_ball", () -> new GummyBallItem(new Item.Properties().stacksTo(16)));
     public static final RegistryObject<Item> LEMON_JELLY_BALL = registerPortItem("lemon_jelly_ball");
     public static final RegistryObject<Item> RASPBERRY_JELLY_BALL = registerPortItem("raspberry_jelly_ball");
@@ -144,19 +152,37 @@ public final class CCItems {
     public static final RegistryObject<Item> PEZ_JELLY_BALL = registerPortItem("pez_jelly_ball");
     public static final RegistryObject<Item> CARAMEL_KING_JELLY_BALL = registerPortItem("caramel_king_jelly_ball");
     public static final RegistryObject<Item> STRAWBERRY_QUEEN_JELLY_BALL = registerPortItem("strawberry_queen_jelly_ball");
-    public static final RegistryObject<Item> BOSS_BEETLE_GUMMY_BALL = ITEMS.register("boss_beetle_gummy_ball", () -> new Item(new Item.Properties()));
+    public static final RegistryObject<Item> LEMON_JELLY_SLICE = registerPortItem("lemon_jelly_slice", () ->
+        new PlaceableJellyFoodItem(CCBlocks.LEMON_JELLY_FOOD.get(), foodProperties(7, 0.4F)));
+    public static final RegistryObject<Item> MINT_JELLY_SLICE = registerPortItem("mint_jelly_slice", () ->
+        new PlaceableJellyFoodItem(CCBlocks.MINT_JELLY_FOOD.get(), foodProperties(7, 0.4F)));
+    public static final RegistryObject<Item> CARAMEL_JELLY = registerPortItem("caramel_jelly", () ->
+        new StrawberryJellyItem(CCBlocks.CARAMEL_JELLY_BLOCK.get(), new Item.Properties()));
+    public static final RegistryObject<Item> STRAWBERRY_JELLY = registerPortItem("strawberry_jelly", () ->
+        new StrawberryJellyItem(CCBlocks.STRAWBERRY_JELLY_BLOCK.get(), new Item.Properties()));
+    public static final RegistryObject<Item> CARAMEL_JELLY_SLICE = registerFood("caramel_jelly_slice", 12, 0.6F);
+    public static final RegistryObject<Item> STRAWBERRY_JELLY_SLICE = registerFood("strawberry_jelly_slice", 12, 0.6F);
+    public static final RegistryObject<Item> ROYAL_RATIONS = registerPortItem("royal_rations", () ->
+        new StrawberryJellyItem(CCBlocks.ROYAL_RATIONS_BLOCK.get(), new Item.Properties()));
+    public static final RegistryObject<Item> ROYAL_RATIONS_SLICE = registerFood("royal_rations_slice", 20, 0.5F);
     public static final RegistryObject<Item> DYNAMITE = registerPortItem("dynamite", () -> new DynamiteItem(new Item.Properties(), false));
     public static final RegistryObject<Item> GLUE_DYNAMITE = registerPortItem("glue_dynamite", () -> new DynamiteItem(new Item.Properties(), true));
-    public static final RegistryObject<Item> JELLY_WAND = registerPortItem("jelly_wand", () -> new JellyWandItem(new Item.Properties().stacksTo(1)));
-    public static final RegistryObject<Item> JUMP_WAND = registerPortItem("jump_wand", () -> new JumpWandItem(new Item.Properties().stacksTo(1)));
+    public static final RegistryObject<Item> JELLY_WAND = registerToolItem("jelly_wand", () -> new JellyWandItem(new Item.Properties().stacksTo(1)));
+    public static final RegistryObject<Item> JUMP_WAND = registerToolItem("jump_wand", () -> new JumpWandItem(new Item.Properties().stacksTo(1)));
     public static final RegistryObject<Item> WIKI = registerPortItem("wiki", () -> new WikiItem(new Item.Properties().stacksTo(1)));
+    public static final RegistryObject<Item> MARSHMALLOW_SIGN = registerSignItem("marshmallow_sign", () -> CCBlocks.MARSHMALLOW_SIGN.get(), () -> CCBlocks.MARSHMALLOW_WALL_SIGN.get());
+    public static final RegistryObject<Item> MARSHMALLOW_SIGN_LIGHT = registerSignItem("marshmallow_sign_light", () -> CCBlocks.MARSHMALLOW_SIGN_LIGHT.get(), () -> CCBlocks.MARSHMALLOW_WALL_SIGN_LIGHT.get());
+    public static final RegistryObject<Item> MARSHMALLOW_SIGN_DARK = registerSignItem("marshmallow_sign_dark", () -> CCBlocks.MARSHMALLOW_SIGN_DARK.get(), () -> CCBlocks.MARSHMALLOW_WALL_SIGN_DARK.get());
+    public static final RegistryObject<Item> MILK_CHOCOLATE_SIGN = registerSignItem("milk_chocolate_sign", () -> CCBlocks.MILK_CHOCOLATE_SIGN.get(), () -> CCBlocks.MILK_CHOCOLATE_WALL_SIGN.get());
+    public static final RegistryObject<Item> WHITE_CHOCOLATE_SIGN = registerSignItem("white_chocolate_sign", () -> CCBlocks.WHITE_CHOCOLATE_SIGN.get(), () -> CCBlocks.WHITE_CHOCOLATE_WALL_SIGN.get());
+    public static final RegistryObject<Item> DARK_CHOCOLATE_SIGN = registerSignItem("dark_chocolate_sign", () -> CCBlocks.DARK_CHOCOLATE_SIGN.get(), () -> CCBlocks.DARK_CHOCOLATE_WALL_SIGN.get());
     public static final RegistryObject<Item> BEETLE_KEY = registerPortItem("beetle_key");
-    public static final RegistryObject<Item> JELLY_KEY = registerPortItem("jelly_key", () -> new JellyDungeonKeyItem(new Item.Properties()));
+    public static final RegistryObject<Item> JELLY_KEY = registerPortItem("jelly_key", () -> new JellyDungeonKeyItem(new Item.Properties().stacksTo(1)));
     public static final RegistryObject<Item> JELLY_SENTRY_KEY = registerPortItem("jelly_sentry_key");
     public static final RegistryObject<Item> JELLY_BOSS_KEY = registerPortItem("jelly_boss_key");
     public static final RegistryObject<Item> SUGUARD_SENTRY_KEY = registerPortItem("suguard_sentry_key");
     public static final RegistryObject<Item> SUGUARD_BOSS_KEY = registerPortItem("suguard_boss_key");
-    public static final RegistryObject<Item> SUGUARD_KEY = registerPortItem("suguard_key", () -> new JellyDungeonKeyItem(new Item.Properties(), true));
+    public static final RegistryObject<Item> SUGUARD_KEY = registerPortItem("suguard_key", () -> new JellyDungeonKeyItem(new Item.Properties().stacksTo(1), true));
     public static final RegistryObject<Item> SKY_KEY = registerPortItem("sky_key");
     public static final RegistryObject<Item> CHEWING_GUM_EMBLEM = registerEmblem("chewing_gum_emblem", "tooltip.candycraftmod.chewing_gum_emblem");
     public static final RegistryObject<Item> CRANBERRY_EMBLEM = registerEmblem("cranberry_emblem", "tooltip.candycraftmod.cranberry_emblem");
@@ -168,10 +194,10 @@ public final class CCItems {
     public static final RegistryObject<Item> WATER_EMBLEM = registerEmblem("water_emblem", "tooltip.candycraftmod.water_emblem");
     public static final RegistryObject<Item> JELLY_CROWN = registerPortItem("jelly_crown", () -> new CCArmorItem(CCArmorMaterials.JELLY, ArmorItem.Type.HELMET, new Item.Properties().stacksTo(1).rarity(Rarity.RARE)));
     public static final RegistryObject<Item> WATER_MASK = registerPortItem("water_mask", () -> new CCArmorItem(CCArmorMaterials.MASK, ArmorItem.Type.HELMET, new Item.Properties().stacksTo(1)));
-    public static final RegistryObject<Item> RECORD_1 = registerRecord("record_1", CCSoundEvents.RECORD_CD_1, 2400);
-    public static final RegistryObject<Item> RECORD_2 = registerRecord("record_2", CCSoundEvents.RECORD_CD_2, 2400);
-    public static final RegistryObject<Item> RECORD_3 = registerRecord("record_3", CCSoundEvents.RECORD_CD_3, 2400);
-    public static final RegistryObject<Item> RECORD_4 = registerRecord("record_4", CCSoundEvents.RECORD_CD_4, 2400);
+    public static final RegistryObject<Item> RECORD_1 = registerRecord("record_1", CCSoundEvents.RECORD_CD_1, 6330);
+    public static final RegistryObject<Item> RECORD_2 = registerRecord("record_2", CCSoundEvents.RECORD_CD_2, 1961);
+    public static final RegistryObject<Item> RECORD_3 = registerRecord("record_3", CCSoundEvents.RECORD_CD_3, 2259);
+    public static final RegistryObject<Item> RECORD_4 = registerRecord("record_4", CCSoundEvents.RECORD_CD_4, 5911);
     public static final RegistryObject<Item> CARAMEL_BUCKET = registerPortItem("caramel_bucket", () -> new BucketItem(CCFluids.SOURCE_CARAMEL, new Item.Properties().craftRemainder(Items.BUCKET).stacksTo(1)));
     public static final RegistryObject<Item> GRENADINE_BUCKET = registerPortItem("grenadine_bucket", () -> new BucketItem(CCFluids.SOURCE_GRENADINE, new Item.Properties().craftRemainder(Items.BUCKET).stacksTo(1)));
     private static final ToolSet MARSHMALLOW_TOOLS = registerToolSet("marshmallow", CCItemTiers.MARSHMALLOW);
@@ -211,48 +237,48 @@ public final class CCItems {
     public static final RegistryObject<Item> PEZ_LEGGINGS = registerArmor("pez_leggings", CCArmorMaterials.PEZ, ArmorItem.Type.LEGGINGS);
     public static final RegistryObject<Item> PEZ_BOOTS = registerArmor("pez_boots", CCArmorMaterials.PEZ, ArmorItem.Type.BOOTS);
     public static final RegistryObject<Item> JELLY_BOOTS = registerArmor("jelly_boots", CCArmorMaterials.JELLY, ArmorItem.Type.BOOTS);
-    public static final RegistryObject<Item> CANDY_PIG_SPAWN_EGG = registerSpawnEgg("candy_pig_spawn_egg", CCEntityTypes.CANDY_PIG, 0xD88C9A, 0xF7F0E1);
-    public static final RegistryObject<Item> WAFFLE_SHEEP_SPAWN_EGG = registerSpawnEgg("waffle_sheep_spawn_egg", CCEntityTypes.WAFFLE_SHEEP, 0xE4B76E, 0xFFF0C2);
-    public static final RegistryObject<Item> CANDY_CREEPER_SPAWN_EGG = registerSpawnEgg("candy_creeper_spawn_egg", CCEntityTypes.CANDY_CREEPER, 0x8A5A2B, 0xF0D58A);
-    public static final RegistryObject<Item> COTTON_CANDY_SPIDER_SPAWN_EGG = registerSpawnEgg("cotton_candy_spider_spawn_egg", CCEntityTypes.COTTON_CANDY_SPIDER, 0xF2A0C8, 0xFFFFFF);
-    public static final RegistryObject<Item> SUGUARD_SPAWN_EGG = registerSpawnEgg("suguard_spawn_egg", CCEntityTypes.SUGUARD, 0xF3F3F3, 0xD14646);
-    public static final RegistryObject<Item> MAGE_SUGUARD_SPAWN_EGG = registerSpawnEgg("mage_suguard_spawn_egg", CCEntityTypes.MAGE_SUGUARD, 0xF3F3F3, 0x7A42C8);
-    public static final RegistryObject<Item> CANDY_WOLF_SPAWN_EGG = registerSpawnEgg("candy_wolf_spawn_egg", CCEntityTypes.CANDY_WOLF, 0x4B2E22, 0xDDB98F);
-    public static final RegistryObject<Item> GUMMY_BUNNY_SPAWN_EGG = registerSpawnEgg("gummy_bunny_spawn_egg", CCEntityTypes.GUMMY_BUNNY, 0xEBA3C8, 0xFFFFFF);
+    public static final RegistryObject<Item> CANDY_PIG_SPAWN_EGG = registerSpawnEgg("candy_pig_spawn_egg", CCEntityTypes.CANDY_PIG, 0xF1C3C3, 0xFB5757);
+    public static final RegistryObject<Item> WAFFLE_SHEEP_SPAWN_EGG = registerSpawnEgg("waffle_sheep_spawn_egg", CCEntityTypes.WAFFLE_SHEEP, 0xF1C3C3, 0xFFC000);
+    public static final RegistryObject<Item> CANDY_CREEPER_SPAWN_EGG = registerSpawnEgg("candy_creeper_spawn_egg", CCEntityTypes.CANDY_CREEPER, 0xF1C3C3, 0x777777);
+    public static final RegistryObject<Item> COTTON_CANDY_SPIDER_SPAWN_EGG = registerSpawnEgg("cotton_candy_spider_spawn_egg", CCEntityTypes.COTTON_CANDY_SPIDER, 0xF1C3C3, 0xA00000);
+    public static final RegistryObject<Item> SUGUARD_SPAWN_EGG = registerSpawnEgg("suguard_spawn_egg", CCEntityTypes.SUGUARD, 0xF1C3C3, 0x8E0082);
+    public static final RegistryObject<Item> MAGE_SUGUARD_SPAWN_EGG = registerSpawnEgg("mage_suguard_spawn_egg", CCEntityTypes.MAGE_SUGUARD, 0xF1C3C3, 0xEB3D00);
+    public static final RegistryObject<Item> CANDY_WOLF_SPAWN_EGG = registerSpawnEgg("candy_wolf_spawn_egg", CCEntityTypes.CANDY_WOLF, 0xF1C3C3, 0xDDDDDD);
+    public static final RegistryObject<Item> GUMMY_BUNNY_SPAWN_EGG = registerSpawnEgg("gummy_bunny_spawn_egg", CCEntityTypes.GUMMY_BUNNY, 0xF1C3C3, 0xEEFF33);
     public static final RegistryObject<Item> COTTON_CANDY_SHEEP_SPAWN_EGG = registerSpawnEgg("cotton_candy_sheep_spawn_egg", CCEntityTypes.COTTON_CANDY_SHEEP, 0xFF33FF, 0xFFCCFF);
     public static final RegistryObject<Item> EASTER_CHICKEN_SPAWN_EGG = registerSpawnEgg("easter_chicken_spawn_egg", CCEntityTypes.EASTER_CHICKEN, 0x996611, 0x774411);
     public static final RegistryObject<Item> GUMMY_MOUSE_SPAWN_EGG = registerSpawnEgg("gummy_mouse_spawn_egg", CCEntityTypes.GUMMY_MOUSE, 0x00FF00, 0x33BB33);
     public static final RegistryObject<Item> GUMMY_BEAR_SPAWN_EGG = registerSpawnEgg("gummy_bear_spawn_egg", CCEntityTypes.GUMMY_BEAR, 0x00FF00, 0x33BB33);
-    public static final RegistryObject<Item> CARAMEL_BEE_SPAWN_EGG = registerSpawnEgg("caramel_bee_spawn_egg", CCEntityTypes.CARAMEL_BEE, 0xB26B20, 0xFFD65A);
-    public static final RegistryObject<Item> GINGERBREAD_MAN_SPAWN_EGG = registerSpawnEgg("gingerbread_man_spawn_egg", CCEntityTypes.GINGERBREAD_MAN, 0xB87535, 0xFFFFFF);
-    public static final RegistryObject<Item> CANDY_FISH_SPAWN_EGG = registerSpawnEgg("candy_fish_spawn_egg", CCEntityTypes.CANDY_FISH, 0xB61E34, 0xF7A3B1);
-    public static final RegistryObject<Item> PINGOUIN_SPAWN_EGG = registerSpawnEgg("pingouin_spawn_egg", CCEntityTypes.PINGOUIN, 0x2F3552, 0xB9E7FF);
-    public static final RegistryObject<Item> BEETLE_SPAWN_EGG = registerSpawnEgg("beetle_spawn_egg", CCEntityTypes.BEETLE, 0xF08AC1, 0x7A2E5F);
-    public static final RegistryObject<Item> NESSIE_SPAWN_EGG = registerSpawnEgg("nessie_spawn_egg", CCEntityTypes.NESSIE, 0x3C8AA0, 0x92D7E8);
-    public static final RegistryObject<Item> DRAGON_SPAWN_EGG = registerSpawnEgg("dragon_spawn_egg", CCEntityTypes.DRAGON, 0x5572C6, 0xBBD6FF);
-    public static final RegistryObject<Item> KING_BEETLE_SPAWN_EGG = registerSpawnEgg("king_beetle_spawn_egg", CCEntityTypes.KING_BEETLE, 0x33201A, 0xE6C17A);
-    public static final RegistryObject<Item> MERMAID_SPAWN_EGG = registerSpawnEgg("mermaid_spawn_egg", CCEntityTypes.MERMAID, 0x4AA7B5, 0xF5C0D5);
+    public static final RegistryObject<Item> CARAMEL_BEE_SPAWN_EGG = registerSpawnEgg("caramel_bee_spawn_egg", CCEntityTypes.CARAMEL_BEE, 0xF1C3C3, 0xFE7F01);
+    public static final RegistryObject<Item> GINGERBREAD_MAN_SPAWN_EGG = registerSpawnEgg("gingerbread_man_spawn_egg", CCEntityTypes.GINGERBREAD_MAN, 0xF1C3C3, 0x61380B);
+    public static final RegistryObject<Item> CANDY_FISH_SPAWN_EGG = registerSpawnEgg("candy_fish_spawn_egg", CCEntityTypes.CANDY_FISH, 0xF1C3C3, 0x3A01DF);
+    public static final RegistryObject<Item> PINGOUIN_SPAWN_EGG = registerSpawnEgg("pingouin_spawn_egg", CCEntityTypes.PINGOUIN, 0xF1C3C3, 0xFFFFFF);
+    public static final RegistryObject<Item> BEETLE_SPAWN_EGG = registerSpawnEgg("beetle_spawn_egg", CCEntityTypes.BEETLE, 0xF1C3C3, 0x250066);
+    public static final RegistryObject<Item> NESSIE_SPAWN_EGG = registerSpawnEgg("nessie_spawn_egg", CCEntityTypes.NESSIE, 0xF1C3C3, 0xA9E2F3);
+    public static final RegistryObject<Item> DRAGON_SPAWN_EGG = registerSpawnEgg("dragon_spawn_egg", CCEntityTypes.DRAGON, 0x8DC444, 0xA4EDFF);
+    public static final RegistryObject<Item> KING_BEETLE_SPAWN_EGG = registerSpawnEgg("king_beetle_spawn_egg", CCEntityTypes.KING_BEETLE, 0x8DC444, 0xA500B3);
+    public static final RegistryObject<Item> MERMAID_SPAWN_EGG = registerSpawnEgg("mermaid_spawn_egg", CCEntityTypes.MERMAID, 0x555555, 0x7D82B0);
     public static final RegistryObject<Item> NOUGAT_GOLEM_SPAWN_EGG = registerSpawnEgg("nougat_golem_spawn_egg", CCEntityTypes.NOUGAT_GOLEM, 0xD8C18C, 0x805B38);
-    public static final RegistryObject<Item> YELLOW_JELLY_SPAWN_EGG = registerSpawnEgg("yellow_jelly_spawn_egg", CCEntityTypes.YELLOW_JELLY, 0xFFF15A, 0xFFFFFF);
-    public static final RegistryObject<Item> RED_JELLY_SPAWN_EGG = registerSpawnEgg("red_jelly_spawn_egg", CCEntityTypes.RED_JELLY, 0xE94242, 0xFFFFFF);
-    public static final RegistryObject<Item> TORNADO_JELLY_SPAWN_EGG = registerSpawnEgg("tornado_jelly_spawn_egg", CCEntityTypes.TORNADO_JELLY, 0x78E0B5, 0xFFFFFF);
-    public static final RegistryObject<Item> PEZ_JELLY_SPAWN_EGG = registerSpawnEgg("pez_jelly_spawn_egg", CCEntityTypes.PEZ_JELLY, 0x7EC8F0, 0xFFFFFF);
-    public static final RegistryObject<Item> KING_SLIME_SPAWN_EGG = registerSpawnEgg("king_slime_spawn_egg", CCEntityTypes.KING_SLIME, 0xA76BEA, 0xFFD94A);
-    public static final RegistryObject<Item> JELLY_QUEEN_SPAWN_EGG = registerSpawnEgg("jelly_queen_spawn_egg", CCEntityTypes.JELLY_QUEEN, 0xD85AFF, 0xFFF15A);
-    public static final RegistryObject<Item> BOSS_SUGUARD_SPAWN_EGG = registerSpawnEgg("boss_suguard_spawn_egg", CCEntityTypes.BOSS_SUGUARD, 0xE8E8E8, 0xA12424);
-    public static final RegistryObject<Item> BOSS_BEETLE_SPAWN_EGG = registerSpawnEgg("boss_beetle_spawn_egg", CCEntityTypes.BOSS_BEETLE, 0x171313, 0x8B1F2D);
+    public static final RegistryObject<Item> YELLOW_JELLY_SPAWN_EGG = registerSpawnEgg("yellow_jelly_spawn_egg", CCEntityTypes.YELLOW_JELLY, 0x555555, 0xFFFF00);
+    public static final RegistryObject<Item> RED_JELLY_SPAWN_EGG = registerSpawnEgg("red_jelly_spawn_egg", CCEntityTypes.RED_JELLY, 0x555555, 0xFF0000);
+    public static final RegistryObject<Item> TORNADO_JELLY_SPAWN_EGG = registerSpawnEgg("tornado_jelly_spawn_egg", CCEntityTypes.TORNADO_JELLY, 0x555555, 0x00FFFF);
+    public static final RegistryObject<Item> PEZ_JELLY_SPAWN_EGG = registerSpawnEgg("pez_jelly_spawn_egg", CCEntityTypes.PEZ_JELLY, 0x9166FF, 0xFFFFFF);
+    public static final RegistryObject<Item> KING_SLIME_SPAWN_EGG = registerSpawnEgg("king_slime_spawn_egg", CCEntityTypes.KING_SLIME, 0xB23838, 0xE37D11);
+    public static final RegistryObject<Item> JELLY_QUEEN_SPAWN_EGG = registerSpawnEgg("jelly_queen_spawn_egg", CCEntityTypes.JELLY_QUEEN, 0xFF7373, 0xCF00EF);
+    public static final RegistryObject<Item> BOSS_SUGUARD_SPAWN_EGG = registerSpawnEgg("boss_suguard_spawn_egg", CCEntityTypes.BOSS_SUGUARD, 0xFF7373, 0xDFDFDF);
+    public static final RegistryObject<Item> BOSS_BEETLE_SPAWN_EGG = registerSpawnEgg("boss_beetle_spawn_egg", CCEntityTypes.BOSS_BEETLE, 0xFF7373, 0x1C1C1C);
 
 
     public static final RegistryObject<Item> BUTTER = registerSweetscapeFood("butter", 1, 1.0F);
     public static final RegistryObject<Item> CANDY_FLOSS = registerSweetscapeFood("cotton_candy", 4, 0.5F);
     public static final RegistryObject<Item> WAFER_STICK = registerSweetscapeFood("wafer_stick", 5, 0.6F);
     public static final RegistryObject<Item> ROCK_CANDY = registerSweetscapeFood("rock_candy", 4, 0.2F);
-    public static final RegistryObject<Item> WHITE_CANDY_CANE = registerSweetscapeFood("white_candy_cane", 5, 0.6F);
-    public static final RegistryObject<Item> RED_CANDY_CANE = registerSweetscapeFood("red_candy_cane", 5, 0.6F);
-    public static final RegistryObject<Item> GREEN_CANDY_CANE = registerSweetscapeFood("green_candy_cane", 5, 0.6F);
-    public static final RegistryObject<Item> WHITE_RED_CANDY_CANE = registerSweetscapeFood("white_red_candy_cane", 5, 0.6F);
-    public static final RegistryObject<Item> WHITE_GREEN_CANDY_CANE = registerSweetscapeFood("white_green_candy_cane", 5, 0.6F);
-    public static final RegistryObject<Item> RED_GREEN_CANDY_CANE = registerSweetscapeFood("red_green_candy_cane", 5, 0.6F);
+    public static final RegistryObject<Item> WHITE_HARD_CANDY = registerSweetscapeFood("white_hard_candy", 2, 0.6F);
+    public static final RegistryObject<Item> RED_HARD_CANDY = registerSweetscapeFood("red_hard_candy", 2, 0.6F);
+    public static final RegistryObject<Item> GREEN_HARD_CANDY = registerSweetscapeFood("green_hard_candy", 2, 0.6F);
+    public static final RegistryObject<Item> WHITE_RED_HARD_CANDY = registerSweetscapeFood("white_red_hard_candy", 2, 0.6F);
+    public static final RegistryObject<Item> WHITE_GREEN_HARD_CANDY = registerSweetscapeFood("white_green_hard_candy", 2, 0.6F);
+    public static final RegistryObject<Item> RED_GREEN_HARD_CANDY = registerSweetscapeFood("red_green_hard_candy", 2, 0.6F);
     public static final RegistryObject<Item> MILK_BROWNIE = registerSweetscapeFood("milk_brownie", 4, 0.5F);
     public static final RegistryObject<Item> WHITE_BROWNIE = registerSweetscapeFood("white_brownie", 4, 0.5F);
     public static final RegistryObject<Item> DARK_BROWNIE = registerSweetscapeFood("dark_brownie", 4, 0.5F);
@@ -273,7 +299,8 @@ public final class CCItems {
     public static final RegistryObject<Item> YELLOW_GUMMY_WORM = registerSweetscapeFood("yellow_gummy_worm", 6, 1.0F);
     public static final RegistryObject<Item> WHITE_GUMMY_WORM = registerSweetscapeFood("white_gummy_worm", 6, 1.0F);
     public static final RegistryObject<Item> GREEN_GUMMY_WORM = registerSweetscapeFood("green_gummy_worm", 6, 1.0F);
-    public static final RegistryObject<Item> TELEPORTER = registerSweetscapeFood("teleporter", 1, 1.0F, true);
+    public static final RegistryObject<Item> HOT_GUMMY_WORM = registerSweetscapeFood("hot_gummy_worm", 7, 1.1F);
+    public static final RegistryObject<Item> TELEPORTER = registerSweetscapeSimple("teleporter", () -> new MagicCandyItem(foodProperties(1, 1.0F, true)));
 
     public static final RegistryObject<Item> MILK_CHOCOLATE_AXE = registerSweetscapeTool("milk_chocolate_axe", () -> new AxeItem(CHOCOLATE, 5.5F, -3.0F, foodProperties(6, 0.6F)));
     public static final RegistryObject<Item> MILK_CHOCOLATE_PICKAXE = registerSweetscapeTool("milk_chocolate_pickaxe", () -> new PickaxeItem(CHOCOLATE, 1, -2.8F, foodProperties(6, 0.6F)));
@@ -311,10 +338,11 @@ public final class CCItems {
         Item.Properties properties = new Item.Properties();
         return switch (name) {
             case "marshmallow_door", "marshmallow_door_dark", "marshmallow_door_light",
-                "milk_chocolate_door", "white_chocolate_door", "dark_chocolate_door" -> new DoubleHighBlockItem(block, properties);
-            case "cotton_candy_bed_block" -> new BedItem(block, properties.stacksTo(1));
+                "mint_door", "milk_chocolate_door", "white_chocolate_door", "dark_chocolate_door" -> new DoubleHighBlockItem(block, properties);
+            case "cotton_candy_bed_block", "mint_bed_block", "banana_seaweed_bed_block",
+                "chewing_gum_bed_block" -> new BedItem(block, properties.stacksTo(1));
             case "honey_torch" -> new StandingAndWallBlockItem(block, CCBlocks.HONEY_WALL_TORCH.get(), properties, Direction.DOWN);
-            case "marshmallow_slice", "marshmallow_slice_block", "marshmallow_flower_block" -> new PlaceOnWaterBlockItem(block, properties);
+            case "marshmallow_slice", "marshmallow_flower_block" -> new PlaceOnWaterBlockItem(block, properties);
             default -> new BlockItem(block, properties);
         };
     }
@@ -328,6 +356,12 @@ public final class CCItems {
     private static RegistryObject<Item> registerPortItem(String name, SupplierItem itemSupplier) {
         RegistryObject<Item> item = ITEMS.register(name, itemSupplier::get);
         PORT_ITEMS.add(item);
+        return item;
+    }
+
+    private static RegistryObject<Item> registerToolItem(String name, SupplierItem itemSupplier) {
+        RegistryObject<Item> item = ITEMS.register(name, itemSupplier::get);
+        TOOL_ITEMS.add(item);
         return item;
     }
 
@@ -392,18 +426,25 @@ public final class CCItems {
         return item;
     }
 
+    private static RegistryObject<Item> registerSignItem(String name, SupplierBlock standing, SupplierBlock wall) {
+        RegistryObject<Item> item = ITEMS.register(name, () ->
+            new SignItem(new Item.Properties().stacksTo(16), standing.get(), wall.get()));
+        BLOCK_ITEMS.add(item);
+        return item;
+    }
+
     private static ToolSet registerToolSet(String prefix, Tier tier) {
         return new ToolSet(
-            registerPortItem(prefix + "_sword", () -> new SwordItem(tier, 3, -2.4F, new Item.Properties())),
-            registerPortItem(prefix + "_shovel", () -> new ShovelItem(tier, 1.5F, -3.0F, new Item.Properties())),
-            registerPortItem(prefix + "_pickaxe", () -> new PickaxeItem(tier, 1, -2.8F, new Item.Properties())),
-            registerPortItem(prefix + "_axe", () -> new AxeItem(tier, 5.0F, -3.1F, new Item.Properties())),
-            registerPortItem(prefix + "_hoe", () -> new HoeItem(tier, -2, -1.0F, new Item.Properties()))
+            registerToolItem(prefix + "_sword", () -> new SwordItem(tier, 3, -2.4F, new Item.Properties())),
+            registerToolItem(prefix + "_shovel", () -> new ShovelItem(tier, 1.5F, -3.0F, new Item.Properties())),
+            registerToolItem(prefix + "_pickaxe", () -> new PickaxeItem(tier, 1, -2.8F, new Item.Properties())),
+            registerToolItem(prefix + "_axe", () -> new AxeItem(tier, 5.0F, -3.1F, new Item.Properties())),
+            registerToolItem(prefix + "_hoe", () -> new HoeItem(tier, -2, -1.0F, new Item.Properties()))
         );
     }
 
     private static RegistryObject<Item> registerArmor(String name, CCArmorMaterials material, ArmorItem.Type type) {
-        return registerPortItem(name, () -> new CCArmorItem(material, type, new Item.Properties()));
+        return registerToolItem(name, () -> new CCArmorItem(material, type, new Item.Properties()));
     }
 
     public static void register(IEventBus eventBus) {

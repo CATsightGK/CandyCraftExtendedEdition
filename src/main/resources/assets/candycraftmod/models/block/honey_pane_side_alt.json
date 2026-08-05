@@ -1,0 +1,8 @@
+{
+  "render_type": "minecraft:translucent",
+  "parent": "minecraft:block/template_glass_pane_side_alt",
+  "textures": {
+    "pane": "candycraftmod:block/honey_glass_0",
+    "edge": "candycraftmod:block/honey_glass_top"
+  }
+}

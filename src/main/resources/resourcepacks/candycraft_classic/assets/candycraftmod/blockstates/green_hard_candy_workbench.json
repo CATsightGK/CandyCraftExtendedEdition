@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "": [
+      {
+        "model": "candycraftmod:block/hard_candy/green_hard_candy_workbench"
+      }
+    ]
+  }
+}
+

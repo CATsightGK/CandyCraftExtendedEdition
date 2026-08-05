@@ -1,0 +1,7 @@
+{
+    "variants":  {
+                     "":  {
+                               "model":  "candycraftmod:block/chocolate_ice_cream"
+                           }
+                 }
+}

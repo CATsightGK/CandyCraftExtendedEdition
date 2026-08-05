@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "NNN",
+    "N N",
+    "NNN"
+  ],
+  "key": {
+    "N": { "item": "candycraftmod:nougat_block" }
+  },
+  "result": {
+    "item": "candycraftmod:square_pattern_nougat_block",
+    "count": 8
+  },
+  "show_notification": true
+}

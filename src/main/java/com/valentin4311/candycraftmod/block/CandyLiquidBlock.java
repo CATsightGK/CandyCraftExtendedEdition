@@ -1,7 +1,6 @@
 package com.valentin4311.candycraftmod.block;
 
 import com.valentin4311.candycraftmod.registry.CCBlocks;
-import com.valentin4311.candycraftmod.registry.CCBlocks;
 import java.util.function.Supplier;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -128,9 +127,8 @@ public class CandyLiquidBlock extends LiquidBlock {
             BlockPos neighborPos = pos.relative(direction);
             BlockState neighbor = level.getBlockState(neighborPos);
             if (isNonLavaLiquid(neighbor.getFluidState())) {
-                level.setBlock(source ? pos : neighborPos, source
-                    ? CCBlocks.CANDY_CANE_BLOCK.get().defaultBlockState()
-                    : CCBlocks.CRYSTALLIZED_SUGAR.get().defaultBlockState(), Block.UPDATE_ALL);
+                level.setBlock(source ? pos : neighborPos,
+                    CCBlocks.PINK_CRYSTALLIZED_SUGAR.get().defaultBlockState(), Block.UPDATE_ALL);
                 return;
             }
         }

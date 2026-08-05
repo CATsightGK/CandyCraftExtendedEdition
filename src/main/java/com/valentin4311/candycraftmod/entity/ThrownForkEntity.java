@@ -58,6 +58,7 @@ public class ThrownForkEntity extends AbstractArrow {
             dealtDamage = true;
         }
         super.tick();
+        applyNonWaterFluidDrag();
     }
 
     @Override
@@ -77,16 +78,17 @@ public class ThrownForkEntity extends AbstractArrow {
         dealtDamage = true;
         boolean hurt = target.hurt(damageSources().trident(this, owner == null ? this : owner), damage);
         if (hurt && target instanceof LivingEntity livingTarget) {
-            if (target instanceof EnderMan) {
-                return;
-            }
-            if (owner instanceof LivingEntity livingOwner) {
+            if (!(target instanceof EnderMan) && owner instanceof LivingEntity livingOwner) {
                 EnchantmentHelper.doPostHurtEffects(livingTarget, livingOwner);
                 EnchantmentHelper.doPostDamageEffects(livingOwner, livingTarget);
             }
-            doPostHurtEffects(livingTarget);
+            if (!(target instanceof EnderMan)) {
+                doPostHurtEffects(livingTarget);
+            }
         }
 
+        // Match ThrownTrident: the fork stops in the target and receives only
+        // the tiny impact reversal used by the vanilla projectile.
         setDeltaMovement(getDeltaMovement().multiply(-0.01D, -0.1D, -0.01D));
         playSound(SoundEvents.TRIDENT_HIT, 1.0F, 1.0F);
     }
@@ -104,7 +106,13 @@ public class ThrownForkEntity extends AbstractArrow {
 
     @Override
     protected float getWaterInertia() {
-        return 0.99F;
+        return 0.6F;
+    }
+
+    private void applyNonWaterFluidDrag() {
+        if (!inGround && !isInWater() && isInFluidType()) {
+            setDeltaMovement(getDeltaMovement().scale(0.6D));
+        }
     }
 
     public ItemStack getForkStack() {

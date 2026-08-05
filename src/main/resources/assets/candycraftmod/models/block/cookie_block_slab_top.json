@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/slab_top",
+  "textures": {
+    "bottom": "candycraftmod:block/cookie_block",
+    "side": "candycraftmod:block/cookie_block",
+    "top": "candycraftmod:block/cookie_block"
+  }
+}

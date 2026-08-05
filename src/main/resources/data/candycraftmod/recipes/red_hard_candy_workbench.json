@@ -1,0 +1,19 @@
+{
+    "key":  {
+                "#":  {
+                          "item":  "candycraftmod:red_hard_candy_block"
+                      },
+                "@":  {
+                          "item":  "candycraftmod:raspberry_cotton_candy"
+                      }
+            },
+    "category":  "misc",
+    "pattern":  [
+                    "@@",
+                    "##"
+                ],
+    "result":  {
+                   "item":  "candycraftmod:red_hard_candy_workbench"
+               },
+    "type":  "minecraft:crafting_shaped"
+}

@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "bottom": "candycraftmod:block/marshmallow_planks.2",
+    "top": "candycraftmod:block/marshmallow_workbench_light_top",
+    "side": "candycraftmod:block/marshmallow_workbench_light_side"
+  }
+}

@@ -1,6 +1,6 @@
 {
   "order": 200,
-  "icon": "candycraftmod:slot/candycraft_emblem",
+  "icon": "candycraftmod:slot/candycraft_emblem_curios",
   "size": 1,
   "validators": [
     "curios:tag"

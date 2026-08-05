@@ -4,8 +4,6 @@ import com.valentin4311.candycraftmod.alchemy.AlchemyMixing;
 import com.valentin4311.candycraftmod.registry.CCBlockEntities;
 import com.valentin4311.candycraftmod.registry.CCBlocks;
 import com.valentin4311.candycraftmod.registry.CCItems;
-import com.valentin4311.candycraftmod.registry.CCBlocks;
-import com.valentin4311.candycraftmod.registry.CCItems;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -25,9 +23,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
 public class AlchemyTableBlockEntity extends BlockEntity {
-    private static final int MAX_LIQUID_UNITS = 6;
-    private static final int BREW_TIME_TICKS = 20 * 10;
-    private static final int ADVANCED_BREW_TIME_TICKS = 20 * 5;
+    public static final int MAX_LIQUID_UNITS = 8;
     private AlchemyLiquidKind liquidKind = AlchemyLiquidKind.NONE;
     private boolean topFilled;
     private int liquidAmount;
@@ -64,17 +60,16 @@ public class AlchemyTableBlockEntity extends BlockEntity {
             return;
         }
 
-        if (liquidKind != AlchemyLiquidKind.GRENADINE || !isTopFilled() || getIngredientCount() < AlchemyMixing.INPUT_SLOTS || !isMixing() || !hasCraftableRecipe()) {
+        if (!isTopFilled() || getIngredientCount() < AlchemyMixing.INPUT_SLOTS || !isMixing() || !hasCraftableRecipe()) {
             resetBrewTicks();
             return;
         }
 
-        if (!hasMixerCatalyst()) {
-            resetBrewTicks();
-            return;
+        if (mixerSugarCharges <= 0) {
+            pullMixerSugarFromFactory();
         }
 
-        int requiredTicks = hasAdvancedMixerSugar ? ADVANCED_BREW_TIME_TICKS : BREW_TIME_TICKS;
+        int requiredTicks = getRequiredBrewTicks();
         brewTicks++;
         if (brewTicks >= requiredTicks) {
             finishBrew();
@@ -106,6 +101,10 @@ public class AlchemyTableBlockEntity extends BlockEntity {
         return Math.max(0, Math.min(MAX_LIQUID_UNITS, liquidAmount + (topFilled ? 1 : 0)));
     }
 
+    public float getLiquidFillFraction() {
+        return getDisplayedSyrupUnits() / (float)MAX_LIQUID_UNITS;
+    }
+
     public void setLiquidAmount(int liquidAmount) {
         this.liquidAmount = Math.max(0, Math.min(MAX_LIQUID_UNITS - 1, liquidAmount));
         if (this.liquidAmount <= 0 && !topFilled) {
@@ -116,7 +115,6 @@ public class AlchemyTableBlockEntity extends BlockEntity {
 
     public boolean canAddLiquid(AlchemyLiquidKind kind) {
         return kind != AlchemyLiquidKind.NONE
-            && getIngredientCount() == 0
             && brewTicks == 0
             && mixerSugarCharges == 0
             && (liquidKind == AlchemyLiquidKind.NONE || liquidKind == kind)
@@ -176,7 +174,7 @@ public class AlchemyTableBlockEntity extends BlockEntity {
     }
 
     public int getRequiredBrewTicks() {
-        return hasAdvancedMixerSugar ? ADVANCED_BREW_TIME_TICKS : BREW_TIME_TICKS;
+        return AlchemyMixing.mixingTime(level, ingredientInputs(), liquidKind, mixerSugarCharges > 0);
     }
 
     public boolean isMixing() {
@@ -212,16 +210,19 @@ public class AlchemyTableBlockEntity extends BlockEntity {
 
         if (Float.isNaN(clientLastAnimationTime)) {
             clientLastAnimationTime = renderTime;
-            clientMixerSpeed = targetClientMixerSpeed();
+            // Start from rest. Assigning the target here causes a visible one-frame impulse
+            // when the block entity first becomes visible or resumes after a chunk update.
+            clientMixerSpeed = 0.0F;
+            clientMixerAngle = 0.0F;
             return;
         }
 
         float deltaTicks = Math.max(0.0F, Math.min(4.0F, renderTime - clientLastAnimationTime));
         clientLastAnimationTime = renderTime;
         float targetSpeed = targetClientMixerSpeed();
-        float acceleration = targetSpeed > clientMixerSpeed ? 2.6F : 1.7F;
-        if (targetSpeed > 24.0F || clientMixerSpeed > 24.0F) {
-            acceleration = targetSpeed > clientMixerSpeed ? 3.8F : 2.4F;
+        float acceleration = targetSpeed > clientMixerSpeed ? 5.2F : 3.4F;
+        if (targetSpeed > 48.0F || clientMixerSpeed > 48.0F) {
+            acceleration = targetSpeed > clientMixerSpeed ? 7.6F : 4.8F;
         }
         clientMixerSpeed = approach(clientMixerSpeed, targetSpeed, acceleration * deltaTicks);
         clientMixerAngle = (clientMixerAngle + clientMixerSpeed * deltaTicks) % 360.0F;
@@ -232,12 +233,12 @@ public class AlchemyTableBlockEntity extends BlockEntity {
             return 0.0F;
         }
         if (isAdvancedSugarBoostedMixing()) {
-            return 42.0F;
+            return 84.0F;
         }
         if (isSugarBoostedMixing()) {
-            return 30.0F;
+            return 60.0F;
         }
-        return 16.0F;
+        return 32.0F;
     }
 
     private static float approach(float value, float target, float step) {
@@ -295,7 +296,6 @@ public class AlchemyTableBlockEntity extends BlockEntity {
         }
         updateMixerState();
         return isTopFilled()
-            && liquidKind == AlchemyLiquidKind.GRENADINE
             && getIngredientCount() >= AlchemyMixing.INPUT_SLOTS
             && mixerSugarCharges <= 0
             && isMixing()
@@ -303,7 +303,7 @@ public class AlchemyTableBlockEntity extends BlockEntity {
     }
 
     public boolean addIngredient(ItemStack stack) {
-        if (level == null || level.isClientSide || stack.isEmpty() || liquidKind != AlchemyLiquidKind.GRENADINE || !isTopFilled() || !AlchemyMixing.isValidIngredient(stack)) {
+        if (level == null || level.isClientSide || stack.isEmpty() || !isTopFilled() || !AlchemyMixing.isValidIngredient(level, stack, liquidKind)) {
             return false;
         }
 
@@ -322,14 +322,7 @@ public class AlchemyTableBlockEntity extends BlockEntity {
             return false;
         }
 
-        List<ItemStack> inputs = new ArrayList<>(4);
-        for (ItemStack ingredient : ingredients) {
-            if (ingredient.isEmpty()) {
-                return false;
-            }
-            inputs.add(ingredient);
-        }
-        return !AlchemyMixing.craft(inputs).isEmpty();
+        return !AlchemyMixing.craft(level, ingredientInputs(), liquidKind).isEmpty();
     }
 
     private void finishBrew() {
@@ -337,24 +330,11 @@ public class AlchemyTableBlockEntity extends BlockEntity {
             return;
         }
 
-        List<ItemStack> inputs = new ArrayList<>(4);
-        for (ItemStack ingredient : ingredients) {
-            if (ingredient.isEmpty()) {
-                return;
-            }
-            inputs.add(ingredient);
-        }
-
-        ItemStack result = AlchemyMixing.craft(inputs);
+        ItemStack result = AlchemyMixing.craft(level, ingredientInputs(), liquidKind);
         if (result.isEmpty()) {
             resetBrewTicks();
             return;
         }
-        if (mixerSugarCharges <= 0) {
-            resetBrewTicks();
-            return;
-        }
-
         double x = worldPosition.getX() + 0.5D;
         double y = worldPosition.getY() + 0.85D;
         double z = worldPosition.getZ() + 0.5D;
@@ -376,19 +356,21 @@ public class AlchemyTableBlockEntity extends BlockEntity {
         sync();
     }
 
+    private List<ItemStack> ingredientInputs() {
+        List<ItemStack> inputs = new ArrayList<>(ingredients.size());
+        for (ItemStack ingredient : ingredients) {
+            if (!ingredient.isEmpty()) {
+                inputs.add(ingredient.copyWithCount(1));
+            }
+        }
+        return inputs;
+    }
+
     private void resetBrewTicks() {
         if (brewTicks != 0) {
             brewTicks = 0;
             sync();
         }
-    }
-
-    private boolean hasMixerCatalyst() {
-        if (mixerSugarCharges > 0) {
-            hasMixerSugar = true;
-            return true;
-        }
-        return pullMixerSugarFromFactory();
     }
 
     private boolean pullMixerSugarFromFactory() {
@@ -439,13 +421,12 @@ public class AlchemyTableBlockEntity extends BlockEntity {
         for (Direction direction : Direction.values()) {
             BlockPos neighborPos = worldPosition.relative(direction);
             BlockState neighborState = level.getBlockState(neighborPos);
-            if (isCandyCaneBlock(neighborState)) {
+            if (isMixerPowerSource(neighborState)) {
                 power = true;
             }
 
             BlockEntity neighbor = level.getBlockEntity(neighborPos);
             if (neighbor instanceof SugarFactoryBlockEntity factory) {
-                power = true;
                 if (factory.getItem(1).is(Items.SUGAR)) {
                     sugar = true;
                     if (factory.isAdvancedFactory()) {
@@ -457,14 +438,12 @@ public class AlchemyTableBlockEntity extends BlockEntity {
         return new MixerState(power, sugar, advancedSugar);
     }
 
-    private static boolean isCandyCaneBlock(BlockState state) {
+    private static boolean isMixerPowerSource(BlockState state) {
         return state.is(CCBlocks.CANDY_CANE_BLOCK.get())
-            || state.is(CCBlocks.WHITE_CANDY_CANE_BLOCK.get())
-            || state.is(CCBlocks.RED_CANDY_CANE_BLOCK.get())
-            || state.is(CCBlocks.GREEN_CANDY_CANE_BLOCK.get())
-            || state.is(CCBlocks.WHITE_RED_CANDY_CANE_BLOCK.get())
-            || state.is(CCBlocks.WHITE_GREEN_CANDY_CANE_BLOCK.get())
-            || state.is(CCBlocks.RED_GREEN_CANDY_CANE_BLOCK.get());
+            || state.is(CCBlocks.SUGAR_FACTORY.get())
+            || state.is(CCBlocks.ADVANCED_SUGAR_FACTORY.get())
+            || state.is(CCBlocks.LICORICE_FURNACE.get())
+            || state.is(CCBlocks.LICORICE_FURNACE_ON.get());
     }
 
     public void clearIngredients() {
@@ -525,6 +504,7 @@ public class AlchemyTableBlockEntity extends BlockEntity {
         setChanged();
         if (level != null && !level.isClientSide) {
             level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 3);
+            level.getLightEngine().checkBlock(worldPosition);
         }
     }
 

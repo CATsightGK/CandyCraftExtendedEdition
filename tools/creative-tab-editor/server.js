@@ -1,14 +1,49 @@
 const fs = require("fs");
+const childProcess = require("child_process");
 const http = require("http");
 const path = require("path");
 const url = require("url");
 
-const root = process.env.CANDYCRAFT_ROOT
-  ? path.resolve(process.env.CANDYCRAFT_ROOT)
-  : path.resolve(__dirname, "..", "..");
+const embeddedProjectRoot = "C:\\Users\\10424\\Documents\\Codex\\2026-05-26\\1-8-9forge-1-20-1forge\\CandyCraftExtendedEdition-clean";
+
+function resolveProjectRoot() {
+  const candidates = [
+    process.env.CANDYCRAFT_ROOT,
+    process.cwd(),
+    path.dirname(process.execPath),
+    embeddedProjectRoot,
+    path.resolve(__dirname, "..", "..")
+  ].filter(Boolean);
+  for (const candidate of candidates) {
+    const resolved = path.resolve(candidate);
+    if (fs.existsSync(path.join(resolved, "src", "main"))) {
+      return resolved;
+    }
+  }
+  return path.resolve(candidates[0]);
+}
+
+const root = resolveProjectRoot();
 const assetsRoot = path.join(root, "src", "main", "resources", "assets", "candycraftmod");
 const orderPath = path.join(root, "src", "main", "resources", "data", "candycraftmod", "creative_tabs", "order.json");
 const defaultPort = Number(process.env.PORT || 4311);
+
+function openInDefaultBrowser(target) {
+  if (process.env.CANDYCRAFT_NO_BROWSER === "1") {
+    return;
+  }
+  const opener = process.platform === "win32"
+    ? { command: "rundll32.exe", args: ["url.dll,FileProtocolHandler", target] }
+    : process.platform === "darwin"
+      ? { command: "open", args: [target] }
+      : { command: "xdg-open", args: [target] };
+  const child = childProcess.spawn(opener.command, opener.args, {
+    detached: true,
+    stdio: "ignore",
+    windowsHide: true
+  });
+  child.unref();
+}
 
 function readText(file) {
   return fs.existsSync(file) ? fs.readFileSync(file, "utf8") : "";
@@ -40,22 +75,35 @@ function walk(dir, out = []) {
 function parseRegistryIds(javaFile, kind) {
   const text = readText(path.join(root, "src", "main", "java", "com", "valentin4311", "candycraftmod", "registry", javaFile));
   const items = [];
+  const toolSets = new Map();
+  const toolSetRegex = /ToolSet\s+([A-Z0-9_]+)\s*=\s*registerToolSet\("([^"]+)"/g;
+  let toolSetMatch;
+  while ((toolSetMatch = toolSetRegex.exec(text))) {
+    toolSets.set(toolSetMatch[1], toolSetMatch[2]);
+  }
   const regex = /public\s+static\s+final\s+RegistryObject<[^>]+>\s+([A-Z0-9_]+)\s*=\s*([^;]+);/g;
   let match;
   while ((match = regex.exec(text))) {
     const constant = match[1];
     const expr = match[2];
-    const name = expr.match(/\bregister(?:Food|Simple|Tool|PortItem|SeedItem|SpawnEgg|Armor|Record|Emblem|BlockItem)?\("([^"]+)"/);
-    if (!name || expr.includes("registerNoItem(")) {
+    const name = expr.match(/\bregister(?:SweetscapeFood|SweetscapeSimple|SweetscapeTool|Food|Simple|ToolItem|Tool|PortItem|SeedItem|SpawnEgg|Armor|Record|Emblem|BlockItem)?\("([^"]+)"/);
+    const toolAlias = expr.match(/^\s*([A-Z0-9_]+)\.(sword|shovel|pickaxe|axe|hoe)\s*$/);
+    if ((!name && !toolAlias) || expr.includes("registerNoItem(")) {
       continue;
     }
+    const id = name ? name[1] : `${toolSets.get(toolAlias[1])}_${toolAlias[2]}`;
+    if (!id || id.startsWith("undefined_")) {
+      continue;
+    }
+    const isTool = Boolean(toolAlias) || /register(?:Sweetscape)?(?:ToolItem|Tool|Armor)\(/.test(expr);
     items.push({
-      id: `candycraftmod:${name[1]}`,
+      id: `candycraftmod:${id}`,
       constant,
       kind,
       registryFile: javaFile,
-      list: expr.includes("registerTool(") ? "tool"
-        : expr.includes("registerSimple(") || expr.includes("registerFood(") ? "simple"
+      source: /registerSweetscape/.test(expr) ? "sweetscape" : "candycraft",
+      list: isTool ? "tool"
+        : /register(?:Sweetscape)?(?:Simple|Food)\(/.test(expr) ? "simple"
         : kind === "block" ? "block"
         : "item"
     });
@@ -149,74 +197,21 @@ function textureFromModel(id) {
 }
 
 function defaultOrders(items) {
-  const byConstant = new Map(items.map(item => [`${item.source}.${item.constant}`, item.id]));
-  const byId = new Set(items.map(item => item.id));
-  const movedCandyCanes = new Set([
-    "WHITE_CANDY_CANE",
-    "RED_CANDY_CANE",
-    "GREEN_CANDY_CANE",
-    "WHITE_RED_CANDY_CANE",
-    "WHITE_GREEN_CANDY_CANE",
-    "RED_GREEN_CANDY_CANE"
-  ]);
-  const candycraftConstants = [
-    "HONEY_SHARD", "HONEYCOMB", "NOUGAT_POWDER", "PEZ", "PEZ_DUST",
-    "LICORICE", "CHOCOLATE_COIN", "CRANBERRY_SCALE", "SUGAR_CRYSTAL",
-    "WAFFLE_NUGGET", "MARSHMALLOW_STICK",
-    "LOLLIPOP_SEEDS", "DRAGIBUS", "MARSHMALLOW_FLOWER",
-    "CANDIED_CHERRY", "CANDY_CANE",
-    "sweetscape.WHITE_CANDY_CANE", "sweetscape.RED_CANDY_CANE", "sweetscape.GREEN_CANDY_CANE",
-    "sweetscape.WHITE_RED_CANDY_CANE", "sweetscape.WHITE_GREEN_CANDY_CANE", "sweetscape.RED_GREEN_CANDY_CANE",
-    "CHEWING_GUM", "COTTON_CANDY",
-    "CRANBERRY_FISH", "CRANBERRY_FISH_COOKED", "DRAGIBUS_STICK", "GUMMY",
-    "HOT_GUMMY", "LOLLIPOP", "SUGAR_PILL", "WAFFLE",
-    "MARSHMALLOW_SWORD", "MARSHMALLOW_SHOVEL", "MARSHMALLOW_PICKAXE", "MARSHMALLOW_AXE", "MARSHMALLOW_HOE",
-    "LICORICE_SWORD", "LICORICE_SHOVEL", "LICORICE_PICKAXE", "LICORICE_AXE", "LICORICE_HOE",
-    "HONEY_SWORD", "HONEY_SHOVEL", "HONEY_PICKAXE", "HONEY_AXE", "HONEY_HOE",
-    "PEZ_SWORD", "PEZ_SHOVEL", "PEZ_PICKAXE", "PEZ_AXE", "PEZ_HOE",
-    "FORK", "LICORICE_SPEAR", "CARAMEL_BOW", "CARAMEL_CROSSBOW", "HONEY_ARROW", "HONEY_BOLT",
-    "GUMMY_BALL", "DYNAMITE", "GLUE_DYNAMITE",
-    "HONEY_HELMET", "HONEY_PLATE", "HONEY_LEGGINGS", "HONEY_BOOTS",
-    "LICORICE_HELMET", "LICORICE_PLATE", "LICORICE_LEGGINGS", "LICORICE_BOOTS",
-    "PEZ_HELMET", "PEZ_PLATE", "PEZ_LEGGINGS", "PEZ_BOOTS", "JELLY_BOOTS",
-    "BEETLE_KEY", "JELLY_KEY", "JELLY_SENTRY_KEY", "JELLY_BOSS_KEY",
-    "SUGUARD_KEY", "SUGUARD_SENTRY_KEY", "SUGUARD_BOSS_KEY", "SKY_KEY",
-    "CHEWING_GUM_EMBLEM", "CRANBERRY_EMBLEM", "GINGERBREAD_EMBLEM", "HONEY_EMBLEM",
-    "JELLY_EMBLEM", "SKY_EMBLEM", "SUGUARD_EMBLEM", "WATER_EMBLEM",
-    "JELLY_CROWN", "WATER_MASK", "JELLY_WAND", "JUMP_WAND",
-    "RECORD_1", "RECORD_2", "RECORD_3", "RECORD_4",
-    "CARAMEL_BUCKET", "GRENADINE_BUCKET"
-  ];
-  const candycraft = [];
-  for (const constant of candycraftConstants) {
-    const key = constant.includes(".") ? constant : `candycraft.${constant}`;
-    const id = byConstant.get(key);
-    if (id && !candycraft.includes(id)) {
-      candycraft.push(id);
-    }
-  }
-  for (const item of items) {
-    if (item.source === "candycraft" && item.kind === "block" && shouldShowCandycraftBlock(item.id)) {
-      candycraft.push(item.id);
-    }
-  }
-
-  const sweetscape = [];
-  for (const group of ["simple", "tool", "block"]) {
-    for (const item of items) {
-      if (item.source !== "sweetscape" || item.list !== group) {
-        continue;
-      }
-      if (movedCandyCanes.has(item.constant)) {
-        continue;
-      }
-      sweetscape.push(item.id);
-    }
-  }
-  for (const id of [...candycraft, ...sweetscape]) {
-    byId.delete(id);
-  }
-  return { candycraft, sweetscape };
+  const unique = ids => [...new Set(ids)];
+  const blocks = items
+    .filter(item => item.kind === "block" && shouldShowCandycraftBlock(item.id))
+    .map(item => item.id);
+  const tools = items
+    .filter(item => item.list === "tool")
+    .map(item => item.id);
+  const misc = items
+    .filter(item => item.kind !== "block" && item.list !== "tool")
+    .map(item => item.id);
+  return {
+    blocks: unique(blocks),
+    tools_armor: unique(tools),
+    misc: unique(misc)
+  };
 }
 
 function shouldShowCandycraftBlock(id) {
@@ -237,16 +232,10 @@ function buildState() {
   const registry = new Map();
 
   for (const item of parseRegistryIds("CCItems.java", "item")) {
-    registry.set(item.id, { ...item, source: "candycraft" });
-  }
-  for (const item of parseRegistryIds("CCSweetscapeItems.java", "item")) {
-    registry.set(item.id, { ...item, source: "sweetscape" });
+    registry.set(item.id, item);
   }
   for (const block of parseRegistryIds("CCBlocks.java", "block")) {
-    registry.set(block.id, { ...block, source: "candycraft" });
-  }
-  for (const block of parseRegistryIds("CCSweetscapeBlocks.java", "block")) {
-    registry.set(block.id, { ...block, source: "sweetscape" });
+    registry.set(block.id, block);
   }
   const items = [...registry.values()]
     .map(item => {
@@ -260,8 +249,12 @@ function buildState() {
     });
 
   const saved = readJson(orderPath, null);
-  const tabs = saved && Array.isArray(saved.blocks) && Array.isArray(saved.food) && Array.isArray(saved.tools_armor) && Array.isArray(saved.misc)
-    ? saved
+  const tabs = saved && Array.isArray(saved.blocks) && Array.isArray(saved.tools_armor) && Array.isArray(saved.misc)
+    ? {
+      blocks: saved.blocks,
+      tools_armor: saved.tools_armor,
+      misc: [...saved.misc, ...(Array.isArray(saved.food) ? saved.food : [])]
+    }
     : defaultOrders(items);
   return { items, tabs, orderPath };
 }
@@ -365,7 +358,6 @@ const server = http.createServer((req, res) => {
         const data = JSON.parse(body);
         const clean = {
           blocks: Array.isArray(data.blocks) ? data.blocks.filter(id => typeof id === "string") : [],
-          food: Array.isArray(data.food) ? data.food.filter(id => typeof id === "string") : [],
           tools_armor: Array.isArray(data.tools_armor) ? data.tools_armor.filter(id => typeof id === "string") : [],
           misc: Array.isArray(data.misc) ? data.misc.filter(id => typeof id === "string") : []
         };
@@ -398,10 +390,19 @@ function startServer(port = defaultPort) {
 }
 
 if (require.main === module) {
-  startServer().catch(error => {
-    console.error(error);
-    process.exitCode = 1;
-  });
+  const shouldOpenBrowser = !process.argv.includes("--no-browser");
+  startServer()
+    .then(({ port }) => {
+      if (shouldOpenBrowser) openInDefaultBrowser(`http://127.0.0.1:${port}/?v=8`);
+    })
+    .catch(error => {
+      if (error && error.code === "EADDRINUSE") {
+        if (shouldOpenBrowser) openInDefaultBrowser(`http://127.0.0.1:${defaultPort}/?v=8`);
+        return;
+      }
+      console.error(error);
+      process.exitCode = 1;
+    });
 }
 
 module.exports = { startServer };

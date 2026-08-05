@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "building",
+  "ingredients": [
+    {
+      "item": "candycraftmod:grenadine_glass"
+    }
+  ],
+  "result": {
+    "item": "candycraftmod:grenadine_glass_grid"
+  }
+}

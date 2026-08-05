@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "end": "candycraftmod:block/pudding_top",
+    "side": "candycraftmod:block/strawberry_filled_pudding_block_side"
+  }
+}

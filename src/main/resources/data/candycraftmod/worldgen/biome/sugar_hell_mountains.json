@@ -1,5 +1,5 @@
 {
-  "has_precipitation": true,
+  "has_precipitation": false,
   "temperature": 0,
   "downfall": 0.5,
   "effects": {
@@ -11,6 +11,14 @@
     "foliage_color": 16777215
   },
   "spawners": {
+    "creature": [
+      {
+        "type": "candycraftmod:cotton_candy_sheep",
+        "weight": 1,
+        "minCount": 1,
+        "maxCount": 1
+      }
+    ],
     "monster": [
       {
         "type": "candycraftmod:suguard",
@@ -64,7 +72,6 @@
       "candycraftmod:ore_sweetscape_dark_brownie_cake_roll_x",
       "candycraftmod:ore_sweetscape_dark_brownie_cake_roll_y",
       "candycraftmod:ore_sweetscape_dark_brownie_cake_roll_z",
-      "candycraftmod:ore_sweetscape_cake_block",
       "candycraftmod:ore_sweetscape_sugar_cookie",
       "candycraftmod:ore_sweetscape_teleporter",
       "candycraftmod:ore_sweetscape_sugar_sand"

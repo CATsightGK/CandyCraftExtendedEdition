@@ -18,6 +18,18 @@ public final class CCParticleTypes {
         PARTICLE_TYPES.register("milk_rain_drop", () -> new SimpleParticleType(false));
     public static final RegistryObject<SimpleParticleType> MILK_RAIN_SPLASH =
         PARTICLE_TYPES.register("milk_rain_splash", () -> new SimpleParticleType(false));
+    public static final RegistryObject<SimpleParticleType> ALCHEMY_SPLASH =
+        PARTICLE_TYPES.register("alchemy_splash", () -> new SimpleParticleType(false));
+    public static final RegistryObject<SimpleParticleType> STRAWBERRY_JELLY_FRAGMENT =
+        PARTICLE_TYPES.register("strawberry_jelly_fragment", () -> new SimpleParticleType(false));
+    public static final RegistryObject<SimpleParticleType> CARAMEL_JELLY_FRAGMENT =
+        PARTICLE_TYPES.register("caramel_jelly_fragment", () -> new SimpleParticleType(false));
+    public static final RegistryObject<SimpleParticleType> ROYAL_RATIONS_FRAGMENT =
+        PARTICLE_TYPES.register("royal_rations_fragment", () -> new SimpleParticleType(false));
+    public static final RegistryObject<SimpleParticleType> LEMON_JELLY_FRAGMENT =
+        PARTICLE_TYPES.register("lemon_jelly_fragment", () -> new SimpleParticleType(false));
+    public static final RegistryObject<SimpleParticleType> MINT_JELLY_FRAGMENT =
+        PARTICLE_TYPES.register("mint_jelly_fragment", () -> new SimpleParticleType(false));
 
     private CCParticleTypes() {
     }

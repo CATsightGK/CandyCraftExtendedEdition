@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "XXX",
+    "XXX"
+  ],
+  "key": {
+    "X": {
+      "item": "candycraftmod:caramel_king_jelly_ball"
+    }
+  },
+  "result": {
+    "item": "candycraftmod:caramel_jelly"
+  }
+}

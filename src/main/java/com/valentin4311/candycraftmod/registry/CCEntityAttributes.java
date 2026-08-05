@@ -16,6 +16,7 @@ import com.valentin4311.candycraftmod.entity.GummyBearEntity;
 import com.valentin4311.candycraftmod.entity.GummyBunnyEntity;
 import com.valentin4311.candycraftmod.entity.GummyMouseEntity;
 import com.valentin4311.candycraftmod.entity.NougatGolemEntity;
+import com.valentin4311.candycraftmod.entity.NessieEntity;
 import com.valentin4311.candycraftmod.entity.PingouinEntity;
 import com.valentin4311.candycraftmod.entity.WaffleSheepEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
@@ -86,11 +87,7 @@ public final class CCEntityAttributes {
             .add(Attributes.ATTACK_DAMAGE, 3.0D)
             .build();
         event.put(CCEntityTypes.MERMAID.get(), zombie);
-        event.put(CCEntityTypes.NESSIE.get(), Zombie.createAttributes()
-            .add(Attributes.MAX_HEALTH, 60.0D)
-            .add(Attributes.MOVEMENT_SPEED, 0.4D)
-            .add(Attributes.ATTACK_DAMAGE, 3.0D)
-            .build());
+        event.put(CCEntityTypes.NESSIE.get(), NessieEntity.createAttributes().build());
         event.put(CCEntityTypes.DRAGON.get(), Zombie.createAttributes()
             .add(Attributes.MAX_HEALTH, 80.0D)
             .add(Attributes.MOVEMENT_SPEED, 0.4D)

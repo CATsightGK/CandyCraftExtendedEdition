@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "candycraftmod:block/lemon_jelly_food"
+    },
+    "facing=east": {
+      "model": "candycraftmod:block/lemon_jelly_food",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "candycraftmod:block/lemon_jelly_food",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "candycraftmod:block/lemon_jelly_food",
+      "y": 270
+    }
+  }
+}

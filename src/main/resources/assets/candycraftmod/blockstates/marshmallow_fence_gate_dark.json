@@ -1,0 +1,20 @@
+{
+  "variants": {
+    "facing=east,in_wall=false,open=false": { "model": "candycraftmod:block/marshmallow_fence_gate_dark", "uvlock": true, "y": 270 },
+    "facing=east,in_wall=false,open=true": { "model": "candycraftmod:block/marshmallow_fence_gate_dark_open", "uvlock": true, "y": 270 },
+    "facing=east,in_wall=true,open=false": { "model": "candycraftmod:block/marshmallow_fence_gate_dark_wall", "uvlock": true, "y": 270 },
+    "facing=east,in_wall=true,open=true": { "model": "candycraftmod:block/marshmallow_fence_gate_dark_wall_open", "uvlock": true, "y": 270 },
+    "facing=north,in_wall=false,open=false": { "model": "candycraftmod:block/marshmallow_fence_gate_dark", "uvlock": true, "y": 180 },
+    "facing=north,in_wall=false,open=true": { "model": "candycraftmod:block/marshmallow_fence_gate_dark_open", "uvlock": true, "y": 180 },
+    "facing=north,in_wall=true,open=false": { "model": "candycraftmod:block/marshmallow_fence_gate_dark_wall", "uvlock": true, "y": 180 },
+    "facing=north,in_wall=true,open=true": { "model": "candycraftmod:block/marshmallow_fence_gate_dark_wall_open", "uvlock": true, "y": 180 },
+    "facing=south,in_wall=false,open=false": { "model": "candycraftmod:block/marshmallow_fence_gate_dark" },
+    "facing=south,in_wall=false,open=true": { "model": "candycraftmod:block/marshmallow_fence_gate_dark_open" },
+    "facing=south,in_wall=true,open=false": { "model": "candycraftmod:block/marshmallow_fence_gate_dark_wall" },
+    "facing=south,in_wall=true,open=true": { "model": "candycraftmod:block/marshmallow_fence_gate_dark_wall_open" },
+    "facing=west,in_wall=false,open=false": { "model": "candycraftmod:block/marshmallow_fence_gate_dark", "uvlock": true, "y": 90 },
+    "facing=west,in_wall=false,open=true": { "model": "candycraftmod:block/marshmallow_fence_gate_dark_open", "uvlock": true, "y": 90 },
+    "facing=west,in_wall=true,open=false": { "model": "candycraftmod:block/marshmallow_fence_gate_dark_wall", "uvlock": true, "y": 90 },
+    "facing=west,in_wall=true,open=true": { "model": "candycraftmod:block/marshmallow_fence_gate_dark_wall_open", "uvlock": true, "y": 90 }
+  }
+}

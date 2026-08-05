@@ -1,40 +1,209 @@
 {
-    "variants":  {
-                     "facing=west,half=bottom,shape=straight,waterlogged=true":  {
-                                                                                     "y":  180,
-                                                                                     "uvlock":  true,
-                                                                                     "model":  "candycraftmod:block/dark_marshmallow_stairs"
-                                                                                 },
-                     "facing=east,half=bottom,shape=straight,waterlogged=true":  {
-                                                                                     "model":  "candycraftmod:block/dark_marshmallow_stairs"
-                                                                                 },
-                     "facing=north,half=bottom,shape=straight,waterlogged=true":  {
-                                                                                      "y":  270,
-                                                                                      "uvlock":  true,
-                                                                                      "model":  "candycraftmod:block/dark_marshmallow_stairs"
-                                                                                  },
-                     "facing=east,half=bottom,shape=straight,waterlogged=false":  {
-                                                                                      "model":  "candycraftmod:block/dark_marshmallow_stairs"
-                                                                                  },
-                     "facing=south,half=bottom,shape=straight,waterlogged=true":  {
-                                                                                      "y":  90,
-                                                                                      "uvlock":  true,
-                                                                                      "model":  "candycraftmod:block/dark_marshmallow_stairs"
-                                                                                  },
-                     "facing=south,half=bottom,shape=straight,waterlogged=false":  {
-                                                                                       "y":  90,
-                                                                                       "uvlock":  true,
-                                                                                       "model":  "candycraftmod:block/dark_marshmallow_stairs"
-                                                                                   },
-                     "facing=west,half=bottom,shape=straight,waterlogged=false":  {
-                                                                                      "y":  180,
-                                                                                      "uvlock":  true,
-                                                                                      "model":  "candycraftmod:block/dark_marshmallow_stairs"
-                                                                                  },
-                     "facing=north,half=bottom,shape=straight,waterlogged=false":  {
-                                                                                       "y":  270,
-                                                                                       "uvlock":  true,
-                                                                                       "model":  "candycraftmod:block/dark_marshmallow_stairs"
-                                                                                   }
-                 }
+  "variants": {
+    "facing=east,half=bottom,shape=straight": {
+      "model": "candycraftmod:block/dark_marshmallow_stairs"
+    },
+    "facing=east,half=bottom,shape=inner_left": {
+      "model": "candycraftmod:block/marshmallow_inner_stairs.1",
+      "y": 270,
+      "uvlock": true
+    },
+    "facing=east,half=bottom,shape=inner_right": {
+      "model": "candycraftmod:block/marshmallow_inner_stairs.1"
+    },
+    "facing=east,half=bottom,shape=outer_left": {
+      "model": "candycraftmod:block/marshmallow_outer_stairs.1",
+      "y": 270,
+      "uvlock": true
+    },
+    "facing=east,half=bottom,shape=outer_right": {
+      "model": "candycraftmod:block/marshmallow_outer_stairs.1"
+    },
+    "facing=east,half=top,shape=straight": {
+      "model": "candycraftmod:block/dark_marshmallow_stairs",
+      "x": 180,
+      "uvlock": true
+    },
+    "facing=east,half=top,shape=inner_left": {
+      "model": "candycraftmod:block/marshmallow_inner_stairs.1",
+      "x": 180,
+      "uvlock": true
+    },
+    "facing=east,half=top,shape=inner_right": {
+      "model": "candycraftmod:block/marshmallow_inner_stairs.1",
+      "x": 180,
+      "y": 90,
+      "uvlock": true
+    },
+    "facing=east,half=top,shape=outer_left": {
+      "model": "candycraftmod:block/marshmallow_outer_stairs.1",
+      "x": 180,
+      "uvlock": true
+    },
+    "facing=east,half=top,shape=outer_right": {
+      "model": "candycraftmod:block/marshmallow_outer_stairs.1",
+      "x": 180,
+      "y": 90,
+      "uvlock": true
+    },
+    "facing=north,half=bottom,shape=straight": {
+      "model": "candycraftmod:block/dark_marshmallow_stairs",
+      "y": 270,
+      "uvlock": true
+    },
+    "facing=north,half=bottom,shape=inner_left": {
+      "model": "candycraftmod:block/marshmallow_inner_stairs.1",
+      "y": 180,
+      "uvlock": true
+    },
+    "facing=north,half=bottom,shape=inner_right": {
+      "model": "candycraftmod:block/marshmallow_inner_stairs.1",
+      "y": 270,
+      "uvlock": true
+    },
+    "facing=north,half=bottom,shape=outer_left": {
+      "model": "candycraftmod:block/marshmallow_outer_stairs.1",
+      "y": 180,
+      "uvlock": true
+    },
+    "facing=north,half=bottom,shape=outer_right": {
+      "model": "candycraftmod:block/marshmallow_outer_stairs.1",
+      "y": 270,
+      "uvlock": true
+    },
+    "facing=north,half=top,shape=straight": {
+      "model": "candycraftmod:block/dark_marshmallow_stairs",
+      "x": 180,
+      "y": 270,
+      "uvlock": true
+    },
+    "facing=north,half=top,shape=inner_left": {
+      "model": "candycraftmod:block/marshmallow_inner_stairs.1",
+      "x": 180,
+      "y": 270,
+      "uvlock": true
+    },
+    "facing=north,half=top,shape=inner_right": {
+      "model": "candycraftmod:block/marshmallow_inner_stairs.1",
+      "x": 180,
+      "uvlock": true
+    },
+    "facing=north,half=top,shape=outer_left": {
+      "model": "candycraftmod:block/marshmallow_outer_stairs.1",
+      "x": 180,
+      "y": 270,
+      "uvlock": true
+    },
+    "facing=north,half=top,shape=outer_right": {
+      "model": "candycraftmod:block/marshmallow_outer_stairs.1",
+      "x": 180,
+      "uvlock": true
+    },
+    "facing=south,half=bottom,shape=straight": {
+      "model": "candycraftmod:block/dark_marshmallow_stairs",
+      "y": 90,
+      "uvlock": true
+    },
+    "facing=south,half=bottom,shape=inner_left": {
+      "model": "candycraftmod:block/marshmallow_inner_stairs.1"
+    },
+    "facing=south,half=bottom,shape=inner_right": {
+      "model": "candycraftmod:block/marshmallow_inner_stairs.1",
+      "y": 90,
+      "uvlock": true
+    },
+    "facing=south,half=bottom,shape=outer_left": {
+      "model": "candycraftmod:block/marshmallow_outer_stairs.1"
+    },
+    "facing=south,half=bottom,shape=outer_right": {
+      "model": "candycraftmod:block/marshmallow_outer_stairs.1",
+      "y": 90,
+      "uvlock": true
+    },
+    "facing=south,half=top,shape=straight": {
+      "model": "candycraftmod:block/dark_marshmallow_stairs",
+      "x": 180,
+      "y": 90,
+      "uvlock": true
+    },
+    "facing=south,half=top,shape=inner_left": {
+      "model": "candycraftmod:block/marshmallow_inner_stairs.1",
+      "x": 180,
+      "y": 90,
+      "uvlock": true
+    },
+    "facing=south,half=top,shape=inner_right": {
+      "model": "candycraftmod:block/marshmallow_inner_stairs.1",
+      "x": 180,
+      "y": 180,
+      "uvlock": true
+    },
+    "facing=south,half=top,shape=outer_left": {
+      "model": "candycraftmod:block/marshmallow_outer_stairs.1",
+      "x": 180,
+      "y": 90,
+      "uvlock": true
+    },
+    "facing=south,half=top,shape=outer_right": {
+      "model": "candycraftmod:block/marshmallow_outer_stairs.1",
+      "x": 180,
+      "y": 180,
+      "uvlock": true
+    },
+    "facing=west,half=bottom,shape=straight": {
+      "model": "candycraftmod:block/dark_marshmallow_stairs",
+      "y": 180,
+      "uvlock": true
+    },
+    "facing=west,half=bottom,shape=inner_left": {
+      "model": "candycraftmod:block/marshmallow_inner_stairs.1",
+      "y": 90,
+      "uvlock": true
+    },
+    "facing=west,half=bottom,shape=inner_right": {
+      "model": "candycraftmod:block/marshmallow_inner_stairs.1",
+      "y": 180,
+      "uvlock": true
+    },
+    "facing=west,half=bottom,shape=outer_left": {
+      "model": "candycraftmod:block/marshmallow_outer_stairs.1",
+      "y": 90,
+      "uvlock": true
+    },
+    "facing=west,half=bottom,shape=outer_right": {
+      "model": "candycraftmod:block/marshmallow_outer_stairs.1",
+      "y": 180,
+      "uvlock": true
+    },
+    "facing=west,half=top,shape=straight": {
+      "model": "candycraftmod:block/dark_marshmallow_stairs",
+      "x": 180,
+      "y": 180,
+      "uvlock": true
+    },
+    "facing=west,half=top,shape=inner_left": {
+      "model": "candycraftmod:block/marshmallow_inner_stairs.1",
+      "x": 180,
+      "y": 180,
+      "uvlock": true
+    },
+    "facing=west,half=top,shape=inner_right": {
+      "model": "candycraftmod:block/marshmallow_inner_stairs.1",
+      "x": 180,
+      "y": 270,
+      "uvlock": true
+    },
+    "facing=west,half=top,shape=outer_left": {
+      "model": "candycraftmod:block/marshmallow_outer_stairs.1",
+      "x": 180,
+      "y": 180,
+      "uvlock": true
+    },
+    "facing=west,half=top,shape=outer_right": {
+      "model": "candycraftmod:block/marshmallow_outer_stairs.1",
+      "x": 180,
+      "y": 270,
+      "uvlock": true
+    }
+  }
 }

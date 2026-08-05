@@ -50,9 +50,14 @@ public class SuguardRenderer extends MobRenderer<BasicCandyZombieEntity, Suguard
             if (!entity.isBossSuguardAwake()) {
                 return BOSS_SLEEPING;
             }
-            return BOSS_AWAKE;
+            return switch (entity.getBossSuguardStat()) {
+                case 1 -> BOSS_STAT_1;
+                case 2 -> BOSS_STAT_2;
+                case 3 -> BOSS_STAT_3;
+                default -> BOSS_AWAKE;
+            };
         }
-        return entity.getMainHandItem().is(CCItems.DYNAMITE.get()) ? SOLDIER : SUGUARD;
+        return entity.isChocolateForestSuguard() || entity.getMainHandItem().is(CCItems.DYNAMITE.get()) ? SOLDIER : SUGUARD;
     }
 
     private static ResourceLocation texture(String name) {

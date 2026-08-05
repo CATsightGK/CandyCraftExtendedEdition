@@ -1,7 +1,6 @@
 package com.valentin4311.candycraftmod.block.entity;
 
 import com.valentin4311.candycraftmod.registry.CCItems;
-import com.valentin4311.candycraftmod.registry.CCItems;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
@@ -23,6 +22,23 @@ public enum AlchemyLiquidKind {
 
     public String id() {
         return id;
+    }
+
+    public int lightLevel() {
+        return switch (this) {
+            case LIQUID_CANDY -> 12;
+            case LAVA -> 15;
+            default -> 0;
+        };
+    }
+
+    public int temperature() {
+        return switch (this) {
+            case CHOCOLATE -> 315;
+            case LIQUID_CANDY -> 1000;
+            case LAVA -> 1300;
+            default -> 300;
+        };
     }
 
     public ItemStack bucket() {

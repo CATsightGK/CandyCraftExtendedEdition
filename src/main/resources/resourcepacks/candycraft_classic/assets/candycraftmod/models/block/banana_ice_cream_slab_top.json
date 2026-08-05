@@ -1,0 +1,8 @@
+{
+    "textures":  {
+                     "bottom":  "candycraftmod:block/banana_ice_cream",
+                     "top":  "candycraftmod:block/banana_ice_cream",
+                     "side":  "candycraftmod:block/banana_ice_cream"
+                 },
+    "parent":  "minecraft:block/slab_top"
+}

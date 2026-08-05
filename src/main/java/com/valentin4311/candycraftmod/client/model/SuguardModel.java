@@ -89,9 +89,6 @@ public class SuguardModel<T extends BasicCandyZombieEntity> extends EntityModel<
         leftArm.xRot = -1.570796F;
         leftArm.yRot = 0.0F;
         leftArm.zRot = 0.0F;
-        if (entity.isBossSuguardAwake() && entity.getMainHandItem().is(CCItems.CARAMEL_BOW.get())) {
-            applyBossBowDraw(entity, ageInTicks);
-        }
     }
 
     private void setDormantBossPose() {
@@ -114,21 +111,6 @@ public class SuguardModel<T extends BasicCandyZombieEntity> extends EntityModel<
         leftArm.xRot = -1.570796F;
         leftArm.yRot = 0.0F;
         leftArm.zRot = 0.0F;
-    }
-
-    private void applyBossBowDraw(T entity, float ageInTicks) {
-        float draw = entity.getBossBowDrawProgress(0.0F);
-        float eased = draw * draw * (3.0F - 2.0F * draw);
-        float settle = Mth.sin(eased * (float)Math.PI) * 0.08F;
-        float idle = Mth.sin(ageInTicks * 0.34F) * 0.025F;
-        rightArm.xRot = -1.48F - 0.22F * eased + idle;
-        rightArm.yRot = -0.50F - 0.22F * eased;
-        rightArm.zRot = 0.34F + 0.12F * eased + settle;
-        leftArm.xRot = -1.52F + 0.10F * eased - idle;
-        leftArm.yRot = 0.44F + 0.48F * eased;
-        leftArm.zRot = -0.26F - 0.18F * eased - settle;
-        float headPull = eased * 0.10F;
-        setHeadGroupYaw(head.yRot - headPull);
     }
 
     private void setHeadGroupYaw(float yaw) {

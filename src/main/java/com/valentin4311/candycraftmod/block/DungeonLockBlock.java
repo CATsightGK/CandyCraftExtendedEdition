@@ -1,8 +1,8 @@
 package com.valentin4311.candycraftmod.block;
 
-import com.valentin4311.candycraftmod.registry.CCBlocks;
 import com.valentin4311.candycraftmod.registry.CCItems;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
@@ -35,7 +35,10 @@ public class DungeonLockBlock extends Block {
             return InteractionResult.SUCCESS;
         }
 
-        openDoor(level, pos);
+        if (kind == Kind.JELLY_BOSS && player instanceof ServerPlayer serverPlayer) {
+            DungeonTeleporterBlock.markJellyCompletedFromBossLock(serverPlayer);
+        }
+        removeLockBlocks(level, pos);
         if (!player.getAbilities().instabuild) {
             stack.shrink(1);
         }
@@ -53,34 +56,13 @@ public class DungeonLockBlock extends Block {
         return stack.is(item);
     }
 
-    private static void openDoor(Level level, BlockPos pos) {
+    private static void removeLockBlocks(Level level, BlockPos pos) {
         for (int dy = -2; dy <= 2; dy++) {
             BlockPos lockPos = pos.offset(0, dy, 0);
             if (level.getBlockState(lockPos).getBlock() instanceof DungeonLockBlock) {
                 level.setBlock(lockPos, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);
             }
         }
-
-        clearDoorPlane(level, pos, true);
-        clearDoorPlane(level, pos, false);
-    }
-
-    private static void clearDoorPlane(Level level, BlockPos center, boolean alongX) {
-        for (int horizontal = -2; horizontal <= 2; horizontal++) {
-            for (int dy = -1; dy <= 3; dy++) {
-                BlockPos pos = alongX ? center.offset(horizontal, dy, 0) : center.offset(0, dy, horizontal);
-                BlockState state = level.getBlockState(pos);
-                if (isDoorBlock(state)) {
-                    level.setBlock(pos, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);
-                }
-            }
-        }
-    }
-
-    private static boolean isDoorBlock(BlockState state) {
-        return state.is(CCBlocks.JAW_BREAKER_BLOCK.get())
-            || state.is(CCBlocks.JAW_BREAKER_LIGHT.get())
-            || state.getBlock() instanceof DungeonLockBlock;
     }
 
     public enum Kind {

@@ -8,6 +8,7 @@ import com.valentin4311.candycraftmod.entity.ThrownForkEntity;
 import com.valentin4311.candycraftmod.inventory.tooltip.ForkHeldBlockTooltip;
 import com.valentin4311.candycraftmod.registry.CCBlocks;
 import com.valentin4311.candycraftmod.registry.CCCriteriaTriggers;
+import com.valentin4311.candycraftmod.registry.CCToolProperties;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.BlockParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
@@ -71,7 +72,7 @@ public class ForkItem extends TieredItem {
     public static final TagKey<Block> FORK_EDIBLE = BlockTags.create(new ResourceLocation(CandyCraft.MODID, "fork_edible"));
     private final Multimap<Attribute, AttributeModifier> defaultModifiers;
 
-    public ForkItem(Tier tier, int attackDamageModifier, float attackSpeedModifier, Properties properties) {
+    public ForkItem(Tier tier, float attackDamageModifier, float attackSpeedModifier, Properties properties) {
         super(tier, properties);
         this.defaultModifiers = ImmutableMultimap.<Attribute, AttributeModifier>builder()
             .put(Attributes.ATTACK_DAMAGE, new AttributeModifier(BASE_ATTACK_DAMAGE_UUID,
@@ -218,7 +219,9 @@ public class ForkItem extends TieredItem {
             if (player.getAbilities().instabuild) {
                 fork.pickup = net.minecraft.world.entity.projectile.AbstractArrow.Pickup.CREATIVE_ONLY;
             }
-            level.addFreshEntity(fork);
+            if (level.addFreshEntity(fork) && player instanceof ServerPlayer serverPlayer) {
+                CCCriteriaTriggers.THROW_FORK.trigger(serverPlayer);
+            }
             level.playSound(null, fork, SoundEvents.TRIDENT_THROW, SoundSource.PLAYERS, 1.0F, 1.0F);
             if (!player.getAbilities().instabuild) {
                 stack.shrink(1);
@@ -254,7 +257,9 @@ public class ForkItem extends TieredItem {
 
     @Override
     public boolean canApplyAtEnchantingTable(ItemStack stack, Enchantment enchantment) {
-        return enchantment == Enchantments.UNBREAKING || enchantment == Enchantments.MENDING;
+        Boolean configured = CCToolProperties.configuredEnchantmentRule(stack, enchantment);
+        return configured != null ? configured
+            : enchantment == Enchantments.UNBREAKING || enchantment == Enchantments.MENDING;
     }
 
     @Override

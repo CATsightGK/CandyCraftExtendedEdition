@@ -2,6 +2,8 @@
   "replace": false,
   "values": [
     "candycraftmod:marshmallow_fence",
+    "candycraftmod:marshmallow_fence_dark",
+    "candycraftmod:marshmallow_fence_light",
     "candycraftmod:candy_cane_fence"
   ]
 }

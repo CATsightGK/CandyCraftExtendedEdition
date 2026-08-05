@@ -1,0 +1,23 @@
+{
+  "display": {
+    "icon": {
+      "item": "candycraftmod:fork"
+    },
+    "title": {
+      "translate": "advancements.candycraft.throw_fork.title"
+    },
+    "description": {
+      "translate": "advancements.candycraft.throw_fork.desc"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "complete": {
+      "trigger": "candycraftmod:throw_fork"
+    }
+  },
+  "parent": "candycraftmod:craft_fork"
+}

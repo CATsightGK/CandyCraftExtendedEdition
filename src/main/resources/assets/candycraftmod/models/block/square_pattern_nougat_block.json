@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/cube_all",
+  "textures": {
+    "all": "candycraftmod:block/square_pattern_nougat_block"
+  }
+}

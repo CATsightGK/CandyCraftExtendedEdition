@@ -127,7 +127,6 @@ public class CottonCandySheepEntity extends Sheep {
 
     @Override
     protected void dropCustomDeathLoot(DamageSource source, int looting, boolean recentlyHit) {
-        super.dropCustomDeathLoot(source, looting, recentlyHit);
         if (!isSheared()) {
             int count = 1 + random.nextInt(2) + random.nextInt(looting + 1);
             spawnAtLocation(new ItemStack(CCItems.CANDY_FLOSS.get(), count));

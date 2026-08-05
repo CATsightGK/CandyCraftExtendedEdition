@@ -1,5 +1,5 @@
 {
-  "has_precipitation": true,
+  "has_precipitation": false,
   "temperature": 0.8,
   "downfall": 0.3,
   "creature_spawn_probability": 0.1,
@@ -15,9 +15,9 @@
     "creature": [
       {
         "type": "candycraftmod:cotton_candy_sheep",
-        "weight": 35,
-        "minCount": 3,
-        "maxCount": 6
+        "weight": 12,
+        "minCount": 2,
+        "maxCount": 3
       }
     ],
     "monster": [
@@ -46,7 +46,7 @@
         "maxCount": 4
       }
     ],
-    "water_creature": [
+    "water_ambient": [
       {
         "type": "candycraftmod:candy_fish",
         "weight": 50,

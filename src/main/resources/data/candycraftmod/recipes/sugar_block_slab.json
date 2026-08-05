@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [ "###" ],
+  "key": {
+    "#": { "item": "candycraftmod:sugar_block" }
+  },
+  "result": {
+    "item": "candycraftmod:sugar_block_slab",
+    "count": 6
+  }
+}

@@ -1,0 +1,1 @@
+{"type":"minecraft:crafting_shaped","category":"misc","group":"candycraft_sign","key":{"#":{"item":"candycraftmod:dark_chocolate_block"},"X":{"item":"candycraftmod:wafer_stick"}},"pattern":["###","###"," X "],"result":{"count":3,"item":"candycraftmod:dark_chocolate_sign"},"show_notification":true}

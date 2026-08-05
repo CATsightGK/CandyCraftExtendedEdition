@@ -1,0 +1,13 @@
+{
+  "multipart": [
+    { "when": { "up": "true" }, "apply": { "model": "candycraftmod:block/sugar_block_wall_post" } },
+    { "when": { "north": "low" }, "apply": { "model": "candycraftmod:block/sugar_block_wall_side", "uvlock": true } },
+    { "when": { "east": "low" }, "apply": { "model": "candycraftmod:block/sugar_block_wall_side", "uvlock": true, "y": 90 } },
+    { "when": { "south": "low" }, "apply": { "model": "candycraftmod:block/sugar_block_wall_side", "uvlock": true, "y": 180 } },
+    { "when": { "west": "low" }, "apply": { "model": "candycraftmod:block/sugar_block_wall_side", "uvlock": true, "y": 270 } },
+    { "when": { "north": "tall" }, "apply": { "model": "candycraftmod:block/sugar_block_wall_side_tall", "uvlock": true } },
+    { "when": { "east": "tall" }, "apply": { "model": "candycraftmod:block/sugar_block_wall_side_tall", "uvlock": true, "y": 90 } },
+    { "when": { "south": "tall" }, "apply": { "model": "candycraftmod:block/sugar_block_wall_side_tall", "uvlock": true, "y": 180 } },
+    { "when": { "west": "tall" }, "apply": { "model": "candycraftmod:block/sugar_block_wall_side_tall", "uvlock": true, "y": 270 } }
+  ]
+}

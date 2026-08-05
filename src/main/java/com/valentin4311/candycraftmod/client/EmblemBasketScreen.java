@@ -10,15 +10,18 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
 
 public class EmblemBasketScreen extends AbstractContainerScreen<EmblemBasketMenu> {
+    private static final ResourceLocation BACKGROUND = new ResourceLocation(
+        CandyCraft.MODID,
+        "textures/gui/container/emblem_basket.png"
+    );
+    private static final ResourceLocation MARSHMALLOW_SLOT = new ResourceLocation(
+        CandyCraft.MODID,
+        "textures/gui/marshmallow_slot.png"
+    );
     private static final ResourceLocation EMPTY_EMBLEM_SLOT = new ResourceLocation(
         CandyCraft.MODID,
         "textures/slot/candycraft_emblem.png"
     );
-    private static final int BORDER = 0xFF351326;
-    private static final int DARK_PINK = 0xFF9E3F70;
-    private static final int MID_PINK = 0xFFE276AA;
-    private static final int LIGHT_PINK = 0xFFFFC8DF;
-    private static final int HIGHLIGHT = 0xFFFFE4EF;
 
     public EmblemBasketScreen(EmblemBasketMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
@@ -32,13 +35,7 @@ public class EmblemBasketScreen extends AbstractContainerScreen<EmblemBasketMenu
     protected void renderBg(GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
         int left = leftPos;
         int top = topPos;
-        graphics.fill(left, top, left + imageWidth, top + imageHeight, BORDER);
-        graphics.fill(left + 2, top + 2, left + imageWidth - 2, top + imageHeight - 2, DARK_PINK);
-        graphics.fill(left + 4, top + 4, left + imageWidth - 4, top + imageHeight - 4, MID_PINK);
-        graphics.fill(left + 5, top + 17, left + imageWidth - 5, top + menu.getInventoryStartY() - 5, LIGHT_PINK);
-        graphics.fill(left + 5, top + menu.getInventoryStartY() - 7,
-            left + imageWidth - 5, top + imageHeight - 5, 0xFFD9669B);
-        graphics.fill(left + 5, top + 17, left + imageWidth - 5, top + 19, HIGHLIGHT);
+        graphics.blit(BACKGROUND, left, top, 0, 0, imageWidth, imageHeight, imageWidth, imageHeight);
 
         int visibleEmblems = menu.getVisibleEmblemSlots();
         for (int slotIndex = 0; slotIndex < menu.slots.size(); slotIndex++) {
@@ -54,9 +51,13 @@ public class EmblemBasketScreen extends AbstractContainerScreen<EmblemBasketMenu
     }
 
     private static void drawSlot(GuiGraphics graphics, int x, int y) {
-        graphics.fill(x, y, x + 18, y + 18, BORDER);
-        graphics.fill(x + 1, y + 1, x + 17, y + 17, 0xFF6E2B52);
-        graphics.fill(x + 2, y + 2, x + 16, y + 16, 0x66FFFFFF);
+        graphics.blit(MARSHMALLOW_SLOT, x, y, 0, 0, 18, 18, 18, 18);
+    }
+
+    @Override
+    protected void renderLabels(GuiGraphics graphics, int mouseX, int mouseY) {
+        graphics.drawString(font, title, titleLabelX, titleLabelY, 0x51343E, false);
+        graphics.drawString(font, playerInventoryTitle, inventoryLabelX, inventoryLabelY, 0x51343E, false);
     }
 
     @Override

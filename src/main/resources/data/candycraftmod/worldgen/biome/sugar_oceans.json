@@ -1,5 +1,5 @@
 {
-  "has_precipitation": true,
+  "has_precipitation": false,
   "temperature": 0.5,
   "downfall": 0.5,
   "effects": {
@@ -11,13 +11,15 @@
     "foliage_color": 11755263
   },
   "spawners": {
-    "water_creature": [
+    "water_ambient": [
       {
         "type": "candycraftmod:candy_fish",
-        "weight": 75,
-        "minCount": 4,
-        "maxCount": 4
-      },
+        "weight": 15,
+        "minCount": 3,
+        "maxCount": 6
+      }
+    ],
+    "water_creature": [
       {
         "type": "candycraftmod:nessie",
         "weight": 25,
@@ -59,7 +61,6 @@
       "candycraftmod:ore_sweetscape_dark_brownie_cake_roll_x",
       "candycraftmod:ore_sweetscape_dark_brownie_cake_roll_y",
       "candycraftmod:ore_sweetscape_dark_brownie_cake_roll_z",
-      "candycraftmod:ore_sweetscape_cake_block",
       "candycraftmod:ore_sweetscape_sugar_cookie",
       "candycraftmod:ore_sweetscape_teleporter",
       "candycraftmod:ore_sweetscape_sugar_sand"

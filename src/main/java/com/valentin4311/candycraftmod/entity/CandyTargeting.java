@@ -11,11 +11,12 @@ public final class CandyTargeting {
     }
 
     public static boolean canAttackPlayer(Player player) {
-        return player != null && !player.getAbilities().instabuild && !player.isSpectator();
+        return player != null && player.isAlive() && !player.getAbilities().instabuild && !player.isSpectator();
     }
 
     public static boolean canAttackEntity(Entity entity) {
-        return !(entity instanceof Player player) || canAttackPlayer(player);
+        return entity != null && entity.isAlive()
+            && (!(entity instanceof Player player) || canAttackPlayer(player));
     }
 
     public static Player nearestAttackablePlayer(Level level, Entity seeker, double range) {

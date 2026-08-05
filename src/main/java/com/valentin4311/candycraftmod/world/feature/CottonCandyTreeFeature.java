@@ -32,7 +32,7 @@ public class CottonCandyTreeFeature extends Feature<NoneFeatureConfiguration> {
         }
 
         int trunkHeight = 5 + random.nextInt(3);
-        BlockState trunk = CCBlocks.WHITE_CANDY_CANE_BLOCK.get().defaultBlockState();
+        BlockState trunk = CCBlocks.WHITE_HARD_CANDY_BLOCK.get().defaultBlockState();
         BlockState leaves = CCBlocks.COTTON_CANDY_BLOCK.get().defaultBlockState();
         for (int y = 0; y < trunkHeight; y++) {
             setReplaceable(level, base.above(y), trunk);

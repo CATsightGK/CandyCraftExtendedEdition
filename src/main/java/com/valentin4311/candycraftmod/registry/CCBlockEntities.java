@@ -2,11 +2,13 @@ package com.valentin4311.candycraftmod.registry;
 
 import com.valentin4311.candycraftmod.block.entity.AlchemyTableBlockEntity;
 import com.valentin4311.candycraftmod.CandyCraft;
+import com.valentin4311.candycraftmod.block.entity.CandySignBlockEntity;
 import com.valentin4311.candycraftmod.block.entity.DragonEggBlockEntity;
 import com.valentin4311.candycraftmod.block.entity.LicoriceFurnaceBlockEntity;
 import com.valentin4311.candycraftmod.block.entity.MarshmallowChestBlockEntity;
 import com.valentin4311.candycraftmod.block.entity.SugarFactoryBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.entity.SignBlockEntity;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -48,6 +50,20 @@ public final class CCBlockEntities {
         BLOCK_ENTITY_TYPES.register("marshmallow_chest", () -> new BlockEntityType<>(
             MarshmallowChestBlockEntity::new,
             java.util.Set.of(CCBlocks.MARSHMALLOW_CHEST.get(), CCBlocks.MARSHMALLOW_CHEST_DARK.get(), CCBlocks.MARSHMALLOW_CHEST_LIGHT.get()),
+            null
+        ));
+
+    public static final RegistryObject<BlockEntityType<SignBlockEntity>> CANDY_SIGN =
+        BLOCK_ENTITY_TYPES.register("candy_sign", () -> new BlockEntityType<>(
+            CandySignBlockEntity::new,
+            java.util.Set.of(
+                CCBlocks.MARSHMALLOW_SIGN.get(), CCBlocks.MARSHMALLOW_WALL_SIGN.get(),
+                CCBlocks.MARSHMALLOW_SIGN_LIGHT.get(), CCBlocks.MARSHMALLOW_WALL_SIGN_LIGHT.get(),
+                CCBlocks.MARSHMALLOW_SIGN_DARK.get(), CCBlocks.MARSHMALLOW_WALL_SIGN_DARK.get(),
+                CCBlocks.MILK_CHOCOLATE_SIGN.get(), CCBlocks.MILK_CHOCOLATE_WALL_SIGN.get(),
+                CCBlocks.WHITE_CHOCOLATE_SIGN.get(), CCBlocks.WHITE_CHOCOLATE_WALL_SIGN.get(),
+                CCBlocks.DARK_CHOCOLATE_SIGN.get(), CCBlocks.DARK_CHOCOLATE_WALL_SIGN.get()
+            ),
             null
         ));
 

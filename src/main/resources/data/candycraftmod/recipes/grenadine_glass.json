@@ -1,0 +1,13 @@
+{
+  "type": "candycraftmod:licorice_smelting",
+  "category": "blocks",
+  "ingredient": {
+    "item": "candycraftmod:grenadine_bucket"
+  },
+  "result": {
+    "item": "candycraftmod:grenadine_glass",
+    "count": 8
+  },
+  "experience": 0.7,
+  "cookingtime": 200
+}

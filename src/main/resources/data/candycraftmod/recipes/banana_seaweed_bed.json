@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "###",
+    "PPP"
+  ],
+  "key": {
+    "#": { "item": "candycraftmod:banana_block" },
+    "P": { "tag": "candycraftmod:marshmallow_planks" }
+  },
+  "result": { "item": "candycraftmod:banana_seaweed_bed_block" }
+}

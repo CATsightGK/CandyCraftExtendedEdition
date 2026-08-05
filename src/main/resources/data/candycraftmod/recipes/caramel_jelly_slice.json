@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "candycraftmod:caramel_jelly"
+    }
+  ],
+  "result": {
+    "item": "candycraftmod:caramel_jelly_slice"
+  }
+}

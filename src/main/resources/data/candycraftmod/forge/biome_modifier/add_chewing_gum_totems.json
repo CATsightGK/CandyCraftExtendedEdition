@@ -1,0 +1,6 @@
+{
+  "type": "forge:add_features",
+  "biomes": "#candycraftmod:candy_world",
+  "features": "candycraftmod:chewing_gum_totem",
+  "step": "surface_structures"
+}

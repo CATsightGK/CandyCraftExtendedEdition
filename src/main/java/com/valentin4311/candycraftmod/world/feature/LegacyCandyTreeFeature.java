@@ -160,7 +160,7 @@ public class LegacyCandyTreeFeature extends Feature<NoneFeatureConfiguration> {
 
     private static boolean generateSpruceLike(LevelAccessor level, RandomSource random, BlockPos base, BlockState trunk, BlockState leaves) {
         int height = 6 + random.nextInt(4);
-        if (!canGrow(level, base, height + 1, 3)) {
+        if (!canGrow(level, base, height + 1, 3, true)) {
             return false;
         }
 
@@ -271,7 +271,12 @@ public class LegacyCandyTreeFeature extends Feature<NoneFeatureConfiguration> {
     }
 
     private static boolean canGrow(LevelAccessor level, BlockPos base, int height, int radius) {
-        if (!isCandySoil(level.getBlockState(base.below()))) {
+        return canGrow(level, base, height, radius, false);
+    }
+
+    private static boolean canGrow(LevelAccessor level, BlockPos base, int height, int radius, boolean allowIceCream) {
+        BlockState soil = level.getBlockState(base.below());
+        if (!isCandySoil(soil) && !(allowIceCream && soil.is(CCBlocks.ICE_CREAM.get()))) {
             return false;
         }
         for (int y = 0; y <= height; y++) {

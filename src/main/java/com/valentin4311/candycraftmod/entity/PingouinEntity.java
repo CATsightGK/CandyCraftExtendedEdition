@@ -27,6 +27,7 @@ import net.minecraft.world.level.block.Block;
 import org.jetbrains.annotations.Nullable;
 
 public class PingouinEntity extends Animal {
+    private static final int COLOR_VARIANTS = 5;
     private static final EntityDataAccessor<Integer> COLOR = SynchedEntityData.defineId(PingouinEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Boolean> SUPER = SynchedEntityData.defineId(PingouinEntity.class, EntityDataSerializers.BOOLEAN);
 
@@ -36,7 +37,7 @@ public class PingouinEntity extends Animal {
 
     public static AttributeSupplier.Builder createAttributes() {
         return Mob.createMobAttributes()
-            .add(Attributes.MAX_HEALTH, 8.0D)
+            .add(Attributes.MAX_HEALTH, 20.0D)
             .add(Attributes.MOVEMENT_SPEED, 0.5D);
     }
 
@@ -60,11 +61,11 @@ public class PingouinEntity extends Animal {
     }
 
     public int getColor() {
-        return entityData.get(COLOR) & 3;
+        return Math.floorMod(entityData.get(COLOR), COLOR_VARIANTS);
     }
 
     public void setColor(int color) {
-        entityData.set(COLOR, color & 3);
+        entityData.set(COLOR, Math.floorMod(color, COLOR_VARIANTS));
     }
 
     public boolean isSuperPingouin() {
@@ -95,7 +96,7 @@ public class PingouinEntity extends Animal {
 
     @Override
     public int getMaxSpawnClusterSize() {
-        return 6;
+        return 4;
     }
 
     @Override
@@ -118,7 +119,7 @@ public class PingouinEntity extends Animal {
     @Override
     public SpawnGroupData finalizeSpawn(net.minecraft.world.level.ServerLevelAccessor level, net.minecraft.world.DifficultyInstance difficulty, MobSpawnType spawnType, @Nullable SpawnGroupData spawnGroupData, @Nullable CompoundTag tag) {
         SpawnGroupData data = super.finalizeSpawn(level, difficulty, spawnType, spawnGroupData, tag);
-        setColor(random.nextInt(3));
+        setColor(random.nextInt(COLOR_VARIANTS));
         if (random.nextInt(30) == 0) {
             setSuper(true);
         }
@@ -177,6 +178,8 @@ public class PingouinEntity extends Animal {
             case 0 -> CCBlocks.STRAWBERRY_ICE_CREAM.get();
             case 1 -> CCBlocks.MINT_ICE_CREAM.get();
             case 2 -> CCBlocks.BLUEBERRY_ICE_CREAM.get();
+            case 3 -> CCBlocks.CHOCOLATE_ICE_CREAM.get();
+            case 4 -> CCBlocks.BANANA_ICE_CREAM.get();
             default -> CCBlocks.ICE_CREAM.get();
         };
     }

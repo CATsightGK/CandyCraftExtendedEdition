@@ -9,7 +9,10 @@
     "description": {
       "translate": "advancements.candycraft.kill_jelly_queen.desc"
     },
-    "frame": "goal"
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
   },
   "parent": "candycraftmod:craft_licorice_sword",
   "criteria": {

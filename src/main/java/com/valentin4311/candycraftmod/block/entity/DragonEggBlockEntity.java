@@ -9,7 +9,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -18,8 +17,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.item.ItemStack;
 
 public class DragonEggBlockEntity extends BlockEntity {
-    private static final int MIN_HATCH_TICKS = 48000;
-    private static final int HATCH_TICK_SPREAD = 24000;
+    private static final int HATCH_TICKS = 300;
     private static final int SPAWN_DELAY_TICKS = 50;
     private int timeLeft = -1;
 
@@ -29,8 +27,10 @@ public class DragonEggBlockEntity extends BlockEntity {
 
     public static void tick(Level level, BlockPos pos, BlockState state, DragonEggBlockEntity egg) {
         if (egg.timeLeft < 0) {
-            RandomSource random = level.getRandom();
-            egg.timeLeft = MIN_HATCH_TICKS + random.nextInt(HATCH_TICK_SPREAD + 1);
+            egg.timeLeft = HATCH_TICKS;
+            egg.setChanged();
+        } else if (egg.timeLeft > HATCH_TICKS) {
+            egg.timeLeft = HATCH_TICKS;
             egg.setChanged();
         }
         if (!hasSugarEssenceRing(level, pos) && egg.timeLeft > SPAWN_DELAY_TICKS) {
@@ -54,10 +54,6 @@ public class DragonEggBlockEntity extends BlockEntity {
 
         if (entity == null) {
             return;
-        }
-
-        if (entity.getType() == CCEntityTypes.DRAGON.get()) {
-            entity.setBabyDragon(true);
         }
 
         entity.moveTo(pos.getX() + 0.5D, pos.getY() + 1.0D, pos.getZ() + 0.5D, level.getRandom().nextFloat() * 360.0F, 0.0F);

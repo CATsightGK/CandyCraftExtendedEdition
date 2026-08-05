@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": ["###"],
+  "key": {
+    "#": { "item": "candycraftmod:cookie_block" }
+  },
+  "result": {
+    "item": "candycraftmod:cookie_block_slab",
+    "count": 6
+  }
+}

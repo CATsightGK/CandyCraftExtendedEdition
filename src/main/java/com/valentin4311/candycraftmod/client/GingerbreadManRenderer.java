@@ -2,6 +2,7 @@ package com.valentin4311.candycraftmod.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.valentin4311.candycraftmod.CandyCraft;
+import com.valentin4311.candycraftmod.client.layer.GingerbreadHeldItemLayer;
 import com.valentin4311.candycraftmod.entity.GingerbreadManEntity;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.MobRenderer;
@@ -17,6 +18,7 @@ public class GingerbreadManRenderer extends MobRenderer<GingerbreadManEntity, Gi
 
     public GingerbreadManRenderer(EntityRendererProvider.Context context) {
         super(context, new GingerbreadManModel<>(context.bakeLayer(GingerbreadManModel.LAYER)), 0.25F);
+        addLayer(new GingerbreadHeldItemLayer(this, context.getItemInHandRenderer()));
     }
 
     @Override

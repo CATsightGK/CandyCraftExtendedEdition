@@ -14,12 +14,6 @@
   "spawners": {
     "creature": [
       {
-        "type": "candycraftmod:candy_pig",
-        "weight": 21,
-        "minCount": 4,
-        "maxCount": 6
-      },
-      {
         "type": "candycraftmod:gummy_bunny",
         "weight": 21,
         "minCount": 4,
@@ -30,6 +24,12 @@
         "weight": 30,
         "minCount": 3,
         "maxCount": 7
+      },
+      {
+        "type": "candycraftmod:cotton_candy_sheep",
+        "weight": 1,
+        "minCount": 1,
+        "maxCount": 1
       }
     ],
     "monster": [
@@ -58,7 +58,7 @@
         "maxCount": 4
       }
     ],
-    "water_creature": [
+    "water_ambient": [
       {
         "type": "candycraftmod:candy_fish",
         "weight": 50,

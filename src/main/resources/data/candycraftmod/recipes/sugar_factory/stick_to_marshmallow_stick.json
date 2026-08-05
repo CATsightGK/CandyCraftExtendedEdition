@@ -1,0 +1,13 @@
+{
+  "type": "candycraftmod:sugar_factory",
+  "ingredient": {
+    "item": "minecraft:stick"
+  },
+  "input_count": 1,
+  "result": {
+    "item": "candycraftmod:marshmallow_stick",
+    "count": 1
+  },
+  "processing_time": 240,
+  "factory": "both"
+}

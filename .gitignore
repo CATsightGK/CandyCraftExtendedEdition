@@ -4,9 +4,13 @@ run/
 out/
 bin/
 output/
+exports/
 _generated/
 generated_textures/
 tools/desktop-shell/
+tmp/
+__pycache__/
+*.py[cod]
 
 *.class
 *.log

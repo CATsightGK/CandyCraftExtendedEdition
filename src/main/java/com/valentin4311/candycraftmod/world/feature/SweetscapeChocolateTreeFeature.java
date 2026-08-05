@@ -1,6 +1,7 @@
 package com.valentin4311.candycraftmod.world.feature;
 
 import com.mojang.serialization.Codec;
+import com.valentin4311.candycraftmod.block.WaferChocolateSaplingBlock;
 import com.valentin4311.candycraftmod.registry.CCBlocks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.RandomSource;
@@ -26,10 +27,19 @@ public class SweetscapeChocolateTreeFeature extends Feature<NoneFeatureConfigura
         return generate((WorldGenLevel) level, random, origin);
     }
 
+    public static boolean generateFromSapling(ServerLevel level, RandomSource random, BlockPos base) {
+        return generateAt(level, random, base);
+    }
+
     private static boolean generate(WorldGenLevel level, RandomSource random, BlockPos origin) {
-        BlockPos base = new BlockPos(origin.getX(), level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, origin.getX(), origin.getZ()), origin.getZ());
-        BlockState below = level.getBlockState(base.below());
-        if (!below.is(CCBlocks.CHOCOLATE_COVERED_WHITE_BROWNIE.get()) && !below.is(CCBlocks.WHITE_BROWNIE_BLOCK.get())) {
+        BlockPos base = new BlockPos(origin.getX(),
+            level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, origin.getX(), origin.getZ()),
+            origin.getZ());
+        return generateAt(level, random, base);
+    }
+
+    private static boolean generateAt(WorldGenLevel level, RandomSource random, BlockPos base) {
+        if (!WaferChocolateSaplingBlock.canGrowOn(level.getBlockState(base.below()))) {
             return false;
         }
 

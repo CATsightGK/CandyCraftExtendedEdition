@@ -47,16 +47,18 @@ public class CandyWorkbenchBlock extends Block {
     }
 
     public enum CandyWorkbenchTheme {
-        MARSHMALLOW(0xF2A6C8, 0xFFF3FA, 0xB65D89),
+        MARSHMALLOW(0xF2A6C8, 0xFFF3FA, 0xB65D89, "marshmallow_workbench_normal"),
+        MARSHMALLOW_LIGHT(0xF2D8D0, 0xFFF4EF, 0xC58D91, "marshmallow_workbench_light"),
+        MARSHMALLOW_DARK(0xDD9275, 0xF4B296, 0x9D5250, "marshmallow_workbench_dark"),
         MILK_CHOCOLATE(0x6F3F22, 0xC98952, 0x3B2114),
         WHITE_CHOCOLATE(0xEAD9B6, 0xFFF5D8, 0x9A7B4A),
         DARK_CHOCOLATE(0x2D1710, 0x6B3B28, 0x160A07),
-        WHITE_CANDY_CANE(0xF2F2E7, 0xFFFFFF, 0xB8A48E),
-        RED_CANDY_CANE(0xC92F38, 0xFFE8E8, 0x801E28),
-        GREEN_CANDY_CANE(0x45A845, 0xECFFE8, 0x266C29),
-        WHITE_RED_CANDY_CANE(0xE7DDD5, 0xD9454D, 0x8D2530),
-        WHITE_GREEN_CANDY_CANE(0xE7EBDD, 0x58B85B, 0x2E742F),
-        RED_GREEN_CANDY_CANE(0xC9363E, 0x4CA84F, 0x752327),
+        WHITE_HARD_CANDY(0xF2F2E7, 0xFFFFFF, 0xB8A48E),
+        RED_HARD_CANDY(0xC92F38, 0xFFE8E8, 0x801E28),
+        GREEN_HARD_CANDY(0x45A845, 0xECFFE8, 0x266C29),
+        WHITE_RED_HARD_CANDY(0xE7DDD5, 0xD9454D, 0x8D2530),
+        WHITE_GREEN_HARD_CANDY(0xE7EBDD, 0x58B85B, 0x2E742F),
+        RED_GREEN_HARD_CANDY(0xC9363E, 0x4CA84F, 0x752327),
         RED_GUMMY(0xF04A48, 0xFF9B9B, 0x8E1E25),
         ORANGE_GUMMY(0xFF8A36, 0xFFC07A, 0x9E481E),
         YELLOW_GUMMY(0xFFD94A, 0xFFF2A0, 0xA87614),
@@ -66,11 +68,17 @@ public class CandyWorkbenchBlock extends Block {
         private final int baseColor;
         private final int lightColor;
         private final int darkColor;
+        private final String guiTextureName;
 
         CandyWorkbenchTheme(int baseColor, int lightColor, int darkColor) {
+            this(baseColor, lightColor, darkColor, null);
+        }
+
+        CandyWorkbenchTheme(int baseColor, int lightColor, int darkColor, String guiTextureName) {
             this.baseColor = baseColor;
             this.lightColor = lightColor;
             this.darkColor = darkColor;
+            this.guiTextureName = guiTextureName;
         }
 
         public int id() {
@@ -87,6 +95,10 @@ public class CandyWorkbenchBlock extends Block {
 
         public int darkColor() {
             return darkColor;
+        }
+
+        public String guiTextureName() {
+            return guiTextureName;
         }
 
         public static CandyWorkbenchTheme byId(int id) {

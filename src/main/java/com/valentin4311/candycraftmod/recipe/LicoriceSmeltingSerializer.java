@@ -19,7 +19,12 @@ public class LicoriceSmeltingSerializer implements RecipeSerializer<LicoriceSmel
         Ingredient ingredient = Ingredient.fromJson(GsonHelper.isArrayNode(json, "ingredient")
             ? GsonHelper.getAsJsonArray(json, "ingredient")
             : GsonHelper.getAsJsonObject(json, "ingredient"));
-        ItemStack result = new ItemStack(itemFromJson(GsonHelper.getAsJsonObject(json, "result")));
+        JsonObject resultJson = GsonHelper.getAsJsonObject(json, "result");
+        int resultCount = GsonHelper.getAsInt(resultJson, "count", 1);
+        if (resultCount < 1 || resultCount > 64) {
+            throw new com.google.gson.JsonSyntaxException("Licorice furnace result count must be between 1 and 64");
+        }
+        ItemStack result = new ItemStack(itemFromJson(resultJson), resultCount);
         float experience = GsonHelper.getAsFloat(json, "experience", 0.0F);
         int cookingTime = GsonHelper.getAsInt(json, "cookingtime", 200);
         return new LicoriceSmeltingRecipe(recipeId, group, category, ingredient, result, experience, cookingTime);

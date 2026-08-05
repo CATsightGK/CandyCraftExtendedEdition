@@ -1,0 +1,8 @@
+{
+  "type": "candycraftmod:licorice_smelting",
+  "category": "blocks",
+  "ingredient": { "item": "candycraftmod:sugar_sand" },
+  "result": { "item": "candycraftmod:sugar_glass" },
+  "experience": 0.1,
+  "cookingtime": 200
+}

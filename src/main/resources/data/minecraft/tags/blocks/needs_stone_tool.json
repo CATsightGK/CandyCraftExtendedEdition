@@ -1,0 +1,11 @@
+{
+  "replace": false,
+  "values": [
+    "candycraftmod:smooth_pink_sugar",
+    "candycraftmod:smooth_pink_sugar_stairs",
+    "candycraftmod:smooth_pink_sugar_slab",
+    "candycraftmod:pink_sugar_brick",
+    "candycraftmod:pink_sugar_brick_stairs",
+    "candycraftmod:pink_sugar_brick_slab"
+  ]
+}

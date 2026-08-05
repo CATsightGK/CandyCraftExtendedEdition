@@ -1,0 +1,13 @@
+{
+  "type": "candycraftmod:sugar_factory",
+  "ingredient": {
+    "item": "candycraftmod:fraise_tagada_flower"
+  },
+  "input_count": 1,
+  "result": {
+    "item": "candycraftmod:honey_shard",
+    "count": 1
+  },
+  "processing_time": 240,
+  "factory": "both"
+}

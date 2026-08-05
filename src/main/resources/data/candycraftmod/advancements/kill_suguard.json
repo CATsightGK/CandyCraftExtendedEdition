@@ -8,7 +8,11 @@
     },
     "description": {
       "translate": "advancements.candycraft.kill_suguard.desc"
-    }
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
   },
   "parent": "candycraftmod:kill_candy_creeper",
   "criteria": {

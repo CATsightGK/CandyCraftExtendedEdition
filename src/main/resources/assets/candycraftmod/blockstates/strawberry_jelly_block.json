@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "cuts=0": {
+      "model": "candycraftmod:block/strawberry_jelly_block"
+    },
+    "cuts=1": {
+      "model": "candycraftmod:block/strawberry_jelly_block_cut_1"
+    },
+    "cuts=2": {
+      "model": "candycraftmod:block/strawberry_jelly_block_cut_2"
+    },
+    "cuts=3": {
+      "model": "candycraftmod:block/strawberry_jelly_block_cut_3"
+    }
+  }
+}

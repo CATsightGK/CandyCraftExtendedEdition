@@ -5,7 +5,11 @@
   "refmap": "candycraftmod.refmap.json",
   "compatibilityLevel": "JAVA_17",
   "mixins": [
-    "BiomeMixin"
+    "BiomeMixin",
+    "EntityMixin",
+    "ItemMixin",
+    "LivingEntityMixin",
+    "PressurePlateBlockMixin"
   ],
   "injectors": {
     "defaultRequire": 1

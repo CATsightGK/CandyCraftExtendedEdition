@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "stage=0": {
+      "model": "candycraftmod:block/wafer_chocolate_sapling"
+    },
+    "stage=1": {
+      "model": "candycraftmod:block/wafer_chocolate_sapling"
+    }
+  }
+}

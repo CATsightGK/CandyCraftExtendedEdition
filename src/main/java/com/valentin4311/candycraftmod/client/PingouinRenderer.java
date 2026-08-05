@@ -13,7 +13,9 @@ public class PingouinRenderer extends MobRenderer<PingouinEntity, PingouinModel<
     private static final ResourceLocation[] TEXTURES = {
         new ResourceLocation(CandyCraft.MODID, "textures/entity/pingouin0.png"),
         new ResourceLocation(CandyCraft.MODID, "textures/entity/pingouin1.png"),
-        new ResourceLocation(CandyCraft.MODID, "textures/entity/pingouin2.png")
+        new ResourceLocation(CandyCraft.MODID, "textures/entity/pingouin2.png"),
+        new ResourceLocation(CandyCraft.MODID, "textures/entity/pingouin3.png"),
+        new ResourceLocation(CandyCraft.MODID, "textures/entity/pingouin4.png")
     };
 
     public PingouinRenderer(EntityRendererProvider.Context context) {

@@ -2,6 +2,7 @@ package com.valentin4311.candycraftmod.event;
 
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.valentin4311.candycraftmod.CandyCraft;
 import com.valentin4311.candycraftmod.entity.BasicCandySlimeEntity;
 import com.valentin4311.candycraftmod.registry.CCEntityTypes;
@@ -10,8 +11,12 @@ import com.valentin4311.candycraftmod.world.feature.SuguardDungeonFeature;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.WeakHashMap;
 import net.minecraft.commands.arguments.coordinates.BlockPosArgument;
+import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -19,6 +24,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtUtils;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
@@ -28,11 +34,14 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.level.storage.LevelResource;
 import net.minecraftforge.event.RegisterCommandsEvent;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 @Mod.EventBusSubscriber(modid = CandyCraft.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public final class DungeonDebugEvents {
+    private static final Map<MinecraftServer, SuguardGenerationJob> SUGUARD_GENERATION_JOBS = new WeakHashMap<>();
+
     private DungeonDebugEvents() {
     }
 
@@ -45,9 +54,9 @@ public final class DungeonDebugEvents {
                 BlockPos base = BlockPos.containing(context.getSource().getPosition()).offset(0, 1, 0);
                 JellyDungeonFeature.generateDebugShowcase(level, base);
                 SuguardDungeonFeature.generateDebugShowcase(level, base.offset(240, 0, 0));
-                context.getSource().sendSuccess(() -> Component.literal(
-                    "Generated CandyCraft dungeon debug showcase at " + base.toShortString()
-                        + " and " + base.offset(240, 0, 0).toShortString()), true);
+                context.getSource().sendSuccess(() -> Component.translatable(
+                    "message.candycraftmod.debug.dungeons_generated", base.toShortString(),
+                    base.offset(240, 0, 0).toShortString()), true);
                 return 1;
             }));
         event.getDispatcher().register(Commands.literal("candycraft_debug_suguard_dungeon")
@@ -56,18 +65,25 @@ public final class DungeonDebugEvents {
                 ServerLevel level = context.getSource().getLevel();
                 BlockPos base = BlockPos.containing(context.getSource().getPosition()).offset(0, 1, 0);
                 SuguardDungeonFeature.generateDebugShowcase(level, base);
-                context.getSource().sendSuccess(() -> Component.literal(
-                    "Generated Suguard dungeon debug showcase at " + base.toShortString()), true);
+                context.getSource().sendSuccess(() -> Component.translatable(
+                    "message.candycraftmod.debug.suguard_dungeon_generated", base.toShortString()), true);
                 return 1;
             }));
+        LiteralArgumentBuilder<CommandSourceStack> suguardGenerator = Commands.literal("candycraft_suguard_dungeon")
+            .requires(source -> source.hasPermission(2));
+        suguardGenerator.then(suguardGenerationTarget("full"));
+        for (String room : SuguardDungeonFeature.debugRoomNames()) {
+            suguardGenerator.then(suguardGenerationTarget(room));
+        }
+        event.getDispatcher().register(suguardGenerator);
         event.getDispatcher().register(Commands.literal("candycraft_debug_jelly_water_room")
             .requires(source -> source.hasPermission(2))
             .executes(context -> {
                 ServerLevel level = context.getSource().getLevel();
                 BlockPos base = BlockPos.containing(context.getSource().getPosition()).offset(0, 1, 0);
                 JellyDungeonFeature.generateDebugWaterRoom(level, base);
-                context.getSource().sendSuccess(() -> Component.literal(
-                    "Generated CandyCraft jelly water room at " + base.toShortString()), true);
+                context.getSource().sendSuccess(() -> Component.translatable(
+                    "message.candycraftmod.debug.jelly_water_room_generated", base.toShortString()), true);
                 return 1;
             }));
         event.getDispatcher().register(Commands.literal("candycraft_debug_pez_roll")
@@ -86,20 +102,79 @@ public final class DungeonDebugEvents {
                         BlockPos origin = BlockPosArgument.getLoadedBlockPos(context, "origin");
                         RoomBounds bounds = suguardRoomBounds(room);
                         if (bounds == null) {
-                            context.getSource().sendFailure(Component.literal(
-                                "Unknown room. Use spawn, z_corridor, x_corridor, archer, water, barrier, jump, fall, fight, boss."));
+                            context.getSource().sendFailure(Component.translatable("message.candycraftmod.debug.unknown_room"));
                             return 0;
                         }
                         try {
                             Path exported = exportRoom(level, room, origin, bounds);
-                            context.getSource().sendSuccess(() -> Component.literal(
-                                "Exported " + room + " to " + exported), true);
+                            context.getSource().sendSuccess(() -> Component.translatable(
+                                "message.candycraftmod.debug.room_exported", room, exported), true);
                             return 1;
                         } catch (IOException e) {
-                            context.getSource().sendFailure(Component.literal("Failed to export room: " + e.getMessage()));
+                            context.getSource().sendFailure(Component.translatable(
+                                "message.candycraftmod.debug.room_export_failed", e.getMessage()));
                             return 0;
                         }
                     }))));
+    }
+
+    @SubscribeEvent
+    public static void onServerTick(TickEvent.ServerTickEvent event) {
+        if (event.phase != TickEvent.Phase.END) {
+            return;
+        }
+        MinecraftServer server = event.getServer();
+        SuguardGenerationJob job = SUGUARD_GENERATION_JOBS.get(server);
+        if (job == null) {
+            return;
+        }
+        try {
+            if (job.runNext(server.overworld())) {
+                SUGUARD_GENERATION_JOBS.remove(server);
+                job.source.sendSuccess(() -> Component.translatable(
+                    "message.candycraftmod.debug.suguard_generation_finished",
+                    job.target, job.origin.toShortString()), true);
+            }
+        } catch (RuntimeException exception) {
+            SUGUARD_GENERATION_JOBS.remove(server);
+            job.source.sendFailure(Component.translatable(
+                "message.candycraftmod.debug.suguard_generation_failed", exception.getMessage()));
+        }
+    }
+
+    private static LiteralArgumentBuilder<CommandSourceStack> suguardGenerationTarget(String target) {
+        return Commands.literal(target)
+            .executes(context -> generateSuguardTarget(
+                context.getSource(), target, BlockPos.containing(context.getSource().getPosition()).below()))
+            .then(Commands.argument("origin", BlockPosArgument.blockPos())
+                .executes(context -> generateSuguardTarget(
+                    context.getSource(), target, BlockPosArgument.getLoadedBlockPos(context, "origin"))));
+    }
+
+    private static int generateSuguardTarget(CommandSourceStack source, String target, BlockPos origin) {
+        MinecraftServer server = source.getServer();
+        ServerLevel overworld = server.overworld();
+        if (source.getLevel() != overworld) {
+            source.sendFailure(Component.translatable("message.candycraftmod.debug.suguard_overworld_only"));
+            return 0;
+        }
+        if (SUGUARD_GENERATION_JOBS.containsKey(server)) {
+            source.sendFailure(Component.translatable("message.candycraftmod.debug.suguard_generation_busy"));
+            return 0;
+        }
+
+        List<SuguardDungeonFeature.DebugGenerationStep> steps = "full".equals(target)
+            ? SuguardDungeonFeature.debugDungeonSteps(origin)
+            : List.of(new SuguardDungeonFeature.DebugGenerationStep(target, origin));
+        if (!"full".equals(target) && !SuguardDungeonFeature.debugRoomNames().contains(target)) {
+            source.sendFailure(Component.translatable("message.candycraftmod.debug.unknown_room"));
+            return 0;
+        }
+
+        SUGUARD_GENERATION_JOBS.put(server, new SuguardGenerationJob(source, target, origin, steps));
+        source.sendSuccess(() -> Component.translatable(
+            "message.candycraftmod.debug.suguard_generation_started", target, origin.toShortString()), true);
+        return 1;
     }
 
     private static int debugPezRoll(ServerLevel level, ServerPlayer player, int radius) {
@@ -110,15 +185,15 @@ public final class DungeonDebugEvents {
             .min((a, b) -> Double.compare(a.distanceToSqr(player), b.distanceToSqr(player)))
             .orElse(null);
         if (pez == null) {
-            player.sendSystemMessage(Component.literal("No PEZ jelly found within " + radius + " blocks."));
+            player.sendSystemMessage(Component.translatable("message.candycraftmod.debug.pez_not_found", radius));
             return 0;
         }
         LivingEntity target = pez.getTarget() != null ? pez.getTarget() : player;
         if (!pez.debugStartPezRoll(target)) {
-            player.sendSystemMessage(Component.literal("Failed to start PEZ roll."));
+            player.sendSystemMessage(Component.translatable("message.candycraftmod.debug.pez_roll_failed"));
             return 0;
         }
-        player.sendSystemMessage(Component.literal("Started PEZ roll for entity " + pez.getId() + "."));
+        player.sendSystemMessage(Component.translatable("message.candycraftmod.debug.pez_roll_started", pez.getId()));
         return 1;
     }
 
@@ -133,7 +208,8 @@ public final class DungeonDebugEvents {
             case "jump" -> new RoomBounds(-4, -54, 0, 4, 187, 19);
             case "fall" -> new RoomBounds(-15, -54, -4, 0, 186, 4);
             case "fight" -> new RoomBounds(-40, -10, -21, 1, 60, 21);
-            case "boss" -> new RoomBounds(-21, -2, -21, 21, 36, 21);
+            case "boss", "boss_key_north", "boss_key_south", "boss_key_west" ->
+                new RoomBounds(-21, -2, -21, 21, 36, 21);
             default -> null;
         };
     }
@@ -203,6 +279,44 @@ public final class DungeonDebugEvents {
 
     private static <T extends Comparable<T>> String valueName(BlockState state, Property<T> property) {
         return property.getName(state.getValue(property));
+    }
+
+    private static final class SuguardGenerationJob {
+        private final CommandSourceStack source;
+        private final String target;
+        private final BlockPos origin;
+        private final List<SuguardDungeonFeature.DebugGenerationStep> steps;
+        private int index;
+        private boolean clearing = true;
+
+        private SuguardGenerationJob(CommandSourceStack source, String target, BlockPos origin,
+                List<SuguardDungeonFeature.DebugGenerationStep> steps) {
+            this.source = source;
+            this.target = target;
+            this.origin = origin;
+            this.steps = List.copyOf(steps);
+        }
+
+        private boolean runNext(ServerLevel level) {
+            SuguardDungeonFeature.DebugGenerationStep step = steps.get(index);
+            boolean success = clearing
+                ? SuguardDungeonFeature.clearDebugRoom(level, step.origin(), step.room())
+                : SuguardDungeonFeature.placeDebugRoom(level, step.origin(), step.room());
+            if (!success) {
+                throw new IllegalStateException("Unknown Suguard room: " + step.room());
+            }
+
+            index++;
+            if (index < steps.size()) {
+                return false;
+            }
+            if (clearing) {
+                clearing = false;
+                index = 0;
+                return false;
+            }
+            return true;
+        }
     }
 
     private record RoomBounds(int minX, int minY, int minZ, int maxX, int maxY, int maxZ) {

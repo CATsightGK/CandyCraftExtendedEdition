@@ -2,11 +2,10 @@ package com.valentin4311.candycraftmod.entity;
 
 import com.valentin4311.candycraftmod.registry.CCEntityTypes;
 import com.valentin4311.candycraftmod.registry.CCItems;
-import com.valentin4311.candycraftmod.registry.CCItems;
 import com.valentin4311.candycraftmod.util.EmblemHelper;
-import java.util.List;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
@@ -28,6 +27,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.storage.loot.BuiltInLootTables;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
@@ -35,15 +35,6 @@ public class CandyPigEntity extends Pig {
     private static final double AVOID_DISTANCE = 7.0D;
     private int boostTime;
     private int boostTimeTotal;
-    private static final List<java.util.function.Supplier<? extends net.minecraft.world.item.Item>> CANDY_CANE_DROPS = List.of(
-        CCItems.CANDY_CANE,
-        CCItems.WHITE_CANDY_CANE,
-        CCItems.RED_CANDY_CANE,
-        CCItems.GREEN_CANDY_CANE,
-        CCItems.WHITE_GREEN_CANDY_CANE,
-        CCItems.RED_GREEN_CANDY_CANE
-    );
-
     public CandyPigEntity(EntityType<? extends CandyPigEntity> type, Level level) {
         super(type, level);
     }
@@ -141,14 +132,17 @@ public class CandyPigEntity extends Pig {
 
     @Override
     protected void dropCustomDeathLoot(DamageSource source, int looting, boolean recentlyHit) {
-        super.dropCustomDeathLoot(source, looting, recentlyHit);
-        if (isBaby()) {
-            return;
+        if (!isBaby()) {
+            int count = random.nextInt(3);
+            if (count > 0) {
+                spawnAtLocation(new ItemStack(CCItems.CANDY_CANE.get(), count));
+            }
         }
-        int count = 1 + random.nextInt(3) + random.nextInt(looting + 1);
-        for (int i = 0; i < count; i++) {
-            spawnAtLocation(CANDY_CANE_DROPS.get(random.nextInt(CANDY_CANE_DROPS.size())).get());
-        }
+    }
+
+    @Override
+    protected ResourceLocation getDefaultLootTable() {
+        return BuiltInLootTables.EMPTY;
     }
 
     private boolean shouldAvoidPlayer(Player player) {

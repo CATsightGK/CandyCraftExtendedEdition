@@ -1,0 +1,8 @@
+{
+  "render_type": "minecraft:translucent",
+  "parent": "minecraft:block/template_glass_pane_post",
+  "textures": {
+    "pane": "candycraftmod:block/dark_caramel_glass_2",
+    "edge": "candycraftmod:block/dark_caramel_glass_top"
+  }
+}

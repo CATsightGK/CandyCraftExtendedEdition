@@ -47,8 +47,24 @@ public class SpikesBlock extends Block {
 
     @Override
     public void entityInside(BlockState state, Level level, BlockPos pos, Entity entity) {
-        if (entity instanceof LivingEntity) {
-            entity.hurt(level.damageSources().cactus(), damage / 2.0F);
+        hurtEntity(level, entity);
+    }
+
+    @Override
+    public void stepOn(Level level, BlockPos pos, BlockState state, Entity entity) {
+        hurtEntity(level, entity);
+        super.stepOn(level, pos, state, entity);
+    }
+
+    @Override
+    public void fallOn(Level level, BlockState state, BlockPos pos, Entity entity, float fallDistance) {
+        hurtEntity(level, entity);
+        super.fallOn(level, state, pos, entity, fallDistance);
+    }
+
+    private void hurtEntity(Level level, Entity entity) {
+        if (!level.isClientSide && entity instanceof LivingEntity) {
+            entity.hurt(level.damageSources().generic(), damage / 2.0F);
         }
     }
 }

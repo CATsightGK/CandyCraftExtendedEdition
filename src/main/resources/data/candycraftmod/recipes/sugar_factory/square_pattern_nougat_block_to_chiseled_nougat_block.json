@@ -1,0 +1,13 @@
+{
+  "type": "candycraftmod:sugar_factory",
+  "ingredient": {
+    "item": "candycraftmod:square_pattern_nougat_block"
+  },
+  "input_count": 1,
+  "result": {
+    "item": "candycraftmod:chiseled_nougat_block",
+    "count": 1
+  },
+  "processing_time": 240,
+  "factory": "both"
+}

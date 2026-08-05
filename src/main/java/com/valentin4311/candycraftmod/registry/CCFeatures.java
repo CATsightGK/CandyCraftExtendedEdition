@@ -3,6 +3,7 @@ package com.valentin4311.candycraftmod.registry;
 import com.valentin4311.candycraftmod.CandyCraft;
 import com.valentin4311.candycraftmod.world.feature.CandyGrassFeature;
 import com.valentin4311.candycraftmod.world.feature.CandySeaweedFeature;
+import com.valentin4311.candycraftmod.world.feature.CandyLiquidLakeFeature;
 import com.valentin4311.candycraftmod.world.feature.CottonCandyTreeFeature;
 import com.valentin4311.candycraftmod.world.feature.GummyWormFeature;
 import com.valentin4311.candycraftmod.world.feature.HoneyDungeonFeature;
@@ -12,7 +13,9 @@ import com.valentin4311.candycraftmod.world.feature.LegacyCandyTreeFeature;
 import com.valentin4311.candycraftmod.world.feature.MarshmallowWaterlilyPatchFeature;
 import com.valentin4311.candycraftmod.world.feature.SweetscapeChocolateTreeFeature;
 import com.valentin4311.candycraftmod.world.feature.SuguardDungeonFeature;
+import com.valentin4311.candycraftmod.world.feature.TemplateSurfaceStructureFeature;
 import com.valentin4311.candycraftmod.world.tree.CherryTreeDecorator;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.levelgen.feature.Feature;
 import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
 import net.minecraft.world.level.levelgen.feature.treedecorators.TreeDecoratorType;
@@ -45,6 +48,14 @@ public final class CCFeatures {
     public static final RegistryObject<Feature<NoneFeatureConfiguration>> CANDY_SEAWEED = FEATURES.register(
         "candy_seaweed",
         () -> new CandySeaweedFeature(NoneFeatureConfiguration.CODEC)
+    );
+    public static final RegistryObject<Feature<NoneFeatureConfiguration>> CANDY_LIQUID_LAKE = FEATURES.register(
+        "candy_liquid_lake",
+        () -> new CandyLiquidLakeFeature(NoneFeatureConfiguration.CODEC, CandyLiquidLakeFeature.FluidMode.WATER_OR_GRENADINE)
+    );
+    public static final RegistryObject<Feature<NoneFeatureConfiguration>> CANDY_CHOCOLATE_LAKE = FEATURES.register(
+        "candy_chocolate_lake",
+        () -> new CandyLiquidLakeFeature(NoneFeatureConfiguration.CODEC, CandyLiquidLakeFeature.FluidMode.CHOCOLATE)
     );
     public static final RegistryObject<Feature<NoneFeatureConfiguration>> MARSHMALLOW_WATERLILY_PATCH = FEATURES.register(
         "marshmallow_waterlily_patch",
@@ -82,9 +93,21 @@ public final class CCFeatures {
         "white_chocolate_tree",
         () -> new LegacyCandyTreeFeature(NoneFeatureConfiguration.CODEC, LegacyCandyTreeFeature.Kind.WHITE_CHOCOLATE)
     );
-    public static final RegistryObject<Feature<NoneFeatureConfiguration>> CANDY_HOUSE = FEATURES.register(
-        "candy_house",
-        () -> new LegacyStructureFeature(NoneFeatureConfiguration.CODEC, LegacyStructureFeature.Kind.CANDY_HOUSE)
+    public static final RegistryObject<Feature<NoneFeatureConfiguration>> CANDY_PLANT_HOUSE = FEATURES.register(
+        "candy_plant_house",
+        () -> new TemplateSurfaceStructureFeature(
+            NoneFeatureConfiguration.CODEC,
+            new ResourceLocation(CandyCraft.MODID, "candy_plant_house")
+        )
+    );
+    public static final RegistryObject<Feature<NoneFeatureConfiguration>> SUGUARD_OUTPOST = FEATURES.register(
+        "suguard_outpost",
+        () -> new TemplateSurfaceStructureFeature(
+            NoneFeatureConfiguration.CODEC,
+            new ResourceLocation(CandyCraft.MODID, "suguard_outpost"),
+            true,
+            true
+        )
     );
     public static final RegistryObject<Feature<NoneFeatureConfiguration>> ICE_TOWER = FEATURES.register(
         "ice_tower",

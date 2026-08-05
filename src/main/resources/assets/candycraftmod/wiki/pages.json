@@ -1,0 +1,339 @@
+{
+  "pages": [
+    {
+      "key": "portal",
+      "titleX": -1,
+      "titleY": 25,
+      "previousButtonX": 8,
+      "previousButtonY": 195,
+      "nextButtonX": 272,
+      "nextButtonY": 195,
+      "elements": [
+        {
+          "type": "text",
+          "x": 150,
+          "y": 18,
+          "width": 105,
+          "height": 64,
+          "scale": 1,
+          "rotation": 0,
+          "color": "#3F251F",
+          "key": "wiki.candycraftmod.portal.body"
+        },
+        {
+          "type": "sticker",
+          "x": 113,
+          "y": -8,
+          "width": 39,
+          "height": 35,
+          "rotation": 0,
+          "asset": "journal_bow"
+        }
+      ]
+    },
+    {
+      "key": "fork",
+      "titleX": 2,
+      "titleY": 25,
+      "previousButtonX": 8,
+      "previousButtonY": 195,
+      "nextButtonX": 272,
+      "nextButtonY": 195,
+      "elements": [
+        {
+          "type": "text",
+          "x": 145,
+          "y": 13,
+          "width": 116,
+          "height": 28,
+          "scale": 1,
+          "rotation": 0,
+          "color": "#3F251F",
+          "key": "wiki.candycraftmod.fork.body",
+          "text": "叉子可以吃任意糖果世界的方块！"
+        },
+        {
+          "type": "item",
+          "x": 148,
+          "y": 97,
+          "width": 48,
+          "height": 48,
+          "size": 32,
+          "scale": 2,
+          "rotation": 0,
+          "id": "candycraftmod:fork",
+          "slot": false
+        },
+        {
+          "type": "sticker",
+          "x": 242,
+          "y": 22,
+          "width": 27,
+          "height": 27,
+          "rotation": 0,
+          "asset": "candy_star_cluster"
+        },
+        {
+          "type": "item",
+          "x": 160,
+          "y": 67,
+          "width": 20,
+          "height": 20,
+          "size": 32,
+          "scale": 2,
+          "rotation": 0,
+          "id": "candycraftmod:cotton_candy_block",
+          "slot": false
+        },
+        {
+          "type": "item",
+          "x": 190,
+          "y": 75,
+          "width": 22,
+          "height": 22,
+          "size": 32,
+          "scale": 2,
+          "rotation": 0,
+          "id": "candycraftmod:milk_chocolate_brick",
+          "slot": false
+        },
+        {
+          "type": "item",
+          "x": 210,
+          "y": 100,
+          "width": 23,
+          "height": 23,
+          "size": 32,
+          "scale": 2,
+          "rotation": 0,
+          "id": "candycraftmod:chewing_gum_block",
+          "slot": false
+        },
+        {
+          "type": "text",
+          "x": 20,
+          "y": 38,
+          "width": 63,
+          "height": 12,
+          "scale": 1,
+          "rotation": 0,
+          "color": "#3F251F",
+          "text": "一种神奇的多功能道具"
+        },
+        {
+          "type": "entity",
+          "x": 19,
+          "y": 54,
+          "width": 71,
+          "height": 87,
+          "size": 38,
+          "rotation": 0,
+          "id": "candycraftmod:thrown_fork_block"
+        }
+      ]
+    },
+    {
+      "key": "alchemy",
+      "titleX": -3,
+      "titleY": 30,
+      "previousButtonX": 8,
+      "previousButtonY": 195,
+      "nextButtonX": 272,
+      "nextButtonY": 195,
+      "elements": [
+        {
+          "type": "text",
+          "x": 142,
+          "y": 22,
+          "width": 127,
+          "height": 66,
+          "scale": 1,
+          "rotation": 0,
+          "color": "#3F251F",
+          "key": "wiki.candycraftmod.alchemy.body",
+          "text": "炼金搅拌锅需要拐杖糖方块或者制糖机为动力。将动力方块贴着炼金搅拌锅时搅拌锅会自动开始运行。锅可容纳八桶流体。放入糖则会加速炼金速度。\n制作糖丸时需要倒入番石榴糖浆，接着放入四个糖果世界的糖果物品即可开始制作。不同物品炼出的药水效果也不同，一颗糖丸可以容纳四种药水效果。"
+        },
+        {
+          "type": "sticker",
+          "x": 151,
+          "y": -8,
+          "width": 30,
+          "height": 35,
+          "rotation": -52,
+          "asset": "candy_star_cluster"
+        },
+        {
+          "type": "item",
+          "x": 195,
+          "y": 84,
+          "width": 33,
+          "height": 33,
+          "size": 32,
+          "scale": 2,
+          "rotation": 0,
+          "id": "candycraftmod:alchemy_table",
+          "slot": false
+        },
+        {
+          "type": "sticker",
+          "x": 97,
+          "y": 2,
+          "width": 20,
+          "height": 20,
+          "rotation": 0,
+          "asset": "candy_double_heart"
+        },
+        {
+          "type": "sticker",
+          "x": -3,
+          "y": 119,
+          "width": 36,
+          "height": 36,
+          "rotation": 0,
+          "asset": "journal_sparkles"
+        },
+        {
+          "type": "item",
+          "x": 11,
+          "y": 46,
+          "width": 102,
+          "height": 102,
+          "size": 32,
+          "scale": 2,
+          "rotation": 0,
+          "id": "candycraftmod:alchemy_table",
+          "slot": false
+        },
+        {
+          "type": "item",
+          "x": 244,
+          "y": 76,
+          "width": 32,
+          "height": 32,
+          "size": 32,
+          "scale": 2,
+          "rotation": 0,
+          "id": "candycraftmod:sugar_pill",
+          "slot": false
+        },
+        {
+          "type": "item",
+          "x": 144,
+          "y": 92,
+          "width": 22,
+          "height": 22,
+          "size": 32,
+          "scale": 2,
+          "rotation": 0,
+          "id": "candycraftmod:grenadine_bucket",
+          "slot": false
+        },
+        {
+          "type": "item",
+          "x": 200,
+          "y": 135,
+          "width": 21,
+          "height": 21,
+          "size": 32,
+          "scale": 2,
+          "rotation": 0,
+          "id": "candycraftmod:sugar_factory",
+          "slot": false
+        },
+        {
+          "type": "sticker",
+          "x": 168,
+          "y": 91,
+          "width": 22,
+          "height": 24,
+          "rotation": 17,
+          "asset": "journal_arrow_right"
+        },
+        {
+          "type": "sticker",
+          "x": 226,
+          "y": 88,
+          "width": 23,
+          "height": 20,
+          "rotation": -22,
+          "asset": "journal_arrow_right"
+        },
+        {
+          "type": "sticker",
+          "x": 200,
+          "y": 114,
+          "width": 21,
+          "height": 20,
+          "rotation": 271,
+          "asset": "journal_arrow_right"
+        }
+      ]
+    },
+    {
+      "key": "dungeon_keys",
+      "titleX": -9,
+      "titleY": 17,
+      "previousButtonX": 8,
+      "previousButtonY": 195,
+      "nextButtonX": 273,
+      "nextButtonY": 195,
+      "elements": [
+        {
+          "type": "text",
+          "x": 147,
+          "y": 8,
+          "width": 116,
+          "height": 60,
+          "scale": 1,
+          "rotation": 0,
+          "color": "#3F251F",
+          "text": "新文本框"
+        }
+      ]
+    },
+    {
+      "key": "dragon_egg",
+      "titleX": -6,
+      "titleY": 21,
+      "previousButtonX": 8,
+      "previousButtonY": 195,
+      "nextButtonX": 272,
+      "nextButtonY": 196,
+      "elements": [
+        {
+          "type": "text",
+          "x": 147,
+          "y": 24,
+          "width": 116,
+          "height": 60,
+          "scale": 1,
+          "rotation": 0,
+          "color": "#3F251F",
+          "key": "wiki.candycraftmod.dragon_egg.body"
+        }
+      ]
+    },
+    {
+      "key": "emblems",
+      "titleX": -2,
+      "titleY": 24,
+      "previousButtonX": 8,
+      "previousButtonY": 195,
+      "nextButtonX": 272,
+      "nextButtonY": 195,
+      "elements": [
+        {
+          "type": "text",
+          "x": 146,
+          "y": 18,
+          "width": 116,
+          "height": 60,
+          "scale": 1,
+          "rotation": 0,
+          "color": "#3F251F",
+          "key": "wiki.candycraftmod.emblems.body"
+        }
+      ]
+    }
+  ]
+}

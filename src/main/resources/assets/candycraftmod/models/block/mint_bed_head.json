@@ -1,0 +1,6 @@
+{
+  "parent": "candycraftmod:block/candy_bed_head_base",
+  "textures": {
+    "bed": "candycraftmod:block/candy_beds/mint_bed"
+  }
+}

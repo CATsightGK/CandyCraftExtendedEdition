@@ -11,19 +11,23 @@ import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.inventory.RecipeBookType;
 import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 
 public class LicoriceFurnaceMenu extends AbstractFurnaceMenu {
+    private final Level level;
+
     public LicoriceFurnaceMenu(int id, Inventory inventory) {
         this(id, inventory, new SimpleContainer(3), new SimpleContainerData(4));
     }
 
     public LicoriceFurnaceMenu(int id, Inventory inventory, Container container, ContainerData data) {
         super(CCMenus.LICORICE_FURNACE.get(), CCRecipeTypes.LICORICE_SMELTING_TYPE.get(), RecipeBookType.FURNACE, id, inventory, container, data);
+        this.level = inventory.player.level();
     }
 
     @Override
     protected boolean isFuel(ItemStack stack) {
-        return LicoriceFurnaceBlockEntity.isLicoriceFuel(stack);
+        return LicoriceFurnaceBlockEntity.isLicoriceFuel(level, stack);
     }
 
 }

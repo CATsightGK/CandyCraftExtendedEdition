@@ -1,6 +1,0 @@
-{
-    "textures":  {
-                     "all":  "candycraftmod:block/marshmallow_planks.0"
-                 },
-    "parent":  "minecraft:block/cube_all"
-}

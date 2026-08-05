@@ -2,6 +2,7 @@ package com.valentin4311.candycraftmod.event;
 
 import com.valentin4311.candycraftmod.CandyCraft;
 import com.valentin4311.candycraftmod.registry.CCBlocks;
+import com.valentin4311.candycraftmod.world.CandyPrecipitation;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.resources.ResourceKey;
@@ -22,6 +23,8 @@ import net.minecraftforge.event.CommandEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Mod.EventBusSubscriber(modid = CandyCraft.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public final class CandyWeatherEvents {
@@ -29,6 +32,8 @@ public final class CandyWeatherEvents {
         Registries.DIMENSION, new ResourceLocation(CandyCraft.MODID, "candy_world"));
     private static final int CAULDRON_SCAN_RADIUS = 6;
     private static final int CAULDRON_SCAN_DIAMETER = CAULDRON_SCAN_RADIUS * 2 + 1;
+    private static final Pattern WEATHER_COMMAND = Pattern.compile(
+        "(?:^|\\s)(?:minecraft:)?weather\\s+(clear|rain|thunder)(?:\\s+(\\S+))?\\s*$");
 
     private CandyWeatherEvents() {
     }
@@ -40,24 +45,37 @@ public final class CandyWeatherEvents {
             return;
         }
 
-        String[] command = event.getParseResults().getReader().getString().trim().split("\\s+");
-        if (command.length < 2 || command.length > 3 || !"weather".equals(command[0])) {
+        String command = event.getParseResults().getReader().getString().trim();
+        if (command.startsWith("/")) {
+            command = command.substring(1);
+        }
+        Matcher matcher = WEATHER_COMMAND.matcher(command);
+        if (!matcher.find()) {
             return;
         }
 
-        ServerLevel candyWorld = event.getParseResults().getContext().getSource().getServer().getLevel(CANDY_WORLD);
+        var source = event.getParseResults().getContext().getSource();
+        ServerLevel candyWorld = source.getServer().getLevel(CANDY_WORLD);
         if (candyWorld == null) {
             return;
         }
 
-        int duration = command.length == 3 ? parseWeatherDuration(command[2]) : defaultWeatherDuration(candyWorld, command[1]);
+        String weather = matcher.group(1);
+        String durationArgument = matcher.group(2);
+        int duration = durationArgument != null
+            ? parseWeatherDuration(durationArgument)
+            : defaultWeatherDuration(candyWorld, weather);
         if (duration < 0) {
             return;
         }
-        switch (command[1]) {
-            case "clear" -> candyWorld.setWeatherParameters(duration, 0, false, false);
-            case "rain" -> candyWorld.setWeatherParameters(0, duration, true, false);
-            case "thunder" -> candyWorld.setWeatherParameters(0, duration, true, true);
+
+        // Custom dimensions use DerivedLevelData: weather setters are no-ops there,
+        // while reads delegate to the primary level data owned by the overworld.
+        ServerLevel weatherOwner = source.getServer().overworld();
+        switch (weather) {
+            case "clear" -> weatherOwner.setWeatherParameters(duration, 0, false, false);
+            case "rain" -> weatherOwner.setWeatherParameters(0, duration, true, false);
+            case "thunder" -> weatherOwner.setWeatherParameters(0, duration, true, true);
             default -> {
             }
         }
@@ -120,7 +138,7 @@ public final class CandyWeatherEvents {
         if (!level.isRaining() || !level.canSeeSky(pos.above())) {
             return;
         }
-        Biome.Precipitation precipitation = level.getBiome(pos).value().getPrecipitationAt(pos);
+        Biome.Precipitation precipitation = CandyPrecipitation.at(level, pos);
         if (state.is(Blocks.POWDER_SNOW_CAULDRON)) {
             level.setBlockAndUpdate(pos, Blocks.CAULDRON.defaultBlockState());
             return;
@@ -143,8 +161,16 @@ public final class CandyWeatherEvents {
 
     private static int parseWeatherDuration(String value) {
         try {
-            int seconds = Integer.parseInt(value);
-            return seconds >= 1 && seconds <= 1_000_000 ? seconds * 20 : -1;
+            int unitLength = Character.isDigit(value.charAt(value.length() - 1)) ? 0 : 1;
+            long amount = Long.parseLong(value.substring(0, value.length() - unitLength));
+            long multiplier = unitLength == 0 ? 1L : switch (value.charAt(value.length() - 1)) {
+                case 'd' -> 24000L;
+                case 's' -> 20L;
+                case 't' -> 1L;
+                default -> -1L;
+            };
+            long ticks = amount * multiplier;
+            return ticks >= 1L && ticks <= Integer.MAX_VALUE ? (int) ticks : -1;
         } catch (NumberFormatException ignored) {
             return -1;
         }

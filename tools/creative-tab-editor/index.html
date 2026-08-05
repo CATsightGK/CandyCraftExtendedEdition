@@ -18,11 +18,17 @@
 
     <section class="controls">
       <button class="tab active" data-tab="blocks">&#26041;&#22359;</button>
-      <button class="tab" data-tab="food">&#39135;&#29289;</button>
       <button class="tab" data-tab="tools_armor">&#24037;&#20855;&#19982;&#30420;&#30002;</button>
       <button class="tab" data-tab="misc">&#26434;&#39033;</button>
       <input id="search" placeholder="Search / &#25628;&#32034;&#29289;&#21697;&#21517;&#25110;&#27880;&#20876;&#21517;">
       <button id="save" class="save">&#20445;&#23384;&#39034;&#24207;</button>
+    </section>
+
+    <section class="selection-bar">
+      <span id="selectionStatus">&#26410;&#36873;&#25321;&#29289;&#21697;</span>
+      <span class="selection-hint">Ctrl / Cmd &#28857;&#20987;&#22810;&#36873;&#65292;Shift &#36830;&#36873;&#65292;&#25302;&#21160;&#20219;&#19968;&#24050;&#36873;&#29289;&#21697;&#21363;&#21487;&#25972;&#32452;&#31227;&#21160;</span>
+      <button id="selectVisible" type="button">&#20840;&#36873;&#24403;&#21069;&#21487;&#35265;</button>
+      <button id="clearSelection" type="button" disabled>&#21462;&#28040;&#36873;&#25321;</button>
     </section>
 
     <main class="layout">
@@ -55,7 +61,6 @@
       items: new Map(initialState.items.map(item => [item.id, item])),
       tabs: {
         blocks: [...(initialState.tabs.blocks || [])],
-        food: [...(initialState.tabs.food || [])],
         tools_armor: [...(initialState.tabs.tools_armor || [])],
         misc: [...(initialState.tabs.misc || [])]
       },
@@ -70,6 +75,12 @@
     const search = document.getElementById("search");
     const toast = document.getElementById("toast");
     const dragGhost = document.getElementById("dragGhost");
+    const selectionStatus = document.getElementById("selectionStatus");
+    const clearSelectionButton = document.getElementById("clearSelection");
+    const selection = new Set();
+    const selectionAnchor = { active: null, library: null };
+    let selectionPlace = null;
+    let lastInteractionPlace = "active";
     let dragState = null;
 
     function showToast(text) {
@@ -93,6 +104,9 @@
       slot.draggable = false;
       slot.dataset.id = item.id;
       slot.dataset.place = place;
+      const selected = selectionPlace === place && selection.has(item.id);
+      slot.classList.toggle("selected", selected);
+      slot.setAttribute("aria-pressed", selected ? "true" : "false");
       slot.title = `${item.name}\n${item.id}`;
       slot.innerHTML = `
         <span class="sprite">${item.texture ? `<img src="${item.texture}" alt="">` : ""}</span>
@@ -118,25 +132,93 @@
       }
     }
 
-    function dropIntoActive(id, targetId, placement = "append") {
-      if (!state.items.has(id)) return;
-      const oldList = [...state.tabs[state.activeTab]].filter(x => x !== id);
-      removeEverywhere(id);
+    function orderedSelection(place) {
+      if (selectionPlace !== place) return [];
+      if (place === "active") {
+        return state.tabs[state.activeTab].filter(id => selection.has(id));
+      }
+      return [...libraryGrid.querySelectorAll(".slot[data-id]")]
+        .map(slot => slot.dataset.id)
+        .filter(id => selection.has(id));
+    }
+
+    function setSelection(ids, place, anchorId = null) {
+      selection.clear();
+      for (const id of ids) {
+        if (state.items.has(id)) selection.add(id);
+      }
+      selectionPlace = selection.size ? place : null;
+      if (place) selectionAnchor[place] = anchorId || ids[ids.length - 1] || null;
+      updateSelectionUi();
+    }
+
+    function clearSelection() {
+      selection.clear();
+      selectionPlace = null;
+      updateSelectionUi();
+    }
+
+    function updateSelectionUi() {
+      document.querySelectorAll(".slot[data-id]").forEach(slot => {
+        const selected = slot.dataset.place === selectionPlace && selection.has(slot.dataset.id);
+        slot.classList.toggle("selected", selected);
+        slot.setAttribute("aria-pressed", selected ? "true" : "false");
+      });
+      selectionStatus.textContent = selection.size ? `已选择 ${selection.size} 个物品` : "未选择物品";
+      clearSelectionButton.disabled = selection.size === 0;
+    }
+
+    function toggleSelection(id, place) {
+      if (selectionPlace !== place) selection.clear();
+      selectionPlace = place;
+      if (selection.has(id)) selection.delete(id);
+      else selection.add(id);
+      selectionAnchor[place] = id;
+      if (!selection.size) selectionPlace = null;
+      updateSelectionUi();
+    }
+
+    function selectRange(id, place) {
+      const grid = place === "active" ? activeGrid : libraryGrid;
+      const ids = [...grid.querySelectorAll(".slot[data-id]")].map(slot => slot.dataset.id);
+      const anchor = selectionPlace === place ? selectionAnchor[place] : null;
+      const start = ids.indexOf(anchor);
+      const end = ids.indexOf(id);
+      if (start < 0 || end < 0) {
+        setSelection([id], place, id);
+        return;
+      }
+      const range = ids.slice(Math.min(start, end), Math.max(start, end) + 1);
+      setSelection(range, place, anchor);
+    }
+
+    function handleClickSelection(id, place, event) {
+      if (event.shiftKey) selectRange(id, place);
+      else if (event.ctrlKey || event.metaKey) toggleSelection(id, place);
+      else setSelection([id], place, id);
+    }
+
+    function dropIntoActive(ids, targetId, placement = "append") {
+      const movingIds = [...new Set(ids)].filter(id => state.items.has(id));
+      if (!movingIds.length || (targetId && movingIds.includes(targetId))) return;
+      const oldList = state.tabs[state.activeTab].filter(id => !movingIds.includes(id));
+      for (const id of movingIds) removeEverywhere(id);
       const list = state.tabs[state.activeTab];
       let index = -1;
       if (targetId) {
         index = oldList.indexOf(targetId);
-        if (index >= 0 && placement === "after") {
-          index += 1;
-        }
+        if (index >= 0 && placement === "after") index += 1;
       }
-      if (index >= 0) list.splice(index, 0, id);
-      else list.push(id);
+      if (index >= 0) list.splice(index, 0, ...movingIds);
+      else list.push(...movingIds);
+      setSelection(movingIds, "active", movingIds[0]);
       render();
     }
 
-    function removeFromActive(id) {
-      state.tabs[state.activeTab] = state.tabs[state.activeTab].filter(x => x !== id);
+    function removeFromActive(ids) {
+      const removing = new Set(ids);
+      state.tabs[state.activeTab] = state.tabs[state.activeTab].filter(id => !removing.has(id));
+      clearSelection();
       render();
     }
 
@@ -150,9 +232,19 @@
       if (event.button !== 0 || !state.items.has(id)) return;
       event.preventDefault();
       slot.setPointerCapture(event.pointerId);
-      const item = state.items.get(id);
+      const place = slot.dataset.place;
+      lastInteractionPlace = place;
+      const modifiedSelection = event.ctrlKey || event.metaKey || event.shiftKey;
+      if (!modifiedSelection && (selectionPlace !== place || !selection.has(id))) setSelection([id], place, id);
+      const ids = selectionPlace === place && selection.has(id) ? orderedSelection(place) : [id];
+      const item = state.items.get(ids[0]);
       dragState = {
         id,
+        ids,
+        place,
+        ctrlKey: event.ctrlKey,
+        metaKey: event.metaKey,
+        shiftKey: event.shiftKey,
         pointerId: event.pointerId,
         startX: event.clientX,
         startY: event.clientY,
@@ -160,7 +252,7 @@
         target: null,
         sourceSlot: slot
       };
-      dragGhost.innerHTML = `<span class="sprite">${item.texture ? `<img src="${item.texture}" alt="">` : ""}</span>`;
+      dragGhost.innerHTML = `<span class="sprite">${item.texture ? `<img src="${item.texture}" alt="">` : ""}</span>${ids.length > 1 ? `<span class="drag-count">${ids.length}</span>` : ""}`;
       dragGhost.className = "drag-ghost";
       moveGhost(event.clientX, event.clientY);
       slot.classList.add("drag-source");
@@ -174,7 +266,7 @@
       if (!dragState || event.pointerId !== dragState.pointerId) return;
       const dx = Math.abs(event.clientX - dragState.startX);
       const dy = Math.abs(event.clientY - dragState.startY);
-      if (!dragState.moved && dx + dy > 3) {
+      if (!dragState.moved && dx * dx + dy * dy > 36) {
         dragState.moved = true;
         dragGhost.classList.add("show");
       }
@@ -189,15 +281,13 @@
       if (!dragState || event.pointerId !== dragState.pointerId) return;
       const stateToDrop = dragState;
       cleanupDrag();
-      if (!stateToDrop.moved || !stateToDrop.target) return;
-      if (stateToDrop.target.type === "trash") {
-        removeFromActive(stateToDrop.id);
-      } else if (stateToDrop.target.type === "active") {
-        if (stateToDrop.target.id === stateToDrop.id) {
-          return;
-        }
-        dropIntoActive(stateToDrop.id, stateToDrop.target.id, stateToDrop.target.placement);
+      if (!stateToDrop.moved) {
+        handleClickSelection(stateToDrop.id, stateToDrop.place, stateToDrop);
+        return;
       }
+      if (!stateToDrop.target) return;
+      if (stateToDrop.target.type === "trash") removeFromActive(stateToDrop.ids);
+      else if (stateToDrop.target.type === "active") dropIntoActive(stateToDrop.ids, stateToDrop.target.id, stateToDrop.target.placement);
     }
 
     function cancelDrag(event) {
@@ -228,7 +318,7 @@
       if (!dragState) return;
       const trash = document.getElementById("trash");
       const trashRect = trash.getBoundingClientRect();
-      if (pointInRect(x, y, trashRect)) {
+      if (dragState.place === "active" && pointInRect(x, y, trashRect)) {
         trash.classList.add("drop-trash");
         dragState.target = { type: "trash" };
         return;
@@ -246,6 +336,10 @@
         return;
       }
       const rect = slot.getBoundingClientRect();
+      if (dragState.ids.includes(slot.dataset.id)) {
+        dragState.target = null;
+        return;
+      }
       const placement = x < rect.left + rect.width / 2 ? "before" : "after";
       slot.classList.add(placement === "before" ? "drop-before" : "drop-after");
       dragState.target = { type: "active", id: slot.dataset.id, placement };
@@ -276,7 +370,6 @@
       const used = new Set(Object.values(state.tabs).flat());
       activeTitle.textContent = {
         blocks: "\u65b9\u5757",
-        food: "\u98df\u7269",
         tools_armor: "\u5de5\u5177\u4e0e\u76d4\u7532",
         misc: "\u6742\u9879"
       }[state.activeTab] || state.activeTab;
@@ -295,9 +388,11 @@
       libraryCount.textContent = `${libraryItems.length} items`;
       libraryGrid.innerHTML = "";
       for (const item of libraryItems) libraryGrid.appendChild(itemSlot(item, "library"));
+      updateSelectionUi();
     }
 
     function setActiveTab(tab) {
+      clearSelection();
       state.activeTab = tab;
       document.querySelectorAll(".tab").forEach(button => {
         button.classList.toggle("active", button.dataset.tab === tab);
@@ -324,7 +419,25 @@
       button.addEventListener("click", () => setActiveTab(button.dataset.tab));
     });
     document.getElementById("save").addEventListener("click", save);
-    search.addEventListener("input", render);
+    document.getElementById("selectVisible").addEventListener("click", () => {
+      const place = lastInteractionPlace;
+      const grid = place === "active" ? activeGrid : libraryGrid;
+      const ids = [...grid.querySelectorAll(".slot[data-id]")].map(slot => slot.dataset.id);
+      setSelection(ids, place, ids[0] || null);
+    });
+    clearSelectionButton.addEventListener("click", clearSelection);
+    activeGrid.addEventListener("pointerenter", () => lastInteractionPlace = "active");
+    libraryGrid.addEventListener("pointerenter", () => lastInteractionPlace = "library");
+    search.addEventListener("input", () => {
+      clearSelection();
+      render();
+    });
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape") {
+        if (dragState) cleanupDrag();
+        else clearSelection();
+      }
+    });
     render();
   </script>
 </body>

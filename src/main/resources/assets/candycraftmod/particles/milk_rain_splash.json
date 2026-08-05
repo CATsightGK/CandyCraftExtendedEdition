@@ -1,3 +1,8 @@
 {
-  "textures": ["candycraftmod:particle/milk_rain_splash"]
+  "textures": [
+    "candycraftmod:milk_rain_splash_0",
+    "candycraftmod:milk_rain_splash_1",
+    "candycraftmod:milk_rain_splash_2",
+    "candycraftmod:milk_rain_splash_3"
+  ]
 }

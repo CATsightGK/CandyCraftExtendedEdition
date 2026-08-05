@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": ["#  ", "## ", "###"],
+  "key": {
+    "#": { "item": "candycraftmod:smooth_pink_sugar" }
+  },
+  "result": {
+    "item": "candycraftmod:smooth_pink_sugar_stairs",
+    "count": 4
+  }
+}

@@ -1,5 +1,5 @@
 {
-  "has_precipitation": true,
+  "has_precipitation": false,
   "temperature": 1,
   "downfall": 0.3,
   "creature_spawn_probability": 0.1,
@@ -30,6 +30,12 @@
         "weight": 21,
         "minCount": 4,
         "maxCount": 6
+      },
+      {
+        "type": "candycraftmod:cotton_candy_sheep",
+        "weight": 1,
+        "minCount": 1,
+        "maxCount": 1
       }
     ],
     "monster": [
@@ -58,7 +64,7 @@
         "maxCount": 4
       }
     ],
-    "water_creature": [
+    "water_ambient": [
       {
         "type": "candycraftmod:candy_fish",
         "weight": 50,
@@ -101,7 +107,6 @@
       "candycraftmod:ore_sweetscape_dark_brownie_cake_roll_x",
       "candycraftmod:ore_sweetscape_dark_brownie_cake_roll_y",
       "candycraftmod:ore_sweetscape_dark_brownie_cake_roll_z",
-      "candycraftmod:ore_sweetscape_cake_block",
       "candycraftmod:ore_sweetscape_sugar_cookie",
       "candycraftmod:ore_sweetscape_teleporter",
       "candycraftmod:ore_sweetscape_sugar_sand"

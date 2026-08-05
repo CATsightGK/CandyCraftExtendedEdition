@@ -170,11 +170,10 @@ public class GummyBunnyEntity extends Rabbit {
     @Override
     protected void dropCustomDeathLoot(DamageSource source, int looting, boolean recentlyHit) {
         super.dropCustomDeathLoot(source, looting, recentlyHit);
-        if (isBaby()) {
-            return;
+        int count = random.nextInt(3) + random.nextInt(looting + 1);
+        if (count > 0) {
+            spawnAtLocation(new ItemStack(CCItems.GUMMY.get(), count));
         }
-        int count = 1 + random.nextInt(3) + random.nextInt(looting + 1);
-        spawnAtLocation(new ItemStack(dropItemForCurrentColor(), count));
     }
 
     @Nullable
@@ -211,33 +210,6 @@ public class GummyBunnyEntity extends Rabbit {
 
     private boolean hasHorizontalMovement() {
         return Math.abs(getDeltaMovement().x) > 0.003D || Math.abs(getDeltaMovement().z) > 0.003D;
-    }
-
-    private net.minecraft.world.item.Item dropItemForCurrentColor() {
-        if (!entityData.get(SWAMP_GUMMY_VARIANT)) {
-            return CCItems.GUMMY.get();
-        }
-        return GummyMouseEntity.itemForColor(currentGummyColor());
-    }
-
-    private SweetscapeGummyColor currentGummyColor() {
-        int red = getRed();
-        int green = getGreen();
-        int blue = getBlue();
-        SweetscapeGummyColor closest = SweetscapeGummyColor.RED;
-        int closestDistance = Integer.MAX_VALUE;
-        for (SweetscapeGummyColor color : SweetscapeGummyColor.values()) {
-            int rgb = color.color();
-            int dr = red - ((rgb >> 16) & 0xFF);
-            int dg = green - ((rgb >> 8) & 0xFF);
-            int db = blue - (rgb & 0xFF);
-            int distance = dr * dr + dg * dg + db * db;
-            if (distance < closestDistance) {
-                closest = color;
-                closestDistance = distance;
-            }
-        }
-        return closest;
     }
 
     private boolean isGummySwamp(net.minecraft.world.level.LevelAccessor level) {

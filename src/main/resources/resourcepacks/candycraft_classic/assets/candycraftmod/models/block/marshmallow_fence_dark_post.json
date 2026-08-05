@@ -1,0 +1,4 @@
+{
+  "parent": "candycraftmod:block/fence_post",
+  "textures": { "texture": "candycraftmod:block/marshmallow_planks.1" }
+}

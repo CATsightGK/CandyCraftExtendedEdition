@@ -30,4 +30,26 @@ public class HoneyBoltEntity extends AbstractArrow {
     protected ItemStack getPickupItem() {
         return new ItemStack(CCItems.HONEY_BOLT.get());
     }
+
+    @Override
+    public void tick() {
+        super.tick();
+        if (!inGround && !isInWater() && isInFluidType()) {
+            setDeltaMovement(getDeltaMovement().scale(0.6D));
+        }
+    }
+
+    @Override
+    protected float getWaterInertia() {
+        return 0.6F;
+    }
+
+    @Override
+    protected void doPostHurtEffects(LivingEntity living) {
+        super.doPostHurtEffects(living);
+        if (!level().isClientSide && getPierceLevel() <= 0 && living instanceof CandyStuckProjectileCarrier carrier) {
+            living.setArrowCount(Math.max(0, living.getArrowCount() - 1));
+            carrier.candycraft$setHoneyBoltCount(carrier.candycraft$getHoneyBoltCount() + 1);
+        }
+    }
 }

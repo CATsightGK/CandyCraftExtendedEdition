@@ -9,6 +9,7 @@ import net.minecraft.world.level.Level;
 
 public class RawGummyItem extends Item {
     public static final int TRIP_DURATION_TICKS = 30;
+    private static final float TRIP_EFFECT_CHANCE = 0.9F;
 
     public RawGummyItem(Properties properties) {
         super(properties);
@@ -17,7 +18,7 @@ public class RawGummyItem extends Item {
     @Override
     public ItemStack finishUsingItem(ItemStack stack, Level level, LivingEntity living) {
         ItemStack result = super.finishUsingItem(stack, level, living);
-        if (!level.isClientSide) {
+        if (!level.isClientSide && level.random.nextFloat() < TRIP_EFFECT_CHANCE) {
             living.addEffect(new MobEffectInstance(MobEffects.CONFUSION, TRIP_DURATION_TICKS, 0, false, true, true));
         }
         return result;

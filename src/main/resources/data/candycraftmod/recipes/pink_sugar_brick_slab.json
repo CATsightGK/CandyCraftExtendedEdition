@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": ["###"],
+  "key": {
+    "#": { "item": "candycraftmod:pink_sugar_brick" }
+  },
+  "result": {
+    "item": "candycraftmod:pink_sugar_brick_slab",
+    "count": 6
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "type": "candycraftmod:licorice_fuel",
+  "ingredient": {
+    "item": "candycraftmod:sugar_block"
+  },
+  "burn_time": 1200
+}

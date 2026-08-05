@@ -1,6 +1,0 @@
-{
-    "parent": "candycraftmod:block/candy_lily",
-    "textures": {
-        "texture": "candycraftmod:block/marshmallow_slice"
-    }
-}

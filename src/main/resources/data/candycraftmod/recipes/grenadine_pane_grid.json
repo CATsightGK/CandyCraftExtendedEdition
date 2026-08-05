@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "###",
+    "###"
+  ],
+  "key": {
+    "#": {
+      "item": "candycraftmod:grenadine_glass_grid"
+    }
+  },
+  "result": {
+    "item": "candycraftmod:grenadine_pane_grid",
+    "count": 16
+  }
+}

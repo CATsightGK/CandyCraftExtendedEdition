@@ -6,6 +6,9 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.level.block.SoundType;
 
 public final class CCSoundTypes {
+    public static final SoundType COOKIE = new SoundType(0.9F, 1.15F,
+        SoundEvents.CALCITE_BREAK, SoundEvents.CALCITE_STEP, SoundEvents.CALCITE_PLACE,
+        SoundEvents.CALCITE_HIT, SoundEvents.CALCITE_FALL);
     public static final SoundType JELLY = new DeferredSoundType(0.7F, 0.6F, () -> CCSoundEvents.DIG_JELLY.get());
 
     private CCSoundTypes() {

@@ -62,11 +62,11 @@ public class GummyBearModel<T extends GummyBearEntity> extends EntityModel<T> {
         root.addOrReplaceChild("body",
             CubeListBuilder.create()
                 .texOffs(0, 19).addBox(-9.0F, -13.0F, -7.0F, 14.0F, 14.0F, 11.0F)
-                .texOffs(39, 0).addBox(-8.0F, -25.0F, -7.0F, 12.0F, 12.0F, 10.0F),
+                .texOffs(39, 0).addBox(-8.0F, -25.0F, -7.0F, 12.0F, 11.99F, 10.0F),
             PartPose.offset(2.0F, 9.0F, 12.0F));
         root.addOrReplaceChild("body_outer",
             CubeListBuilder.create()
-                .texOffs(58, 70).addBox(-9.0F, -26.0F, -8.0F, 14.0F, 13.0F, 12.0F)
+                .texOffs(58, 70).addBox(-9.0F, -26.0F, -8.0F, 14.0F, 11.99F, 12.0F)
                 .texOffs(0, 67).addBox(-10.0F, -14.0F, -8.0F, 16.0F, 15.0F, 13.0F),
             PartPose.offset(2.0F, 9.0F, 12.0F));
         root.addOrReplaceChild("leg0",

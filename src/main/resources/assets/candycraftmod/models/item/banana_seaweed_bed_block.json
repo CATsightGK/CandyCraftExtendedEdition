@@ -1,0 +1,7 @@
+{
+  "parent": "candycraftmod:item/candy_bed_3d_base",
+  "textures": {
+    "bed": "candycraftmod:block/candy_beds/banana_seaweed_bed",
+    "particle": "candycraftmod:block/marshmallow_planks.0"
+  }
+}

@@ -2,6 +2,11 @@ package com.valentin4311.candycraftmod.world.feature;
 
 import com.mojang.serialization.Codec;
 import com.valentin4311.candycraftmod.CandyCraft;
+import com.valentin4311.candycraftmod.block.DungeonTeleporterBlock;
+import com.valentin4311.candycraftmod.block.DungeonTeleporterBlock.DungeonKind;
+import com.valentin4311.candycraftmod.block.DungeonTeleporterBlock.PortalRole;
+import com.valentin4311.candycraftmod.block.MarshmallowChestBlock;
+import com.valentin4311.candycraftmod.block.entity.MarshmallowChestBlockEntity;
 import com.valentin4311.candycraftmod.entity.BasicCandySlimeEntity;
 import com.valentin4311.candycraftmod.registry.CCBlocks;
 import com.valentin4311.candycraftmod.registry.CCEntityTypes;
@@ -16,6 +21,8 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.Container;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.WorldGenLevel;
@@ -36,12 +43,18 @@ import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.block.entity.SpawnerBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.ChestType;
 import net.minecraft.world.level.block.state.properties.SlabType;
 import net.minecraft.world.level.levelgen.feature.Feature;
 import net.minecraft.world.level.levelgen.feature.FeaturePlaceContext;
 import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
+import net.minecraft.world.level.storage.loot.LootParams;
+import net.minecraft.world.level.storage.loot.LootTable;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.core.Direction;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 
 public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
     private static final ResourceLocation LOOT_TABLE = new ResourceLocation(CandyCraft.MODID, "chests/jelly_dungeon");
@@ -61,6 +74,18 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
         clearArea(level, origin, -36, 36, -7, 56, -430, 24);
         new JellyDungeonFeature(NoneFeatureConfiguration.CODEC).legacyDungeon(level, random, origin);
         purgeDungeonItemEntities(level, origin, -36, 36, -7, 56, -430, 24);
+    }
+
+    public static void clearDungeonInstance(ServerLevel level, BlockPos origin) {
+        loadDungeonChunks(level, origin, -36, 36, -430, 24);
+        AABB bounds = new AABB(
+            origin.getX() - 36, origin.getY() - 7, origin.getZ() - 430,
+            origin.getX() + 37, origin.getY() + 57, origin.getZ() + 25
+        );
+        for (Entity entity : level.getEntitiesOfClass(Entity.class, bounds, entity -> !(entity instanceof Player))) {
+            entity.discard();
+        }
+        clearArea(level, origin, -36, 36, -7, 56, -430, 24);
     }
 
     public static void generateDebugShowcase(ServerLevel level, BlockPos origin) {
@@ -221,7 +246,7 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
         }
         legacyEntranceDoor189(level, x, y, z - 4);
         set(level, x + 1, y + 1, z + 1, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
-        set(level, x + 1, y + 2, z + 1, CCBlocks.BLOCK_TELEPORTER.get().defaultBlockState());
+        set(level, x + 1, y + 2, z + 1, DungeonTeleporterBlock.state(DungeonKind.JELLY, PortalRole.ENTRY));
         set(level, x - 1, y + 3, z + 1, CCBlocks.TRAMPOJELLY.get().defaultBlockState());
         set(level, x - 2, y + 3, z + 1, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
         set(level, x + 10, y + 3, z + 1, CCBlocks.TRAMPOJELLY.get().defaultBlockState());
@@ -357,7 +382,7 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
                 }
             }
         }
-        clearDoor(level, x + 2, y + 4, z - 41, 2, 5);
+        clearDoor(level, x + 2, y + 4, z - 41, 2, 4);
         set(level, x + 4, y + 11, z - 41, Blocks.REDSTONE_LAMP.defaultBlockState().setValue(BlockStateProperties.LIT, true));
         set(level, x + 4, y + 11, z - 40, Blocks.LEVER.defaultBlockState()
             .setValue(LeverBlock.FACE, AttachFace.WALL)
@@ -378,7 +403,7 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
         }
         set(level, x + 2, y + 5, z - 43, slab(CCBlocks.LICORICE_BRICK_SLAB.get(), false));
         set(level, x + 3, y + 5, z - 43, slab(CCBlocks.LICORICE_BRICK_SLAB.get(), false));
-        clearDoor(level, x + 2, y + 4, z - 41, 2, 5);
+        clearDoor(level, x + 2, y + 4, z - 41, 2, 4);
         set(level, x + 2, y + 4, z - 41, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
         set(level, x + 3, y + 4, z - 41, CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState());
         forceJumpEndPistonsRetracted(level, x, y, z);
@@ -453,7 +478,7 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
     }
 
     private void restoreLayeredWater(WorldGenLevel level, int x, int y, int z) {
-        BlockState sourceWater = Blocks.WATER.defaultBlockState().setValue(net.minecraft.world.level.block.LiquidBlock.LEVEL, 0);
+        BlockState sourceWater = CCBlocks.STATIC_WATER.get().defaultBlockState();
         for (int i = 1; i < 23; i++) {
             boolean water = true;
             for (int j = 5; j < 23; j++) {
@@ -718,13 +743,9 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
         set(level, x, y + 2, z - 1, Blocks.AIR.defaultBlockState());
         set(level, x + 1, y + 3, z - 1, Blocks.AIR.defaultBlockState());
         set(level, x, y + 3, z - 1, Blocks.AIR.defaultBlockState());
-        BlockPos chestPos = new BlockPos(x, y + 2, z - 15);
-        set(level, chestPos, Blocks.CHEST.defaultBlockState());
-        if (level.getBlockEntity(chestPos) instanceof ChestBlockEntity chest) {
-            chest.setLootTable(LOOT_TABLE, random.nextLong());
-            chest.setItem(0, new ItemStack(CCItems.JELLY_CROWN.get()));
-        }
-        set(level, x + 1, y + 2, z - 15, CCBlocks.BLOCK_TELEPORTER.get().defaultBlockState());
+        BlockPos chestPos = new BlockPos(x + 1, y + 2, z - 13);
+        finalRewardChest(level, random, chestPos);
+        set(level, x + 1, y + 2, z - 15, DungeonTeleporterBlock.state(DungeonKind.JELLY, PortalRole.END));
     }
 
     private static boolean canFit(WorldGenLevel level, BlockPos origin) {
@@ -771,7 +792,7 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
 
         placeJellyPads(level, x, y + 1, z - 2, 4, CCBlocks.TRAMPOJELLY.get().defaultBlockState());
         set(level, new BlockPos(x - 3, y + 1, z - 3), CCBlocks.CARAMEL_BLOCK.get().defaultBlockState());
-        set(level, new BlockPos(x - 3, y + 2, z - 3), CCBlocks.BLOCK_TELEPORTER.get().defaultBlockState());
+        set(level, new BlockPos(x - 3, y + 2, z - 3), DungeonTeleporterBlock.state(DungeonKind.JELLY, PortalRole.ENTRY));
         keyChest(level, new BlockPos(x + 3, y + 1, z - 3), CCItems.JELLY_SENTRY_KEY.get());
 
         for (int i = 0; i < 5; i++) {
@@ -1101,6 +1122,30 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
         }
     }
 
+    private void finalRewardChest(WorldGenLevel level, RandomSource random, BlockPos pos) {
+        BlockState state = CCBlocks.MARSHMALLOW_CHEST_DARK.get().defaultBlockState()
+            .setValue(MarshmallowChestBlock.FACING, Direction.SOUTH)
+            .setValue(MarshmallowChestBlock.TYPE, ChestType.SINGLE);
+        set(level, pos, state);
+        if (level.getBlockEntity(pos) instanceof MarshmallowChestBlockEntity chest) {
+            fillLoot(level, random, pos, chest);
+            chest.setItem(13, new ItemStack(CCItems.JELLY_CROWN.get()));
+        }
+    }
+
+    private static void fillLoot(WorldGenLevel level, RandomSource random, BlockPos pos, Container container) {
+        ServerLevel serverLevel = level instanceof ServerLevel directLevel ? directLevel
+            : level instanceof WorldGenRegion region ? region.getLevel() : null;
+        if (serverLevel == null) {
+            return;
+        }
+        LootTable lootTable = serverLevel.getServer().getLootData().getLootTable(LOOT_TABLE);
+        LootParams params = new LootParams.Builder(serverLevel)
+            .withParameter(LootContextParams.ORIGIN, Vec3.atCenterOf(pos))
+            .create(LootContextParamSets.CHEST);
+        lootTable.fill(container, params, random.nextLong());
+    }
+
     private void lockedDoor(WorldGenLevel level, RandomSource random, BlockPos center, boolean alongX, BlockState lock) {
         for (int horizontal = -2; horizontal <= 2; horizontal++) {
             for (int dy = -1; dy <= 2; dy++) {
@@ -1173,7 +1218,7 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
         room(level, random, x, y, z, 6, 7, 11);
         placeJellyPads(level, x, y + 1, z - 4, 5, CCBlocks.TRAMPOJELLY.get().defaultBlockState());
         set(level, new BlockPos(x - 4, y + 1, z - 2), CCBlocks.CARAMEL_BLOCK.get().defaultBlockState());
-        set(level, new BlockPos(x - 4, y + 2, z - 2), CCBlocks.BLOCK_TELEPORTER.get().defaultBlockState());
+        set(level, new BlockPos(x - 4, y + 2, z - 2), DungeonTeleporterBlock.state(DungeonKind.JELLY, PortalRole.ENTRY));
         cursorZ -= 11;
     }
 
@@ -1249,12 +1294,9 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
     private void rewardRoom(WorldGenLevel level, RandomSource random, int x, int y) {
         int z = cursorZ;
         room(level, random, x, y, z, 6, 6, 18);
-        BlockPos chestPos = new BlockPos(x, y + 1, z - 13);
-        set(level, chestPos, Blocks.CHEST.defaultBlockState());
-        if (level.getBlockEntity(chestPos) instanceof ChestBlockEntity chest) {
-            chest.setLootTable(LOOT_TABLE, random.nextLong());
-        }
-        set(level, new BlockPos(x + 2, y + 1, z - 13), CCBlocks.BLOCK_TELEPORTER.get().defaultBlockState());
+        BlockPos chestPos = new BlockPos(x + 1, y + 1, z - 10);
+        finalRewardChest(level, random, chestPos);
+        set(level, new BlockPos(x + 2, y + 1, z - 13), DungeonTeleporterBlock.state(DungeonKind.JELLY, PortalRole.END));
         cursorZ -= 18;
     }
 

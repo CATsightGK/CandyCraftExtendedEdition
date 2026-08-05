@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/cube_all",
+  "textures": {
+    "all": "candycraftmod:block/chiseled_nougat_block"
+  }
+}

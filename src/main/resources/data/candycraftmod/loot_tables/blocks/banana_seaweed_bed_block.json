@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        { "type": "minecraft:item", "name": "candycraftmod:banana_seaweed_bed_block" }
+      ],
+      "conditions": [
+        {
+          "condition": "minecraft:block_state_property",
+          "block": "candycraftmod:banana_seaweed_bed_block",
+          "properties": { "part": "head" }
+        },
+        { "condition": "minecraft:survives_explosion" }
+      ]
+    }
+  ]
+}

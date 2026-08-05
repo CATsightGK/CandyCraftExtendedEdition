@@ -58,8 +58,8 @@ public class BasicCandySlimeRenderer extends SlimeRenderer {
             return "candyboss4.png";
         }
         return switch (queen.getJellyQueenMode()) {
-            case BasicCandySlimeEntity.JELLY_QUEEN_BLUE_MODE -> "candyboss2.png";
-            case BasicCandySlimeEntity.JELLY_QUEEN_BROWN_MODE -> "candyboss3.png";
+            case BasicCandySlimeEntity.JELLY_QUEEN_BLUE_MODE -> "candyboss3.png";
+            case BasicCandySlimeEntity.JELLY_QUEEN_BROWN_MODE -> "candyboss2.png";
             default -> "candyboss.png";
         };
     }

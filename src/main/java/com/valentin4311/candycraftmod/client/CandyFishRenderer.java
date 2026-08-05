@@ -4,9 +4,11 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.valentin4311.candycraftmod.CandyCraft;
 import com.valentin4311.candycraftmod.client.model.CandyFishModel;
 import com.valentin4311.candycraftmod.entity.CandyFishEntity;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.resources.ResourceLocation;
+import org.jetbrains.annotations.Nullable;
 
 public class CandyFishRenderer extends MobRenderer<CandyFishEntity, CandyFishModel<CandyFishEntity>> {
     private static final ResourceLocation TEXTURE = new ResourceLocation(CandyCraft.MODID, "textures/entity/fish.png");
@@ -27,5 +29,14 @@ public class CandyFishRenderer extends MobRenderer<CandyFishEntity, CandyFishMod
     @Override
     public ResourceLocation getTextureLocation(CandyFishEntity entity) {
         return TEXTURE;
+    }
+
+    @Nullable
+    @Override
+    protected RenderType getRenderType(CandyFishEntity entity, boolean bodyVisible, boolean translucent, boolean glowing) {
+        if (bodyVisible || translucent) {
+            return RenderType.entityTranslucent(getTextureLocation(entity));
+        }
+        return glowing ? RenderType.outline(getTextureLocation(entity)) : null;
     }
 }

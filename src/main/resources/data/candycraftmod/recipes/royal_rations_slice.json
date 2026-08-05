@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "candycraftmod:royal_rations"
+    }
+  ],
+  "result": {
+    "item": "candycraftmod:royal_rations_slice"
+  }
+}

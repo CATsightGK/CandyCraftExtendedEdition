@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CandyCraft Advancement Editor</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark">C</span>
+        <div><h1>&#31958;&#26524;&#19990;&#30028;&#36827;&#24230;&#32534;&#36753;&#22120;</h1><p id="projectPath"></p></div>
+      </div>
+      <div class="top-actions">
+        <span id="saveState" class="status saved">&#24050;&#21152;&#36733;</span>
+        <button id="addButton" class="button secondary" type="button"><b>+</b> &#28155;&#21152;&#25104;&#23601;</button>
+        <button id="saveButton" class="button primary" type="button">&#20445;&#23384;&#21040;&#27169;&#32452;</button>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <section class="tree-panel">
+        <div class="tree-toolbar">
+          <label class="search-box"><span>&#25628;&#32034;</span><input id="treeSearch" type="search" placeholder="&#26631;&#39064;&#25110; ID"></label>
+          <div class="toolbar-group">
+            <button id="autoLayoutButton" class="icon-text" type="button">&#33258;&#21160;&#25490;&#21015;</button>
+            <button id="centerButton" class="icon-button" type="button" title="&#23621;&#20013;&#26174;&#31034;">&#9673;</button>
+            <button id="zoomOutButton" class="icon-button" type="button" title="&#32553;&#23567;">&#8722;</button>
+            <output id="zoomLabel">100%</output>
+            <button id="zoomInButton" class="icon-button" type="button" title="&#25918;&#22823;">+</button>
+          </div>
+        </div>
+        <div id="viewport" class="viewport">
+          <div id="world" class="world">
+            <svg id="edges" class="edges" width="2800" height="2000" aria-hidden="true"></svg>
+            <div id="nodes" class="nodes"></div>
+          </div>
+          <div class="canvas-legend">
+            <span><i class="dot task"></i>&#26222;&#36890;</span><span><i class="dot goal"></i>&#30446;&#26631;</span><span><i class="dot challenge"></i>&#25361;&#25112;</span>
+          </div>
+        </div>
+      </section>
+
+      <aside class="inspector">
+        <div id="emptyInspector" class="empty-inspector"><strong>&#36873;&#25321;&#19968;&#20010;&#36827;&#24230;</strong><span>&#22312;&#24038;&#20391;&#36827;&#24230;&#26641;&#20013;&#28857;&#20987;&#33410;&#28857;</span></div>
+        <form id="editorForm" hidden>
+          <div class="inspector-head">
+            <div><span class="eyebrow">ADVANCEMENT</span><h2 id="selectedId"></h2></div>
+            <button id="deleteButton" class="danger-icon" type="button" title="&#21024;&#38500;&#36827;&#24230;">&#215;</button>
+          </div>
+
+          <section class="form-section identity-grid">
+            <button id="iconButton" class="icon-preview" type="button" title="&#36873;&#25321;&#23637;&#31034;&#29289;&#21697;"></button>
+            <label>&#23637;&#31034;&#29289;&#21697;<input id="iconItem" name="iconItem" autocomplete="off"></label>
+            <label>&#36793;&#26694;&#31867;&#22411;<select id="frame" name="frame"><option value="task">&#26222;&#36890;</option><option value="goal">&#30446;&#26631;</option><option value="challenge">&#25361;&#25112;</option></select></label>
+          </section>
+
+          <section class="form-section">
+            <h3>&#26631;&#39064;&#19982;&#35828;&#26126;</h3>
+            <label>&#20013;&#25991;&#26631;&#39064;<input id="titleZh" name="titleZh"></label>
+            <label>&#20013;&#25991;&#35828;&#26126;<textarea id="descriptionZh" name="descriptionZh" rows="2"></textarea></label>
+            <div class="two-columns"><label>English title<input id="titleEn" name="titleEn"></label><label>&#29238;&#32423;&#36827;&#24230;<select id="parent" name="parent"></select></label></div>
+            <label>English description<textarea id="descriptionEn" name="descriptionEn" rows="2"></textarea></label>
+          </section>
+
+          <section class="form-section">
+            <h3>&#23637;&#31034;&#35774;&#32622;</h3>
+            <div class="toggle-list">
+              <label class="toggle-row"><span>&#23436;&#25104;&#26102;&#24377;&#20986;&#25552;&#31034;</span><input id="showToast" type="checkbox"><i></i></label>
+              <label class="toggle-row"><span>&#22312;&#32842;&#22825;&#26639;&#20844;&#21578;</span><input id="announceChat" type="checkbox"><i></i></label>
+              <label class="toggle-row"><span>&#23436;&#25104;&#21069;&#38544;&#34255;</span><input id="hidden" type="checkbox"><i></i></label>
+            </div>
+          </section>
+
+          <details class="advanced-section">
+            <summary>&#35302;&#21457;&#26465;&#20214;&#19982;&#38656;&#27714;</summary>
+            <p>&#20445;&#30041; Minecraft 1.20.1 &#30340;&#21407;&#22987;&#26465;&#20214;&#32467;&#26500;&#12290;</p>
+            <label>criteria JSON<textarea id="criteriaJson" spellcheck="false" rows="12"></textarea></label>
+            <label>requirements JSON<textarea id="requirementsJson" spellcheck="false" rows="4"></textarea></label>
+          </details>
+        </form>
+      </aside>
+    </main>
+  </div>
+
+  <dialog id="addDialog">
+    <form method="dialog" class="dialog-form" id="addForm">
+      <div class="dialog-head"><div><span class="eyebrow">NEW ADVANCEMENT</span><h2>&#28155;&#21152;&#25104;&#23601;</h2></div><button class="close-button" value="cancel" formnovalidate aria-label="Close">&#215;</button></div>
+      <label>&#36827;&#24230; ID<input id="newId" pattern="[a-z0-9_./-]+" placeholder="find_sweet_crystal" required></label>
+      <label>&#20013;&#25991;&#26631;&#39064;<input id="newTitle" required></label>
+      <label>&#29238;&#32423;&#36827;&#24230;<select id="newParent"></select></label>
+      <label>&#23637;&#31034;&#29289;&#21697; ID<input id="newIcon" value="candycraftmod:sugar_block" required></label>
+      <label>&#35302;&#21457;&#26041;&#24335;<select id="newTrigger"><option value="inventory">&#33719;&#24471;&#23637;&#31034;&#29289;&#21697;</option><option value="recipe">&#35299;&#38145;&#21516;&#21517;&#37197;&#26041;</option><option value="impossible">&#20165;&#21629;&#20196;/&#31243;&#24207;&#35302;&#21457;</option></select></label>
+      <div class="dialog-actions"><button value="cancel" formnovalidate class="button secondary">&#21462;&#28040;</button><button id="createButton" value="default" class="button primary">&#21019;&#24314;&#24182;&#32534;&#36753;</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="itemDialog" class="item-dialog">
+    <div class="dialog-head"><div><span class="eyebrow">DISPLAY ITEM</span><h2>&#36873;&#25321;&#23637;&#31034;&#29289;&#21697;</h2></div><button id="closeItems" class="close-button" type="button">&#215;</button></div>
+    <input id="itemSearch" class="item-search" type="search" placeholder="&#25628;&#32034;&#29289;&#21697;&#21517;&#25110;&#27880;&#20876;&#21517;">
+    <div id="itemGrid" class="item-grid"></div>
+  </dialog>
+  <div id="toast" class="toast"></div>
+
+  <script>
+    const initialState = __INITIAL_STATE__;
+    const NS = "candycraftmod:";
+    const state = {
+      nodes: new Map(initialState.advancements.map(node => [node.id, structuredClone(node)])),
+      items: initialState.items,
+      selected: null,
+      dirty: false,
+      transform: { x: 28, y: 28, scale: 1 }
+    };
+
+    const $ = id => document.getElementById(id);
+    const viewport = $("viewport");
+    const world = $("world");
+    const nodesLayer = $("nodes");
+    const edges = $("edges");
+    const form = $("editorForm");
+    const fields = ["iconItem", "frame", "titleZh", "descriptionZh", "titleEn", "descriptionEn", "parent"];
+    $("projectPath").textContent = initialState.advancementsRoot;
+
+    function escapeHtml(value) { return String(value).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+    function itemById(id) { return state.items.find(item => item.id === id); }
+    function imageHtml(id) {
+      const item = itemById(id);
+      return item && item.texture ? `<img src="${escapeHtml(item.texture)}" alt="">` : `<span>${escapeHtml((id || "?").split(":").pop().slice(0, 2).toUpperCase())}</span>`;
+    }
+    function fullId(id) { return id && id.includes(":") ? id : id ? NS + id : ""; }
+    function localParent(node) { return node.data.parent && node.data.parent.startsWith(NS) ? node.data.parent.slice(NS.length) : null; }
+    function markDirty() { state.dirty = true; $("saveState").textContent = "\u6709\u672a\u4fdd\u5b58\u66f4\u6539"; $("saveState").className = "status dirty"; }
+    function showToast(text, error = false) { const el = $("toast"); el.textContent = text; el.className = `toast show${error ? " error" : ""}`; clearTimeout(showToast.timer); showToast.timer = setTimeout(() => el.className = "toast", 2600); }
+
+    function autoLayout(mark = true) {
+      const children = new Map();
+      const roots = [];
+      for (const node of state.nodes.values()) children.set(node.id, []);
+      for (const node of state.nodes.values()) {
+        const parent = localParent(node);
+        if (parent && children.has(parent)) children.get(parent).push(node.id); else roots.push(node.id);
+      }
+      for (const list of children.values()) list.sort();
+      let row = 0;
+      const visiting = new Set();
+      function place(id, depth) {
+        if (visiting.has(id)) return row++;
+        visiting.add(id);
+        const kids = children.get(id) || [];
+        let center;
+        if (!kids.length) center = row++;
+        else {
+          const rows = kids.map(child => place(child, depth + 1));
+          center = (Math.min(...rows) + Math.max(...rows)) / 2;
+        }
+        state.nodes.get(id).position = { x: 90 + depth * 250, y: 70 + center * 112 };
+        visiting.delete(id);
+        return center;
+      }
+      roots.sort().forEach(id => { place(id, 0); row += 0.35; });
+      renderTree();
+      if (mark) markDirty();
+    }
+
+    function ensurePositions() {
+      if ([...state.nodes.values()].some(node => !node.position || !Number.isFinite(node.position.x))) autoLayout(false);
+      else renderTree();
+    }
+
+    function renderEdges() {
+      edges.innerHTML = "";
+      for (const node of state.nodes.values()) {
+        const parent = state.nodes.get(localParent(node));
+        if (!parent || !parent.position || !node.position) continue;
+        const x1 = parent.position.x + 190, y1 = parent.position.y + 38, x2 = node.position.x, y2 = node.position.y + 38;
+        const bend = Math.max(45, Math.abs(x2 - x1) * 0.48);
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        path.setAttribute("d", `M ${x1} ${y1} C ${x1 + bend} ${y1}, ${x2 - bend} ${y2}, ${x2} ${y2}`);
+        path.classList.toggle("active", state.selected === node.id || state.selected === parent.id);
+        edges.appendChild(path);
+      }
+    }
+
+    function renderTree() {
+      const query = $("treeSearch").value.trim().toLowerCase();
+      nodesLayer.innerHTML = "";
+      for (const node of state.nodes.values()) {
+        const display = node.data.display || {};
+        const frame = display.frame || "task";
+        const filtered = query && !`${node.id} ${node.titleZh} ${node.titleEn}`.toLowerCase().includes(query);
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = `adv-node ${frame}${state.selected === node.id ? " selected" : ""}${filtered ? " filtered" : ""}`;
+        button.dataset.id = node.id;
+        button.style.transform = `translate(${node.position.x}px, ${node.position.y}px)`;
+        button.innerHTML = `<span class="adv-icon">${imageHtml(display.icon && display.icon.item)}</span><span class="adv-copy"><strong>${escapeHtml(node.titleZh || node.id)}</strong><small>${escapeHtml(node.id)}</small></span>`;
+        button.addEventListener("pointerdown", startNodeDrag);
+        button.addEventListener("click", event => { if (!button.dataset.dragged) selectNode(node.id); delete button.dataset.dragged; event.stopPropagation(); });
+        nodesLayer.appendChild(button);
+      }
+      renderEdges();
+      applyTransform();
+    }
+
+    function populateParentSelects() {
+      const options = [...state.nodes.values()].sort((a,b) => (a.titleZh || a.id).localeCompare(b.titleZh || b.id, "zh-CN"));
+      const html = `<option value="">\u65e0\uff08\u6839\u8fdb\u5ea6\uff09</option>` + options.map(node => `<option value="${escapeHtml(node.id)}">${escapeHtml(node.titleZh || node.id)} (${escapeHtml(node.id)})</option>`).join("");
+      $("parent").innerHTML = html;
+      $("newParent").innerHTML = html;
+    }
+
+    function selectNode(id) {
+      const node = state.nodes.get(id);
+      if (!node) return;
+      state.selected = id;
+      $("emptyInspector").hidden = true;
+      form.hidden = false;
+      $("selectedId").textContent = id;
+      populateParentSelects();
+      const display = node.data.display || (node.data.display = {});
+      $("iconItem").value = display.icon && display.icon.item || "";
+      $("frame").value = display.frame || "task";
+      $("titleZh").value = node.titleZh || "";
+      $("titleEn").value = node.titleEn || "";
+      $("descriptionZh").value = node.descriptionZh || "";
+      $("descriptionEn").value = node.descriptionEn || "";
+      $("parent").value = localParent(node) || node.data.parent || "";
+      $("showToast").checked = display.show_toast !== false;
+      $("announceChat").checked = display.announce_to_chat !== false;
+      $("hidden").checked = display.hidden === true;
+      $("criteriaJson").value = JSON.stringify(node.data.criteria || {}, null, 2);
+      $("requirementsJson").value = node.data.requirements ? JSON.stringify(node.data.requirements, null, 2) : "";
+      $("iconButton").innerHTML = imageHtml($("iconItem").value);
+      renderTree();
+    }
+
+    function updateSelectedFromForm() {
+      const node = state.nodes.get(state.selected);
+      if (!node) return;
+      const display = node.data.display || (node.data.display = {});
+      display.icon = { ...(display.icon || {}), item: $("iconItem").value.trim() };
+      display.frame = $("frame").value;
+      node.titleZh = $("titleZh").value;
+      node.titleEn = $("titleEn").value;
+      node.descriptionZh = $("descriptionZh").value;
+      node.descriptionEn = $("descriptionEn").value;
+      const parent = $("parent").value;
+      if (!parent) delete node.data.parent; else node.data.parent = fullId(parent);
+      display.show_toast = $("showToast").checked;
+      display.announce_to_chat = $("announceChat").checked;
+      display.hidden = $("hidden").checked;
+      $("iconButton").innerHTML = imageHtml(display.icon.item);
+      markDirty(); renderTree();
+    }
+
+    function commitAdvanced() {
+      const node = state.nodes.get(state.selected);
+      if (!node) return true;
+      try {
+        const criteria = JSON.parse($("criteriaJson").value || "{}");
+        if (!criteria || Array.isArray(criteria) || !Object.keys(criteria).length) throw new Error("criteria must not be empty");
+        node.data.criteria = criteria;
+        const requirements = $("requirementsJson").value.trim();
+        if (requirements) node.data.requirements = JSON.parse(requirements); else delete node.data.requirements;
+        $("criteriaJson").classList.remove("invalid"); $("requirementsJson").classList.remove("invalid");
+        markDirty(); return true;
+      } catch (error) {
+        $("criteriaJson").classList.add("invalid");
+        showToast(`JSON \u683c\u5f0f\u9519\u8bef: ${error.message}`, true); return false;
+      }
+    }
+
+    function startNodeDrag(event) {
+      if (event.button !== 0) return;
+      event.stopPropagation();
+      const element = event.currentTarget;
+      const node = state.nodes.get(element.dataset.id);
+      const start = { x: event.clientX, y: event.clientY, nodeX: node.position.x, nodeY: node.position.y };
+      element.setPointerCapture(event.pointerId);
+      function move(e) {
+        const dx = (e.clientX - start.x) / state.transform.scale, dy = (e.clientY - start.y) / state.transform.scale;
+        if (Math.abs(dx) + Math.abs(dy) > 3) element.dataset.dragged = "1";
+        node.position.x = Math.max(0, Math.round(start.nodeX + dx));
+        node.position.y = Math.max(0, Math.round(start.nodeY + dy));
+        element.style.transform = `translate(${node.position.x}px, ${node.position.y}px)`;
+        renderEdges();
+      }
+      function end() { element.removeEventListener("pointermove", move); element.removeEventListener("pointerup", end); if (element.dataset.dragged) markDirty(); }
+      element.addEventListener("pointermove", move); element.addEventListener("pointerup", end);
+    }
+
+    function applyTransform() {
+      const t = state.transform;
+      world.style.transform = `translate(${t.x}px, ${t.y}px) scale(${t.scale})`;
+      $("zoomLabel").textContent = `${Math.round(t.scale * 100)}%`;
+    }
+    function setZoom(next, anchorX = viewport.clientWidth / 2, anchorY = viewport.clientHeight / 2) {
+      const t = state.transform, old = t.scale;
+      next = Math.min(1.6, Math.max(0.45, next));
+      const worldX = (anchorX - t.x) / old, worldY = (anchorY - t.y) / old;
+      t.scale = next; t.x = anchorX - worldX * next; t.y = anchorY - worldY * next; applyTransform();
+    }
+    function centerView() {
+      const positioned = [...state.nodes.values()].filter(node => node.position);
+      if (!positioned.length) return;
+      const minX = Math.min(...positioned.map(n => n.position.x)), maxX = Math.max(...positioned.map(n => n.position.x + 190));
+      const minY = Math.min(...positioned.map(n => n.position.y)), maxY = Math.max(...positioned.map(n => n.position.y + 76));
+      const scale = Math.min(1, Math.max(0.45, Math.min((viewport.clientWidth - 90) / (maxX - minX), (viewport.clientHeight - 90) / (maxY - minY))));
+      state.transform.scale = scale;
+      state.transform.x = (viewport.clientWidth - (maxX - minX) * scale) / 2 - minX * scale;
+      state.transform.y = (viewport.clientHeight - (maxY - minY) * scale) / 2 - minY * scale;
+      applyTransform();
+    }
+
+    let pan = null;
+    viewport.addEventListener("pointerdown", event => {
+      if (event.button !== 0 || event.target.closest(".adv-node")) return;
+      pan = { x: event.clientX, y: event.clientY, tx: state.transform.x, ty: state.transform.y };
+      viewport.setPointerCapture(event.pointerId); viewport.classList.add("panning");
+    });
+    viewport.addEventListener("pointermove", event => { if (pan) { state.transform.x = pan.tx + event.clientX - pan.x; state.transform.y = pan.ty + event.clientY - pan.y; applyTransform(); } });
+    viewport.addEventListener("pointerup", () => { pan = null; viewport.classList.remove("panning"); });
+    viewport.addEventListener("wheel", event => { event.preventDefault(); const rect = viewport.getBoundingClientRect(); setZoom(state.transform.scale * (event.deltaY > 0 ? 0.9 : 1.1), event.clientX - rect.left, event.clientY - rect.top); }, { passive: false });
+
+    function renderItemGrid() {
+      const q = $("itemSearch").value.trim().toLowerCase();
+      $("itemGrid").innerHTML = state.items.filter(item => !q || `${item.name} ${item.id}`.toLowerCase().includes(q)).map(item => `<button type="button" class="item-choice" data-id="${escapeHtml(item.id)}" title="${escapeHtml(item.name)}\n${escapeHtml(item.id)}"><span>${imageHtml(item.id)}</span><small>${escapeHtml(item.name)}</small></button>`).join("");
+      $("itemGrid").querySelectorAll("button").forEach(button => button.addEventListener("click", () => { $("iconItem").value = button.dataset.id; updateSelectedFromForm(); $("itemDialog").close(); }));
+    }
+
+    function createNode() {
+      const id = $("newId").value.trim();
+      if (!/^[a-z0-9_.\/-]+$/.test(id) || id.includes("..")) return showToast("\u8fdb\u5ea6 ID \u53ea\u80fd\u4f7f\u7528\u5c0f\u5199\u5b57\u6bcd\u3001\u6570\u5b57\u3001_ . / -", true);
+      if (state.nodes.has(id)) return showToast("\u8fd9\u4e2a\u8fdb\u5ea6 ID \u5df2\u5b58\u5728", true);
+      const icon = $("newIcon").value.trim(), parent = $("newParent").value, triggerType = $("newTrigger").value;
+      let criterion;
+      if (triggerType === "recipe") criterion = { trigger: "minecraft:recipe_unlocked", conditions: { recipe: fullId(id) } };
+      else if (triggerType === "impossible") criterion = { trigger: "minecraft:impossible" };
+      else criterion = { trigger: "minecraft:inventory_changed", conditions: { items: [{ items: [icon] }] } };
+      const parentNode = state.nodes.get(parent);
+      const position = parentNode ? { x: parentNode.position.x + 250, y: parentNode.position.y + 100 } : { x: 90, y: 70 + state.nodes.size * 20 };
+      const node = {
+        id, titleKey: `advancements.candycraft.${id}.title`, descriptionKey: `advancements.candycraft.${id}.desc`,
+        titleZh: $("newTitle").value.trim(), titleEn: id.replace(/[_.-]+/g, " ").replace(/\b\w/g, c => c.toUpperCase()), descriptionZh: "", descriptionEn: "", position,
+        data: { display: { icon: { item: icon }, title: {}, description: {}, frame: "task", show_toast: true, announce_to_chat: true, hidden: false }, criteria: { complete: criterion } }
+      };
+      if (parent) node.data.parent = fullId(parent);
+      state.nodes.set(id, node); markDirty(); $("addDialog").close(); selectNode(id); populateParentSelects();
+    }
+
+    async function saveAll() {
+      if (!commitAdvanced()) return;
+      $("saveButton").disabled = true; $("saveButton").textContent = "\u6b63\u5728\u4fdd\u5b58...";
+      try {
+        const response = await fetch("/api/save", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ advancements: [...state.nodes.values()] }) });
+        const result = await response.json();
+        if (!response.ok || !result.ok) throw new Error(result.error || "Save failed");
+        state.dirty = false; $("saveState").textContent = `\u5df2\u4fdd\u5b58 ${result.count} \u4e2a\u8fdb\u5ea6`; $("saveState").className = "status saved"; showToast("\u8fdb\u5ea6 JSON \u548c\u4e2d\u82f1\u6587\u6587\u672c\u5df2\u4fdd\u5b58");
+      } catch (error) { showToast(error.message, true); }
+      finally { $("saveButton").disabled = false; $("saveButton").textContent = "\u4fdd\u5b58\u5230\u6a21\u7ec4"; }
+    }
+
+    fields.forEach(id => $(id).addEventListener(id === "parent" || id === "frame" ? "change" : "input", updateSelectedFromForm));
+    ["showToast", "announceChat", "hidden"].forEach(id => $(id).addEventListener("change", updateSelectedFromForm));
+    ["criteriaJson", "requirementsJson"].forEach(id => $(id).addEventListener("change", commitAdvanced));
+    $("treeSearch").addEventListener("input", renderTree);
+    $("autoLayoutButton").addEventListener("click", () => autoLayout(true));
+    $("centerButton").addEventListener("click", centerView);
+    $("zoomInButton").addEventListener("click", () => setZoom(state.transform.scale + 0.1));
+    $("zoomOutButton").addEventListener("click", () => setZoom(state.transform.scale - 0.1));
+    $("saveButton").addEventListener("click", saveAll);
+    $("addButton").addEventListener("click", () => { populateParentSelects(); $("newParent").value = state.selected || ""; $("addForm").reset(); $("newIcon").value = "candycraftmod:sugar_block"; $("newParent").value = state.selected || ""; $("addDialog").showModal(); setTimeout(() => $("newId").focus(), 50); });
+    $("addForm").addEventListener("submit", event => { if (event.submitter && event.submitter.id === "createButton") { event.preventDefault(); createNode(); } });
+    $("deleteButton").addEventListener("click", () => {
+      const id = state.selected;
+      if (!id || !confirm(`\u5220\u9664\u8fdb\u5ea6 ${id}\uff1f\n\u5b83\u7684\u5b50\u8fdb\u5ea6\u5c06\u6539\u4e3a\u6839\u8fdb\u5ea6\u3002`)) return;
+      state.nodes.delete(id);
+      for (const node of state.nodes.values()) if (localParent(node) === id) delete node.data.parent;
+      state.selected = null; form.hidden = true; $("emptyInspector").hidden = false; markDirty(); renderTree(); populateParentSelects();
+    });
+    $("iconButton").addEventListener("click", () => { renderItemGrid(); $("itemDialog").showModal(); setTimeout(() => $("itemSearch").focus(), 50); });
+    $("closeItems").addEventListener("click", () => $("itemDialog").close());
+    $("itemSearch").addEventListener("input", renderItemGrid);
+    window.addEventListener("beforeunload", event => { if (state.dirty) { event.preventDefault(); event.returnValue = ""; } });
+    document.addEventListener("keydown", event => { if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") { event.preventDefault(); saveAll(); } });
+
+    ensurePositions(); populateParentSelects();
+    const first = state.nodes.has("root") ? "root" : state.nodes.keys().next().value;
+    if (first) selectNode(first);
+    requestAnimationFrame(centerView);
+  </script>
+</body>
+</html>

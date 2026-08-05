@@ -2,6 +2,7 @@ package com.valentin4311.candycraftmod.integration.jei;
 
 import com.valentin4311.candycraftmod.CandyCraft;
 import com.valentin4311.candycraftmod.block.entity.SugarFactoryBlockEntity;
+import net.minecraft.client.Minecraft;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.resources.ResourceLocation;
@@ -14,7 +15,7 @@ public record SugarFactoryJeiRecipe(List<ItemStack> inputs, ItemStack output, bo
         List<ItemStack> sugarInputs = new ArrayList<>();
         List<ItemStack> advancedSugarInputs = new ArrayList<>();
 
-        for (SugarFactoryBlockEntity.DisplayRecipe recipe : SugarFactoryBlockEntity.getDisplayRecipes()) {
+        for (SugarFactoryBlockEntity.DisplayRecipe recipe : SugarFactoryBlockEntity.getDisplayRecipes(Minecraft.getInstance().level)) {
             if (recipe.output().is(Items.SUGAR)) {
                 if (recipe.normalFactory() && recipe.advancedFactory()) {
                     sugarInputs.add(recipe.input().copy());

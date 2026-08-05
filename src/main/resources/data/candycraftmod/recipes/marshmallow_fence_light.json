@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "P#P",
+    "P#P"
+  ],
+  "key": {
+    "P": { "item": "candycraftmod:marshmallow_planks_light" },
+    "#": { "item": "candycraftmod:marshmallow_stick" }
+  },
+  "result": {
+    "item": "candycraftmod:marshmallow_fence_light",
+    "count": 3
+  }
+}

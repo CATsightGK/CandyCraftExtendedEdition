@@ -1,0 +1,8 @@
+{
+  "type": "candycraftmod:feature_locator",
+  "biomes": "#candycraftmod:candy_world",
+  "step": "surface_structures",
+  "spawn_overrides": {},
+  "terrain_adaptation": "none",
+  "feature": "candycraftmod:ice_tower"
+}

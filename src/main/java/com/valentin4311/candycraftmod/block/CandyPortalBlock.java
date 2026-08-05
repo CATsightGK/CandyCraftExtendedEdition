@@ -2,6 +2,9 @@ package com.valentin4311.candycraftmod.block;
 
 import com.valentin4311.candycraftmod.CandyCraft;
 import com.valentin4311.candycraftmod.registry.CCBlocks;
+import java.util.ArrayDeque;
+import java.util.HashSet;
+import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.Registries;
@@ -28,6 +31,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.EnumProperty;
+import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.joml.Vector3f;
@@ -52,6 +56,7 @@ public class CandyPortalBlock extends Block {
     private final float particleRed;
     private final float particleGreen;
     private final float particleBlue;
+    private boolean removingConnectedPortals;
 
     public CandyPortalBlock(BlockBehaviour.Properties properties) {
         this(properties, 0.95F, 0.55F, 0.12F);
@@ -86,6 +91,33 @@ public class CandyPortalBlock extends Block {
     }
 
     @Override
+    public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
+        if (!level.isClientSide && state.is(this) && !newState.is(this) && !removingConnectedPortals) {
+            removingConnectedPortals = true;
+            try {
+                ArrayDeque<BlockPos> queue = new ArrayDeque<>();
+                Set<BlockPos> visited = new HashSet<>();
+                for (Direction direction : Direction.values()) {
+                    queue.add(pos.relative(direction));
+                }
+                while (!queue.isEmpty()) {
+                    BlockPos current = queue.removeFirst();
+                    if (!visited.add(current) || !level.getBlockState(current).is(this)) {
+                        continue;
+                    }
+                    level.setBlock(current, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL | Block.UPDATE_SUPPRESS_DROPS);
+                    for (Direction direction : Direction.values()) {
+                        queue.add(current.relative(direction));
+                    }
+                }
+            } finally {
+                removingConnectedPortals = false;
+            }
+        }
+        super.onRemove(state, level, pos, newState, isMoving);
+    }
+
+    @Override
     public void entityInside(BlockState state, Level level, BlockPos pos, Entity entity) {
         if (level.isClientSide || entity.isOnPortalCooldown() || !(entity instanceof ServerPlayer player)) {
             return;
@@ -105,12 +137,16 @@ public class CandyPortalBlock extends Block {
         }
         player.getPersistentData().putInt(PORTAL_TIME_TAG, 0);
 
+        teleportPlayer(player);
+    }
+
+    public static boolean teleportPlayer(ServerPlayer player) {
         ServerLevel source = player.serverLevel();
         ServerLevel target = source.dimension() == CANDY_WORLD
             ? player.server.getLevel(Level.OVERWORLD)
             : player.server.getLevel(CANDY_WORLD);
         if (target == null) {
-            return;
+            return false;
         }
 
         BlockPos targetPos = findArrivalPos(player, target);
@@ -118,11 +154,11 @@ public class CandyPortalBlock extends Block {
         player.setPortalCooldown(80);
         source.playSound(null, player.blockPosition(), SoundEvents.PORTAL_TRAVEL, SoundSource.PLAYERS, 0.8F, 1.0F);
         player.teleportTo(target, targetPos.getX() + 0.5D, targetPos.getY(), targetPos.getZ() + 0.5D, player.getYRot(), player.getXRot());
+        player.setDeltaMovement(0.0D, -0.1D, 0.0D);
+        player.fallDistance = 0.0F;
         target.playSound(null, targetPos, SoundEvents.PORTAL_TRAVEL, SoundSource.PLAYERS, 0.8F, 1.0F);
         player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 400, 19, false, false, true));
-        if (target.dimension() == CANDY_WORLD) {
-            player.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, 20 * 12, 0, false, false, false));
-        }
+        return true;
     }
 
     @Override
@@ -150,13 +186,12 @@ public class CandyPortalBlock extends Block {
     }
 
     public boolean trySpawnPortal(Level level, BlockPos pos) {
-        if (level.isClientSide) {
-            return true;
-        }
         for (Direction.Axis axis : new Direction.Axis[] { Direction.Axis.X, Direction.Axis.Z }) {
             CandyPortalFrame frame = findContainingFrame(level, pos, axis, false, this);
             if (frame != null) {
-                spawnPortal(level, frame);
+                if (!level.isClientSide) {
+                    spawnPortal(level, frame);
+                }
                 return true;
             }
         }
@@ -193,8 +228,12 @@ public class CandyPortalBlock extends Block {
         for (int x = -1; x <= width; x++) {
             for (int y = -1; y <= height; y++) {
                 BlockState state = level.getBlockState(origin.relative(right, x).offset(0, y, 0));
-                boolean frame = x == -1 || x == width || y == -1 || y == height;
-                if (frame) {
+                boolean verticalFrame = x == -1 || x == width;
+                boolean horizontalFrame = y == -1 || y == height;
+                if (verticalFrame && horizontalFrame) {
+                    continue;
+                }
+                if (verticalFrame || horizontalFrame) {
                     if (!state.is(CCBlocks.SUGAR_BLOCK.get())) {
                         return false;
                     }
@@ -223,12 +262,15 @@ public class CandyPortalBlock extends Block {
     private static BlockPos findArrivalPos(ServerPlayer player, ServerLevel target) {
         int x = player.getBlockX();
         int z = player.getBlockZ();
+        preloadChunks(target, x, z, CANDY_WORLD_PRELOAD_RADIUS);
+        int surfaceY = target.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
+        int maxFeetY = target.getMaxBuildHeight() - 2;
         if (target.dimension() == CANDY_WORLD) {
-            preloadChunks(target, x, z, CANDY_WORLD_PRELOAD_RADIUS);
-            int y = Math.max(target.getMinBuildHeight() + 2, target.getMaxBuildHeight() - 8);
+            int highArrivalY = Math.max(surfaceY + 24, target.getMaxBuildHeight() - 16);
+            int y = Mth.clamp(highArrivalY, target.getMinBuildHeight() + 2, maxFeetY);
             return new BlockPos(x, y, z);
         }
-        int y = Math.max(target.getMinBuildHeight() + 2, Math.min(player.getBlockY(), target.getMaxBuildHeight() - 2));
+        int y = Mth.clamp(surfaceY + 1, target.getMinBuildHeight() + 2, maxFeetY);
         return new BlockPos(x, y, z);
     }
 

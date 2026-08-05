@@ -13,10 +13,10 @@ import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.animal.AbstractSchoolingFish;
+import net.minecraft.world.entity.animal.WaterAnimal;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
-import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.Vec3;
 import java.util.EnumSet;
 
@@ -34,8 +34,7 @@ public class CandyFishEntity extends AbstractSchoolingFish {
     }
 
     public static boolean canSpawn(EntityType<CandyFishEntity> type, LevelAccessor level, MobSpawnType reason, BlockPos pos, net.minecraft.util.RandomSource random) {
-        FluidState fluid = level.getFluidState(pos);
-        return pos.getY() > 45 && pos.getY() < 60 && fluid.is(FluidTags.WATER) && level.getFluidState(pos.above()).is(FluidTags.WATER);
+        return WaterAnimal.checkSurfaceWaterAnimalSpawnRules(type, level, reason, pos, random);
     }
 
     @Override

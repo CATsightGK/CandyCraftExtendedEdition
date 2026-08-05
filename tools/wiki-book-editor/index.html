@@ -1,0 +1,965 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CandyCraft攻略编辑器</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header>
+    <div class="brandBlock">
+      <h1>CandyCraft攻略编辑器</h1>
+      <p id="savePath"></p>
+    </div>
+    <div class="headerActions">
+      <span id="saveState" class="saveState">已同步</span>
+      <button id="saveBtn">保存到模组</button>
+    </div>
+  </header>
+
+  <main>
+    <aside class="pages">
+      <h2 class="panelTitle">页面</h2>
+      <div class="toolbar">
+        <button id="addPageBtn">+ 新页</button>
+        <button id="dupPageBtn">复制</button>
+        <button id="deletePageBtn">删除</button>
+      </div>
+      <div id="pageList"></div>
+      <section class="pageSettings">
+        <h2>页面设置</h2>
+        <label>页面 key<input id="pageKey"></label>
+        <label>标题本地化键<input id="pageTitleKey"></label>
+        <div class="grid2 compactGrid">
+          <label>标题 X<input id="pageTitleX" type="number"></label>
+          <label>标题 Y<input id="pageTitleY" type="number"></label>
+        </div>
+        <h2>翻页按钮位置</h2>
+        <div class="grid2 compactGrid">
+          <label>上一页 X<input id="previousButtonX" type="number"></label>
+          <label>上一页 Y<input id="previousButtonY" type="number"></label>
+          <label>下一页 X<input id="nextButtonX" type="number"></label>
+          <label>下一页 Y<input id="nextButtonY" type="number"></label>
+        </div>
+        <button id="resetPagePositionsBtn" class="secondaryButton">重置页面位置</button>
+      </section>
+    </aside>
+
+    <section class="stage">
+      <div class="addbar">
+        <span class="addbarLabel">添加</span>
+        <button data-add="text">文本</button>
+        <button data-add="item_slot">物品格</button>
+        <button data-add="item">物品展示</button>
+        <button data-add="entity">实体框</button>
+        <button data-add="workbench_gui">工作台GUI</button>
+      </div>
+      <div class="previewSurface">
+        <div id="book" class="book">
+          <div class="page left">
+            <div id="title" class="title"></div>
+          </div>
+          <div class="spine"></div>
+          <div class="page right">
+            <div class="hint"></div>
+          </div>
+          <div id="canvas" class="canvas"></div>
+          <button id="previousPageBtn" class="wikiPageButton previous" type="button" aria-label="Previous page"></button>
+          <button id="nextPageBtn" class="wikiPageButton next" type="button" aria-label="Next page"></button>
+        </div>
+      </div>
+    </section>
+
+    <aside class="inspector">
+      <div class="inspectorTabs" role="tablist" aria-label="编辑面板">
+        <button class="inspectorTab active" data-panel="propertiesPanel" role="tab">属性</button>
+        <button class="inspectorTab" data-panel="stickersPanel" role="tab">贴纸</button>
+        <button class="inspectorTab" data-panel="assetsPanel" role="tab">资源</button>
+      </div>
+
+      <section id="propertiesPanel" class="inspectorPanel active">
+        <div id="emptyInspector" class="emptyState">未选择元素</div>
+        <div id="elementInspector" hidden>
+          <div class="sectionHeader">
+            <h2>元素属性</h2>
+            <span id="selectionType" class="typeBadge"></span>
+          </div>
+          <div class="grid2 compactGrid">
+            <label>X<input id="elX" type="number"></label>
+            <label>Y<input id="elY" type="number"></label>
+            <label>宽<input id="elW" type="number"></label>
+            <label>高<input id="elH" type="number"></label>
+            <label>旋转角度<input id="elRotation" type="number" step="1"></label>
+            <label>缩放<input id="elScale" type="number" step="0.05"></label>
+          </div>
+          <input id="elType" hidden>
+          <input id="elSize" type="number" hidden>
+          <label>颜色<input id="elColor" type="color"></label>
+          <label>本地化键<input id="elKey"></label>
+          <label>直接文字<textarea id="elText" rows="4"></textarea></label>
+          <label>物品/方块<select id="elItem"></select></label>
+          <label>实体<select id="elEntity"></select></label>
+          <label>工作台主题<select id="elTheme"><option value="normal">普通</option><option value="dark">深色</option><option value="light">浅色</option></select></label>
+          <label>贴纸素材<select id="elSticker"></select></label>
+          <label class="check"><input id="elSlot" type="checkbox"> 显示物品格边框</label>
+          <div class="elementActions">
+            <button id="duplicateElementBtn">复制元素</button>
+            <button id="deleteElementBtn" class="dangerButton">删除元素</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="stickersPanel" class="inspectorPanel">
+        <div class="sectionHeader"><h2>糖果手账贴纸</h2><span id="stickerCount" class="countBadge"></span></div>
+        <input id="stickerSearch" placeholder="搜索贴纸">
+        <div id="stickerFilters" class="segmentedControl">
+          <button class="active" data-sticker-filter="all">全部</button>
+          <button data-sticker-filter="arrow">箭头</button>
+          <button data-sticker-filter="mark">标记</button>
+          <button data-sticker-filter="decor">装饰</button>
+        </div>
+        <div id="stickerLibrary"></div>
+      </section>
+
+      <section id="assetsPanel" class="inspectorPanel">
+        <h2>物品、方块与实体</h2>
+        <input id="search" placeholder="搜索名称或 ID">
+        <select id="assetKind" aria-label="资源类型">
+          <option value="all">全部资源</option>
+          <option value="item">物品</option>
+          <option value="block">方块</option>
+          <option value="entity">实体</option>
+        </select>
+        <div id="library"></div>
+      </section>
+    </aside>
+  </main>
+
+  <div id="toast"></div>
+
+  <script>
+    window.initialState = __INITIAL_STATE__;
+  </script>
+  <script>
+    const state = window.initialState;
+    let data = structuredClone(state.pages);
+    let pageIndex = 0;
+    let selectedIndex = -1;
+    let stickerFilter = "all";
+    let suppressPageButtonClick = false;
+    let dirty = false;
+    const CANVAS_SCALE = 2;
+    const FIXED_SLOT_SIZE = 38;
+    const RESIZE_DIRECTIONS = ["n", "e", "s", "w", "nw", "ne", "se", "sw"];
+    const STICKERS = [
+      { id: "candy_arrow_right", name: "粉色直箭头", category: "arrow" },
+      { id: "candy_arrow_curved", name: "粉色弯箭头", category: "arrow" },
+      { id: "candy_exclamation", name: "粉色感叹号", category: "mark" },
+      { id: "candy_star", name: "粉色星星", category: "decor" },
+      { id: "candy_star_cluster", name: "粉色星群", category: "decor" },
+      { id: "candy_heart", name: "粉色爱心", category: "decor" },
+      { id: "candy_double_heart", name: "双爱心", category: "decor" },
+      { id: "pink_face_happy", name: "开心糖果表情", width: 32, height: 32, category: "decor" },
+      { id: "pink_face_surprised", name: "惊讶糖果表情", width: 32, height: 32, category: "decor" },
+      { id: "journal_arrow_right", name: "手账指向箭头", width: 76, height: 32, category: "arrow" },
+      { id: "journal_arrow_curved", name: "手账弯曲箭头", width: 54, height: 54, category: "arrow" },
+      { id: "journal_bow", name: "手账蝴蝶结", width: 58, height: 52, category: "decor" },
+      { id: "journal_washi_tape", name: "粉色纸胶带", width: 84, height: 24, category: "decor" },
+      { id: "journal_flower", name: "粉色花朵", width: 54, height: 54, category: "decor" },
+      { id: "journal_sparkles", name: "粉色闪光簇", width: 56, height: 56, category: "decor" },
+      { id: "journal_heart_stamp", name: "爱心印章", width: 54, height: 54, category: "decor" },
+      { id: "candy_arrow_ribbon_right", name: "草莓糖带箭头", width: 72, height: 30, category: "arrow" },
+      { id: "candy_arrow_hook_up", name: "太妃糖转向箭头", width: 54, height: 54, category: "arrow" },
+      { id: "candy_arrow_double_right", name: "双重软糖箭头", width: 68, height: 32, category: "arrow" },
+      { id: "candy_arrow_sprinkle_down", name: "糖霜向下箭头", width: 34, height: 60, category: "arrow" },
+      { id: "candy_question_gummy", name: "覆盆子软糖问号", width: 46, height: 58, category: "mark" },
+      { id: "candy_question_cookie", name: "糖霜曲奇问号", width: 46, height: 58, category: "mark" },
+      { id: "candy_question_cream", name: "草莓奶油问号", width: 46, height: 58, category: "mark" },
+      { id: "journal_lollipop_pair", name: "交叉棒棒糖", width: 56, height: 56, category: "decor" },
+      { id: "journal_cupcake", name: "草莓纸杯蛋糕", width: 50, height: 54, category: "decor" },
+      { id: "journal_candy_cluster", name: "缤纷糖果簇", width: 58, height: 48, category: "decor" },
+      { id: "journal_strawberry", name: "糖渍草莓", width: 44, height: 52, category: "decor" },
+      { id: "journal_candy_crown", name: "糖果皇冠", width: 58, height: 44, category: "decor" },
+      { id: "journal_music_note", name: "拐杖糖音符", width: 50, height: 54, category: "decor" },
+      { id: "journal_star_garland", name: "糖星挂饰", width: 82, height: 26, category: "decor" }
+    ];
+    const stickerById = new Map(STICKERS.map(sticker => [sticker.id, sticker]));
+    const byId = new Map(state.items.map(item => [item.id, item]));
+    const entityById = new Map(state.entities.map(entity => [entity.id, entity]));
+    const els = Object.fromEntries([...document.querySelectorAll("[id]")].map(el => [el.id, el]));
+
+    function setDirty(value = true) {
+      dirty = value;
+      els.saveState.textContent = dirty ? "有未保存更改" : "已同步";
+      els.saveState.classList.toggle("dirty", dirty);
+    }
+
+    function normalizePage(page) {
+      page.titleX = Number(page.titleX) || 0;
+      page.titleY = Number(page.titleY) || 0;
+      return page;
+    }
+
+    function normalizePageButtons() {
+      const legacy = data.pages?.find(page => Number.isFinite(Number(page.previousButtonX)) || Number.isFinite(Number(page.nextButtonX))) || {};
+      const source = data.pageButtons || {};
+      const coordinate = (value, legacyValue, fallback) => Number.isFinite(Number(value))
+        ? Number(value)
+        : Number.isFinite(Number(legacyValue)) ? Number(legacyValue) : fallback;
+      data.pageButtons = {
+        previousX: coordinate(source.previousX, legacy.previousButtonX, 16),
+        previousY: coordinate(source.previousY, legacy.previousButtonY, 168),
+        nextX: coordinate(source.nextX, legacy.nextButtonX, 264),
+        nextY: coordinate(source.nextY, legacy.nextButtonY, 168)
+      };
+      data.pages?.forEach(page => {
+        delete page.previousButtonX;
+        delete page.previousButtonY;
+        delete page.nextButtonX;
+        delete page.nextButtonY;
+      });
+      return data.pageButtons;
+    }
+
+    function currentPage() {
+      if (!data.pages.length) data.pages.push({ key: "page_1", elements: [] });
+      pageIndex = Math.max(0, Math.min(pageIndex, data.pages.length - 1));
+      return normalizePage(data.pages[pageIndex]);
+    }
+
+    function currentElement() {
+      return currentPage().elements[selectedIndex];
+    }
+
+    function isItemElement(element) {
+      return element.type === "item" || element.type === "item_slot";
+    }
+
+    function isFixedItemSlot(element) {
+      return isItemElement(element) && element.slot !== false;
+    }
+
+    function isResizableElement(element) {
+      return element.type === "text" || element.type === "sticker" || element.type === "entity" || (isItemElement(element) && !isFixedItemSlot(element));
+    }
+
+    function hasTransformOverlay(element) {
+      return true;
+    }
+
+    function normalizeElement(element) {
+      element.rotation = Number(element.rotation) || 0;
+      if (isFixedItemSlot(element)) {
+        element.width = FIXED_SLOT_SIZE;
+        element.height = FIXED_SLOT_SIZE;
+        element.size = FIXED_SLOT_SIZE;
+        element.scale = 2;
+        element.slot = true;
+      } else if (isItemElement(element)) {
+        const fallback = Math.max(12, Number(element.size) || Math.round(16 * (Number(element.scale) || 2)));
+        element.width = Math.max(12, Number(element.width) || fallback);
+        element.height = Math.max(12, Number(element.height) || fallback);
+        element.slot = false;
+      } else if (element.type === "entity") {
+        element.width = Math.max(24, Number(element.width) || 78);
+        element.height = Math.max(24, Number(element.height) || 96);
+      } else if (element.type === "text") {
+        element.width = Math.max(24, Number(element.width) || 116);
+        element.height = Math.max(12, Number(element.height) || 60);
+      } else if (element.type === "sticker") {
+        element.width = Math.max(12, Number(element.width) || 48);
+        element.height = Math.max(12, Number(element.height) || 48);
+        if (!stickerById.has(element.asset)) element.asset = STICKERS[0].id;
+      } else if (element.type === "workbench_gui") {
+        element.scale = Math.max(0.2, Number(element.scale) || 0.34);
+        element.width = Math.round(176 * element.scale);
+        element.height = Math.round(166 * element.scale);
+      }
+      return element;
+    }
+
+    function elementWidth(element) {
+      normalizeElement(element);
+      return Math.max(12, Number(element.width) || Number(element.size) || FIXED_SLOT_SIZE);
+    }
+
+    function elementHeight(element) {
+      normalizeElement(element);
+      return Math.max(12, Number(element.height) || Number(element.size) || FIXED_SLOT_SIZE);
+    }
+
+    function pageTitle(page) {
+      return page.titleKey || `wiki.candycraftmod.${page.key}.title`;
+    }
+
+    function renderPages() {
+      els.pageList.innerHTML = "";
+      data.pages.forEach((page, index) => {
+        const button = document.createElement("button");
+        button.className = index === pageIndex ? "active" : "";
+        button.textContent = `${index + 1}. ${page.key || "page"}`;
+        button.onclick = () => {
+          pageIndex = index;
+          selectedIndex = -1;
+          renderAll();
+        };
+        els.pageList.append(button);
+      });
+    }
+
+    function makeElement(type) {
+      if (type === "text") return { type, x: 146, y: 18, width: 116, height: 60, text: "新文本框", color: "#3F251F", scale: 1 };
+      if (type === "sticker") return { type, x: 48, y: 52, width: 48, height: 48, asset: STICKERS[0].id };
+      if (type === "entity") return { type, x: 22, y: 28, width: 78, height: 96, id: state.entities[0]?.id || "minecraft:pig", size: 38 };
+      if (type === "workbench_gui") return { type, x: 8, y: 112, scale: 0.34, theme: "normal" };
+      if (type === "item") return { type, x: 12, y: 42, width: 32, height: 32, id: state.items[0]?.id || "minecraft:air", size: 32, scale: 2, slot: false };
+      return { type, x: 12, y: 42, width: FIXED_SLOT_SIZE, height: FIXED_SLOT_SIZE, id: state.items[0]?.id || "minecraft:air", size: FIXED_SLOT_SIZE, scale: 2, slot: true };
+    }
+
+    const textureCache = new Map();
+
+    function loadTexture(src) {
+      if (!src) return Promise.reject(new Error("missing texture"));
+      if (!textureCache.has(src)) {
+        textureCache.set(src, new Promise((resolve, reject) => {
+          const image = new Image();
+          image.onload = () => resolve(image);
+          image.onerror = reject;
+          image.src = src;
+        }));
+      }
+      return textureCache.get(src);
+    }
+
+    function drawTextureFace(context, image, transform, shade) {
+      context.save();
+      context.setTransform(...transform);
+      context.imageSmoothingEnabled = false;
+      context.drawImage(image, 0, 0, 16, 16);
+      if (shade) {
+        context.globalCompositeOperation = "source-atop";
+        context.fillStyle = shade;
+        context.fillRect(0, 0, 16, 16);
+      }
+      context.restore();
+    }
+
+    async function drawBlockIcon(canvas, render) {
+      try {
+        const [top, side, front] = await Promise.all([
+          loadTexture(render.top),
+          loadTexture(render.side),
+          loadTexture(render.front || render.side)
+        ]);
+        if (!canvas.isConnected) return;
+        const context = canvas.getContext("2d");
+        context.clearRect(0, 0, 32, 32);
+        drawTextureFace(context, top, [0.875, 0.4375, -0.875, 0.4375, 16, 2], null);
+        drawTextureFace(context, side, [0.875, 0.4375, 0, 0.875, 2, 9], "rgba(70, 45, 80, .20)");
+        drawTextureFace(context, front, [0.875, -0.4375, 0, 0.875, 16, 16], "rgba(20, 10, 35, .08)");
+      } catch {
+        canvas.classList.add("renderFailed");
+      }
+    }
+
+    function appendAssetPreview(container, entry) {
+      if (entry?.render?.kind === "block") {
+        const canvas = document.createElement("canvas");
+        canvas.width = 32;
+        canvas.height = 32;
+        canvas.className = "blockRender";
+        container.append(canvas);
+        drawBlockIcon(canvas, entry.render);
+        return true;
+      }
+      if (entry?.texture) {
+        const img = document.createElement("img");
+        img.src = entry.texture;
+        img.alt = "";
+        img.draggable = false;
+        container.append(img);
+        return true;
+      }
+      return false;
+    }
+
+    function renderBook() {
+      const page = currentPage();
+      const pageButtons = normalizePageButtons();
+      const previousDisabled = pageIndex <= 0;
+      const nextDisabled = pageIndex >= data.pages.length - 1;
+      els.previousPageBtn.classList.toggle("disabled", previousDisabled);
+      els.nextPageBtn.classList.toggle("disabled", nextDisabled);
+      els.previousPageBtn.setAttribute("aria-disabled", String(previousDisabled));
+      els.nextPageBtn.setAttribute("aria-disabled", String(nextDisabled));
+      els.previousPageBtn.style.left = `${pageButtons.previousX * CANVAS_SCALE}px`;
+      els.previousPageBtn.style.top = `${pageButtons.previousY * CANVAS_SCALE}px`;
+      els.nextPageBtn.style.left = `${pageButtons.nextX * CANVAS_SCALE}px`;
+      els.nextPageBtn.style.top = `${pageButtons.nextY * CANVAS_SCALE}px`;
+      els.previousPageBtn.onpointerdown = event => startPageButtonInteraction(event, "previous");
+      els.nextPageBtn.onpointerdown = event => startPageButtonInteraction(event, "next");
+      els.title.textContent = pageTitle(page);
+      els.title.style.left = `${(18 + (Number(page.titleX) || 0)) * CANVAS_SCALE}px`;
+      els.title.style.top = `${(18 + (Number(page.titleY) || 0)) * CANVAS_SCALE}px`;
+      els.title.onpointerdown = startTitleInteraction;
+      els.pageKey.value = page.key || "";
+      els.pageTitleKey.value = page.titleKey || "";
+      els.pageTitleX.value = page.titleX;
+      els.pageTitleY.value = page.titleY;
+      els.previousButtonX.value = pageButtons.previousX;
+      els.previousButtonY.value = pageButtons.previousY;
+      els.nextButtonX.value = pageButtons.nextX;
+      els.nextButtonY.value = pageButtons.nextY;
+      els.canvas.innerHTML = "";
+      page.elements.forEach((element, index) => {
+        normalizeElement(element);
+        const node = document.createElement("div");
+        node.className = `element ${element.type} ${index === selectedIndex ? "selected" : ""}`;
+        node.style.left = `${element.x || 0}px`;
+        node.style.top = `${element.y || 0}px`;
+        node.style.width = `${elementWidth(element)}px`;
+        node.style.height = `${elementHeight(element)}px`;
+        node.style.transform = `rotate(${element.rotation}deg)`;
+        node.tabIndex = 0;
+        node.onclick = event => {
+          event.stopPropagation();
+          selectedIndex = index;
+          renderAll();
+        };
+        const content = document.createElement("div");
+        content.className = `elementContent ${element.type}`;
+        node.append(content);
+        if (element.type === "text") {
+          content.style.color = element.color || "#3F251F";
+          content.style.fontSize = `${Math.round((element.scale || 1) * 6)}px`;
+          content.textContent = element.text || element.key || "text";
+        } else if (element.type === "sticker") {
+          const img = document.createElement("img");
+          img.src = `/asset/gui/wiki_stickers/${element.asset}.png`;
+          img.alt = stickerById.get(element.asset)?.name || "贴纸";
+          img.draggable = false;
+          content.append(img);
+        } else if (element.type === "entity") {
+          content.classList.add("entityFrame");
+          const label = document.createElement("span");
+          label.className = "entityLabel";
+          label.textContent = entityById.get(element.id)?.name || element.id || "entity";
+          content.append(label);
+        } else if (element.type === "workbench_gui") {
+          content.classList.add("workbenchPreview");
+        } else {
+          if (isFixedItemSlot(element)) content.classList.add("fixedItemSlot");
+          else content.classList.add("freeItem");
+          if (!appendAssetPreview(content, byId.get(element.id))) {
+            content.classList.add("missingTexture");
+            content.textContent = (element.id || "item").split(":").pop();
+          }
+        }
+        if (hasTransformOverlay(element)) {
+          const moveSurface = document.createElement("div");
+          moveSurface.className = "moveSurface";
+          moveSurface.onpointerdown = event => startInteraction(event, index, "move");
+          node.append(moveSurface);
+          if (isResizableElement(element)) {
+            for (const direction of RESIZE_DIRECTIONS) {
+              const handle = document.createElement("div");
+              handle.className = `resizeHandle ${direction}`;
+              handle.dataset.direction = direction;
+              handle.onpointerdown = event => startInteraction(event, index, "resize", direction);
+              node.append(handle);
+            }
+          }
+          const rotationHandle = document.createElement("button");
+          rotationHandle.type = "button";
+          rotationHandle.className = "rotationHandle";
+          rotationHandle.title = "拖拽旋转";
+          rotationHandle.setAttribute("aria-label", "拖拽旋转元素");
+          rotationHandle.onpointerdown = event => startInteraction(event, index, "rotate");
+          node.append(rotationHandle);
+        }
+        els.canvas.append(node);
+      });
+    }
+
+    function startTitleInteraction(event) {
+      if (event.button !== 0) return;
+      event.preventDefault();
+      event.stopPropagation();
+      selectedIndex = -1;
+      const page = currentPage();
+      const startX = event.clientX;
+      const startY = event.clientY;
+      const originalX = Number(page.titleX) || 0;
+      const originalY = Number(page.titleY) || 0;
+      els.title.classList.add("dragging");
+      const move = pointer => {
+        page.titleX = Math.round(originalX + (pointer.clientX - startX) / CANVAS_SCALE);
+        page.titleY = Math.round(originalY + (pointer.clientY - startY) / CANVAS_SCALE);
+        els.title.style.left = `${(18 + page.titleX) * CANVAS_SCALE}px`;
+        els.title.style.top = `${(18 + page.titleY) * CANVAS_SCALE}px`;
+      };
+      const finish = () => {
+        els.title.classList.remove("dragging");
+        window.removeEventListener("pointermove", move);
+        window.removeEventListener("pointerup", finish);
+        window.removeEventListener("pointercancel", finish);
+        setDirty();
+        renderAll();
+      };
+      window.addEventListener("pointermove", move);
+      window.addEventListener("pointerup", finish);
+      window.addEventListener("pointercancel", finish);
+      els.title.setPointerCapture?.(event.pointerId);
+    }
+
+    function startPageButtonInteraction(event, side) {
+      if (event.button !== 0) return;
+      event.preventDefault();
+      event.stopPropagation();
+      const pageButtons = normalizePageButtons();
+      const button = side === "previous" ? els.previousPageBtn : els.nextPageBtn;
+      const xKey = side === "previous" ? "previousX" : "nextX";
+      const yKey = side === "previous" ? "previousY" : "nextY";
+      const startX = event.clientX;
+      const startY = event.clientY;
+      const originalX = pageButtons[xKey];
+      const originalY = pageButtons[yKey];
+      let moved = false;
+      button.classList.add("dragging");
+      const move = pointer => {
+        const dx = (pointer.clientX - startX) / CANVAS_SCALE;
+        const dy = (pointer.clientY - startY) / CANVAS_SCALE;
+        moved ||= Math.abs(dx) > 1 || Math.abs(dy) > 1;
+        if (!moved) return;
+        pageButtons[xKey] = Math.round(originalX + dx);
+        pageButtons[yKey] = Math.round(originalY + dy);
+        button.style.left = `${pageButtons[xKey] * CANVAS_SCALE}px`;
+        button.style.top = `${pageButtons[yKey] * CANVAS_SCALE}px`;
+        const xInput = side === "previous" ? els.previousButtonX : els.nextButtonX;
+        const yInput = side === "previous" ? els.previousButtonY : els.nextButtonY;
+        xInput.value = pageButtons[xKey];
+        yInput.value = pageButtons[yKey];
+      };
+      const finish = () => {
+        button.classList.remove("dragging");
+        window.removeEventListener("pointermove", move);
+        window.removeEventListener("pointerup", finish);
+        window.removeEventListener("pointercancel", finish);
+        if (moved) {
+          suppressPageButtonClick = true;
+          setDirty();
+          setTimeout(() => suppressPageButtonClick = false, 0);
+        }
+      };
+      window.addEventListener("pointermove", move);
+      window.addEventListener("pointerup", finish);
+      window.addEventListener("pointercancel", finish);
+      button.setPointerCapture?.(event.pointerId);
+    }
+
+    function startInteraction(event, index, mode, direction = "") {
+      if (event.button !== 0) return;
+      event.preventDefault();
+      event.stopPropagation();
+      const element = normalizeElement(currentPage().elements[index]);
+      selectedIndex = index;
+      const captureTarget = event.currentTarget;
+      const target = captureTarget.closest(".element");
+      const startX = event.clientX;
+      const startY = event.clientY;
+      const originalX = Number(element.x) || 0;
+      const originalY = Number(element.y) || 0;
+      const originalWidth = elementWidth(element);
+      const originalHeight = elementHeight(element);
+      const originalRotation = Number(element.rotation) || 0;
+      const targetRect = target.getBoundingClientRect();
+      const centerX = targetRect.left + targetRect.width / 2;
+      const centerY = targetRect.top + targetRect.height / 2;
+      const startAngle = Math.atan2(startY - centerY, startX - centerX);
+      const minimumSize = element.type === "entity" ? 24 : 12;
+      target.classList.add("dragging");
+      const moveInteraction = move => {
+        const dx = (move.clientX - startX) / CANVAS_SCALE;
+        const dy = (move.clientY - startY) / CANVAS_SCALE;
+        if (mode === "rotate") {
+          const pointerAngle = Math.atan2(move.clientY - centerY, move.clientX - centerX);
+          element.rotation = Math.round(originalRotation + (pointerAngle - startAngle) * 180 / Math.PI);
+          target.style.transform = `rotate(${element.rotation}deg)`;
+        } else if (mode === "move") {
+          element.x = Math.round(originalX + dx);
+          element.y = Math.round(originalY + dy);
+        } else if (direction.length === 1) {
+          if (direction === "e") element.width = Math.max(minimumSize, Math.round(originalWidth + dx));
+          if (direction === "s") element.height = Math.max(minimumSize, Math.round(originalHeight + dy));
+          if (direction === "w") {
+            element.width = Math.max(minimumSize, Math.round(originalWidth - dx));
+            element.x = originalX + originalWidth - element.width;
+          }
+          if (direction === "n") {
+            element.height = Math.max(minimumSize, Math.round(originalHeight - dy));
+            element.y = originalY + originalHeight - element.height;
+          }
+        } else {
+          const horizontalDelta = (direction.includes("e") ? dx : -dx) / originalWidth;
+          const verticalDelta = (direction.includes("s") ? dy : -dy) / originalHeight;
+          const chosenDelta = Math.abs(horizontalDelta) >= Math.abs(verticalDelta) ? horizontalDelta : verticalDelta;
+          const minimumFactor = Math.max(minimumSize / originalWidth, minimumSize / originalHeight);
+          const factor = Math.max(minimumFactor, 1 + chosenDelta);
+          element.width = Math.max(minimumSize, Math.round(originalWidth * factor));
+          element.height = Math.max(minimumSize, Math.round(originalHeight * factor));
+          if (direction.includes("w")) element.x = originalX + originalWidth - element.width;
+          if (direction.includes("n")) element.y = originalY + originalHeight - element.height;
+        }
+        target.style.left = `${element.x}px`;
+        target.style.top = `${element.y}px`;
+        target.style.width = `${elementWidth(element)}px`;
+        target.style.height = `${elementHeight(element)}px`;
+        renderInspector();
+      };
+      const finish = () => {
+        target.classList.remove("dragging");
+        window.removeEventListener("pointermove", moveInteraction);
+        window.removeEventListener("pointerup", finish);
+        window.removeEventListener("pointercancel", finish);
+        if (captureTarget.hasPointerCapture?.(event.pointerId)) captureTarget.releasePointerCapture(event.pointerId);
+        setDirty();
+        renderAll();
+      };
+      window.addEventListener("pointermove", moveInteraction);
+      window.addEventListener("pointerup", finish);
+      window.addEventListener("pointercancel", finish);
+      captureTarget.setPointerCapture?.(event.pointerId);
+    }
+
+    function renderInspector() {
+      els.emptyInspector.hidden = selectedIndex >= 0;
+      els.elementInspector.hidden = selectedIndex < 0;
+      if (selectedIndex < 0) return;
+      const element = normalizeElement(currentElement());
+      const fixedSlot = isFixedItemSlot(element);
+      const showField = (id, show) => {
+        const label = els[id].closest("label");
+        if (label) label.hidden = !show;
+      };
+      els.elType.value = element.type || "";
+      els.selectionType.textContent = ({ text: "文本", sticker: "贴纸", item: "物品", item_slot: "物品格", entity: "实体", workbench_gui: "工作台" })[element.type] || element.type;
+      els.elX.value = element.x ?? 0;
+      els.elY.value = element.y ?? 0;
+      els.elW.value = element.width ?? "";
+      els.elH.value = element.height ?? "";
+      els.elRotation.value = element.rotation ?? 0;
+      els.elSize.value = element.size ?? "";
+      els.elScale.value = element.scale ?? 1;
+      els.elColor.value = element.color || "#3F251F";
+      els.elKey.value = element.key || "";
+      els.elText.value = element.text || "";
+      els.elItem.value = element.id || "";
+      els.elEntity.value = element.id || "";
+      els.elTheme.value = element.theme || "normal";
+      els.elSticker.value = element.asset || STICKERS[0].id;
+      els.elSlot.checked = element.slot !== false;
+      els.elW.disabled = fixedSlot;
+      els.elH.disabled = fixedSlot;
+      els.elSize.disabled = fixedSlot || element.type === "entity" || (isItemElement(element) && !fixedSlot);
+      els.elScale.disabled = fixedSlot || element.type === "entity" || (isItemElement(element) && !fixedSlot);
+      showField("elColor", element.type === "text");
+      showField("elKey", element.type === "text");
+      showField("elText", element.type === "text");
+      showField("elItem", isItemElement(element));
+      showField("elEntity", element.type === "entity");
+      showField("elTheme", element.type === "workbench_gui");
+      showField("elSticker", element.type === "sticker");
+      showField("elSlot", isItemElement(element));
+      showField("elScale", element.type === "text" || element.type === "workbench_gui");
+    }
+
+    function renderLibrary() {
+      const q = els.search.value.trim().toLowerCase();
+      const kind = els.assetKind.value || "all";
+      const list = [...state.items, ...state.entities].filter(entry => {
+        const kindMatches = kind === "all" || entry.kind === kind;
+        const queryMatches = !q || entry.id.toLowerCase().includes(q) || String(entry.name).toLowerCase().includes(q);
+        return kindMatches && queryMatches;
+      }).slice(0, 180);
+      els.library.innerHTML = "";
+      for (const entry of list) {
+        const button = document.createElement("button");
+        button.className = "libItem";
+        button.title = entry.id;
+        appendAssetPreview(button, entry);
+        const span = document.createElement("span");
+        span.textContent = entry.name || entry.id;
+        const kindLabel = document.createElement("small");
+        kindLabel.textContent = ({ item: "物品", block: "方块", entity: "实体" })[entry.kind] || entry.kind;
+        button.append(span);
+        button.append(kindLabel);
+        button.onclick = () => {
+          const element = currentElement();
+          if (!element) return;
+          element.id = entry.id;
+          setDirty();
+          renderAll();
+        };
+        els.library.append(button);
+      }
+    }
+
+    function renderStickerLibrary() {
+      els.stickerLibrary.innerHTML = "";
+      const query = els.stickerSearch.value.trim().toLowerCase();
+      const visibleStickers = STICKERS.filter(sticker => {
+        const categoryMatches = stickerFilter === "all" || sticker.category === stickerFilter;
+        const queryMatches = !query || sticker.name.toLowerCase().includes(query) || sticker.id.includes(query);
+        return categoryMatches && queryMatches;
+      });
+      els.stickerCount.textContent = `${visibleStickers.length} 个`;
+      for (const sticker of visibleStickers) {
+        const button = document.createElement("button");
+        button.className = "stickerItem";
+        button.title = `添加${sticker.name}`;
+        const img = document.createElement("img");
+        img.src = `/asset/gui/wiki_stickers/${sticker.id}.png`;
+        img.alt = "";
+        const label = document.createElement("span");
+        label.textContent = sticker.name;
+        button.append(img, label);
+        button.onclick = () => {
+          const element = makeElement("sticker");
+          element.asset = sticker.id;
+          element.width = sticker.width || element.width;
+          element.height = sticker.height || element.height;
+          currentPage().elements.push(element);
+          selectedIndex = currentPage().elements.length - 1;
+          setDirty();
+          renderAll();
+        };
+        els.stickerLibrary.append(button);
+      }
+    }
+
+    function renderOptions() {
+      els.elItem.innerHTML = state.items.map(item => `<option value="${item.id}">${item.name} - ${item.id}</option>`).join("");
+      els.elEntity.innerHTML = state.entities.map(entity => `<option value="${entity.id}">${entity.name} - ${entity.id}</option>`).join("");
+      els.elSticker.innerHTML = STICKERS.map(sticker => `<option value="${sticker.id}">${sticker.name}</option>`).join("");
+    }
+
+    function bindNumber(id, key) {
+      els[id].oninput = () => {
+        const element = currentElement();
+        if (element) {
+          element[key] = Number(els[id].value) || 0;
+          setDirty();
+          renderBook();
+        }
+      };
+    }
+
+    function bindText(id, key) {
+      els[id].oninput = () => {
+        const element = currentElement();
+        if (element) {
+          element[key] = els[id].value;
+          setDirty();
+          renderBook();
+        }
+      };
+    }
+
+    function renderAll() {
+      renderPages();
+      renderBook();
+      renderInspector();
+    }
+
+    renderOptions();
+    renderLibrary();
+    renderStickerLibrary();
+    renderAll();
+    document.addEventListener("dragstart", event => event.preventDefault());
+    els.savePath.textContent = state.pagesPath;
+    document.querySelectorAll(".inspectorTab").forEach(tab => {
+      tab.onclick = () => {
+        document.querySelectorAll(".inspectorTab").forEach(candidate => candidate.classList.toggle("active", candidate === tab));
+        document.querySelectorAll(".inspectorPanel").forEach(panel => panel.classList.toggle("active", panel.id === tab.dataset.panel));
+      };
+    });
+    els.canvas.onclick = () => {
+      selectedIndex = -1;
+      renderAll();
+    };
+    els.pageKey.oninput = () => {
+      currentPage().key = els.pageKey.value;
+      setDirty();
+      renderPages();
+    };
+    els.pageTitleKey.oninput = () => {
+      currentPage().titleKey = els.pageTitleKey.value || undefined;
+      setDirty();
+      renderBook();
+    };
+    for (const [id, key] of [["pageTitleX", "titleX"], ["pageTitleY", "titleY"]]) {
+      els[id].oninput = () => {
+        currentPage()[key] = Number(els[id].value) || 0;
+        setDirty();
+        renderBook();
+      };
+    }
+    for (const [id, key] of [["previousButtonX", "previousX"], ["previousButtonY", "previousY"], ["nextButtonX", "nextX"], ["nextButtonY", "nextY"]]) {
+      els[id].oninput = () => {
+        normalizePageButtons()[key] = Number(els[id].value) || 0;
+        setDirty();
+        renderBook();
+      };
+    }
+    els.resetPagePositionsBtn.onclick = () => {
+      Object.assign(currentPage(), { titleX: 0, titleY: 0 });
+      Object.assign(normalizePageButtons(), { previousX: 16, previousY: 168, nextX: 264, nextY: 168 });
+      setDirty();
+      renderAll();
+    };
+    els.previousPageBtn.onclick = event => {
+      event.stopPropagation();
+      if (suppressPageButtonClick) return;
+      if (pageIndex <= 0) return;
+      pageIndex--;
+      selectedIndex = -1;
+      renderAll();
+    };
+    els.nextPageBtn.onclick = event => {
+      event.stopPropagation();
+      if (suppressPageButtonClick) return;
+      if (pageIndex >= data.pages.length - 1) return;
+      pageIndex++;
+      selectedIndex = -1;
+      renderAll();
+    };
+    for (const [id, key] of [["elX", "x"], ["elY", "y"], ["elW", "width"], ["elH", "height"], ["elRotation", "rotation"], ["elSize", "size"], ["elScale", "scale"]]) bindNumber(id, key);
+    for (const [id, key] of [["elColor", "color"], ["elKey", "key"], ["elText", "text"], ["elTheme", "theme"]]) bindText(id, key);
+    els.elItem.oninput = () => {
+      const element = currentElement();
+      if (element) element.id = els.elItem.value;
+      setDirty();
+      renderBook();
+    };
+    els.elEntity.oninput = () => {
+      const element = currentElement();
+      if (element) element.id = els.elEntity.value;
+      setDirty();
+      renderBook();
+    };
+    els.elSticker.oninput = () => {
+      const element = currentElement();
+      if (element && element.type === "sticker") {
+        const sticker = stickerById.get(els.elSticker.value);
+        element.asset = els.elSticker.value;
+        if (sticker?.width) element.width = sticker.width;
+        if (sticker?.height) element.height = sticker.height;
+      }
+      setDirty();
+      renderBook();
+    };
+    els.elSlot.oninput = () => {
+      const element = currentElement();
+      if (element) {
+        element.slot = els.elSlot.checked;
+        if (isFixedItemSlot(element)) {
+          normalizeElement(element);
+        } else if (isItemElement(element)) {
+          element.width = Math.max(12, Number(element.width) || 32);
+          element.height = Math.max(12, Number(element.height) || 32);
+        }
+      }
+      setDirty();
+      renderAll();
+    };
+    els.search.oninput = renderLibrary;
+    els.assetKind.oninput = renderLibrary;
+    els.stickerSearch.oninput = renderStickerLibrary;
+    document.querySelectorAll("[data-sticker-filter]").forEach(button => {
+      button.onclick = () => {
+        stickerFilter = button.dataset.stickerFilter;
+        document.querySelectorAll("[data-sticker-filter]").forEach(candidate => candidate.classList.toggle("active", candidate === button));
+        renderStickerLibrary();
+      };
+    });
+    document.querySelectorAll("[data-add]").forEach(button => {
+      button.onclick = () => {
+        currentPage().elements.push(makeElement(button.dataset.add));
+        selectedIndex = currentPage().elements.length - 1;
+        setDirty();
+        renderAll();
+      };
+    });
+    els.duplicateElementBtn.onclick = () => {
+      const element = currentElement();
+      if (!element) return;
+      const copy = structuredClone(element);
+      copy.x = (Number(copy.x) || 0) + 6;
+      copy.y = (Number(copy.y) || 0) + 6;
+      currentPage().elements.splice(selectedIndex + 1, 0, copy);
+      selectedIndex++;
+      setDirty();
+      renderAll();
+    };
+    els.deleteElementBtn.onclick = () => {
+      if (selectedIndex < 0) return;
+      currentPage().elements.splice(selectedIndex, 1);
+      selectedIndex = -1;
+      setDirty();
+      renderAll();
+    };
+    els.addPageBtn.onclick = () => {
+      data.pages.push({ key: `page_${data.pages.length + 1}`, titleX: 0, titleY: 0, elements: [] });
+      pageIndex = data.pages.length - 1;
+      selectedIndex = -1;
+      setDirty();
+      renderAll();
+    };
+    els.dupPageBtn.onclick = () => {
+      data.pages.splice(pageIndex + 1, 0, structuredClone(currentPage()));
+      pageIndex++;
+      currentPage().key += "_copy";
+      setDirty();
+      renderAll();
+    };
+    els.deletePageBtn.onclick = () => {
+      if (data.pages.length <= 1) return;
+      data.pages.splice(pageIndex, 1);
+      pageIndex = Math.max(0, pageIndex - 1);
+      selectedIndex = -1;
+      setDirty();
+      renderAll();
+    };
+    window.addEventListener("keydown", event => {
+      const editingField = ["INPUT", "TEXTAREA", "SELECT"].includes(document.activeElement.tagName);
+      if ((event.key === "Delete" || event.key === "Backspace") && selectedIndex >= 0 && !editingField) {
+        currentPage().elements.splice(selectedIndex, 1);
+        selectedIndex = -1;
+        setDirty();
+        renderAll();
+      } else if (selectedIndex >= 0 && !editingField && ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)) {
+        event.preventDefault();
+        const amount = event.shiftKey ? 5 : 1;
+        const element = currentElement();
+        if (event.key === "ArrowLeft") element.x -= amount;
+        if (event.key === "ArrowRight") element.x += amount;
+        if (event.key === "ArrowUp") element.y -= amount;
+        if (event.key === "ArrowDown") element.y += amount;
+        setDirty();
+        renderAll();
+      } else if (event.key === "Escape" && selectedIndex >= 0) {
+        selectedIndex = -1;
+        renderAll();
+      }
+    });
+    els.saveBtn.onclick = async () => {
+      const result = await fetch("/api/save", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(data) }).then(r => r.json());
+      els.toast.textContent = result.ok ? "已保存" : `保存失败：${result.error}`;
+      if (result.ok) setDirty(false);
+      els.toast.classList.add("show");
+      setTimeout(() => els.toast.classList.remove("show"), 1800);
+    };
+  </script>
+</body>
+</html>

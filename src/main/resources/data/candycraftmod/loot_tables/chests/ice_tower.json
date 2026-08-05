@@ -9,20 +9,6 @@
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "candycraftmod:pez",
-          "weight": 10,
-          "functions": [
-            {
-              "function": "minecraft:set_count",
-              "count": {
-                "min": 2,
-                "max": 8
-              }
-            }
-          ]
-        },
-        {
-          "type": "minecraft:item",
           "name": "candycraftmod:honey_shard",
           "weight": 8,
           "functions": [

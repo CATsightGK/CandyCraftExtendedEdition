@@ -9,7 +9,7 @@
 	],
 	"textures": {
 		"6": "candycraftmod:block/alchemy_table",
-		"particle": "candycraftmod:block/alchemy_table"
+		"particle": "candycraftmod:block/pez_block"
 	},
 	"elements": [
 		{

@@ -1,7 +1,6 @@
-﻿{
-    "parent": "item/generated",
-    "textures": {
-        "layer0": "candycraftmod:item/candy_cane_red_green"
-	}
+{
+  "parent": "candycraftmod:item/candy_cane",
+  "textures": {
+    "layer0": "candycraftmod:item/candy_cane_red_green"
+  }
 }
-

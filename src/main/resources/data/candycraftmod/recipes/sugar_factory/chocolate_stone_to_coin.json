@@ -1,0 +1,13 @@
+{
+  "type": "candycraftmod:sugar_factory",
+  "ingredient": {
+    "item": "candycraftmod:chocolate_stone"
+  },
+  "input_count": 1,
+  "result": {
+    "item": "candycraftmod:chocolate_coin",
+    "count": 1
+  },
+  "processing_time": 240,
+  "factory": "both"
+}

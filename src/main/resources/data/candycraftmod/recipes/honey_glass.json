@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "###",
+    "#H#",
+    "###"
+  ],
+  "key": {
+    "#": { "item": "minecraft:glass" },
+    "H": { "item": "candycraftmod:honeycomb" }
+  },
+  "result": {
+    "item": "candycraftmod:honey_glass",
+    "count": 8
+  }
+}

@@ -1,18 +1,24 @@
 package com.valentin4311.candycraftmod.alchemy;
 
+import com.valentin4311.candycraftmod.block.entity.AlchemyLiquidKind;
 import com.valentin4311.candycraftmod.item.SugarPillItem;
 import com.valentin4311.candycraftmod.registry.CCItems;
+import com.valentin4311.candycraftmod.recipe.AlchemyMixingRecipe;
+import com.valentin4311.candycraftmod.registry.CCRecipeTypes;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.level.Level;
 
 public final class AlchemyMixing {
     public static final int INPUT_SLOTS = 4;
@@ -65,6 +71,18 @@ public final class AlchemyMixing {
         return !stack.isEmpty() && RECIPES.containsKey(stack.getItem());
     }
 
+    public static boolean isValidIngredient(Level level, ItemStack stack) {
+        return isValidIngredient(level, stack, AlchemyLiquidKind.GRENADINE);
+    }
+
+    public static boolean isValidIngredient(Level level, ItemStack stack, AlchemyLiquidKind liquid) {
+        if (liquid == AlchemyLiquidKind.GRENADINE && isValidIngredient(stack)) {
+            return true;
+        }
+        return level != null && level.getRecipeManager().getAllRecipesFor(CCRecipeTypes.ALCHEMY_MIXING_TYPE.get())
+            .stream().anyMatch(recipe -> recipe.matchesLiquid(liquid) && recipe.accepts(stack));
+    }
+
     public static List<ItemStack> getDisplayIngredientStacks() {
         return RECIPES.keySet().stream()
             .map(ItemStack::new)
@@ -97,6 +115,48 @@ public final class AlchemyMixing {
         ItemStack pill = new ItemStack(CCItems.SUGAR_PILL.get());
         SugarPillItem.setData(pill, effects, normalizeColors(colors));
         return pill;
+    }
+
+    public static ItemStack craft(Level level, List<ItemStack> inputs) {
+        return craft(level, inputs, AlchemyLiquidKind.GRENADINE);
+    }
+
+    public static ItemStack craft(Level level, List<ItemStack> inputs, AlchemyLiquidKind liquid) {
+        Optional<AlchemyMixingRecipe> recipe = findRecipe(level, inputs, liquid);
+        if (recipe.isPresent()) {
+            return recipe.get().assemble(container(inputs), level.registryAccess());
+        }
+        return liquid == AlchemyLiquidKind.GRENADINE ? craft(inputs) : ItemStack.EMPTY;
+    }
+
+    public static int mixingTime(Level level, List<ItemStack> inputs, boolean withSugar) {
+        return mixingTime(level, inputs, AlchemyLiquidKind.GRENADINE, withSugar);
+    }
+
+    public static int mixingTime(Level level, List<ItemStack> inputs, AlchemyLiquidKind liquid, boolean withSugar) {
+        Optional<AlchemyMixingRecipe> recipe = findRecipe(level, inputs, liquid);
+        if (recipe.isPresent()) {
+            return recipe.get().mixingTime(withSugar);
+        }
+        return withSugar ? 10 * 20 : 20 * 20;
+    }
+
+    private static Optional<AlchemyMixingRecipe> findRecipe(Level level, List<ItemStack> inputs, AlchemyLiquidKind liquid) {
+        if (level == null || liquid == AlchemyLiquidKind.NONE) {
+            return Optional.empty();
+        }
+        SimpleContainer container = container(inputs);
+        return level.getRecipeManager().getAllRecipesFor(CCRecipeTypes.ALCHEMY_MIXING_TYPE.get()).stream()
+            .filter(recipe -> recipe.matchesLiquid(liquid) && recipe.matches(container, level))
+            .findFirst();
+    }
+
+    private static SimpleContainer container(List<ItemStack> inputs) {
+        SimpleContainer container = new SimpleContainer(INPUT_SLOTS);
+        for (int i = 0; i < Math.min(INPUT_SLOTS, inputs.size()); i++) {
+            container.setItem(i, inputs.get(i).copyWithCount(1));
+        }
+        return container;
     }
 
     public static int[] normalizeColors(List<Integer> colors) {

@@ -6,6 +6,8 @@ import com.valentin4311.candycraftmod.CandyCraft;
 import com.valentin4311.candycraftmod.registry.CCBlocks;
 import com.valentin4311.candycraftmod.registry.CCBlocks;
 import com.valentin4311.candycraftmod.registry.CCWorldgen;
+import com.valentin4311.candycraftmod.world.structure.CandyFeatureLocator;
+import com.mojang.datafixers.util.Pair;
 import com.valentin4311.candycraftmod.world.noise.LegacyPerlinOctaveNoise;
 import java.util.List;
 import java.util.Map;
@@ -16,8 +18,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
+import net.minecraft.core.HolderSet;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.WorldGenRegion;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.ChunkPos;
@@ -35,6 +40,7 @@ import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.levelgen.GenerationStep;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.RandomState;
+import net.minecraft.world.level.levelgen.structure.Structure;
 import net.minecraft.world.level.levelgen.blending.Blender;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.util.RandomSource;
@@ -89,6 +95,16 @@ public class CandyWorldChunkGenerator extends ChunkGenerator {
     @Override
     protected Codec<? extends ChunkGenerator> codec() {
         return CCWorldgen.CANDY_WORLD_CHUNK_GENERATOR.get();
+    }
+
+    @Override
+    public Pair<BlockPos, Holder<Structure>> findNearestMapStructure(ServerLevel level,
+            HolderSet<Structure> structures, BlockPos center, int radius, boolean skipKnownStructures) {
+        Pair<BlockPos, Holder<Structure>> located = CandyFeatureLocator.find(
+            this, level, structures, center, radius);
+        return located != null
+            ? located
+            : super.findNearestMapStructure(level, structures, center, radius, skipKnownStructures);
     }
 
     @Override
@@ -239,6 +255,58 @@ public class CandyWorldChunkGenerator extends ChunkGenerator {
 
         generateSurfacePools(region, chunk, randomState);
         generateMountainCandySprings(region, chunk, randomState);
+        decoratePinkCrystallizedSugar(region, chunk, randomState);
+    }
+
+    /** Adds a sparse pink crystal rim to pink syrup exposed underground and at surface pools. */
+    private void decoratePinkCrystallizedSugar(WorldGenRegion region, ChunkAccess chunk, RandomState randomState) {
+        ChunkPos chunkPos = chunk.getPos();
+        long seed = worldSeed(randomState) ^ 0x50494E4B5F435259L;
+        int maxY = Math.min(chunk.getMaxBuildHeight() - 1, HEIGHT - 1);
+        BlockPos.MutableBlockPos liquidPos = new BlockPos.MutableBlockPos();
+        BlockPos.MutableBlockPos targetPos = new BlockPos.MutableBlockPos();
+
+        for (int localX = 0; localX < 16; ++localX) {
+            int worldX = chunkPos.getBlockX(localX);
+            for (int localZ = 0; localZ < 16; ++localZ) {
+                int worldZ = chunkPos.getBlockZ(localZ);
+                for (int worldY = MIN_Y + 1; worldY <= maxY; ++worldY) {
+                    BlockState liquid = chunk.getBlockState(liquidPos.set(worldX, worldY, worldZ));
+                    if (!liquid.is(CCBlocks.LIQUID_CANDY.get())) {
+                        continue;
+                    }
+
+                    for (Direction direction : Direction.values()) {
+                        int targetX = worldX + direction.getStepX();
+                        int targetY = worldY + direction.getStepY();
+                        int targetZ = worldZ + direction.getStepZ();
+                        if (targetY <= MIN_Y || targetY > maxY
+                            || targetX < chunkPos.getMinBlockX() || targetX > chunkPos.getMaxBlockX()
+                            || targetZ < chunkPos.getMinBlockZ() || targetZ > chunkPos.getMaxBlockZ()) {
+                            continue;
+                        }
+
+                        BlockState target = chunk.getBlockState(targetPos.set(targetX, targetY, targetZ));
+                        if (target.isAir() || !target.getFluidState().isEmpty()
+                            || target.is(Blocks.BEDROCK) || target.is(CCBlocks.PINK_CRYSTALLIZED_SUGAR.get())) {
+                            continue;
+                        }
+
+                        boolean surface = targetY >= SEA_LEVEL - 4;
+                        boolean validTarget = isBaseStone(target)
+                            || (surface && target.isCollisionShapeFullBlock(region, targetPos));
+                        if (!validTarget) {
+                            continue;
+                        }
+
+                        int chance = direction == Direction.DOWN ? (surface ? 10 : 22) : (surface ? 18 : 32);
+                        if (positiveHash(targetX, targetY, targetZ, seed) % chance == 0L) {
+                            chunk.setBlockState(targetPos, CCBlocks.PINK_CRYSTALLIZED_SUGAR.get().defaultBlockState(), false);
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private void generateSurfacePools(WorldGenRegion region, ChunkAccess chunk, RandomState randomState) {

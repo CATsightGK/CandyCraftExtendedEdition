@@ -3,7 +3,7 @@ package com.valentin4311.candycraftmod.client.layer;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.valentin4311.candycraftmod.CandyCraft;
 import com.valentin4311.candycraftmod.client.model.NessieModel;
-import com.valentin4311.candycraftmod.entity.BasicCandyZombieEntity;
+import com.valentin4311.candycraftmod.entity.NessieEntity;
 import net.minecraft.client.model.geom.EntityModelSet;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
@@ -12,17 +12,17 @@ import net.minecraft.client.renderer.entity.layers.RenderLayer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.ResourceLocation;
 
-public class NessieSaddleLayer extends RenderLayer<BasicCandyZombieEntity, NessieModel<BasicCandyZombieEntity>> {
+public class NessieSaddleLayer extends RenderLayer<NessieEntity, NessieModel<NessieEntity>> {
     private static final ResourceLocation TEXTURE = new ResourceLocation(CandyCraft.MODID, "textures/entity/nessiesaddle.png");
-    private final NessieModel<BasicCandyZombieEntity> model;
+    private final NessieModel<NessieEntity> model;
 
-    public NessieSaddleLayer(RenderLayerParent<BasicCandyZombieEntity, NessieModel<BasicCandyZombieEntity>> renderer, EntityModelSet modelSet) {
+    public NessieSaddleLayer(RenderLayerParent<NessieEntity, NessieModel<NessieEntity>> renderer, EntityModelSet modelSet) {
         super(renderer);
         this.model = new NessieModel<>(modelSet.bakeLayer(NessieModel.LAYER));
     }
 
     @Override
-    public void render(PoseStack poseStack, MultiBufferSource buffer, int packedLight, BasicCandyZombieEntity entity,
+    public void render(PoseStack poseStack, MultiBufferSource buffer, int packedLight, NessieEntity entity,
             float limbSwing, float limbSwingAmount, float partialTick, float ageInTicks, float netHeadYaw, float headPitch) {
         if (!entity.isNessieSaddled()) {
             return;

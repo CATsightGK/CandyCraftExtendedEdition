@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": ["#P#", "#P#"],
+  "key": {
+    "#": { "item": "candycraftmod:marshmallow_stick" },
+    "P": { "item": "candycraftmod:marshmallow_planks" }
+  },
+  "result": { "item": "candycraftmod:marshmallow_fence_gate" }
+}

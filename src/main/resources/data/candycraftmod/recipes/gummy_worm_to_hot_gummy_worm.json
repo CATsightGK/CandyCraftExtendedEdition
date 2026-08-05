@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:smelting",
+  "category": "food",
+  "ingredient": [
+    { "item": "candycraftmod:red_gummy_worm" },
+    { "item": "candycraftmod:orange_gummy_worm" },
+    { "item": "candycraftmod:yellow_gummy_worm" },
+    { "item": "candycraftmod:white_gummy_worm" },
+    { "item": "candycraftmod:green_gummy_worm" }
+  ],
+  "result": "candycraftmod:hot_gummy_worm",
+  "experience": 0.7,
+  "cookingtime": 200
+}
