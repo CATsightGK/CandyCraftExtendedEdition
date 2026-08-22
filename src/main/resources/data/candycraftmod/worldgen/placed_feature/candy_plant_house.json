@@ -1,7 +1,7 @@
 {
   "feature": "candycraftmod:candy_plant_house",
   "placement": [
-    { "type": "minecraft:rarity_filter", "chance": 200 },
+    { "type": "minecraft:rarity_filter", "chance": 1800 },
     { "type": "minecraft:in_square" },
     { "type": "minecraft:heightmap", "heightmap": "MOTION_BLOCKING_NO_LEAVES" },
     { "type": "minecraft:biome" }

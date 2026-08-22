@@ -1,5 +1,7 @@
 {
-    "variants": {
-        "": { "model": "candycraftmod:block/honey_lamp" }
+  "variants": {
+    "": {
+      "model": "candycraftmod:block/honey_lamp"
     }
+  }
 }

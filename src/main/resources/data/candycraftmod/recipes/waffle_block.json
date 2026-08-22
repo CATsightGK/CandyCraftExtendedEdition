@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "WW",
+    "WW"
+  ],
+  "key": {
+    "W": {
+      "item": "candycraftmod:waffle"
+    }
+  },
+  "result": {
+    "item": "candycraftmod:waffle_block",
+    "count": 1
+  }
+}

@@ -4,12 +4,9 @@ import com.valentin4311.candycraftmod.CandyCraft;
 import java.util.function.Consumer;
 import com.mojang.blaze3d.shaders.FogShape;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Camera;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.FogRenderer;
-import net.minecraft.client.renderer.ScreenEffectRenderer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.effect.MobEffects;
@@ -37,7 +34,8 @@ public final class CCFluids {
     private static final ResourceLocation LIQUID_CHOCOLATE_FLOWING = new ResourceLocation(CandyCraft.MODID, "block/liquid_chocolate_flow");
     private static final ResourceLocation LIQUID_CANDY_STILL = new ResourceLocation(CandyCraft.MODID, "block/liquid_candy_still");
     private static final ResourceLocation LIQUID_CANDY_FLOWING = new ResourceLocation(CandyCraft.MODID, "block/liquid_candy_flow");
-    private static final ResourceLocation VANILLA_UNDERWATER_OVERLAY = new ResourceLocation("minecraft", "textures/misc/underwater.png");
+    private static final ResourceLocation GRENADINE_UNDERWATER = new ResourceLocation(CandyCraft.MODID, "textures/misc/grenadine_underwater.png");
+    private static final ResourceLocation CARAMEL_UNDERWATER = new ResourceLocation(CandyCraft.MODID, "textures/misc/caramel_underwater.png");
     private static final Vector3f GRENADINE_FOG = color(0xF22929);
     private static final Vector3f CARAMEL_FOG = color(0x914000);
     private static final Vector3f LIQUID_CHOCOLATE_FOG = color(0x482B17);
@@ -72,8 +70,8 @@ public final class CCFluids {
                 }
 
                 @Override
-                public void renderOverlay(Minecraft minecraft, PoseStack poseStack) {
-                    renderVanillaWaterOverlay(minecraft, poseStack);
+                public ResourceLocation getOverlayTexture() {
+                    return GRENADINE_UNDERWATER;
                 }
 
                 @Override
@@ -121,8 +119,8 @@ public final class CCFluids {
                 }
 
                 @Override
-                public void renderOverlay(Minecraft minecraft, PoseStack poseStack) {
-                    renderVanillaWaterOverlay(minecraft, poseStack);
+                public ResourceLocation getOverlayTexture() {
+                    return CARAMEL_UNDERWATER;
                 }
 
                 @Override
@@ -236,10 +234,6 @@ public final class CCFluids {
     public static void register(IEventBus eventBus) {
         FLUID_TYPES.register(eventBus);
         FLUIDS.register(eventBus);
-    }
-
-    private static void renderVanillaWaterOverlay(Minecraft minecraft, PoseStack poseStack) {
-        ScreenEffectRenderer.renderFluid(minecraft, poseStack, VANILLA_UNDERWATER_OVERLAY);
     }
 
     private static void renderVanillaWaterFog(float renderDistance, FogShape shape, float maxDistance) {

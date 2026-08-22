@@ -6,6 +6,7 @@ import com.valentin4311.candycraftmod.world.feature.CandySeaweedFeature;
 import com.valentin4311.candycraftmod.world.feature.CandyLiquidLakeFeature;
 import com.valentin4311.candycraftmod.world.feature.CottonCandyTreeFeature;
 import com.valentin4311.candycraftmod.world.feature.GummyWormFeature;
+import com.valentin4311.candycraftmod.world.feature.HardCandyCaneFeature;
 import com.valentin4311.candycraftmod.world.feature.HoneyDungeonFeature;
 import com.valentin4311.candycraftmod.world.feature.JellyDungeonFeature;
 import com.valentin4311.candycraftmod.world.feature.LegacyStructureFeature;
@@ -65,6 +66,10 @@ public final class CCFeatures {
         "gummy_worm",
         () -> new GummyWormFeature(NoneFeatureConfiguration.CODEC)
     );
+    public static final RegistryObject<Feature<NoneFeatureConfiguration>> HARD_CANDY_CANE = FEATURES.register(
+        "hard_candy_cane",
+        () -> new HardCandyCaneFeature(NoneFeatureConfiguration.CODEC)
+    );
     public static final RegistryObject<Feature<NoneFeatureConfiguration>> COTTON_CANDY_TREE = FEATURES.register(
         "cotton_candy_tree",
         () -> new CottonCandyTreeFeature(NoneFeatureConfiguration.CODEC)
@@ -106,7 +111,8 @@ public final class CCFeatures {
             NoneFeatureConfiguration.CODEC,
             new ResourceLocation(CandyCraft.MODID, "suguard_outpost"),
             true,
-            true
+            false,
+            0
         )
     );
     public static final RegistryObject<Feature<NoneFeatureConfiguration>> ICE_TOWER = FEATURES.register(

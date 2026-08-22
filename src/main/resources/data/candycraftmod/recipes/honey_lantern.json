@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "HHH",
+    "HTH",
+    "HHH"
+  ],
+  "key": {
+    "H": {
+      "item": "candycraftmod:honey_shard"
+    },
+    "T": {
+      "item": "candycraftmod:honey_torch"
+    }
+  },
+  "result": {
+    "item": "candycraftmod:honey_lantern"
+  }
+}

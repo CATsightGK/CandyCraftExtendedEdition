@@ -1,17 +1,23 @@
 package com.valentin4311.candycraftmod.world;
 
 import com.valentin4311.candycraftmod.CandyCraft;
+import com.valentin4311.candycraftmod.block.DungeonTeleporterBlock;
 import com.valentin4311.candycraftmod.block.DungeonTeleporterBlock.DungeonKind;
+import com.valentin4311.candycraftmod.block.DungeonTeleporterBlock.PortalRole;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -173,6 +179,47 @@ public final class DungeonProgressData extends SavedData {
             }
         }
         return result;
+    }
+
+    public boolean hasLiveEntrancePortal(MinecraftServer server, UUID owner, DungeonKind kind, long instanceId) {
+        boolean removedStaleRecord = false;
+        Iterator<Map.Entry<PortalKey, PortalRecord>> iterator = portals.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<PortalKey, PortalRecord> entry = iterator.next();
+            PortalRecord record = entry.getValue();
+            if (!record.owner.equals(owner) || record.kind != kind || record.instanceId != instanceId) {
+                continue;
+            }
+
+            ResourceLocation dimensionId = ResourceLocation.tryParse(entry.getKey().dimension);
+            ServerLevel level = dimensionId == null
+                ? null
+                : server.getLevel(ResourceKey.create(Registries.DIMENSION, dimensionId));
+            BlockPos pos = BlockPos.of(entry.getKey().pos);
+            if (level != null && !level.hasChunkAt(pos)) {
+                if (removedStaleRecord) {
+                    setDirty();
+                }
+                return true;
+            }
+            if (level != null) {
+                net.minecraft.world.level.block.state.BlockState state = level.getBlockState(pos);
+                if (state.getBlock() instanceof DungeonTeleporterBlock
+                    && state.getValue(DungeonTeleporterBlock.DUNGEON) == kind
+                    && state.getValue(DungeonTeleporterBlock.ROLE) == PortalRole.ENTRY) {
+                    if (removedStaleRecord) {
+                        setDirty();
+                    }
+                    return true;
+                }
+            }
+            iterator.remove();
+            removedStaleRecord = true;
+        }
+        if (removedStaleRecord) {
+            setDirty();
+        }
+        return false;
     }
 
     public void removePortal(String dimension, BlockPos pos) {

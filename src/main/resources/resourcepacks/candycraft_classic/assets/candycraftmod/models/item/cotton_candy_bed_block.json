@@ -1,7 +1,7 @@
 {
     "parent": "item/generated",
     "textures": {
-        "layer0": "candycraftmod:block/cotton_candy_bed_top_upper"
+        "layer0": "candycraftmod:item/cotton_candy_bed"
     },
     "display": {
         "thirdperson": {

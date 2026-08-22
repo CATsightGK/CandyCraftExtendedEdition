@@ -33,6 +33,10 @@ public final class CCDimensions {
         new ResourceLocation(CandyCraft.MODID, "suguard_dungeon")
     );
 
+    public static boolean isDungeon(Level level) {
+        return level.dimension().equals(JELLY_DUNGEON) || level.dimension().equals(SUGUARD_DUNGEON);
+    }
+
     private CCDimensions() {
     }
 }

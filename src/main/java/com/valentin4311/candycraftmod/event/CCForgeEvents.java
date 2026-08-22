@@ -1,15 +1,24 @@
 package com.valentin4311.candycraftmod.event;
 
 import com.valentin4311.candycraftmod.CandyCraft;
+import com.valentin4311.candycraftmod.block.DungeonTeleporterBlock;
 import com.valentin4311.candycraftmod.block.LegacySaplingBlock;
 import com.valentin4311.candycraftmod.entity.BasicCandyZombieEntity;
 import com.valentin4311.candycraftmod.entity.CandyFishEntity;
+import com.valentin4311.candycraftmod.entity.CaramelBeeEntity;
+import com.valentin4311.candycraftmod.entity.HoneyArrowEntity;
+import com.valentin4311.candycraftmod.entity.HoneyBoltEntity;
+import com.valentin4311.candycraftmod.effect.CloyingSweetFoodHelper;
 import com.valentin4311.candycraftmod.registry.CCBlocks;
+import com.valentin4311.candycraftmod.registry.CCEnchantments;
 import com.valentin4311.candycraftmod.registry.CCEntityTypes;
 import com.valentin4311.candycraftmod.registry.CCFluids;
+import com.valentin4311.candycraftmod.registry.CCItemTags;
 import com.valentin4311.candycraftmod.registry.CCItems;
+import com.valentin4311.candycraftmod.registry.CCMobEffects;
 import com.valentin4311.candycraftmod.registry.CCToolProperties;
 import com.valentin4311.candycraftmod.util.EmblemHelper;
+import com.valentin4311.candycraftmod.world.CCDimensions;
 import com.valentin4311.candycraftmod.world.feature.CottonCandyTreeFeature;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
@@ -18,9 +27,11 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.DamageTypeTags;
+import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -30,28 +41,38 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.SpawnPlacements;
 import net.minecraft.world.entity.projectile.AbstractArrow;
+import net.minecraft.world.entity.projectile.Projectile;
+import net.minecraft.world.entity.animal.Bee;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.HoeItem;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.BedBlock;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.CakeBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraftforge.common.ForgeSpawnEggItem;
 import net.minecraftforge.event.entity.SpawnPlacementRegisterEvent;
 import net.minecraftforge.event.entity.EntityJoinLevelEvent;
+import net.minecraftforge.event.entity.EntityTeleportEvent;
 import net.minecraftforge.event.level.BlockEvent;
+import net.minecraftforge.event.level.ExplosionEvent;
+import net.minecraftforge.event.level.PistonEvent;
 import net.minecraftforge.event.level.SleepFinishedTimeEvent;
 import net.minecraftforge.event.entity.living.MobSpawnEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
+import net.minecraftforge.event.entity.living.LivingEntityUseItemEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.ItemAttributeModifierEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -63,6 +84,7 @@ public final class CCForgeEvents {
     private static final java.util.UUID BASE_ATTACK_DAMAGE_UUID = java.util.UUID.fromString("CB3F55D3-645C-4F38-A497-9C13A33DB5CF");
     private static final java.util.UUID BASE_ATTACK_SPEED_UUID = java.util.UUID.fromString("FA233E1C-4180-4865-B01B-BCCE9785ACA3");
     private static final String CRANBERRY_EMBLEM_DAY = CandyCraft.MODID + ".cranberry_emblem_day";
+    private static final String HONEY_SOURCE_LEVEL = CandyCraft.MODID + ".honey_source_level";
     private static final ResourceKey<Level> CANDY_WORLD = dimensionKey("candy_world");
     private static final ResourceKey<Level> JELLY_DUNGEON = dimensionKey("jelly_dungeon");
     private static final ResourceKey<Level> SUGUARD_DUNGEON = dimensionKey("suguard_dungeon");
@@ -159,15 +181,20 @@ public final class CCForgeEvents {
 
     @SubscribeEvent
     public static void onEntityJoinLevel(EntityJoinLevelEvent event) {
-        if (!event.getLevel().isClientSide
-            && isBlockedDungeonMob(event.getEntity())) {
-            event.setCanceled(true);
+        if (!event.getLevel().isClientSide) {
+            markHoneySourceProjectile(event.getEntity());
         }
     }
 
     @SubscribeEvent
     public static void onLivingHurt(LivingHurtEvent event) {
-        if (!(event.getEntity() instanceof Player player)) {
+        LivingEntity target = event.getEntity();
+        if (!target.level().isClientSide) {
+            applyPropolisDamageBonuses(event);
+            applyHoneySourceEffect(event);
+        }
+
+        if (!(target instanceof Player player)) {
             return;
         }
         if (event.getSource().is(DamageTypeTags.IS_FALL) && player.getItemBySlot(EquipmentSlot.FEET).is(CCItems.JELLY_BOOTS.get())) {
@@ -184,7 +211,100 @@ public final class CCForgeEvents {
     }
 
     @SubscribeEvent
+    public static void onBreakSpeed(PlayerEvent.BreakSpeed event) {
+        MobEffectInstance cloying = event.getEntity().getEffect(CCMobEffects.CLOYING.get());
+        if (cloying == null) {
+            return;
+        }
+        float multiplier = Math.max(0.0F, 1.0F - 0.35F * (cloying.getAmplifier() + 1));
+        event.setNewSpeed(event.getNewSpeed() * multiplier);
+    }
+
+    @SubscribeEvent
+    public static void onFinishUsingItem(LivingEntityUseItemEvent.Finish event) {
+        LivingEntity entity = event.getEntity();
+        if (entity.level().isClientSide
+                || !entity.hasEffect(CCMobEffects.CLOYING.get())
+                || !CloyingSweetFoodHelper.isSweetFood(event.getItem(), entity.level())) {
+            return;
+        }
+        entity.hurt(entity.damageSources().magic(), 0.5F);
+    }
+
+    private static void markHoneySourceProjectile(Entity entity) {
+        if (!(entity instanceof Projectile projectile)
+                || !(projectile.getOwner() instanceof LivingEntity owner)) {
+            return;
+        }
+
+        int level = Math.max(
+            honeySourceLevel(owner.getMainHandItem(), CCItemTags.HONEY_SOURCE_RANGED),
+            honeySourceLevel(owner.getOffhandItem(), CCItemTags.HONEY_SOURCE_RANGED)
+        );
+        if (level > 0) {
+            entity.getPersistentData().putInt(HONEY_SOURCE_LEVEL, level);
+        }
+    }
+
+    private static void applyPropolisDamageBonuses(LivingHurtEvent event) {
+        LivingEntity target = event.getEntity();
+        if (!target.hasEffect(CCMobEffects.HONEY_GLUE.get())) {
+            return;
+        }
+
+        Entity direct = event.getSource().getDirectEntity();
+        Entity attacker = event.getSource().getEntity();
+        float amount = event.getAmount();
+        if (direct instanceof HoneyArrowEntity) {
+            amount += 2.0F;
+        } else if (direct instanceof HoneyBoltEntity) {
+            amount += 2.5F;
+        } else if (attacker instanceof LivingEntity livingAttacker
+                && direct == attacker
+                && livingAttacker.getMainHandItem().is(CCItemTags.PROPOLIS_BONUS_TOOLS)) {
+            amount += 2.0F;
+        }
+
+        if (attacker instanceof CaramelBeeEntity || attacker instanceof Bee) {
+            amount *= 2.0F;
+        }
+        event.setAmount(amount);
+    }
+
+    private static void applyHoneySourceEffect(LivingHurtEvent event) {
+        Entity direct = event.getSource().getDirectEntity();
+        Entity attacker = event.getSource().getEntity();
+        int level = direct == null ? 0 : direct.getPersistentData().getInt(HONEY_SOURCE_LEVEL);
+        int duration = level > 0 ? 10 * 20 : 0;
+
+        if (level <= 0 && attacker instanceof LivingEntity livingAttacker && direct == attacker) {
+            level = honeySourceLevel(livingAttacker.getMainHandItem(), CCItemTags.HONEY_SOURCE_TOOLS);
+            duration = level > 0 ? 7 * 20 : 0;
+        }
+        if (level <= 0) {
+            return;
+        }
+
+        MobEffectInstance propolis = new MobEffectInstance(
+            CCMobEffects.HONEY_GLUE.get(), duration, Math.min(1, level - 1), false, true, true
+        );
+        if (attacker != null) {
+            event.getEntity().addEffect(propolis, attacker);
+        } else {
+            event.getEntity().addEffect(propolis);
+        }
+    }
+
+    private static int honeySourceLevel(ItemStack stack, TagKey<Item> allowedItems) {
+        if (!stack.is(allowedItems)) {
+            return 0;
+        }
+        return EnchantmentHelper.getItemEnchantmentLevel(CCEnchantments.HONEY_SOURCE.get(), stack);
+    }
+
+    @SubscribeEvent
     public static void onRightClickBlock(PlayerInteractEvent.RightClickBlock event) {
+        applyCloyingCakePenalty(event);
         if (isProtectedDungeonInteraction(event.getLevel(), event.getEntity())) {
             return;
         }
@@ -197,6 +317,22 @@ public final class CCForgeEvents {
             event.setCancellationResult(InteractionResult.sidedSuccess(event.getLevel().isClientSide));
             event.setCanceled(true);
         }
+    }
+
+    private static void applyCloyingCakePenalty(PlayerInteractEvent.RightClickBlock event) {
+        Player player = event.getEntity();
+        Level level = event.getLevel();
+        BlockState state = level.getBlockState(event.getPos());
+        if (level.isClientSide
+                || !player.hasEffect(CCMobEffects.CLOYING.get())
+                || !player.canEat(false)
+                || !(state.getBlock() instanceof CakeBlock)) {
+            return;
+        }
+        if (state.getValue(CakeBlock.BITES) == 0 && event.getItemStack().is(ItemTags.CANDLES)) {
+            return;
+        }
+        player.hurt(player.damageSources().magic(), 0.5F);
     }
 
     private static boolean tryRejectVanillaBed(PlayerInteractEvent.RightClickBlock event) {
@@ -231,7 +367,58 @@ public final class CCForgeEvents {
 
     @SubscribeEvent
     public static void onBlockBreak(BlockEvent.BreakEvent event) {
-        if (isProtectedDungeonInteraction(event.getLevel(), event.getPlayer())) {
+        if (hasDungeonPortalAbove(event.getLevel(), event.getPos())
+            || isProtectedDungeonInteraction(event.getLevel(), event.getPlayer())) {
+            event.setCanceled(true);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onExplosionDetonate(ExplosionEvent.Detonate event) {
+        if (isDungeonLevel(event.getLevel())) {
+            event.getAffectedBlocks().clear();
+            return;
+        }
+        event.getAffectedBlocks().removeIf(pos -> hasDungeonPortalAbove(event.getLevel(), pos));
+    }
+
+    @SubscribeEvent
+    public static void onTeleportCommand(EntityTeleportEvent.TeleportCommand event) {
+        if (isProtectedDungeonTeleport(event.getEntity())) {
+            event.setCanceled(true);
+            ((ServerPlayer) event.getEntity()).displayClientMessage(
+                Component.translatable("message.candycraftmod.dungeon.teleport_blocked"), true);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onSpreadPlayersCommand(EntityTeleportEvent.SpreadPlayersCommand event) {
+        if (isProtectedDungeonTeleport(event.getEntity())) {
+            event.setCanceled(true);
+            ((ServerPlayer) event.getEntity()).displayClientMessage(
+                Component.translatable("message.candycraftmod.dungeon.teleport_blocked"), true);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onEnderPearlTeleport(EntityTeleportEvent.EnderPearl event) {
+        ServerPlayer player = event.getPlayer();
+        if (!isDungeonLevel(player.level())) {
+            return;
+        }
+        event.setCanceled(true);
+        player.displayClientMessage(
+            Component.translatable("message.candycraftmod.dungeon.ender_pearl_unwell"), true);
+        player.level().playSound(null, event.getPearlEntity().blockPosition(), SoundEvents.GLASS_BREAK,
+            SoundSource.PLAYERS, 0.7F, 1.35F);
+    }
+
+    @SubscribeEvent
+    public static void onPistonMove(PistonEvent.Pre event) {
+        net.minecraft.world.level.block.piston.PistonStructureResolver resolver = event.getStructureHelper();
+        if (resolver != null && resolver.resolve()
+            && (resolver.getToPush().stream().anyMatch(pos -> hasDungeonPortalAbove(event.getLevel(), pos))
+                || resolver.getToDestroy().stream().anyMatch(pos -> hasDungeonPortalAbove(event.getLevel(), pos)))) {
             event.setCanceled(true);
         }
     }
@@ -241,6 +428,10 @@ public final class CCForgeEvents {
         if (event.getEntity() instanceof Player player && isProtectedDungeonInteraction(event.getLevel(), player)) {
             event.setCanceled(true);
         }
+    }
+
+    private static boolean hasDungeonPortalAbove(LevelAccessor level, BlockPos pos) {
+        return DungeonTeleporterBlock.isProtectedSupport(level, pos);
     }
 
     @SubscribeEvent
@@ -305,13 +496,14 @@ public final class CCForgeEvents {
             }
             int brightness = event.getLevel().getLevel().getMaxLocalRawBrightness(event.getEntity().blockPosition());
             return switch (path) {
-                case "sugar_plains", "sugar_forest", "sugar_cold_forest", "sugar_mountains", "ice_cream_plains", "ice_cream_sky_mountains", "sugar_hell_mountains",
+                case "sugar_plains", "hard_candy_plains", "sugar_forest", "sugar_cold_forest", "sugar_mountains", "ice_cream_plains", "ice_cream_sky_mountains", "sugar_hell_mountains",
                     "cotton_candy_plains", "chocolate_forest", "gummy_swamp", "sugar_oceans", "sugar_river", "candycraft_dungeon" -> brightness <= 7;
                 default -> false;
             };
         }
         if (type == CCEntityTypes.MAGE_SUGUARD.get()) {
-            return "sugar_enchanted_forest".equals(path);
+            int brightness = event.getLevel().getLevel().getMaxLocalRawBrightness(event.getEntity().blockPosition());
+            return "sugar_enchanted_forest".equals(path) && brightness <= 7;
         }
         if (type == CCEntityTypes.CANDY_CREEPER.get() || type == CCEntityTypes.COTTON_CANDY_SPIDER.get()) {
             int brightness = event.getLevel().getLevel().getMaxLocalRawBrightness(event.getEntity().blockPosition());
@@ -361,14 +553,14 @@ public final class CCForgeEvents {
             return isWaffleSheepBiome(path);
         }
         return switch (path) {
-            case "sugar_plains", "sugar_forest", "sugar_cold_forest", "sugar_enchanted_forest", "sugar_mountains", "ice_cream_plains", "ice_cream_sky_mountains", "caramel_forest" -> true;
+            case "sugar_plains", "hard_candy_plains", "sugar_forest", "sugar_cold_forest", "sugar_enchanted_forest", "sugar_mountains", "ice_cream_plains", "ice_cream_sky_mountains", "caramel_forest" -> true;
             default -> false;
         };
     }
 
     private static boolean isCandyPigBiome(String path) {
         return switch (path) {
-            case "sugar_plains", "sugar_forest", "sugar_cold_forest", "sugar_enchanted_forest",
+            case "sugar_plains", "hard_candy_plains", "sugar_forest", "sugar_cold_forest", "sugar_enchanted_forest",
                 "sugar_mountains", "caramel_forest" -> true;
             default -> false;
         };
@@ -376,7 +568,7 @@ public final class CCForgeEvents {
 
     private static boolean isCottonCandySheepBiome(String path) {
         return switch (path) {
-            case "cotton_candy_plains", "sugar_plains", "sugar_forest", "sugar_cold_forest",
+            case "cotton_candy_plains", "sugar_plains", "hard_candy_plains", "sugar_forest", "sugar_cold_forest",
                 "sugar_enchanted_forest", "sugar_mountains", "sugar_hell_mountains",
                 "ice_cream_plains", "ice_cream_sky_mountains", "caramel_forest",
                 "chocolate_forest", "gummy_swamp" -> true;
@@ -386,7 +578,7 @@ public final class CCForgeEvents {
 
     private static boolean isGummyBunnyBiome(String path) {
         return switch (path) {
-            case "sugar_plains", "sugar_forest", "sugar_cold_forest", "sugar_enchanted_forest",
+            case "sugar_plains", "hard_candy_plains", "sugar_forest", "sugar_cold_forest", "sugar_enchanted_forest",
                 "sugar_mountains", "caramel_forest", "chocolate_forest", "gummy_swamp" -> true;
             default -> false;
         };
@@ -394,7 +586,7 @@ public final class CCForgeEvents {
 
     private static boolean isWaffleSheepBiome(String path) {
         return switch (path) {
-            case "sugar_plains", "sugar_cold_forest", "sugar_mountains" -> true;
+            case "sugar_plains", "hard_candy_plains", "sugar_cold_forest", "sugar_mountains" -> true;
             default -> false;
         };
     }
@@ -420,7 +612,14 @@ public final class CCForgeEvents {
     }
 
     private static boolean isDungeonLevel(Level level) {
-        return level.dimension().equals(JELLY_DUNGEON) || level.dimension().equals(SUGUARD_DUNGEON);
+        return CCDimensions.isDungeon(level);
+    }
+
+    private static boolean isProtectedDungeonTeleport(Entity entity) {
+        return entity instanceof ServerPlayer player
+            && !player.isCreative()
+            && !player.isSpectator()
+            && isDungeonLevel(player.level());
     }
 
     private static boolean isNaturalWorldSpawn(MobSpawnType spawnType) {
@@ -443,17 +642,6 @@ public final class CCForgeEvents {
 
     private static ResourceKey<Level> dimensionKey(String path) {
         return ResourceKey.create(Registries.DIMENSION, new ResourceLocation(CandyCraft.MODID, path));
-    }
-
-    private static boolean isBlockedDungeonMob(Entity entity) {
-        if (!(entity instanceof Mob) || !isDungeonLevel(entity.level())) {
-            return false;
-        }
-        ResourceLocation id = ForgeRegistries.ENTITY_TYPES.getKey(entity.getType());
-        if (id == null) {
-            return false;
-        }
-        return "minecraft".equals(id.getNamespace()) || entity.getType() == CCEntityTypes.CARAMEL_BEE.get();
     }
 
     private static boolean tryTillCandySoil(PlayerInteractEvent.RightClickBlock event) {
@@ -532,7 +720,7 @@ public final class CCForgeEvents {
             event.register(CCEntityTypes.GUMMY_BEAR.get(), SpawnPlacements.Type.NO_RESTRICTIONS, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, com.valentin4311.candycraftmod.entity.GummyBearEntity::canSpawn, SpawnPlacementRegisterEvent.Operation.REPLACE);
             event.register(CCEntityTypes.PINGOUIN.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, CCForgeEvents::canSpawnOnCandySurface, SpawnPlacementRegisterEvent.Operation.REPLACE);
             event.register(CCEntityTypes.SUGUARD.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, CCForgeEvents::canSpawnOnCandySurface, SpawnPlacementRegisterEvent.Operation.REPLACE);
-            event.register(CCEntityTypes.MAGE_SUGUARD.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, CCForgeEvents::canSpawnOnCandySurface, SpawnPlacementRegisterEvent.Operation.REPLACE);
+            event.register(CCEntityTypes.MAGE_SUGUARD.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, CCForgeEvents::canHostileCandyMobSpawn, SpawnPlacementRegisterEvent.Operation.REPLACE);
             event.register(CCEntityTypes.CANDY_CREEPER.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, CCForgeEvents::canSpawnOnCandySurface, SpawnPlacementRegisterEvent.Operation.REPLACE);
             event.register(CCEntityTypes.COTTON_CANDY_SPIDER.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, CCForgeEvents::canSpawnOnCandySurface, SpawnPlacementRegisterEvent.Operation.REPLACE);
             event.register(CCEntityTypes.JELLY_QUEEN.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, CCForgeEvents::canSpawnOnCandySurface, SpawnPlacementRegisterEvent.Operation.REPLACE);
@@ -558,6 +746,13 @@ public final class CCForgeEvents {
                 && level.getFluidState(pos.above()).isEmpty();
         }
         return below.isValidSpawn(level, pos.below(), type);
+    }
+
+    private static boolean canHostileCandyMobSpawn(EntityType<? extends Mob> type, LevelAccessor level,
+            MobSpawnType reason, BlockPos pos, net.minecraft.util.RandomSource random) {
+        return level.getLevelData().getDifficulty() != net.minecraft.world.Difficulty.PEACEFUL
+            && level.getMaxLocalRawBrightness(pos) <= 7
+            && canSpawnOnCandySurface(type, level, reason, pos, random);
     }
 
     private static boolean canCaramelBeeSpawn(EntityType<? extends Mob> type, LevelAccessor level, MobSpawnType reason, BlockPos pos, net.minecraft.util.RandomSource random) {

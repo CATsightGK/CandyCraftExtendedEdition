@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "SSS",
+    "STS",
+    "SSS"
+  ],
+  "key": {
+    "S": {
+      "item": "minecraft:sugar"
+    },
+    "T": {
+      "item": "candycraftmod:honey_torch"
+    }
+  },
+  "result": {
+    "item": "candycraftmod:caramel_lamp"
+  }
+}

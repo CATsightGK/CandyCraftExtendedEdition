@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "hanging=false": {
+      "model": "candycraftmod:block/marshmallow_lantern"
+    },
+    "hanging=true": {
+      "model": "candycraftmod:block/marshmallow_lantern_hanging"
+    }
+  }
+}

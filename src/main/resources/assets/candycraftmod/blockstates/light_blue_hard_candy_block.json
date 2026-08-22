@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "axis=y": {
+      "model": "candycraftmod:block/hard_candy/light_blue_hard_candy_block"
+    },
+    "axis=x": {
+      "model": "candycraftmod:block/hard_candy/light_blue_hard_candy_block",
+      "x": 90,
+      "y": 90
+    },
+    "axis=z": {
+      "model": "candycraftmod:block/hard_candy/light_blue_hard_candy_block",
+      "x": 90
+    }
+  }
+}

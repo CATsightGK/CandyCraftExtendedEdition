@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.valentin4311.candycraftmod.CandyCraft;
 import com.valentin4311.candycraftmod.client.model.GummyBunnyModel;
+import com.valentin4311.candycraftmod.client.model.GummyBunnyOuterModel;
 import com.valentin4311.candycraftmod.entity.GummyBunnyEntity;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
@@ -21,6 +22,7 @@ public class GummyBunnyRenderer extends MobRenderer<GummyBunnyEntity, GummyBunny
     public GummyBunnyRenderer(EntityRendererProvider.Context context) {
         super(context, new GummyBunnyModel<>(context.bakeLayer(GummyBunnyModel.LAYER)), 0.3F);
         addLayer(new FurLayer(this, context));
+        addLayer(new GummyShellLayer(this, context));
     }
 
     @Override
@@ -38,6 +40,11 @@ public class GummyBunnyRenderer extends MobRenderer<GummyBunnyEntity, GummyBunny
     @Nullable
     @Override
     protected RenderType getRenderType(GummyBunnyEntity entity, boolean bodyVisible, boolean translucent, boolean glowing) {
+        if (entity.isSwampGummyVariant()) {
+            // The swamp variant is drawn entirely by GummyShellLayer so the
+            // body can be tinted with the entity's gummy color.
+            return glowing ? RenderType.outline(getTextureLocation(entity)) : null;
+        }
         if (bodyVisible || translucent) {
             return RenderType.entityTranslucent(getTextureLocation(entity));
         }
@@ -54,7 +61,7 @@ public class GummyBunnyRenderer extends MobRenderer<GummyBunnyEntity, GummyBunny
 
         @Override
         public void render(PoseStack poseStack, MultiBufferSource buffer, int packedLight, GummyBunnyEntity bunny, float limbSwing, float limbSwingAmount, float partialTick, float ageInTicks, float netHeadYaw, float headPitch) {
-            if (bunny.isInvisible()) {
+            if (bunny.isInvisible() || bunny.isSwampGummyVariant()) {
                 return;
             }
 
@@ -72,6 +79,44 @@ public class GummyBunnyRenderer extends MobRenderer<GummyBunnyEntity, GummyBunny
                 bunny.getBlue() / 255.0F,
                 0.58F
             );
+        }
+    }
+
+    /**
+     * Swamp variant uses the gummy mouse style: a tinted body underneath and
+     * an inflated translucent shell on top, instead of the coplanar fur pass.
+     */
+    private static final class GummyShellLayer extends RenderLayer<GummyBunnyEntity, GummyBunnyModel<GummyBunnyEntity>> {
+        private final GummyBunnyModel<GummyBunnyEntity> bodyModel;
+        private final GummyBunnyOuterModel<GummyBunnyEntity> shellModel;
+
+        private GummyShellLayer(GummyBunnyRenderer renderer, EntityRendererProvider.Context context) {
+            super(renderer);
+            this.bodyModel = new GummyBunnyModel<>(context.bakeLayer(GummyBunnyModel.LAYER));
+            this.shellModel = new GummyBunnyOuterModel<>(context.bakeLayer(GummyBunnyOuterModel.LAYER));
+        }
+
+        @Override
+        public void render(PoseStack poseStack, MultiBufferSource buffer, int packedLight, GummyBunnyEntity bunny, float limbSwing, float limbSwingAmount, float partialTick, float ageInTicks, float netHeadYaw, float headPitch) {
+            if (bunny.isInvisible() || !bunny.isSwampGummyVariant()) {
+                return;
+            }
+
+            float red = bunny.getRed() / 255.0F;
+            float green = bunny.getGreen() / 255.0F;
+            float blue = bunny.getBlue() / 255.0F;
+            int overlay = LivingEntityRenderer.getOverlayCoords(bunny, 0.0F);
+
+            getParentModel().copyPropertiesTo(bodyModel);
+            bodyModel.prepareMobModel(bunny, limbSwing, limbSwingAmount, partialTick);
+            bodyModel.setupAnim(bunny, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
+            bodyModel.renderToBuffer(poseStack, buffer.getBuffer(RenderType.entityTranslucent(FACE)),
+                packedLight, overlay, red, green, blue, 1.0F);
+
+            shellModel.prepareMobModel(bunny, limbSwing, limbSwingAmount, partialTick);
+            shellModel.setupAnim(bunny, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
+            shellModel.renderToBuffer(poseStack, buffer.getBuffer(RenderType.entityTranslucent(FUR)),
+                packedLight, overlay, red, green, blue, 0.6F);
         }
     }
 }

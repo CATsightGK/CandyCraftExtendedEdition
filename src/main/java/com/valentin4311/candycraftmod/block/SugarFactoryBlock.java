@@ -47,6 +47,8 @@ public class SugarFactoryBlock extends FacingModelBlock implements EntityBlock {
     @Override
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean movedByPiston) {
         if (!state.is(newState.getBlock()) && level.getBlockEntity(pos) instanceof SugarFactoryBlockEntity blockEntity) {
+            blockEntity.releasePendingGlassBottles();
+            blockEntity.dropPendingGlassBottles();
             Containers.dropContents(level, pos, blockEntity);
             level.updateNeighbourForOutputSignal(pos, this);
         }

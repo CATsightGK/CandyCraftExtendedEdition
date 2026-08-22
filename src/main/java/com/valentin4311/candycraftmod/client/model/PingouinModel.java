@@ -36,7 +36,7 @@ public class PingouinModel<T extends PingouinEntity> extends EntityModel<T> {
         this.wingRight = root.getChild("wing_right");
         this.head = root.getChild("head");
         this.beak = root.getChild("beak");
-        this.tail = root.getChild("tail");
+        this.tail = body.getChild("tail");
         this.crest = root.getChild("crest");
     }
 
@@ -45,12 +45,16 @@ public class PingouinModel<T extends PingouinEntity> extends EntityModel<T> {
         PartDefinition root = mesh.getRoot();
         root.addOrReplaceChild("foot_left", CubeListBuilder.create().texOffs(0, 12).addBox(-2.0F, 0.0F, -3.0F, 2.0F, 1.0F, 4.0F), PartPose.offsetAndRotation(0.0F, 23.0F, 0.0F, 0.0F, 0.3490659F, 0.0F));
         root.addOrReplaceChild("foot_right", CubeListBuilder.create().texOffs(0, 12).addBox(0.0F, 0.0F, -3.0F, 2.0F, 1.0F, 4.0F), PartPose.offsetAndRotation(0.0F, 23.0F, 0.0F, 0.0F, -0.3490659F, 0.0F));
-        root.addOrReplaceChild("body", CubeListBuilder.create().texOffs(24, 19).addBox(-2.0F, 0.0F, -1.0F, 4.0F, 9.0F, 4.0F), PartPose.offset(0.0F, 14.0F, 0.0F));
+        PartDefinition body = root.addOrReplaceChild("body",
+            CubeListBuilder.create().texOffs(24, 19).addBox(-2.0F, 0.0F, -1.0F, 4.0F, 9.0F, 4.0F),
+            PartPose.offset(0.0F, 14.0F, 0.0F));
+        body.addOrReplaceChild("tail",
+            CubeListBuilder.create().texOffs(10, 0).addBox(-2.0F, 0.0F, 0.0F, 4.0F, 3.0F, 0.0F),
+            PartPose.offsetAndRotation(0.0F, 7.0F, 3.0F, 0.1487144F, 0.0F, 0.0F));
         root.addOrReplaceChild("wing_left", CubeListBuilder.create().texOffs(0, 0).addBox(-1.0F, 0.0F, -2.0F, 1.0F, 7.0F, 4.0F), PartPose.offsetAndRotation(-2.0F, 14.0F, 1.0F, 0.0F, 0.0F, 0.2230717F));
         root.addOrReplaceChild("wing_right", CubeListBuilder.create().texOffs(24, 0).addBox(0.0F, 0.0F, -2.0F, 1.0F, 7.0F, 4.0F), PartPose.offsetAndRotation(2.0F, 14.0F, 1.0F, 0.0F, 0.0F, -0.2230717F));
         root.addOrReplaceChild("head", CubeListBuilder.create().texOffs(0, 20).addBox(-3.0F, -6.0F, -3.0F, 6.0F, 6.0F, 6.0F), PartPose.offset(0.0F, 14.0F, 1.0F));
         root.addOrReplaceChild("beak", CubeListBuilder.create().texOffs(0, 17).addBox(-1.0F, -2.0F, -5.0F, 2.0F, 1.0F, 2.0F), PartPose.offset(0.0F, 14.0F, 1.0F));
-        root.addOrReplaceChild("tail", CubeListBuilder.create().texOffs(10, 0).addBox(-2.0F, 0.0F, 0.0F, 4.0F, 3.0F, 0.0F), PartPose.offsetAndRotation(0.0F, 21.0F, 3.0F, 0.1487144F, 0.0F, 0.0F));
         root.addOrReplaceChild("crest", CubeListBuilder.create().texOffs(12, 9).addBox(-2.5F, 0.0F, 0.0F, 5.0F, 10.0F, 1.0F), PartPose.offsetAndRotation(0.0F, 14.0F, 3.0F, 0.2230717F, 0.0F, 0.0F));
         return LayerDefinition.create(mesh, 64, 32);
     }
@@ -87,9 +91,9 @@ public class PingouinModel<T extends PingouinEntity> extends EntityModel<T> {
 
         float idleFlap = (Mth.sin(ageInTicks * 0.12F) + 1.0F) * 0.045F;
         crest.xRot = 0.2230717F + Mth.sin(ageInTicks * 0.12F) * 0.08F + bounce * 0.08F;
-        tail.y = 21.0F - bounce;
-        tail.xRot = 0.1487144F + bounce * 0.08F;
-        tail.yRot = -waddle * 1.4F;
+        tail.xRot = 0.1487144F;
+        tail.yRot = 0.0F;
+        tail.zRot = 0.0F;
         wingLeft.y = 14.0F - bounce;
         wingRight.y = 14.0F - bounce;
         if (entity.onGround()) {
@@ -117,7 +121,6 @@ public class PingouinModel<T extends PingouinEntity> extends EntityModel<T> {
         wingRight.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
         head.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
         beak.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
-        tail.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
         crest.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
     }
 }

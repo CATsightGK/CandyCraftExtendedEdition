@@ -154,6 +154,8 @@ public final class CCItems {
     public static final RegistryObject<Item> STRAWBERRY_QUEEN_JELLY_BALL = registerPortItem("strawberry_queen_jelly_ball");
     public static final RegistryObject<Item> LEMON_JELLY_SLICE = registerPortItem("lemon_jelly_slice", () ->
         new PlaceableJellyFoodItem(CCBlocks.LEMON_JELLY_FOOD.get(), foodProperties(7, 0.4F)));
+    public static final RegistryObject<Item> RASPBERRY_JELLY_SLICE = registerPortItem("raspberry_jelly_slice", () ->
+        new PlaceableJellyFoodItem(CCBlocks.RASPBERRY_JELLY_FOOD.get(), foodProperties(7, 0.4F)));
     public static final RegistryObject<Item> MINT_JELLY_SLICE = registerPortItem("mint_jelly_slice", () ->
         new PlaceableJellyFoodItem(CCBlocks.MINT_JELLY_FOOD.get(), foodProperties(7, 0.4F)));
     public static final RegistryObject<Item> CARAMEL_JELLY = registerPortItem("caramel_jelly", () ->
@@ -276,8 +278,18 @@ public final class CCItems {
     public static final RegistryObject<Item> WHITE_HARD_CANDY = registerSweetscapeFood("white_hard_candy", 2, 0.6F);
     public static final RegistryObject<Item> RED_HARD_CANDY = registerSweetscapeFood("red_hard_candy", 2, 0.6F);
     public static final RegistryObject<Item> GREEN_HARD_CANDY = registerSweetscapeFood("green_hard_candy", 2, 0.6F);
+    public static final RegistryObject<Item> YELLOW_HARD_CANDY = registerSweetscapeFood("yellow_hard_candy", 2, 0.6F);
+    public static final RegistryObject<Item> ORANGE_HARD_CANDY = registerSweetscapeFood("orange_hard_candy", 2, 0.6F);
+    public static final RegistryObject<Item> LIGHT_BLUE_HARD_CANDY = registerSweetscapeFood("light_blue_hard_candy", 2, 0.6F);
+    public static final RegistryObject<Item> PINK_HARD_CANDY = registerSweetscapeFood("pink_hard_candy", 2, 0.6F);
+    public static final RegistryObject<Item> PURPLE_HARD_CANDY = registerSweetscapeFood("purple_hard_candy", 2, 0.6F);
     public static final RegistryObject<Item> WHITE_RED_HARD_CANDY = registerSweetscapeFood("white_red_hard_candy", 2, 0.6F);
     public static final RegistryObject<Item> WHITE_GREEN_HARD_CANDY = registerSweetscapeFood("white_green_hard_candy", 2, 0.6F);
+    public static final RegistryObject<Item> WHITE_YELLOW_HARD_CANDY = registerSweetscapeFood("white_yellow_hard_candy", 2, 0.6F);
+    public static final RegistryObject<Item> WHITE_ORANGE_HARD_CANDY = registerSweetscapeFood("white_orange_hard_candy", 2, 0.6F);
+    public static final RegistryObject<Item> WHITE_LIGHT_BLUE_HARD_CANDY = registerSweetscapeFood("white_light_blue_hard_candy", 2, 0.6F);
+    public static final RegistryObject<Item> WHITE_PINK_HARD_CANDY = registerSweetscapeFood("white_pink_hard_candy", 2, 0.6F);
+    public static final RegistryObject<Item> WHITE_PURPLE_HARD_CANDY = registerSweetscapeFood("white_purple_hard_candy", 2, 0.6F);
     public static final RegistryObject<Item> RED_GREEN_HARD_CANDY = registerSweetscapeFood("red_green_hard_candy", 2, 0.6F);
     public static final RegistryObject<Item> MILK_BROWNIE = registerSweetscapeFood("milk_brownie", 4, 0.5F);
     public static final RegistryObject<Item> WHITE_BROWNIE = registerSweetscapeFood("white_brownie", 4, 0.5F);

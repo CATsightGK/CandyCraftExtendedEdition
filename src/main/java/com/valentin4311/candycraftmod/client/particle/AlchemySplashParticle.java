@@ -15,6 +15,7 @@ public class AlchemySplashParticle extends TextureSheetParticle {
     private final AlchemyLiquidKind liquidKind;
     private final boolean translucent;
     private final SpriteSet sprites;
+    private final float baseAlpha;
 
     protected AlchemySplashParticle(ClientLevel level, double x, double y, double z,
             double xSpeed, double ySpeed, double zSpeed, SpriteSet sprites) {
@@ -28,13 +29,14 @@ public class AlchemySplashParticle extends TextureSheetParticle {
         this.lifetime = 7 + level.random.nextInt(5);
         // Match the vanilla underwater suspended particle's texture and size,
         // while retaining gravity so this still behaves as a liquid splash.
-        this.quadSize = 0.1F * (level.random.nextFloat() * 0.6F + 0.2F);
+        this.quadSize = 0.12F * (level.random.nextFloat() * 0.6F + 0.25F);
         this.liquidKind = kindAt(level, BlockPos.containing(x, y, z));
         this.translucent = isTranslucent(liquidKind);
         this.setSprite(sprites.get(level.random));
         float[] color = color(liquidKind);
         this.setColor(color[0], color[1], color[2]);
-        this.setAlpha(translucent ? 0.72F : 1.0F);
+        this.baseAlpha = translucent ? 0.72F : 1.0F;
+        this.setAlpha(this.baseAlpha);
     }
 
     @Override
@@ -42,6 +44,11 @@ public class AlchemySplashParticle extends TextureSheetParticle {
         super.tick();
         if (!removed) {
             this.setSpriteFromAge(this.sprites);
+            // Fade out over the last 40% of the lifetime so droplets dissolve
+            // instead of popping out of existence.
+            float fade = 1.0F - Math.max(0.0F,
+                (this.age - this.lifetime * 0.6F) / (this.lifetime * 0.4F));
+            this.setAlpha(this.baseAlpha * fade);
         }
         if (this.onGround) {
             this.remove();
@@ -72,16 +79,23 @@ public class AlchemySplashParticle extends TextureSheetParticle {
     }
 
     private static float[] color(AlchemyLiquidKind kind) {
-        return switch (kind) {
-            case GRENADINE -> new float[] {1.0F, 0.13F, 0.26F};
+        float[] base = switch (kind) {
+            // Base tints are sampled from each liquid's still texture so the
+            // splash reads as the same liquid, just a touch lighter.
+            case GRENADINE -> new float[] {0.95F, 0.16F, 0.15F};
             case WATER -> new float[] {0.25F, 0.55F, 1.0F};
             case MILK -> new float[] {0.95F, 0.95F, 0.88F};
             case CHOCOLATE -> new float[] {0.45F, 0.20F, 0.08F};
-            case LIQUID_CANDY -> new float[] {1.0F, 0.32F, 0.66F};
+            case LIQUID_CANDY -> new float[] {0.90F, 0.40F, 0.77F};
             case LAVA -> new float[] {1.0F, 0.32F, 0.02F};
             case CARAMEL -> new float[] {0.92F, 0.46F, 0.10F};
             case NONE -> new float[] {1.0F, 1.0F, 1.0F};
         };
+        // Splash droplets read better a bit lighter than the liquid surface.
+        for (int i = 0; i < 3; i++) {
+            base[i] += (1.0F - base[i]) * 0.35F;
+        }
+        return base;
     }
 
     public static class Provider implements ParticleProvider<SimpleParticleType> {

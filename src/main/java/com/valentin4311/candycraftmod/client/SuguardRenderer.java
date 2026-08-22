@@ -4,9 +4,11 @@ import com.valentin4311.candycraftmod.CandyCraft;
 import com.valentin4311.candycraftmod.client.model.SuguardModel;
 import com.valentin4311.candycraftmod.entity.BasicCandyZombieEntity;
 import com.valentin4311.candycraftmod.client.layer.SuguardHeldItemLayer;
+import com.valentin4311.candycraftmod.client.layer.SuguardGemGlowLayer;
 import com.valentin4311.candycraftmod.registry.CCEntityTypes;
 import com.valentin4311.candycraftmod.registry.CCItems;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Axis;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.MobRenderer;
@@ -24,13 +26,35 @@ public class SuguardRenderer extends MobRenderer<BasicCandyZombieEntity, Suguard
 
     public SuguardRenderer(EntityRendererProvider.Context context) {
         super(context, new SuguardModel<>(context.bakeLayer(SuguardModel.LAYER)), 0.5F);
+        addLayer(new SuguardGemGlowLayer(this));
         addLayer(new SuguardHeldItemLayer(this, context.getItemInHandRenderer()));
     }
 
     @Override
     public void render(BasicCandyZombieEntity entity, float entityYaw, float partialTicks, PoseStack poseStack, MultiBufferSource buffer, int packedLight) {
         shadowRadius = entity.getType() == CCEntityTypes.BOSS_SUGUARD.get() ? 0.55F : 0.26F;
+        float ageInTicks = entity.tickCount + partialTicks;
+        float idleBlend = SuguardModel.getIdleHurtBlend(entity, partialTicks);
+        float jump = canRenderDance(entity, partialTicks)
+            ? SuguardModel.getDanceJump(entity, ageInTicks) * idleBlend
+            : 0.0F;
+        if (jump > 0.0F) {
+            poseStack.pushPose();
+            poseStack.translate(0.0F, jump * 0.34F, 0.0F);
+            poseStack.mulPose(Axis.YP.rotationDegrees(SuguardModel.getDanceSpinDegrees(entity, ageInTicks) * idleBlend));
+        }
         super.render(entity, entityYaw, partialTicks, poseStack, buffer, packedLight);
+        if (jump > 0.0F) {
+            poseStack.popPose();
+        }
+    }
+
+    private static boolean canRenderDance(BasicCandyZombieEntity entity, float partialTicks) {
+        return SuguardModel.hasDanceIdle(entity)
+            && !entity.isPassenger()
+            && entity.getDeltaMovement().horizontalDistanceSqr() < 0.001D
+            && entity.getAttackAnim(partialTicks) <= 0.0F
+            && entity.getBossBowDrawTicks() <= 0;
     }
 
     @Override

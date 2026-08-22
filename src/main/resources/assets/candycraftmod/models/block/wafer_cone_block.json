@@ -1,0 +1,6 @@
+{
+  "parent": "block/cube_all",
+  "textures": {
+    "all": "candycraftmod:block/wafer_cone_block"
+  }
+}

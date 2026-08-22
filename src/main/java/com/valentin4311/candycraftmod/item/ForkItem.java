@@ -1,5 +1,6 @@
 package com.valentin4311.candycraftmod.item;
 
+import com.valentin4311.candycraftmod.block.DungeonTeleporterBlock;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
 import com.valentin4311.candycraftmod.CandyCraft;
@@ -8,7 +9,9 @@ import com.valentin4311.candycraftmod.entity.ThrownForkEntity;
 import com.valentin4311.candycraftmod.inventory.tooltip.ForkHeldBlockTooltip;
 import com.valentin4311.candycraftmod.registry.CCBlocks;
 import com.valentin4311.candycraftmod.registry.CCCriteriaTriggers;
+import com.valentin4311.candycraftmod.registry.CCEnchantments;
 import com.valentin4311.candycraftmod.registry.CCToolProperties;
+import com.valentin4311.candycraftmod.world.CCDimensions;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.BlockParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
@@ -36,6 +39,8 @@ import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.Container;
+import net.minecraft.world.Containers;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.Tier;
@@ -43,17 +48,20 @@ import net.minecraft.world.item.TieredItem;
 import net.minecraft.world.item.UseAnim;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.DoorBlock;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.client.extensions.common.IClientItemExtensions;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
 
 import java.util.function.Consumer;
 import java.util.Optional;
@@ -126,7 +134,10 @@ public class ForkItem extends TieredItem {
         }
         Level level = player.level();
         BlockState state = level.getBlockState(pos);
-        if (!canForkEat(state)) {
+        if (isForkProtected(level, pos, state)) {
+            return true;
+        }
+        if (!canForkEat(stack, state)) {
             return false;
         }
         if (hasHeldBlock(stack) || player.getCooldowns().isOnCooldown(this)) {
@@ -257,6 +268,15 @@ public class ForkItem extends TieredItem {
 
     @Override
     public boolean canApplyAtEnchantingTable(ItemStack stack, Enchantment enchantment) {
+        if (enchantment == CCEnchantments.HONEY_SOURCE.get()) {
+            return true;
+        }
+        if (enchantment == CCEnchantments.DEVOURING.get()) {
+            return true;
+        }
+        if (enchantment == CCEnchantments.GLUTTONY.get()) {
+            return false;
+        }
         Boolean configured = CCToolProperties.configuredEnchantmentRule(stack, enchantment);
         return configured != null ? configured
             : enchantment == Enchantments.UNBREAKING || enchantment == Enchantments.MENDING;
@@ -327,7 +347,8 @@ public class ForkItem extends TieredItem {
                 || hasHeldBlock(stack)
                 || !player.mayBuild()
                 || player.getCooldowns().isOnCooldown(stack.getItem())
-                || !canForkEat(state)) {
+                || !canForkEat(stack, state)
+                || isForkProtected(level, pos, state)) {
             return false;
         }
         if (!level.isClientSide) {
@@ -344,12 +365,19 @@ public class ForkItem extends TieredItem {
                 || hasHeldBlock(stack)
                 || !player.mayBuild()
                 || player.getCooldowns().isOnCooldown(stack.getItem())
-                || !canForkEat(state)) {
+                || !canForkEat(stack, state)
+                || isForkProtected(level, pos, state)) {
             return false;
         }
         stack.getOrCreateTag().putLong(PENDING_BLOCK_TAG, pos.asLong());
         player.startUsingItem(hand);
         return true;
+    }
+
+    private static boolean isForkProtected(Level level, BlockPos pos, BlockState state) {
+        return CCDimensions.isDungeon(level)
+            || DungeonTeleporterBlock.isProtectedSupport(level, pos)
+            || state.getDestroySpeed(level, pos) < 0.0F;
     }
 
     private static void eatOneBite(ItemStack stack, Player player, InteractionHand hand) {
@@ -389,6 +417,10 @@ public class ForkItem extends TieredItem {
         if (player.level() instanceof ServerLevel) {
             spawnHeldBlockParticles(stack, player, hand, 18);
             player.getFoodData().eat(1, 0.0F);
+            int devouringLevel = EnchantmentHelper.getItemEnchantmentLevel(CCEnchantments.DEVOURING.get(), stack);
+            if (devouringLevel > 0) {
+                player.heal(2.0F + Math.min(3, devouringLevel));
+            }
             if (player instanceof ServerPlayer serverPlayer) {
                 CCCriteriaTriggers.EAT_BLOCK.trigger(serverPlayer);
             }
@@ -432,10 +464,26 @@ public class ForkItem extends TieredItem {
         );
     }
 
-    private static boolean canForkEat(BlockState state) {
-        return state.is(FORK_EDIBLE)
-            && !state.is(CCBlocks.JAW_BREAKER_BLOCK.get())
-            && !state.is(CCBlocks.JAW_BREAKER_LIGHT.get());
+    private static boolean canForkEat(ItemStack stack, BlockState state) {
+        if (state.isAir()) {
+            return false;
+        }
+        if (EnchantmentHelper.getItemEnchantmentLevel(CCEnchantments.GLUTTONY.get(), stack) > 0) {
+            return true;
+        }
+        if (state.is(CCBlocks.JAW_BREAKER_BLOCK.get()) || state.is(CCBlocks.JAW_BREAKER_LIGHT.get())) {
+            return false;
+        }
+        // Every candycraftmod block is edible by default so newly registered
+        // blocks work without touching the tag. Unbreakable blocks (bedrock
+        // hardness, portals, dungeon locks) are rejected by isForkProtected.
+        ResourceLocation blockId = BuiltInRegistries.BLOCK.getKey(state.getBlock());
+        if (blockId != null && CandyCraft.MODID.equals(blockId.getNamespace())) {
+            return true;
+        }
+        // The data tag remains the opt-in mechanism for other namespaces
+        // (vanilla honey block, cake, mushroom blocks, ...).
+        return state.is(FORK_EDIBLE);
     }
 
     private static void pickUpBlock(ItemStack stack, Level level, BlockPos pos, Player player, BlockState state) {
@@ -450,6 +498,7 @@ public class ForkItem extends TieredItem {
     }
 
     private static void removeForkedBlock(ServerLevel level, BlockPos pos, Player player, BlockState state) {
+        dropBlockEntityContents(level, pos);
         if (state.getBlock() instanceof DoorBlock) {
             BlockPos lowerPos = state.getValue(DoorBlock.HALF) == DoubleBlockHalf.LOWER ? pos : pos.below();
             BlockPos upperPos = lowerPos.above();
@@ -464,6 +513,33 @@ public class ForkItem extends TieredItem {
 
         emitForkBreak(level, pos, player, state);
         level.removeBlock(pos, false);
+    }
+
+    private static void dropBlockEntityContents(ServerLevel level, BlockPos pos) {
+        BlockEntity blockEntity = level.getBlockEntity(pos);
+        if (blockEntity == null) {
+            return;
+        }
+
+        if (blockEntity instanceof Container container) {
+            for (int slot = 0; slot < container.getContainerSize(); slot++) {
+                ItemStack removed = container.removeItemNoUpdate(slot);
+                if (!removed.isEmpty()) {
+                    Containers.dropItemStack(level, pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D, removed);
+                }
+            }
+            container.setChanged();
+            return;
+        }
+
+        blockEntity.getCapability(ForgeCapabilities.ITEM_HANDLER).ifPresent(handler -> {
+            for (int slot = 0; slot < handler.getSlots(); slot++) {
+                ItemStack removed = handler.extractItem(slot, Integer.MAX_VALUE, false);
+                if (!removed.isEmpty()) {
+                    Containers.dropItemStack(level, pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D, removed);
+                }
+            }
+        });
     }
 
     private static void emitForkBreak(ServerLevel level, BlockPos pos, Player player, BlockState state) {

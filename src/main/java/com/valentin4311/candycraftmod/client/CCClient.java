@@ -1,6 +1,7 @@
 package com.valentin4311.candycraftmod.client;
 
 import com.valentin4311.candycraftmod.CandyCraft;
+import com.mojang.logging.LogUtils;
 import com.valentin4311.candycraftmod.block.DungeonTeleporterBlock;
 import com.valentin4311.candycraftmod.block.PuddingBlock;
 import com.valentin4311.candycraftmod.client.particle.ChocolateSplashParticle;
@@ -13,6 +14,7 @@ import com.valentin4311.candycraftmod.client.model.BeeModel;
 import com.valentin4311.candycraftmod.client.model.BeetleModel;
 import com.valentin4311.candycraftmod.client.model.DragonModel;
 import com.valentin4311.candycraftmod.client.model.GummyBunnyModel;
+import com.valentin4311.candycraftmod.client.model.GummyBunnyOuterModel;
 import com.valentin4311.candycraftmod.client.model.GummyBearModel;
 import com.valentin4311.candycraftmod.client.model.GummyMouseModel;
 import com.valentin4311.candycraftmod.client.model.GummyMouseOuterModel;
@@ -33,6 +35,7 @@ import com.valentin4311.candycraftmod.registry.CCBlocks;
 import com.valentin4311.candycraftmod.item.CaramelCrossbowItem;
 import com.valentin4311.candycraftmod.item.DynamiteItem;
 import com.valentin4311.candycraftmod.item.JellyWandItem;
+import com.valentin4311.candycraftmod.item.JellyDungeonKeyItem;
 import com.valentin4311.candycraftmod.item.JumpWandItem;
 import com.valentin4311.candycraftmod.item.RawGummyItem;
 import com.valentin4311.candycraftmod.item.SugarPillItem;
@@ -46,6 +49,7 @@ import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Camera;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.particle.FlameParticle;
 import net.minecraft.client.renderer.DimensionSpecialEffects;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.GenericDirtMessageScreen;
@@ -58,6 +62,8 @@ import net.minecraft.client.color.item.ItemColors;
 import net.minecraft.client.renderer.BiomeColors;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.entity.player.PlayerRenderer;
+import net.minecraft.client.renderer.entity.SlimeRenderer;
+import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.client.renderer.item.ItemProperties;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.RenderType;
@@ -86,11 +92,15 @@ import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
+import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
+import org.slf4j.Logger;
 
 @Mod.EventBusSubscriber(modid = CandyCraft.MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public final class CCClient {
+    private static final Logger LOGGER = LogUtils.getLogger();
     private static final ResourceLocation SUGAR_FACTORY_GUI = new ResourceLocation(CandyCraft.MODID, "textures/gui/gui_sugar.png");
     private static final ResourceLocation PUDDING_LOADING_TOP = new ResourceLocation(CandyCraft.MODID, "textures/block/pudding_side.png");
     private static final ResourceLocation FLOUR_LOADING_BACKGROUND = new ResourceLocation(CandyCraft.MODID, "textures/block/flour.png");
@@ -98,9 +108,10 @@ public final class CCClient {
     private static final ResourceLocation JAWBREAKER_RUNE_BACKGROUND = new ResourceLocation(CandyCraft.MODID, "textures/block/jaw_breaker_light.png");
     private static final ResourceLocation VANILLA_PORTAL_OVERLAY = new ResourceLocation("textures/misc/nausea.png");
     private static final ResourceLocation CANDY_WORLD_EFFECTS = new ResourceLocation(CandyCraft.MODID, "candy_world_effects");
+    private static final ResourceLocation DUNGEON_EFFECTS = new ResourceLocation(CandyCraft.MODID, "candy_dungeon_effects");
     private static final int CANDY_WORLD_FOG_FALLBACK = 0xEEAABB;
     private static final int CANDY_WORLD_SKY_FALLBACK = 0xFDD8D7;
-    private static final int CANDY_WORLD_CLIENT_CHUNK_RADIUS = 6;
+    private static final float CANDY_WORLD_MIN_DAY_FACTOR = 0.3957580F;
     private static int portalOverlayTicks;
     private static boolean dungeonLoadingActive;
     private static boolean dungeonLoadingSuguard;
@@ -153,8 +164,11 @@ public final class CCClient {
             sprites -> new JellyFragmentParticle.Provider(sprites, 0.72F, 0.77F, 0.84F));
         event.registerSpriteSet(CCParticleTypes.LEMON_JELLY_FRAGMENT.get(),
             sprites -> new JellyFragmentParticle.Provider(sprites, 0.85F, 0.86F, 0.40F));
+        event.registerSpriteSet(CCParticleTypes.RASPBERRY_JELLY_FRAGMENT.get(),
+            sprites -> new JellyFragmentParticle.Provider(sprites, 0.92F, 0.37F, 0.30F));
         event.registerSpriteSet(CCParticleTypes.MINT_JELLY_FRAGMENT.get(),
             sprites -> new JellyFragmentParticle.Provider(sprites, 0.54F, 0.90F, 0.80F));
+        event.registerSpriteSet(CCParticleTypes.LIQUID_CANDY_FLAME.get(), FlameParticle.Provider::new);
     }
 
     @SubscribeEvent
@@ -168,17 +182,18 @@ public final class CCClient {
     @SubscribeEvent
     public static void registerAdditionalModels(ModelEvent.RegisterAdditional event) {
         event.register(AlchemyTableRenderer.MIX_MODEL);
+        event.register(AlchemyTableRenderer.STRIPS_MODEL);
         event.register(ForkItemRenderer.INVENTORY_MODEL);
     }
 
     @SubscribeEvent
     public static void registerDimensionSpecialEffects(RegisterDimensionSpecialEffectsEvent event) {
         event.register(CANDY_WORLD_EFFECTS, new CandyWorldEffects());
+        event.register(DUNGEON_EFFECTS, new DungeonEffects());
     }
 
     @SubscribeEvent
     public static void registerGuiOverlays(RegisterGuiOverlaysEvent event) {
-        event.registerAboveAll("dragon_mount_power", CCClient::renderDragonMountPowerOverlay);
         event.registerAboveAll("jelly_wand_charge", CCClient::renderJellyWandChargeOverlay);
         event.registerAboveAll("candy_portal_view", CCClient::renderCandyPortalOverlay);
     }
@@ -204,39 +219,6 @@ public final class CCClient {
         RenderSystem.disableBlend();
         RenderSystem.depthMask(true);
         RenderSystem.enableDepthTest();
-    }
-
-    private static void renderDragonMountPowerOverlay(net.minecraftforge.client.gui.overlay.ForgeGui gui, GuiGraphics graphics,
-            float partialTick, int screenWidth, int screenHeight) {
-        Minecraft minecraft = gui.getMinecraft();
-        if (minecraft.player == null || minecraft.options.hideGui || minecraft.player.isSpectator()) {
-            return;
-        }
-        if (!(minecraft.player.getVehicle() instanceof BasicCandyZombieEntity mount) || mount.getType() != CCEntityTypes.DRAGON.get()) {
-            return;
-        }
-
-        int max = Math.max(1, mount.getMountMaxPower());
-        float progress = Mth.clamp(mount.getMountPower() / (float)max, 0.0F, 1.0F);
-        int width = 48;
-        int height = 7;
-        int x = screenWidth - width - 10;
-        int y = 10;
-        int fill = Math.round((width - 4) * progress);
-        int fillColor = mount.isDragonFalling() ? 0xFFD84A5B : 0xFF5AA8FF;
-
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
-        graphics.fill(x, y, x + width, y + height, 0xAA1A1830);
-        graphics.fill(x + 2, y + 2, x + 2 + fill, y + height - 2, fillColor);
-        graphics.fill(x + 2, y + 2, x + 2 + fill, y + 3, 0x88FFFFFF);
-        graphics.fill(x, y, x + width, y + 1, 0xCCBBDDFF);
-        graphics.fill(x, y + height - 1, x + width, y + height, 0xCC30406D);
-        graphics.fill(x, y, x + 1, y + height, 0xCCBBDDFF);
-        graphics.fill(x + width - 1, y, x + width, y + height, 0xCC30406D);
-        Component label = Component.translatable("overlay.candycraftmod.mount.energy");
-        graphics.drawString(minecraft.font, label, x + width / 2 - minecraft.font.width(label) / 2, y + 10, 0xFFFFFF, true);
-        RenderSystem.disableBlend();
     }
 
     private static void renderJellyWandChargeOverlay(net.minecraftforge.client.gui.overlay.ForgeGui gui, GuiGraphics graphics,
@@ -529,7 +511,7 @@ public final class CCClient {
     private static int legacyCandyGrassColor(String biomePath, double x, double z) {
         return switch (biomePath) {
             case "sugar_enchanted_forest" -> enchantedColor(x, z);
-            case "sugar_plains", "sugar_forest" -> 0xEEAABB;
+            case "sugar_plains", "hard_candy_plains", "sugar_forest" -> 0xEEAABB;
             case "sugar_mountains" -> 0xEEBBCC;
             case "sugar_cold_forest" -> 0xFFDDEE;
             case "ice_cream_plains", "ice_cream_sky_mountains", "sugar_hell_mountains" -> 0xFFFFFF;
@@ -544,7 +526,8 @@ public final class CCClient {
     }
 
     private static int enchantedColor(double x, double z) {
-        double noise = Biome.BIOME_INFO_NOISE.getValue(x * 0.0225D, z * 0.0225D, false);
+        // Using custom noise as a replacement for deprecated Biome.BIOME_INFO_NOISE
+        double noise = smoothNoise2D(x * 0.0225D, z * 0.0225D, 0x53494E4B5F435259L);
         if (noise < -0.5D) {
             double blend = smoothstep(-0.85D, -0.5D, noise);
             return lerpColor(0xB0ECFF, 0xB0D8FF, blend);
@@ -555,6 +538,40 @@ public final class CCClient {
         }
         double blend = smoothstep(-0.1D, 0.45D, noise);
         return lerpColor(0xB0B0FF, 0xA376DA, blend);
+    }
+
+    private static double smoothNoise2D(double x, double z, long salt) {
+        int x0 = (int)Math.floor(x);
+        int z0 = (int)Math.floor(z);
+        double tx = fade(x - x0);
+        double tz = fade(z - z0);
+        double a = randomUnit2D(x0, 0, z0, salt);
+        double b = randomUnit2D(x0 + 1, 0, z0, salt);
+        double c = randomUnit2D(x0, 0, z0 + 1, salt);
+        double d = randomUnit2D(x0 + 1, 0, z0 + 1, salt);
+        return Mth.lerp(tz, Mth.lerp(tx, a, b), Mth.lerp(tx, c, d));
+    }
+
+    private static double fade(double value) {
+        return value * value * value * (value * (value * 6.0D - 15.0D) + 10.0D);
+    }
+
+    private static double randomUnit2D(int x, int y, int z, long salt) {
+        long bits = hash2D(x, y, z, salt);
+        return ((bits >>> 11) * 0x1.0p-53D) * 2.0D - 1.0D;
+    }
+
+    private static long hash2D(int x, int y, int z, long salt) {
+        long h = salt;
+        h ^= x * 0x9E3779B97F4A7C15L;
+        h = Long.rotateLeft(h, 27) * 0x94D049BB133111EBL;
+        h ^= y * 0xC2B2AE3D27D4EB4FL;
+        h ^= h >>> 33;
+        h *= 0xff51afd7ed558ccdL;
+        h ^= h >>> 33;
+        h *= 0xc4ceb9fe1a85ec53L;
+        h ^= h >>> 33;
+        return h;
     }
 
     private static double smoothstep(double edge0, double edge1, double value) {
@@ -691,11 +708,39 @@ public final class CCClient {
     }
 
     @SubscribeEvent
-    public static void addPlayerRenderLayers(EntityRenderersEvent.AddLayers event) {
+    public static void addLivingRenderLayers(EntityRenderersEvent.AddLayers event) {
+        int attached = 0;
+        for (EntityType<?> entityType : ForgeRegistries.ENTITY_TYPES.getValues()) {
+            if (addPropolisLayer(event, entityType)) {
+                attached++;
+            }
+        }
         for (String skin : event.getSkins()) {
             PlayerRenderer renderer = event.getSkin(skin);
             renderer.addLayer(new CandyProjectileStuckLayer(event.getContext().getEntityRenderDispatcher(), renderer));
+            renderer.addLayer(new PropolisEntityOverlayLayer<>(renderer));
+            attached++;
         }
+        LOGGER.info("Attached CandyCraft propolis overlays to {} living entity renderers", attached);
+    }
+
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    private static boolean addPropolisLayer(EntityRenderersEvent.AddLayers event, EntityType<?> entityType) {
+        try {
+            LivingEntityRenderer renderer = event.getRenderer((EntityType)entityType);
+            if (renderer != null) {
+                if (renderer instanceof SlimeRenderer slimeRenderer) {
+                    slimeRenderer.addLayer(new PropolisSlimeGlintLayer(
+                        slimeRenderer, event.getContext().getModelSet()));
+                } else {
+                    renderer.addLayer(new PropolisEntityOverlayLayer<>(renderer));
+                }
+                return true;
+            }
+        } catch (ClassCastException ignored) {
+            // The registry includes projectiles and other entity types without living renderers.
+        }
+        return false;
     }
 
     @SubscribeEvent
@@ -703,6 +748,7 @@ public final class CCClient {
         event.registerLayerDefinition(CandyFishModel.LAYER, CandyFishModel::createBodyLayer);
         event.registerLayerDefinition(PingouinModel.LAYER, PingouinModel::createBodyLayer);
         event.registerLayerDefinition(GummyBunnyModel.LAYER, GummyBunnyModel::createBodyLayer);
+        event.registerLayerDefinition(GummyBunnyOuterModel.LAYER, GummyBunnyOuterModel::createBodyLayer);
         event.registerLayerDefinition(GummyMouseModel.LAYER, GummyMouseModel::createBodyLayer);
         event.registerLayerDefinition(GummyMouseOuterModel.LAYER, GummyMouseOuterModel::createBodyLayer);
         event.registerLayerDefinition(GummyBearModel.LAYER, GummyBearModel::createBodyLayer);
@@ -786,12 +832,7 @@ public final class CCClient {
                 portalOverlayTicks = 0;
                 dungeonLoadingActive = false;
                 dungeonLoadingTimeoutTicks = 0;
-                if (candyWorldLoadingActive && --candyWorldLoadingTimeoutTicks <= 0) {
-                    candyWorldLoadingActive = false;
-                    candyWorldLoadingTimeoutTicks = 0;
-                    candyWorldLoadingGraceTicks = 0;
-                    candyWorldLoadingExit = false;
-                }
+                clearCandyWorldLoadingState(false);
                 return;
             }
             tickDungeonLoadingScreen(minecraft);
@@ -804,11 +845,26 @@ public final class CCClient {
             if (event.getLevel().isClientSide() && event.getLevel().getBlockState(event.getPos()).is(CCBlocks.BLOCK_TELEPORTER.get())) {
                 net.minecraft.world.level.block.state.BlockState portal = event.getLevel().getBlockState(event.getPos());
                 if (portal.getValue(DungeonTeleporterBlock.ROLE) == DungeonTeleporterBlock.PortalRole.ENTRY) {
-                    dungeonLoadingSuguard = portal.getValue(DungeonTeleporterBlock.DUNGEON)
-                        == DungeonTeleporterBlock.DungeonKind.SUGUARD;
+                    DungeonTeleporterBlock.DungeonKind kind = portal.getValue(DungeonTeleporterBlock.DUNGEON);
+                    if (hasMatchingDungeonKey(event.getEntity(), kind)) {
+                        clearDungeonLoadingScreen();
+                        return;
+                    }
+                    dungeonLoadingSuguard = kind == DungeonTeleporterBlock.DungeonKind.SUGUARD;
                     beginDungeonLoadingScreen();
                 }
             }
+        }
+
+        private static boolean hasMatchingDungeonKey(net.minecraft.world.entity.player.Player player,
+                DungeonTeleporterBlock.DungeonKind kind) {
+            for (net.minecraft.world.InteractionHand hand : net.minecraft.world.InteractionHand.values()) {
+                net.minecraft.world.item.ItemStack stack = player.getItemInHand(hand);
+                if (stack.getItem() instanceof JellyDungeonKeyItem key && key.matchesDungeon(kind)) {
+                    return true;
+                }
+            }
+            return false;
         }
 
         @SubscribeEvent
@@ -891,6 +947,15 @@ public final class CCClient {
             }
         }
 
+        private static void clearDungeonLoadingScreen() {
+            Minecraft minecraft = Minecraft.getInstance();
+            dungeonLoadingActive = false;
+            dungeonLoadingTimeoutTicks = 0;
+            if (minecraft.screen instanceof GenericDirtMessageScreen) {
+                minecraft.setScreen(null);
+            }
+        }
+
         private static void tickDungeonLoadingScreen(Minecraft minecraft) {
             if (!dungeonLoadingActive) {
                 return;
@@ -922,12 +987,8 @@ public final class CCClient {
                 candyWorldLoadingExit |= inCandyWorld;
             }
             candyWorldLoadingActive = true;
-            candyWorldLoadingTimeoutTicks = 20 * 120;
-            candyWorldLoadingGraceTicks = inCandyWorld ? 20 * 3 : 20 * 20;
-            if (minecraft.player != null && inCandyWorld
-                && !(minecraft.screen instanceof ReceivingLevelScreen || minecraft.screen instanceof LevelLoadingScreen || minecraft.screen instanceof GenericDirtMessageScreen)) {
-                minecraft.setScreen(new GenericDirtMessageScreen(Component.translatable("chat.generating")));
-            }
+            candyWorldLoadingTimeoutTicks = 20 * 30;
+            candyWorldLoadingGraceTicks = 20 * 3;
         }
 
         private static void tickCandyWorldLoadingScreen(Minecraft minecraft) {
@@ -936,61 +997,28 @@ public final class CCClient {
             }
             if (minecraft.screen instanceof ReceivingLevelScreen || minecraft.screen instanceof LevelLoadingScreen) {
                 if (--candyWorldLoadingTimeoutTicks <= 0) {
-                    candyWorldLoadingActive = false;
-                    candyWorldLoadingGraceTicks = 0;
-                    candyWorldLoadingExit = false;
+                    clearCandyWorldLoadingState(false);
                 }
                 return;
             }
 
             if (portalOverlayTicks > 0) {
-                candyWorldLoadingGraceTicks = candyWorldLoadingExit ? 20 * 3 : 20 * 20;
-                return;
-            }
-
-            if (isCandyWorldLevel(minecraft.level)) {
-                if (!areCandyWorldChunksReady(minecraft, CANDY_WORLD_CLIENT_CHUNK_RADIUS)
-                    && --candyWorldLoadingTimeoutTicks > 0) {
-                    if (!(minecraft.screen instanceof ReceivingLevelScreen || minecraft.screen instanceof LevelLoadingScreen || minecraft.screen instanceof GenericDirtMessageScreen)) {
-                        minecraft.setScreen(new GenericDirtMessageScreen(Component.translatable("chat.generating")));
-                    }
-                    return;
-                }
-                candyWorldLoadingActive = false;
-                candyWorldLoadingTimeoutTicks = 0;
-                candyWorldLoadingGraceTicks = 0;
-                candyWorldLoadingExit = false;
-                if (minecraft.screen instanceof GenericDirtMessageScreen) {
-                    minecraft.setScreen(null);
-                }
-                return;
-            }
-
-            if (candyWorldLoadingExit) {
-                if (--candyWorldLoadingGraceTicks > 0 && --candyWorldLoadingTimeoutTicks > 0) {
-                    if (!(minecraft.screen instanceof GenericDirtMessageScreen)) {
-                        minecraft.setScreen(new GenericDirtMessageScreen(Component.translatable("chat.generating")));
-                    }
-                    return;
-                }
-                candyWorldLoadingActive = false;
-                candyWorldLoadingTimeoutTicks = 0;
-                candyWorldLoadingGraceTicks = 0;
-                candyWorldLoadingExit = false;
-                if (minecraft.screen instanceof GenericDirtMessageScreen) {
-                    minecraft.setScreen(null);
-                }
+                candyWorldLoadingGraceTicks = 20 * 3;
                 return;
             }
 
             if (--candyWorldLoadingGraceTicks <= 0 || --candyWorldLoadingTimeoutTicks <= 0) {
-                candyWorldLoadingActive = false;
-                candyWorldLoadingTimeoutTicks = 0;
-                candyWorldLoadingGraceTicks = 0;
-                candyWorldLoadingExit = false;
-                if (minecraft.screen instanceof GenericDirtMessageScreen) {
-                    minecraft.setScreen(null);
-                }
+                clearCandyWorldLoadingState(true);
+            }
+        }
+
+        private static void clearCandyWorldLoadingState(boolean closeLegacyScreen) {
+            candyWorldLoadingActive = false;
+            candyWorldLoadingTimeoutTicks = 0;
+            candyWorldLoadingGraceTicks = 0;
+            candyWorldLoadingExit = false;
+            if (closeLegacyScreen && Minecraft.getInstance().screen instanceof GenericDirtMessageScreen) {
+                Minecraft.getInstance().setScreen(null);
             }
         }
 
@@ -1051,18 +1079,26 @@ public final class CCClient {
             if (view == FLUID_CHOCOLATE || view == FLUID_CANDY) {
                 event.setNearPlaneDistance(0.25F);
                 event.setFarPlaneDistance(1.0F);
+                event.setCanceled(true);
                 return;
             }
             if (view == FLUID_GRENADINE || view == FLUID_CARAMEL) {
                 event.setNearPlaneDistance(-8.0F);
                 event.setFarPlaneDistance(Math.min(event.getFarPlaneDistance(), 48.0F));
+                event.setCanceled(true);
                 return;
             }
         }
 
         private static int fluidView(net.minecraft.client.Camera camera) {
             Level level = camera.getEntity().level();
-            FluidState state = level.getFluidState(net.minecraft.core.BlockPos.containing(camera.getPosition()));
+            net.minecraft.core.BlockPos pos = camera.getBlockPosition();
+            FluidState state = level.getFluidState(pos);
+            if (!state.isEmpty() && camera.getPosition().y >= (double)(pos.getY() + state.getHeight(level, pos))) {
+                // Eye is above the fluid surface within the same block cell:
+                // vanilla water applies no fluid fog here, so neither do we.
+                return FLUID_NONE;
+            }
             if (state.is(CCFluids.SOURCE_LIQUID_CHOCOLATE.get()) || state.is(CCFluids.FLOWING_LIQUID_CHOCOLATE.get())) {
                 return FLUID_CHOCOLATE;
             }
@@ -1106,25 +1142,9 @@ public final class CCClient {
             return CandyCraft.MODID.equals(dimension.getNamespace()) && "candy_world".equals(dimension.getPath());
         }
 
-        private static boolean areCandyWorldChunksReady(Minecraft minecraft, int radius) {
-            if (minecraft.level == null || minecraft.player == null || !isCandyWorldLevel(minecraft.level)) {
-                return false;
-            }
-            int centerChunkX = Mth.floorDiv(minecraft.player.getBlockX(), 16);
-            int centerChunkZ = Mth.floorDiv(minecraft.player.getBlockZ(), 16);
-            for (int chunkX = centerChunkX - radius; chunkX <= centerChunkX + radius; chunkX++) {
-                for (int chunkZ = centerChunkZ - radius; chunkZ <= centerChunkZ + radius; chunkZ++) {
-                    if (!minecraft.level.hasChunk(chunkX, chunkZ)) {
-                        return false;
-                    }
-                }
-            }
-            return true;
-        }
-
         private static float candyDayFactor(Level level, float partialTick) {
             float value = (float)Math.cos(level.getTimeOfDay(partialTick) * ((float)Math.PI * 2.0F)) * 2.0F + 0.5F;
-            return Math.max(0.0F, Math.min(1.0F, value));
+            return Math.max(CANDY_WORLD_MIN_DAY_FACTOR, Math.min(1.0F, value));
         }
     }
 
@@ -1238,6 +1258,85 @@ public final class CCClient {
         private static float candySkyDayFactor(Level level, float partialTick) {
             float value = (float)Math.cos(level.getTimeOfDay(partialTick) * ((float)Math.PI * 2.0F)) * 2.0F + 0.5F;
             return Math.max(0.0F, Math.min(1.0F, value));
+        }
+    }
+
+    private static final class DungeonEffects extends DimensionSpecialEffects {
+        private DungeonEffects() {
+            super(0.0F, false, SkyType.NONE, false, false);
+        }
+
+        @Override
+        public Vec3 getBrightnessDependentFogColor(Vec3 color, float brightness) {
+            return Vec3.ZERO;
+        }
+
+        @Override
+        public boolean isFoggyAt(int x, int z) {
+            return false;
+        }
+
+        @Override
+        public boolean renderClouds(ClientLevel level, int ticks, float partialTick, PoseStack poseStack,
+                double camX, double camY, double camZ, Matrix4f projectionMatrix) {
+            return true;
+        }
+
+        @Override
+        public boolean renderSky(ClientLevel level, int ticks, float partialTick, PoseStack poseStack,
+                Camera camera, Matrix4f projectionMatrix, boolean isFoggy, Runnable setupFog) {
+            setupFog.run();
+            RenderSystem.depthMask(false);
+            RenderSystem.disableBlend();
+            RenderSystem.disableCull();
+            RenderSystem.setShader(GameRenderer::getPositionShader);
+            RenderSystem.setShaderColor(0.0F, 0.0F, 0.0F, 1.0F);
+
+            poseStack.pushPose();
+            drawBlackSkyBox(poseStack.last().pose(), 128.0F);
+            poseStack.popPose();
+
+            RenderSystem.enableCull();
+            RenderSystem.depthMask(true);
+            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+            return true;
+        }
+
+        private static void drawBlackSkyBox(Matrix4f matrix, float radius) {
+            Tesselator tesselator = Tesselator.getInstance();
+            BufferBuilder buffer = tesselator.getBuilder();
+            buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
+
+            buffer.vertex(matrix, -radius, -radius, -radius).endVertex();
+            buffer.vertex(matrix, radius, -radius, -radius).endVertex();
+            buffer.vertex(matrix, radius, radius, -radius).endVertex();
+            buffer.vertex(matrix, -radius, radius, -radius).endVertex();
+
+            buffer.vertex(matrix, radius, -radius, radius).endVertex();
+            buffer.vertex(matrix, -radius, -radius, radius).endVertex();
+            buffer.vertex(matrix, -radius, radius, radius).endVertex();
+            buffer.vertex(matrix, radius, radius, radius).endVertex();
+
+            buffer.vertex(matrix, -radius, -radius, radius).endVertex();
+            buffer.vertex(matrix, -radius, -radius, -radius).endVertex();
+            buffer.vertex(matrix, -radius, radius, -radius).endVertex();
+            buffer.vertex(matrix, -radius, radius, radius).endVertex();
+
+            buffer.vertex(matrix, radius, -radius, -radius).endVertex();
+            buffer.vertex(matrix, radius, -radius, radius).endVertex();
+            buffer.vertex(matrix, radius, radius, radius).endVertex();
+            buffer.vertex(matrix, radius, radius, -radius).endVertex();
+
+            buffer.vertex(matrix, -radius, radius, -radius).endVertex();
+            buffer.vertex(matrix, radius, radius, -radius).endVertex();
+            buffer.vertex(matrix, radius, radius, radius).endVertex();
+            buffer.vertex(matrix, -radius, radius, radius).endVertex();
+
+            buffer.vertex(matrix, -radius, -radius, radius).endVertex();
+            buffer.vertex(matrix, radius, -radius, radius).endVertex();
+            buffer.vertex(matrix, radius, -radius, -radius).endVertex();
+            buffer.vertex(matrix, -radius, -radius, -radius).endVertex();
+            tesselator.end();
         }
     }
 }

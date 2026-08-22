@@ -1,0 +1,27 @@
+{
+  "parent": "minecraft:block/block",
+  "ambientocclusion": false,
+  "textures": {
+    "particle": "candycraftmod:block/alchemy_flow_grenadine",
+    "north": "candycraftmod:block/alchemy_flow_water",
+    "south": "candycraftmod:block/alchemy_flow_lava",
+    "west": "candycraftmod:block/alchemy_flow_chocolate",
+    "east": "candycraftmod:block/alchemy_flow_liquid_candy",
+    "up": "candycraftmod:block/alchemy_flow_caramel",
+    "down": "candycraftmod:block/alchemy_flow_grenadine"
+  },
+  "elements": [
+    {
+      "from": [8, 8, 8],
+      "to": [8, 8, 8],
+      "faces": {
+        "north": { "uv": [0, 0, 0, 0], "texture": "#north" },
+        "south": { "uv": [0, 0, 0, 0], "texture": "#south" },
+        "west": { "uv": [0, 0, 0, 0], "texture": "#west" },
+        "east": { "uv": [0, 0, 0, 0], "texture": "#east" },
+        "up": { "uv": [0, 0, 0, 0], "texture": "#up" },
+        "down": { "uv": [0, 0, 0, 0], "texture": "#down" }
+      }
+    }
+  ]
+}

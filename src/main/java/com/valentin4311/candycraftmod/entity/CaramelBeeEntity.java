@@ -1,21 +1,25 @@
 package com.valentin4311.candycraftmod.entity;
 
 import com.valentin4311.candycraftmod.registry.CCItems;
+import com.valentin4311.candycraftmod.registry.CCMobEffects;
+import java.util.UUID;
 import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.util.Mth;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.SpawnGroupData;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
@@ -27,16 +31,27 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 public class CaramelBeeEntity extends Monster {
+    private static final int HONEY_GLUE_DURATION_TICKS = 5 * 20;
+    private static final int NATURAL_ANGER_DURATION_TICKS = 30 * 20;
+    private static final double SUGUARD_WITNESS_RANGE = 16.0D;
     private static final EntityDataAccessor<Boolean> ANGRY = SynchedEntityData.defineId(CaramelBeeEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Boolean> HANGED = SynchedEntityData.defineId(CaramelBeeEntity.class, EntityDataSerializers.BOOLEAN);
     private static final String TAG_ANGRY = "Angry";
+    private static final String TAG_ALWAYS_HOSTILE = "AlwaysHostile";
+    private static final String TAG_ANGER_TARGET = "AngerTarget";
+    private static final String TAG_ANGER_TICKS = "AngerTicks";
     private static final String TAG_HANGED = "Hanged";
     private BlockPos flightTarget;
     private Vec3 hangedOrigin;
     private int attackTick;
+    private boolean alwaysHostile;
+    @Nullable
+    private UUID angerTarget;
+    private int angerTicks;
 
     public CaramelBeeEntity(EntityType<? extends CaramelBeeEntity> type, Level level) {
         super(type, level);
@@ -52,6 +67,13 @@ public class CaramelBeeEntity extends Monster {
     }
 
     @Override
+    public double getPassengersRidingOffset() {
+        // A mounted suguard sits astride the bee's back instead of standing
+        // on top of the full bounding box.
+        return super.getPassengersRidingOffset() - 0.3D;
+    }
+
+    @Override
     protected void defineSynchedData() {
         super.defineSynchedData();
         entityData.define(ANGRY, false);
@@ -60,8 +82,8 @@ public class CaramelBeeEntity extends Monster {
 
     @Override
     protected void registerGoals() {
-        targetSelector.addGoal(1, new AngryPlayerTargetGoal(this));
-        targetSelector.addGoal(2, new HurtByTargetGoal(this));
+        targetSelector.addGoal(1, new CaramelBeeHurtByTargetGoal(this).setAlertOthers());
+        targetSelector.addGoal(2, new AngryPlayerTargetGoal(this));
     }
 
     public boolean isAngry() {
@@ -70,6 +92,39 @@ public class CaramelBeeEntity extends Monster {
 
     public void setAngry(boolean angry) {
         entityData.set(ANGRY, angry);
+    }
+
+    public void setAlwaysHostile(boolean alwaysHostile) {
+        this.alwaysHostile = alwaysHostile;
+        if (alwaysHostile) {
+            angerTarget = null;
+            angerTicks = 0;
+        }
+        setAngry(alwaysHostile || angerTicks > 0 && angerTarget != null);
+    }
+
+    public void provoke(Player player) {
+        if (alwaysHostile || !CandyTargeting.canAttackPlayer(player)) {
+            return;
+        }
+        angerTarget = player.getUUID();
+        angerTicks = NATURAL_ANGER_DURATION_TICKS;
+        setAngry(true);
+        setTarget(player);
+    }
+
+    public static void alertSuguardAttackWitnesses(ServerLevel level, Entity suguard, Player attacker) {
+        if (!CandyTargeting.canAttackPlayer(attacker)) {
+            return;
+        }
+        AABB searchBounds = suguard.getBoundingBox().inflate(SUGUARD_WITNESS_RANGE);
+        for (CaramelBeeEntity bee : level.getEntitiesOfClass(CaramelBeeEntity.class, searchBounds)) {
+            if (bee.alwaysHostile || bee.distanceToSqr(suguard) > SUGUARD_WITNESS_RANGE * SUGUARD_WITNESS_RANGE
+                    || !bee.hasLineOfSight(suguard) || !bee.hasLineOfSight(attacker)) {
+                continue;
+            }
+            bee.provoke(attacker);
+        }
     }
 
     public boolean isHanged() {
@@ -86,16 +141,22 @@ public class CaramelBeeEntity extends Monster {
 
     @Override
     public void aiStep() {
+        if (!level().isClientSide) {
+            tickAnger();
+        }
         if (isHanged()) {
             tickHanged();
             super.aiStep();
             return;
         }
-        if (!CandyTargeting.canAttackEntity(getTarget())) {
+        if (!CandyTargeting.canAttackEntity(getTarget())
+                || getTarget() instanceof Player player && !canTargetPlayer(player)) {
             setTarget(null);
         }
         setNoGravity(true);
-        tickFlight();
+        if (!level().isClientSide) {
+            tickFlight();
+        }
         super.aiStep();
     }
 
@@ -110,9 +171,23 @@ public class CaramelBeeEntity extends Monster {
     }
 
     private void tickFlight() {
-        Player player = CandyTargeting.nearestAttackablePlayer(level(), this, 8.0D);
+        Player player = null;
+        double followRange = getAttributeValue(Attributes.FOLLOW_RANGE);
+        if (isAngry()) {
+            if (getTarget() instanceof Player currentTarget && canTargetPlayer(currentTarget)
+                    && distanceToSqr(currentTarget) <= followRange * followRange) {
+                player = currentTarget;
+            } else if (alwaysHostile) {
+                player = CandyTargeting.nearestAttackablePlayer(level(), this, followRange);
+            } else if (level() instanceof ServerLevel serverLevel && angerTarget != null) {
+                Player provoker = serverLevel.getPlayerByUUID(angerTarget);
+                if (canTargetPlayer(provoker) && distanceToSqr(provoker) <= followRange * followRange) {
+                    player = provoker;
+                }
+            }
+        }
         attackTick = Math.max(attackTick - 1, 0);
-        if (isAngry() && player != null) {
+        if (player != null) {
             setTarget(player);
         } else if (!isAngry()) {
             setTarget(null);
@@ -153,6 +228,8 @@ public class CaramelBeeEntity extends Monster {
             );
             double blend = isAngry() && player != null ? 0.12D : 0.08D;
             setDeltaMovement(movement.lerp(desired, blend));
+        } else {
+            setDeltaMovement(movement.scale(0.92D));
         }
 
         float targetYaw = (float)(Math.atan2(getDeltaMovement().z, getDeltaMovement().x) * 180.0D / Math.PI) - 90.0F;
@@ -161,7 +238,36 @@ public class CaramelBeeEntity extends Monster {
     }
 
     private boolean canAttackPlayer(Player player) {
-        return isAngry() && CandyTargeting.canAttackPlayer(player);
+        return isAngry() && canTargetPlayer(player);
+    }
+
+    private boolean canTargetPlayer(@Nullable Player player) {
+        return CandyTargeting.canAttackPlayer(player)
+            && (alwaysHostile || angerTicks > 0 && angerTarget != null && angerTarget.equals(player.getUUID()));
+    }
+
+    private void tickAnger() {
+        if (alwaysHostile) {
+            if (!isAngry()) {
+                setAngry(true);
+            }
+            return;
+        }
+        if (angerTicks > 0) {
+            --angerTicks;
+        }
+        if (angerTicks > 0 && angerTarget != null) {
+            if (!isAngry()) {
+                setAngry(true);
+            }
+            return;
+        }
+        angerTicks = 0;
+        angerTarget = null;
+        setAngry(false);
+        if (getTarget() instanceof Player) {
+            setTarget(null);
+        }
     }
 
     @Override
@@ -172,18 +278,10 @@ public class CaramelBeeEntity extends Monster {
         }
         float damage = level().getDifficulty() == Difficulty.HARD ? 3.0F : 2.0F;
         boolean success = target.hurt(damageSources().mobAttack(this), damage);
-        if (success && target instanceof net.minecraft.world.entity.LivingEntity living && random.nextInt(15) == 0) {
-            living.addEffect(new MobEffectInstance(MobEffects.POISON, 400, 0), this);
+        if (success && target instanceof Player player && random.nextBoolean()) {
+            player.addEffect(new MobEffectInstance(CCMobEffects.HONEY_GLUE.get(), HONEY_GLUE_DURATION_TICKS), this);
         }
         return success;
-    }
-
-    @Override
-    public boolean hurt(DamageSource source, float amount) {
-        if (!isInvulnerableTo(source)) {
-            setAngry(true);
-        }
-        return super.hurt(source, amount);
     }
 
     @Override
@@ -237,7 +335,7 @@ public class CaramelBeeEntity extends Monster {
     public SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty, MobSpawnType reason,
             @Nullable SpawnGroupData spawnData, @Nullable CompoundTag tag) {
         SpawnGroupData data = super.finalizeSpawn(level, difficulty, reason, spawnData, tag);
-        setAngry(reason == MobSpawnType.SPAWNER);
+        setAlwaysHostile(reason == MobSpawnType.SPAWNER);
         return data;
     }
 
@@ -245,13 +343,21 @@ public class CaramelBeeEntity extends Monster {
     public void addAdditionalSaveData(CompoundTag tag) {
         super.addAdditionalSaveData(tag);
         tag.putBoolean(TAG_ANGRY, isAngry());
+        tag.putBoolean(TAG_ALWAYS_HOSTILE, alwaysHostile);
+        tag.putInt(TAG_ANGER_TICKS, angerTicks);
+        if (angerTarget != null) {
+            tag.putUUID(TAG_ANGER_TARGET, angerTarget);
+        }
         tag.putBoolean(TAG_HANGED, isHanged());
     }
 
     @Override
     public void readAdditionalSaveData(CompoundTag tag) {
         super.readAdditionalSaveData(tag);
-        setAngry(tag.getBoolean(TAG_ANGRY));
+        alwaysHostile = tag.getBoolean(TAG_ALWAYS_HOSTILE);
+        angerTicks = tag.getInt(TAG_ANGER_TICKS);
+        angerTarget = tag.hasUUID(TAG_ANGER_TARGET) ? tag.getUUID(TAG_ANGER_TARGET) : null;
+        setAngry(alwaysHostile || angerTicks > 0 && angerTarget != null);
         if (tag.contains(TAG_HANGED)) {
             setHanged(tag.getBoolean(TAG_HANGED));
         }
@@ -262,7 +368,7 @@ public class CaramelBeeEntity extends Monster {
 
         private AngryPlayerTargetGoal(CaramelBeeEntity bee) {
             super(bee, Player.class, 10, true, false,
-                entity -> entity instanceof Player player && CandyTargeting.canAttackPlayer(player));
+                entity -> entity instanceof Player player && bee.canTargetPlayer(player));
             this.bee = bee;
         }
 
@@ -274,6 +380,33 @@ public class CaramelBeeEntity extends Monster {
         @Override
         public boolean canContinueToUse() {
             return bee.isAngry() && super.canContinueToUse();
+        }
+    }
+
+    private static final class CaramelBeeHurtByTargetGoal extends HurtByTargetGoal {
+        private final CaramelBeeEntity bee;
+
+        private CaramelBeeHurtByTargetGoal(CaramelBeeEntity bee) {
+            super(bee);
+            this.bee = bee;
+        }
+
+        @Override
+        public void start() {
+            LivingEntity attacker = bee.getLastHurtByMob();
+            if (attacker instanceof Player player) {
+                bee.provoke(player);
+            }
+            super.start();
+        }
+
+        @Override
+        protected void alertOther(Mob mob, LivingEntity target) {
+            if (mob instanceof CaramelBeeEntity otherBee && target instanceof Player player) {
+                otherBee.provoke(player);
+                return;
+            }
+            super.alertOther(mob, target);
         }
     }
 }

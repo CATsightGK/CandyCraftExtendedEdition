@@ -1,0 +1,35 @@
+{
+  "parent": "candycraftmod:sweetscape_gummy",
+  "display": {
+    "icon": {
+      "item": "candycraftmod:orange_hard_candy"
+    },
+    "title": {
+      "translate": "advancements.candycraft.hard_candy_palette.title"
+    },
+    "description": {
+      "translate": "advancements.candycraft.hard_candy_palette.desc"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "hidden": false
+  },
+  "criteria": {
+    "has_colored_hard_candy": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "tag": "candycraftmod:colored_hard_candies"
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has_colored_hard_candy"
+    ]
+  ]
+}

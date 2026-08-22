@@ -31,11 +31,15 @@ import net.minecraft.world.level.block.Block;
 import org.jetbrains.annotations.Nullable;
 
 public class CandyWolfEntity extends Wolf {
-    private static final EntityDataAccessor<Integer> FUR_TIME = SynchedEntityData.defineId(CandyWolfEntity.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Boolean> FUR_READY = SynchedEntityData.defineId(CandyWolfEntity.class, EntityDataSerializers.BOOLEAN);
     private static final String FUR_TIME_TAG = "Caramel";
     private static final int NORMAL_CARAMEL_TIME = 20 * 60 * 16;
     private static final int LEAVES_CARAMEL_TIME_MIN = 20 * 60 * 3;
     private static final int LEAVES_CARAMEL_TIME_RANGE = 20 * 60;
+    private static final int LEAVES_CHECK_INTERVAL = 10;
+    private int furTime;
+    private int leavesCheckCooldown;
+    private boolean cachedUnderCaramelLeaves;
 
     public CandyWolfEntity(EntityType<? extends CandyWolfEntity> type, Level level) {
         super(type, level);
@@ -44,20 +48,24 @@ public class CandyWolfEntity extends Wolf {
     @Override
     protected void defineSynchedData() {
         super.defineSynchedData();
-        entityData.define(FUR_TIME, 0);
+        entityData.define(FUR_READY, true);
     }
 
     public int getFurTime() {
-        return entityData.get(FUR_TIME);
+        return level().isClientSide ? entityData.get(FUR_READY) ? 0 : 1 : furTime;
     }
 
     public void setFurTime(int time) {
-        entityData.set(FUR_TIME, Math.max(time, 0));
+        furTime = Math.max(time, 0);
+        boolean ready = furTime <= 0;
+        if (entityData.get(FUR_READY) != ready) {
+            entityData.set(FUR_READY, ready);
+        }
     }
 
     @Override
     public boolean isFood(ItemStack stack) {
-        return isBrownie(stack);
+        return isTamingFood(stack);
     }
 
     @Override
@@ -73,8 +81,14 @@ public class CandyWolfEntity extends Wolf {
             return;
         }
 
-        if (isTame() && getFurTime() > 0) {
-            setFurTime(getFurTime() - (isUnderCaramelLeaves() ? 5 : 1));
+        if (isTame() && furTime > 0) {
+            if (leavesCheckCooldown > 0) {
+                leavesCheckCooldown--;
+            } else {
+                cachedUnderCaramelLeaves = isUnderCaramelLeaves();
+                leavesCheckCooldown = LEAVES_CHECK_INTERVAL - 1;
+            }
+            setFurTime(furTime - (cachedUnderCaramelLeaves ? 5 : 1));
         }
     }
 
@@ -119,7 +133,7 @@ public class CandyWolfEntity extends Wolf {
                 }
                 return InteractionResult.sidedSuccess(level().isClientSide);
             }
-        } else if (isBrownie(stack) && !isAngry()) {
+        } else if (isTamingFood(stack) && !isAngry()) {
             if (!player.getAbilities().instabuild) {
                 stack.shrink(1);
             }
@@ -203,14 +217,17 @@ public class CandyWolfEntity extends Wolf {
         tag.putInt(FUR_TIME_TAG, getFurTime());
     }
 
-    private boolean isBrownie(ItemStack stack) {
-        return stack.is(CCItems.MILK_BROWNIE.get())
+    private boolean isTamingFood(ItemStack stack) {
+        return stack.is(CCItems.CANDY_CANE.get())
+            || stack.is(CCItems.MILK_BROWNIE.get())
             || stack.is(CCItems.WHITE_BROWNIE.get())
             || stack.is(CCItems.DARK_BROWNIE.get());
     }
 
     private void resetCaramelTimer() {
-        if (isUnderCaramelLeaves()) {
+        cachedUnderCaramelLeaves = isUnderCaramelLeaves();
+        leavesCheckCooldown = LEAVES_CHECK_INTERVAL - 1;
+        if (cachedUnderCaramelLeaves) {
             setFurTime(LEAVES_CARAMEL_TIME_MIN + random.nextInt(LEAVES_CARAMEL_TIME_RANGE + 1));
         } else {
             setFurTime(NORMAL_CARAMEL_TIME);

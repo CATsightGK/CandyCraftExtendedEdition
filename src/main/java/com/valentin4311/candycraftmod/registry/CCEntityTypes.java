@@ -21,6 +21,7 @@ import com.valentin4311.candycraftmod.entity.GummyMouseEntity;
 import com.valentin4311.candycraftmod.entity.GingerbreadManEntity;
 import com.valentin4311.candycraftmod.entity.HoneyArrowEntity;
 import com.valentin4311.candycraftmod.entity.HoneyBoltEntity;
+import com.valentin4311.candycraftmod.entity.HostileCandyHumanoidEntity;
 import com.valentin4311.candycraftmod.entity.NougatGolemEntity;
 import com.valentin4311.candycraftmod.entity.NessieEntity;
 import com.valentin4311.candycraftmod.entity.PingouinEntity;
@@ -131,7 +132,7 @@ public final class CCEntityTypes {
 
     public static final RegistryObject<EntityType<GummyBunnyEntity>> GUMMY_BUNNY = ENTITY_TYPES.register("gummy_bunny", () ->
         EntityType.Builder.of(GummyBunnyEntity::new, MobCategory.CREATURE)
-            .sized(0.5F, 0.5F)
+            .sized(0.5F, 0.4F)
             .clientTrackingRange(10)
             .build(CandyCraft.MODID + ":gummy_bunny")
     );
@@ -160,12 +161,20 @@ public final class CCEntityTypes {
             .build(CandyCraft.MODID + ":gummy_bear")
     );
 
-    public static final RegistryObject<EntityType<BasicCandyZombieEntity>> SUGUARD = basicZombie("suguard", 0.5F, 0.9F);
-    public static final RegistryObject<EntityType<BasicCandyZombieEntity>> MAGE_SUGUARD = basicZombie("mage_suguard", 0.5F, 0.9F);
+    public static final RegistryObject<EntityType<BasicCandyZombieEntity>> SUGUARD = hostileHumanoid("suguard", 0.5F, 0.9F);
+    public static final RegistryObject<EntityType<BasicCandyZombieEntity>> MAGE_SUGUARD = ENTITY_TYPES.register("mage_suguard", () ->
+        EntityType.Builder.<BasicCandyZombieEntity>of(HostileCandyHumanoidEntity::new, MobCategory.MONSTER)
+            .sized(0.5F, 0.9F)
+            .clientTrackingRange(8)
+            .fireImmune()
+            .build(CandyCraft.MODID + ":mage_suguard")
+    );
     public static final RegistryObject<EntityType<CaramelBeeEntity>> CARAMEL_BEE = ENTITY_TYPES.register("caramel_bee", () ->
         EntityType.Builder.of(CaramelBeeEntity::new, MobCategory.MONSTER)
             .sized(0.8F, 1.0F)
             .clientTrackingRange(8)
+            .updateInterval(1)
+            .setShouldReceiveVelocityUpdates(true)
             .build(CandyCraft.MODID + ":caramel_bee")
     );
     public static final RegistryObject<EntityType<GingerbreadManEntity>> GINGERBREAD_MAN = ENTITY_TYPES.register("gingerbread_man", () ->
@@ -176,7 +185,7 @@ public final class CCEntityTypes {
     );
     public static final RegistryObject<EntityType<CandyFishEntity>> CANDY_FISH = ENTITY_TYPES.register("candy_fish", () ->
         EntityType.Builder.of(CandyFishEntity::new, MobCategory.WATER_AMBIENT)
-            .sized(0.875F, 0.625F)
+            .sized(0.95F, 0.95F)
             .clientTrackingRange(8)
             .build(CandyCraft.MODID + ":candy_fish")
     );
@@ -193,9 +202,9 @@ public final class CCEntityTypes {
             .clientTrackingRange(10)
             .build(CandyCraft.MODID + ":nessie")
     );
-    public static final RegistryObject<EntityType<BasicCandyZombieEntity>> DRAGON = basicZombie("dragon", MobCategory.CREATURE, 3.0F, 2.2F);
-    public static final RegistryObject<EntityType<BasicCandyZombieEntity>> KING_BEETLE = basicZombie("king_beetle", MobCategory.CREATURE, 3.0F, 2.0F);
-    public static final RegistryObject<EntityType<BasicCandyZombieEntity>> MERMAID = basicZombie("mermaid", 0.95F, 1.0F);
+    public static final RegistryObject<EntityType<BasicCandyZombieEntity>> DRAGON = passiveLegacyGolem("dragon", 3.0F, 2.2F);
+    public static final RegistryObject<EntityType<BasicCandyZombieEntity>> KING_BEETLE = passiveLegacyGolem("king_beetle", 3.0F, 2.0F);
+    public static final RegistryObject<EntityType<BasicCandyZombieEntity>> MERMAID = hostileHumanoid("mermaid", 0.95F, 1.0F);
     public static final RegistryObject<EntityType<NougatGolemEntity>> NOUGAT_GOLEM = ENTITY_TYPES.register("nougat_golem", () ->
         EntityType.Builder.of(NougatGolemEntity::new, MobCategory.CREATURE)
             .sized(1.0F, 1.0F)
@@ -208,7 +217,7 @@ public final class CCEntityTypes {
     public static final RegistryObject<EntityType<BasicCandySlimeEntity>> PEZ_JELLY = basicSlime("pez_jelly", 1.2F, 1.2F);
     public static final RegistryObject<EntityType<BasicCandySlimeEntity>> KING_SLIME = basicSlime("king_slime", 2.4F, 2.4F);
     public static final RegistryObject<EntityType<BasicCandySlimeEntity>> JELLY_QUEEN = basicSlime("jelly_queen", 2.2F, 2.2F);
-    public static final RegistryObject<EntityType<BasicCandyZombieEntity>> BOSS_SUGUARD = basicZombie("boss_suguard", 0.8F, 1.5F);
+    public static final RegistryObject<EntityType<BasicCandyZombieEntity>> BOSS_SUGUARD = hostileHumanoid("boss_suguard", 0.8F, 1.5F);
     public static final RegistryObject<EntityType<BasicCandySpiderEntity>> BOSS_BEETLE = ENTITY_TYPES.register("boss_beetle", () ->
         EntityType.Builder.of(BasicCandySpiderEntity::new, MobCategory.MONSTER)
             .sized(2.0F, 1.6F)
@@ -224,12 +233,12 @@ public final class CCEntityTypes {
         ENTITY_TYPES.register(eventBus);
     }
 
-    private static RegistryObject<EntityType<BasicCandyZombieEntity>> basicZombie(String name, float width, float height) {
-        return basicZombie(name, MobCategory.MONSTER, width, height);
+    private static RegistryObject<EntityType<BasicCandyZombieEntity>> hostileHumanoid(String name, float width, float height) {
+        return registerBasic(name, HostileCandyHumanoidEntity::new, MobCategory.MONSTER, width, height);
     }
 
-    private static RegistryObject<EntityType<BasicCandyZombieEntity>> basicZombie(String name, MobCategory category, float width, float height) {
-        return registerBasic(name, BasicCandyZombieEntity::new, category, width, height);
+    private static RegistryObject<EntityType<BasicCandyZombieEntity>> passiveLegacyGolem(String name, float width, float height) {
+        return registerBasic(name, BasicCandyZombieEntity::new, MobCategory.CREATURE, width, height);
     }
 
     private static RegistryObject<EntityType<BasicCandySpiderEntity>> basicSpider(String name, float width, float height) {

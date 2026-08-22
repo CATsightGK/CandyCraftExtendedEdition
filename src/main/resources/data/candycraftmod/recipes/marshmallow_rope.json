@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    " P ",
+    " P ",
+    " P "
+  ],
+  "key": {
+    "P": {
+      "item": "candycraftmod:marshmallow_planks"
+    }
+  },
+  "result": {
+    "item": "candycraftmod:marshmallow_rope"
+  },
+  "show_notification": true
+}

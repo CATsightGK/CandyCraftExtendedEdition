@@ -13,7 +13,6 @@ import javax.annotation.Nullable;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -33,12 +32,16 @@ import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MoverType;
+import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.PlayerRideableJumping;
+import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.SpawnGroupData;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
@@ -49,7 +52,7 @@ import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.ai.goal.RandomStrollGoal;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
-import net.minecraft.world.entity.monster.Zombie;
+import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -64,9 +67,16 @@ import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.pathfinder.BlockPathTypes;
 import net.minecraft.world.phys.Vec3;
 
-public class BasicCandyZombieEntity extends Zombie implements PlayerRideableJumping {
+public class BasicCandyZombieEntity extends PathfinderMob implements PlayerRideableJumping {
+    private static final int PLAYER_TARGET_SEARCH_INTERVAL = 10;
     private static final int BOSS_SUGUARD_LOST_TARGET_TICKS = 200;
     private static final int BOSS_SUGUARD_BOW_DRAW_DURATION = 14;
+    private static final double BOSS_SUGUARD_CLOSE_BARRAGE_RANGE_SQR = 9.0D;
+    private static final int BOSS_SUGUARD_CLOSE_BARRAGE_VOLLEYS = 5;
+    private static final int DORMANT_BOSS_HEAL_INTERVAL_TICKS = 20;
+    private static final float DORMANT_BOSS_HEAL_AMOUNT = 5.0F;
+    private static final double DRAGON_MIN_ASCENT_SPEED = 0.16D;
+    private static final double DRAGON_MAX_ASCENT_SPEED = 0.42D;
     private static final String TAG_ANGRY = "Angry";
     private static final String TAG_WAITING = "Waiting";
     private static final String TAG_SPAWNED = "Spawned";
@@ -86,14 +96,22 @@ public class BasicCandyZombieEntity extends Zombie implements PlayerRideableJump
     private boolean spawnedMinions;
     private int summonCooldown;
     private int rangedCooldown;
+    private int mageTargetSearchCooldown;
+    private int bossTargetSearchCooldown;
     private int bossSuguardCounter = 300;
     private int bossSuguardSeeTicks;
     private int bossSuguardLostTargetTicks;
+    private boolean bossSuguardDormantRotationInitialized;
+    private float bossSuguardDormantYRot;
+    private float bossSuguardDormantYHeadRot;
     private boolean bossHealthBarRevealed;
     private int dragonShootTicks;
     private int kingBeetleExplosionCount;
     private int dragonAgeTicks;
     private boolean mountJumpRequested;
+    private float mountJumpCharge;
+    @Nullable
+    private BlockPos mermaidSwimTarget;
     @Nullable
     private BlockPos nessieSwimTarget;
     private final ServerBossEvent bossEvent = new ServerBossEvent(getDisplayName(), BossEvent.BossBarColor.WHITE, BossEvent.BossBarOverlay.PROGRESS);
@@ -104,16 +122,29 @@ public class BasicCandyZombieEntity extends Zombie implements PlayerRideableJump
         this.waiting = isMageSuguard();
         this.angry = isMageSuguard();
         if (isBossSuguard()) {
+            bossEvent.setName(type.getDescription());
+            bossEvent.setColor(BossEvent.BossBarColor.WHITE);
             bossEvent.setVisible(false);
             xpReward = 500;
         }
         if (isDragon()) {
             setMountPower(getMountMaxPower());
         }
+        if (isMermaid()) {
+            rangedCooldown = 20;
+        }
+    }
+
+    @Override
+    public void onAddedToWorld() {
+        super.onAddedToWorld();
+        if (!level().isClientSide) {
+            ensureDefaultEquipment();
+        }
     }
 
     public static AttributeSupplier.Builder createAttributes() {
-        return Zombie.createAttributes()
+        return Monster.createMonsterAttributes()
             .add(Attributes.MAX_HEALTH, 30.0D)
             .add(Attributes.MOVEMENT_SPEED, 0.3D)
             .add(Attributes.ATTACK_DAMAGE, 6.0D);
@@ -136,7 +167,9 @@ public class BasicCandyZombieEntity extends Zombie implements PlayerRideableJump
 
     @Override
     protected void registerGoals() {
-        goalSelector.addGoal(1, new FloatGoal(this));
+        if (!isMermaid()) {
+            goalSelector.addGoal(1, new FloatGoal(this));
+        }
         if (isPassiveCreature()) {
             goalSelector.addGoal(2, new PanicGoal(this, 1.1D));
             goalSelector.addGoal(5, new RandomStrollGoal(this, 0.2D));
@@ -151,6 +184,11 @@ public class BasicCandyZombieEntity extends Zombie implements PlayerRideableJump
             targetSelector.addGoal(2, new HurtByTargetGoal(this));
             return;
         }
+        if (isMermaid()) {
+            targetSelector.addGoal(1, new NearestAttackableTargetGoal<>(this, Player.class, true));
+            targetSelector.addGoal(2, new HurtByTargetGoal(this));
+            return;
+        }
         goalSelector.addGoal(4, new SuguardAttackGoal(this));
         goalSelector.addGoal(5, new RandomStrollGoal(this, 0.2D));
         goalSelector.addGoal(6, new LookAtPlayerGoal(this, Player.class, 8.0F));
@@ -160,13 +198,13 @@ public class BasicCandyZombieEntity extends Zombie implements PlayerRideableJump
     }
 
     @Override
-    protected boolean isSunSensitive() {
-        return false;
+    public boolean canBreatheUnderwater() {
+        return isBossSuguard() || isMermaid() || super.canBreatheUnderwater();
     }
 
     @Override
-    public boolean canBreatheUnderwater() {
-        return isBossSuguard() || super.canBreatheUnderwater();
+    public boolean isPushedByFluid() {
+        return !isMermaid() && super.isPushedByFluid();
     }
 
     @Override
@@ -186,7 +224,7 @@ public class BasicCandyZombieEntity extends Zombie implements PlayerRideableJump
             CaramelBeeEntity bee = CCEntityTypes.CARAMEL_BEE.get().create(serverLevel);
             if (bee != null) {
                 bee.moveTo(getX(), getY(), getZ(), getYRot(), 0.0F);
-                bee.setAngry(true);
+                bee.setAlwaysHostile(true);
                 serverLevel.addFreshEntity(bee);
                 startRiding(bee, true);
             }
@@ -242,30 +280,55 @@ public class BasicCandyZombieEntity extends Zombie implements PlayerRideableJump
 
     @Override
     public void aiStep() {
-        ensureDefaultEquipment();
-        if (isPassiveCreature() && getTarget() != null) {
+        boolean mermaid = isMermaid();
+        boolean bossSuguard = isBossSuguard();
+        boolean mageSuguard = isMageSuguard();
+        boolean dragon = isDragon();
+        boolean kingBeetle = isKingBeetle();
+        boolean nessie = isNessie();
+        if ((nessie || dragon || kingBeetle) && getTarget() != null) {
             setTarget(null);
         }
-        if (isBossSuguard() && !isBossSuguardAwake()) {
+        if (bossSuguard && !isBossSuguardAwake()) {
             tickDormantBossSuguard();
             updateBossBar();
+            super.aiStep();
+            freezeDormantBossSuguard();
             return;
         }
-        if (!CandyTargeting.canAttackEntity(getTarget())) {
+        LivingEntity target = getTarget();
+        if (target != null && !CandyTargeting.canAttackEntity(target)) {
             setTarget(null);
         }
-        updateBossBar();
-        if (!isBossSuguard() && !isAquatic() && !isDragon() && (isInWaterRainOrBubble() || isInGrenadine())) {
+        if (bossSuguard) {
+            updateBossBar();
+        }
+        if (!bossSuguard && !nessie && !mermaid && !dragon && (isInWaterRainOrBubble() || isInGrenadine())) {
             hurt(damageSources().drown(), 1.0F);
         }
 
         if (!level().isClientSide && level() instanceof ServerLevel serverLevel) {
-            tickMageBehavior(serverLevel);
-            tickRangedAndBossBehavior(serverLevel);
+            if (mageSuguard) {
+                tickMageBehavior(serverLevel);
+            }
+            if (mermaid || bossSuguard) {
+                if (rangedCooldown > 0) {
+                    rangedCooldown--;
+                }
+                if (mermaid) {
+                    tickMermaidRangedBehavior(serverLevel);
+                } else {
+                    tickBossSuguard(serverLevel);
+                }
+            }
         }
 
-        tickMovementAbilities();
-        spawnLegacyParticles();
+        if (nessie || dragon || kingBeetle || mermaid) {
+            tickMovementAbilities(nessie, dragon, kingBeetle, mermaid);
+        }
+        if (level().isClientSide) {
+            spawnLegacyParticles();
+        }
         super.aiStep();
     }
 
@@ -328,6 +391,7 @@ public class BasicCandyZombieEntity extends Zombie implements PlayerRideableJump
 
         boolean exhausted = isDragonFalling();
         boolean airborne = !onGround();
+        float ascentCharge = consumeMountJumpCharge();
         Vec3 look = rider.getLookAngle();
         Vec3 horizontalLook = new Vec3(look.x, 0.0D, look.z);
         if (horizontalLook.lengthSqr() < 1.0E-4D) {
@@ -347,16 +411,18 @@ public class BasicCandyZombieEntity extends Zombie implements PlayerRideableJump
             return;
         }
 
+        if (ascentCharge > 0.0F) {
+            airborne = true;
+        }
+
         double forwardInput = Mth.clamp(forward, -0.35F, 1.0F);
         double strafeInput = Mth.clamp(strafe, -0.35F, 0.35F);
         Vec3 side = new Vec3(horizontalLook.z, 0.0D, -horizontalLook.x).scale(strafeInput * 0.42D);
-        Vec3 desired = look.normalize().scale(forwardInput * 0.52D).add(side);
+        Vec3 travelDirection = airborne ? look.normalize() : horizontalLook;
+        Vec3 desired = travelDirection.scale(forwardInput * 0.52D).add(side);
         Vec3 current = getDeltaMovement();
 
-        if (onGround() && (consumeMountJumpRequest() || (forwardInput > 0.05D && look.y > 0.12D))) {
-            desired = desired.add(0.0D, 0.34D, 0.0D);
-            airborne = true;
-        } else if (airborne && Math.abs(forwardInput) < 0.05D) {
+        if (airborne && Math.abs(forwardInput) < 0.05D) {
             desired = new Vec3(current.x * 0.72D, current.y * 0.45D, current.z * 0.72D).add(side);
         }
 
@@ -367,6 +433,10 @@ public class BasicCandyZombieEntity extends Zombie implements PlayerRideableJump
             Mth.clamp(motion.y, -0.48D, 0.48D),
             Mth.clamp(motion.z, -0.62D, 0.62D)
         );
+        if (ascentCharge > 0.0F) {
+            double ascentSpeed = Mth.lerp(ascentCharge, DRAGON_MIN_ASCENT_SPEED, DRAGON_MAX_ASCENT_SPEED);
+            motion = new Vec3(motion.x, Math.max(motion.y, ascentSpeed), motion.z);
+        }
         setNoGravity(airborne);
         setDragonFlying(airborne);
         setDeltaMovement(motion);
@@ -422,7 +492,18 @@ public class BasicCandyZombieEntity extends Zombie implements PlayerRideableJump
     private boolean consumeMountJumpRequest() {
         boolean requested = mountJumpRequested;
         mountJumpRequested = false;
+        mountJumpCharge = 0.0F;
         return requested;
+    }
+
+    private float consumeMountJumpCharge() {
+        if (!mountJumpRequested) {
+            return 0.0F;
+        }
+        float charge = mountJumpCharge;
+        mountJumpRequested = false;
+        mountJumpCharge = 0.0F;
+        return charge;
     }
 
     @Override
@@ -445,6 +526,7 @@ public class BasicCandyZombieEntity extends Zombie implements PlayerRideableJump
     public void onPlayerJump(int jumpPower) {
         if (canJump() && jumpPower > 0) {
             mountJumpRequested = true;
+            mountJumpCharge = Mth.clamp(jumpPower / 100.0F, 0.0F, 1.0F);
         }
     }
 
@@ -455,9 +537,6 @@ public class BasicCandyZombieEntity extends Zombie implements PlayerRideableJump
 
     @Override
     public void handleStartJump(int jumpPower) {
-        if (canJump()) {
-            mountJumpRequested = true;
-        }
     }
 
     @Override
@@ -509,10 +588,18 @@ public class BasicCandyZombieEntity extends Zombie implements PlayerRideableJump
 
     @Override
     public boolean hurt(DamageSource source, float amount) {
+        LivingEntity livingAttacker = getLivingAttacker(source);
+        Player attackingPlayer = livingAttacker instanceof Player player ? player : null;
+        Player playerAttacker = attackingPlayer != null && CandyTargeting.canAttackPlayer(attackingPlayer)
+            ? attackingPlayer
+            : null;
         if (isSuguard() && source.getEntity() instanceof LivingEntity) {
             angry = true;
         }
         if (isBossSuguard()) {
+            if (!level().isClientSide && livingAttacker != null && livingAttacker != this) {
+                activateBossSuguard(CandyTargeting.canAttackEntity(livingAttacker) ? livingAttacker : null);
+            }
             if (source.is(net.minecraft.world.damagesource.DamageTypes.DROWN)) {
                 return false;
             }
@@ -520,11 +607,10 @@ public class BasicCandyZombieEntity extends Zombie implements PlayerRideableJump
                     || source.is(net.minecraft.tags.DamageTypeTags.IS_FIRE)) {
                 return false;
             }
-            Player attacker = source.getEntity() instanceof Player player && !player.isSpectator() ? player : null;
-            if (!level().isClientSide && attacker != null) {
-                activateBossSuguard(CandyTargeting.canAttackPlayer(attacker) ? attacker : null);
-            }
             boolean hurt = super.hurt(source, amount);
+            if (hurt) {
+                alertCaramelBeeWitnesses(playerAttacker);
+            }
             return hurt;
         }
         if ((isDragon() || isKingBeetle()) && getControllingPassenger() != null && getControllingPassenger().equals(source.getEntity())) {
@@ -533,7 +619,29 @@ public class BasicCandyZombieEntity extends Zombie implements PlayerRideableJump
         if (isKingBeetle() && source.is(net.minecraft.tags.DamageTypeTags.IS_EXPLOSION)) {
             return false;
         }
-        return super.hurt(source, amount);
+        boolean hurt = super.hurt(source, amount);
+        if (hurt) {
+            alertCaramelBeeWitnesses(playerAttacker);
+        }
+        return hurt;
+    }
+
+    @Nullable
+    private static LivingEntity getLivingAttacker(DamageSource source) {
+        if (source.getEntity() instanceof LivingEntity attacker) {
+            return attacker;
+        }
+        if (source.getDirectEntity() instanceof LivingEntity attacker) {
+            return attacker;
+        }
+        return null;
+    }
+
+    private void alertCaramelBeeWitnesses(@Nullable Player attacker) {
+        if (attacker != null && level() instanceof ServerLevel serverLevel
+                && (isSuguard() || isMageSuguard() || isBossSuguard())) {
+            CaramelBeeEntity.alertSuguardAttackWitnesses(serverLevel, this, attacker);
+        }
     }
 
     @Override
@@ -544,7 +652,7 @@ public class BasicCandyZombieEntity extends Zombie implements PlayerRideableJump
     @Override
     public void startSeenByPlayer(ServerPlayer player) {
         super.startSeenByPlayer(player);
-        if (hasBossBar()) {
+        if (isBossSuguard()) {
             bossEvent.addPlayer(player);
         }
     }
@@ -692,8 +800,8 @@ public class BasicCandyZombieEntity extends Zombie implements PlayerRideableJump
         }
     }
 
-    private void tickMovementAbilities() {
-        if (isNessie()) {
+    private void tickMovementAbilities(boolean nessie, boolean dragon, boolean kingBeetle, boolean mermaid) {
+        if (nessie) {
             setAirSupply(getMaxAirSupply());
             if (isInWater() && getControllingPassenger() == null && !level().isClientSide) {
                 tickNessieSwimming();
@@ -702,31 +810,59 @@ public class BasicCandyZombieEntity extends Zombie implements PlayerRideableJump
                 zza = 0.0F;
                 setDeltaMovement(getDeltaMovement().multiply(0.15D, 1.0D, 0.15D).add(0.0D, 0.01D, 0.0D));
             }
-        } else if (isDragon()) {
+        } else if (dragon) {
             tickDragonGrowth();
             tickDragonStamina();
             tickDragonPower();
-        } else if (isKingBeetle()) {
+        } else if (kingBeetle) {
             if (getMountPower() < getMountMaxPower()) {
                 setMountPower(getMountPower() + 1);
             }
             tickKingBeetlePower();
-        } else if (isMermaid()) {
+        } else if (mermaid) {
             setAirSupply(getMaxAirSupply());
             if (isInWater()) {
-                Player target = CandyTargeting.nearestAttackablePlayer(level(), this, 16.0D);
-                if (target != null) {
-                    getLookControl().setLookAt(target);
-                    Vec3 to = target.position().subtract(position()).normalize();
-                    setDeltaMovement(getDeltaMovement().add(to.x * 0.015D, to.y * 0.01D, to.z * 0.015D));
+                LivingEntity target = getTarget();
+                if (target != null && CandyTargeting.canAttackEntity(target)) {
+                    mermaidSwimTarget = target.blockPosition();
+                } else if (!isValidMermaidSwimTarget(mermaidSwimTarget)
+                        || random.nextInt(100) == 0
+                        || mermaidSwimTarget.distToCenterSqr(position()) < 4.0D) {
+                    mermaidSwimTarget = chooseMermaidSwimTarget();
+                }
+                if (mermaidSwimTarget != null) {
+                    swimToward(mermaidSwimTarget.getX() + 0.5D, mermaidSwimTarget.getY() + 0.1D,
+                        mermaidSwimTarget.getZ() + 0.5D, 0.15D, 0.26D);
                 }
             } else if (onGround() && tickCount % 10 == 0) {
+                mermaidSwimTarget = null;
                 playSound(SoundEvents.GUARDIAN_FLOP, 1.0F, 1.0F);
                 setDeltaMovement(random.nextFloat() - 0.5F, getDeltaMovement().y + 0.34D, random.nextFloat() - 0.5F);
                 setYRot(random.nextFloat() * 360.0F);
                 yRotO = getYRot();
             }
         }
+    }
+
+    @Nullable
+    private BlockPos chooseMermaidSwimTarget() {
+        BlockPos origin = blockPosition();
+        for (int i = 0; i < 12; i++) {
+            BlockPos candidate = origin.offset(
+                random.nextInt(14) - random.nextInt(14),
+                random.nextInt(3) - 1,
+                random.nextInt(14) - random.nextInt(14));
+            if (isValidMermaidSwimTarget(candidate)) {
+                return candidate;
+            }
+        }
+        return isValidMermaidSwimTarget(origin) ? origin : null;
+    }
+
+    private boolean isValidMermaidSwimTarget(@Nullable BlockPos pos) {
+        return pos != null
+            && pos.getY() > level().getMinBuildHeight()
+            && level().getFluidState(pos).is(FluidTags.WATER);
     }
 
     private void tickNessieSwimming() {
@@ -784,32 +920,26 @@ public class BasicCandyZombieEntity extends Zombie implements PlayerRideableJump
             && level().getFluidState(pos.above()).is(FluidTags.WATER);
     }
 
-    private void tickRangedAndBossBehavior(ServerLevel level) {
-        if (rangedCooldown > 0) {
-            rangedCooldown--;
-        }
-        if (isMermaid() && rangedCooldown <= 0) {
+    private void tickMermaidRangedBehavior(ServerLevel level) {
+        if (rangedCooldown <= 0) {
             LivingEntity target = getTarget();
-            if (target == null && getControllingPassenger() != null) {
-                target = CandyTargeting.nearestAttackablePlayer(level, this, 18.0D);
-            }
             if (target != null && !CandyTargeting.canAttackEntity(target)) {
                 setTarget(null);
                 target = null;
             }
-            if (target != null) {
-                rangedCooldown = 30;
+            if (target != null && distanceToSqr(target) <= 245.0D && hasLineOfSight(target)) {
+                float attackStrength = Mth.clamp(distanceTo(target) / 15.0F, 0.1F, 1.0F);
+                rangedCooldown = Mth.floor(attackStrength * 10.0F + 20.0F);
                 HoneyArrowEntity ball = new HoneyArrowEntity(level, this);
                 double dx = target.getX() - getX();
                 double dy = target.getEyeY() - ball.getY();
                 double dz = target.getZ() - getZ();
+                ball.setBaseDamage(attackStrength * 3.0F + random.nextGaussian() * 0.25D
+                    + level.getDifficulty().getId() * 0.11F);
                 ball.shoot(dx, dy, dz, 1.4F, 8.0F);
                 level.addFreshEntity(ball);
-                playSound(SoundEvents.ARROW_SHOOT, 0.6F, 0.9F + random.nextFloat() * 0.2F);
+                playSound(SoundEvents.ARROW_SHOOT, 1.0F, 1.0F / (random.nextFloat() * 0.4F + 0.8F));
             }
-        }
-        if (isBossSuguard()) {
-            tickBossSuguard(level);
         }
     }
 
@@ -818,9 +948,7 @@ public class BasicCandyZombieEntity extends Zombie implements PlayerRideableJump
             tickDormantBossSuguard();
             return;
         }
-        if (getAttribute(Attributes.MOVEMENT_SPEED) != null) {
-            getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(0.35D);
-        }
+        setMovementSpeedBase(0.35D);
         if (--bossSuguardCounter <= 0) {
             bossSuguardCounter = 300;
             setBossSuguardStat((getBossSuguardStat() + 1) % 4);
@@ -830,8 +958,12 @@ public class BasicCandyZombieEntity extends Zombie implements PlayerRideableJump
             setTarget(null);
             target = null;
         }
-        if (target == null) {
+        if (bossTargetSearchCooldown > 0) {
+            bossTargetSearchCooldown--;
+        }
+        if (target == null && bossTargetSearchCooldown <= 0) {
             target = CandyTargeting.nearestAttackablePlayer(level, this, 48.0D);
+            bossTargetSearchCooldown = PLAYER_TARGET_SEARCH_INTERVAL;
         }
         if (target == null) {
             bossSuguardSeeTicks = 0;
@@ -859,6 +991,16 @@ public class BasicCandyZombieEntity extends Zombie implements PlayerRideableJump
         } else {
             getNavigation().moveTo(target, 1.0D);
         }
+
+        // The legacy boss fires five extra volleys every tick when its target gets within three blocks.
+        if (distanceSqr < BOSS_SUGUARD_CLOSE_BARRAGE_RANGE_SQR) {
+            getNavigation().stop();
+            faceBossSuguardTarget(target);
+            entityData.set(BOSS_BOW_DRAW_TICKS, 1);
+            fireBossSuguardCloseBarrage(level, target);
+            return;
+        }
+
         int drawTicks = getBossBowDrawTicks();
         if (drawTicks > 0) {
             if (distanceSqr > 245.0D || !canSee) {
@@ -876,6 +1018,15 @@ public class BasicCandyZombieEntity extends Zombie implements PlayerRideableJump
             return;
         }
         entityData.set(BOSS_BOW_DRAW_TICKS, BOSS_SUGUARD_BOW_DRAW_DURATION);
+    }
+
+    private void fireBossSuguardCloseBarrage(ServerLevel level, LivingEntity target) {
+        int shotsPerVolley = getBossSuguardStat() == 1 ? 4 : 1;
+        for (int volley = 0; volley < BOSS_SUGUARD_CLOSE_BARRAGE_VOLLEYS; volley++) {
+            for (int shot = 0; shot < shotsPerVolley; shot++) {
+                shootBossSuguardArrow(level, target, 1.0F);
+            }
+        }
     }
 
     private void faceBossSuguardTarget(LivingEntity target) {
@@ -900,10 +1051,11 @@ public class BasicCandyZombieEntity extends Zombie implements PlayerRideableJump
 
     private void shootBossSuguardArrow(ServerLevel level, LivingEntity target, float attackStrength) {
         HoneyArrowEntity arrow = new HoneyArrowEntity(level, this);
+        arrow.markBossSuguardProjectile();
         arrow.setPos(getX(), getEyeY() - 0.05D, getZ());
         arrow.setBaseDamage(attackStrength * 3.0F + random.nextGaussian() * 0.25D + level.getDifficulty().getId() * 0.11F);
         arrow.setSecondsOnFire(getBossSuguardStat() == 3 ? 5 : 0);
-        arrow.setSlow(getBossSuguardStat() == 2);
+        arrow.setHoneyGlue(getBossSuguardStat() == 2);
         if (distanceTo(target) < 3.0F) {
             arrow.setKnockback(2);
         }
@@ -1070,41 +1222,27 @@ public class BasicCandyZombieEntity extends Zombie implements PlayerRideableJump
     }
 
     private void updateBossBar() {
-        if (!hasBossBar() || level().isClientSide) {
+        if (level().isClientSide) {
             return;
         }
-        bossEvent.setName(getBossBarName());
-        bossEvent.setColor(getBossBarColor());
         bossEvent.setProgress(Math.max(0.0F, Math.min(1.0F, getHealth() / getMaxHealth())));
-        bossEvent.setVisible(bossHealthBarRevealed);
-    }
-
-    private boolean hasBossBar() {
-        return isBossSuguard();
-    }
-
-    private Component getBossBarName() {
-        return getType().getDescription();
-    }
-
-    private BossEvent.BossBarColor getBossBarColor() {
-        if (isKingBeetle()) {
-            return BossEvent.BossBarColor.YELLOW;
-        }
-        return BossEvent.BossBarColor.WHITE;
+        bossEvent.setVisible(bossHealthBarRevealed && isBossSuguardAwake());
     }
 
     private void tickMageBehavior(ServerLevel level) {
-        if (!isMageSuguard()) {
-            return;
-        }
-
         LivingEntity currentTarget = getTarget();
         if (currentTarget != null && !CandyTargeting.canAttackEntity(currentTarget)) {
             setTarget(null);
             currentTarget = null;
         }
-        Player nearby = CandyTargeting.nearestAttackablePlayer(level, this, 8.0D);
+        if (mageTargetSearchCooldown > 0) {
+            mageTargetSearchCooldown--;
+        }
+        Player nearby = null;
+        if (currentTarget == null && mageTargetSearchCooldown <= 0) {
+            nearby = CandyTargeting.nearestAttackablePlayer(level, this, 8.0D);
+            mageTargetSearchCooldown = PLAYER_TARGET_SEARCH_INTERVAL;
+        }
         LivingEntity trigger = currentTarget != null ? currentTarget : nearby;
         waiting = trigger == null;
         if (waiting) {
@@ -1122,6 +1260,13 @@ public class BasicCandyZombieEntity extends Zombie implements PlayerRideableJump
         if (trigger != null) {
             setTarget(trigger);
             clearFire();
+            if (random.nextFloat() < 0.05F) {
+                BlockPos firePos = blockPosition();
+                BlockState fire = Blocks.FIRE.defaultBlockState();
+                if (level.getBlockState(firePos).isAir() && fire.canSurvive(level, firePos)) {
+                    level.setBlock(firePos, fire, 3);
+                }
+            }
             if (!spawnedMinions) {
                 summonSupportCircle(level, trigger);
                 spawnedMinions = true;
@@ -1199,15 +1344,34 @@ public class BasicCandyZombieEntity extends Zombie implements PlayerRideableJump
         return getType() == CCEntityTypes.BOSS_SUGUARD.get();
     }
 
+    @Override
+    protected float getStandingEyeHeight(Pose pose, EntityDimensions dimensions) {
+        if (isSuguard() || isMageSuguard() || isBossSuguard()) {
+            return dimensions.height * 0.85F;
+        }
+        return super.getStandingEyeHeight(pose, dimensions);
+    }
+
+    private boolean hasSuguardJumpClearance() {
+        return level().noCollision(this, getBoundingBox().move(0.0D, 0.42D, 0.0D));
+    }
+
     public boolean isBossSuguardAwake() {
         return isBossSuguard() && entityData.get(BOSS_SUGUARD_AWAKE);
     }
 
     private void setBossSuguardAwake(boolean awake) {
+        if (isBossSuguardAwake() != awake) {
+            bossSuguardDormantRotationInitialized = false;
+        }
         angry = awake;
         entityData.set(BOSS_SUGUARD_AWAKE, awake);
-        if (awake && isBossSuguard()) {
-            bossHealthBarRevealed = true;
+        if (isBossSuguard()) {
+            setNoGravity(false);
+            bossHealthBarRevealed = awake;
+            if (!level().isClientSide) {
+                bossEvent.setVisible(awake);
+            }
         }
         if (!awake) {
             bossSuguardLostTargetTicks = 0;
@@ -1215,23 +1379,56 @@ public class BasicCandyZombieEntity extends Zombie implements PlayerRideableJump
     }
 
     private void tickDormantBossSuguard() {
-        setBossSuguardAwake(false);
+        setNoGravity(false);
         bossSuguardSeeTicks = 0;
-        setBossSuguardStat(0);
-        heal(5.0F);
-        setTarget(null);
-        getNavigation().stop();
-        getLookControl().setLookAt(this);
-        setDeltaMovement(0.0D, getDeltaMovement().y, 0.0D);
-        if (getAttribute(Attributes.MOVEMENT_SPEED) != null) {
-            getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(0.0D);
+        if (getBossSuguardStat() != 0) {
+            setBossSuguardStat(0);
         }
+        if (tickCount % DORMANT_BOSS_HEAL_INTERVAL_TICKS == 0) {
+            heal(DORMANT_BOSS_HEAL_AMOUNT);
+        }
+        if (getTarget() != null) {
+            setTarget(null);
+        }
+        getNavigation().stop();
+        setJumping(false);
+        setMovementSpeedBase(0.0D);
         entityData.set(BOSS_BOW_DRAW_TICKS, 0);
-        yRotO = getYRot();
-        yBodyRot = getYRot();
-        yHeadRot = getYRot();
-        yBodyRotO = yBodyRot;
-        yHeadRotO = yHeadRot;
+        freezeDormantBossSuguard();
+    }
+
+    private void freezeDormantBossSuguard() {
+        if (!bossSuguardDormantRotationInitialized) {
+            bossSuguardDormantYRot = getYRot();
+            bossSuguardDormantYHeadRot = getYHeadRot();
+            bossSuguardDormantRotationInitialized = true;
+        }
+        if (getTarget() != null) {
+            setTarget(null);
+        }
+        getNavigation().stop();
+        setJumping(false);
+        stopHorizontalMovement();
+        setYRot(bossSuguardDormantYRot);
+        yRotO = bossSuguardDormantYRot;
+        yBodyRot = bossSuguardDormantYRot;
+        yBodyRotO = bossSuguardDormantYRot;
+        yHeadRot = bossSuguardDormantYHeadRot;
+        yHeadRotO = bossSuguardDormantYHeadRot;
+    }
+
+    private void setMovementSpeedBase(double value) {
+        AttributeInstance speed = getAttribute(Attributes.MOVEMENT_SPEED);
+        if (speed != null && speed.getBaseValue() != value) {
+            speed.setBaseValue(value);
+        }
+    }
+
+    private void stopHorizontalMovement() {
+        Vec3 movement = getDeltaMovement();
+        if (movement.x != 0.0D || movement.z != 0.0D) {
+            setDeltaMovement(0.0D, movement.y, 0.0D);
+        }
     }
 
     public int getBossSuguardStat() {
@@ -1401,7 +1598,9 @@ public class BasicCandyZombieEntity extends Zombie implements PlayerRideableJump
 
         @Override
         public boolean canContinueToUse() {
-            if (suguard.getRandom().nextBoolean()) {
+            if (!suguard.hasSuguardJumpClearance()) {
+                suguard.setJumping(false);
+            } else if (suguard.getRandom().nextBoolean()) {
                 suguard.setJumping(true);
             }
             return super.canContinueToUse();

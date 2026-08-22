@@ -11,7 +11,7 @@ version = mod_version
 group = mod_group_id
 
 base {
-    archivesName = 'candycraft'
+    archivesName = 'CandyCraftEE'
 }
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
@@ -50,6 +50,10 @@ repositories {
     maven {
         url = 'https://maven.blamejared.com'
     }
+    maven {
+        name = 'Modrinth'
+        url = 'https://api.modrinth.com/maven'
+    }
 }
 
 dependencies {
@@ -57,6 +61,8 @@ dependencies {
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
     compileOnly fg.deobf("mezz.jei:jei-${minecraft_version}-common-api:15.20.0.132")
     compileOnly fg.deobf("mezz.jei:jei-${minecraft_version}-forge-api:15.20.0.132")
+    compileOnly fg.deobf("maven.modrinth:jade:11.13.3+forge")
+    runtimeOnly fg.deobf("maven.modrinth:jade:11.13.3+forge")
 }
 
 mixin {
@@ -129,6 +135,40 @@ tasks.named('jar', Jar).configure {
         ])
     }
 }
+
+// Force mixin processor to run before compilation to ensure correct refmap generation
+processResources.dependsOn('addMixinsToJar')
+
+// Auto-copy built jar to desktop and overwrite existing file.
+// `reobfJar` is a RenameJarInPlace task that rewrites the `jar` archive in
+// place, and both tasks finalize `jar`. Enforce that the copy runs after
+// `reobfJar` so it always snapshots the reobfuscated (SRG) jar instead of the
+// pre-reobf MCP-named jar.
+tasks.register('postBuildCopyJar') {
+    dependsOn 'reobfJar'
+    doLast {
+        def jarFile = layout.buildDirectory.file('reobfJar/output.jar').get().asFile
+        if (!jarFile.isFile()) {
+            throw new GradleException("Reobfuscated jar was not produced: ${jarFile}")
+        }
+        def desktopPath = new File(System.getProperty('user.home'), 'Desktop')
+        def destFile = new File(desktopPath, tasks.jar.archiveFile.get().asFile.name)
+        
+        if (destFile.exists()) {
+            destFile.delete()
+        }
+        
+        copy {
+            from jarFile
+            into desktopPath
+            rename { destFile.name }
+        }
+        
+        println "✅ Built JAR copied to Desktop: ${destFile.absolutePath}"
+    }
+}
+
+jar.finalizedBy(postBuildCopyJar)
 
 publishing {
     publications {

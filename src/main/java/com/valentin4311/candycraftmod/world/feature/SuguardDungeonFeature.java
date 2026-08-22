@@ -487,8 +487,6 @@ public class SuguardDungeonFeature extends Feature<NoneFeatureConfiguration> {
         set(level, x - 2, y - 1, z, chocolate());
         set(level, x - 1, 246 + verticalOffset, z, Blocks.OAK_WALL_SIGN.defaultBlockState().setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.SOUTH));
         set(level, x - 2, 246 + verticalOffset, z, Blocks.OAK_WALL_SIGN.defaultBlockState().setValue(BlockStateProperties.HORIZONTAL_FACING, Direction.SOUTH));
-        set(level, x - 1, 247 + verticalOffset, z, CCBlocks.GRENADINE.get().defaultBlockState());
-        set(level, x - 2, 247 + verticalOffset, z, CCBlocks.GRENADINE.get().defaultBlockState());
         box(level, x, y + 1, z, x, y + 2, z, Blocks.AIR.defaultBlockState());
         int sx = x - 4;
         hollowBox(level, sx - 8, 10 + verticalOffset, z - 4, sx, 250 + verticalOffset, z + 4, yCheckerPattern(chocolate(), cobble(), honeyLamp()));
@@ -614,7 +612,7 @@ public class SuguardDungeonFeature extends Feature<NoneFeatureConfiguration> {
             keyChest(level, x + 2, y + 1, z, CCItems.SUGUARD_EMBLEM.get());
             set(level, x - 2, y + 1, z, suguardTeleporter(PortalRole.END));
         } else {
-            set(level, x, y, z, CCBlocks.MARSHMALLOW_TRAPDOOR.get().defaultBlockState().setValue(TrapDoorBlock.HALF, Half.BOTTOM));
+            set(level, x, y, z, CCBlocks.MARSHMALLOW_TRAPDOOR_DARK.get().defaultBlockState().setValue(TrapDoorBlock.HALF, Half.BOTTOM));
             set(level, x, y - 1, z, suguardTeleporter(PortalRole.RETURN));
             keyChest(level, x + 2, y + 1, z, CCItems.SUGUARD_BOSS_KEY.get());
         }
@@ -744,7 +742,7 @@ public class SuguardDungeonFeature extends Feature<NoneFeatureConfiguration> {
     }
 
     private void placeMarshmallowDoor(WorldGenLevel level, int x, int y, int z, Direction facing) {
-        BlockState base = CCBlocks.MARSHMALLOW_DOOR.get().defaultBlockState()
+        BlockState base = CCBlocks.MARSHMALLOW_DOOR_DARK.get().defaultBlockState()
             .setValue(DoorBlock.FACING, facing)
             .setValue(DoorBlock.HINGE, DoorHingeSide.LEFT)
             .setValue(DoorBlock.OPEN, false)

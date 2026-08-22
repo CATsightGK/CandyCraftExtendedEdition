@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "##",
+    "##"
+  ],
+  "key": {
+    "#": {
+      "item": "candycraftmod:wafer_stick_block"
+    }
+  },
+  "result": {
+    "item": "candycraftmod:solid_wafer_block",
+    "count": 3
+  }
+}

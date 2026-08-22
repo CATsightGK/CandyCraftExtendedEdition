@@ -10,6 +10,7 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.HolderSet;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.biome.Biome;
@@ -83,9 +84,16 @@ public final class CandyFeatureLocator {
                 continue;
             }
             for (int step = 0; step < steps.size(); step++) {
-                int featureIndex = steps.get(step).features().indexOf(placedFeature);
-                if (featureIndex >= 0) {
-                    targets.add(new Target(structure, placedFeature, step, featureIndex));
+                List<PlacedFeature> stepFeatures = steps.get(step).features();
+                for (int featureIndex = 0; featureIndex < stepFeatures.size(); featureIndex++) {
+                    PlacedFeature candidate = stepFeatures.get(featureIndex);
+                    ResourceLocation candidateId = placedFeatures.getKey(candidate);
+                    if (candidate == placedFeature || locator.feature().equals(candidateId)) {
+                        targets.add(new Target(structure, candidate, step, featureIndex));
+                        break;
+                    }
+                }
+                if (!targets.isEmpty() && targets.get(targets.size() - 1).structure() == structure) {
                     break;
                 }
             }

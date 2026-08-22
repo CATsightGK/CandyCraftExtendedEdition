@@ -1,6 +1,8 @@
 package com.valentin4311.candycraftmod.mixin;
 
 import com.valentin4311.candycraftmod.registry.CCToolProperties;
+import com.valentin4311.candycraftmod.registry.CCEnchantments;
+import com.valentin4311.candycraftmod.registry.CCItemTags;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
@@ -38,6 +40,10 @@ public abstract class ItemMixin {
     }
 
     public boolean canApplyAtEnchantingTable(ItemStack stack, Enchantment enchantment) {
+        if (enchantment == CCEnchantments.HONEY_SOURCE.get()
+                && (stack.is(CCItemTags.HONEY_SOURCE_TOOLS) || stack.is(CCItemTags.HONEY_SOURCE_RANGED))) {
+            return true;
+        }
         Boolean configured = CCToolProperties.configuredEnchantmentRule(stack, enchantment);
         return configured != null ? configured : enchantment.category.canEnchant((Item)(Object)this);
     }

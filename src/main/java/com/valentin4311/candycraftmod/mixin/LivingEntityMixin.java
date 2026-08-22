@@ -1,7 +1,9 @@
 package com.valentin4311.candycraftmod.mixin;
 
 import com.valentin4311.candycraftmod.entity.CandyStuckProjectileCarrier;
+import com.valentin4311.candycraftmod.entity.PropolisSurfaceCarrier;
 import com.valentin4311.candycraftmod.registry.CCFluids;
+import com.valentin4311.candycraftmod.registry.CCMobEffects;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
@@ -17,7 +19,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(LivingEntity.class)
-public abstract class LivingEntityMixin implements CandyStuckProjectileCarrier {
+public abstract class LivingEntityMixin implements CandyStuckProjectileCarrier, PropolisSurfaceCarrier {
     private static final double MAX_CHOCOLATE_SURFACE_DEPTH = 0.35D;
     private static final float MIN_MOVEMENT_INPUT = 0.01F;
     private static final int STUCK_PROJECTILE_LIFETIME = 20 * 60;
@@ -28,13 +30,19 @@ public abstract class LivingEntityMixin implements CandyStuckProjectileCarrier {
     private static final EntityDataAccessor<Integer> CANDYCRAFT_HONEY_BOLTS =
         SynchedEntityData.defineId(LivingEntity.class, EntityDataSerializers.INT);
     @Unique
+    private static final EntityDataAccessor<Boolean> CANDYCRAFT_PROPOLIS_SURFACE =
+        SynchedEntityData.defineId(LivingEntity.class, EntityDataSerializers.BOOLEAN);
+    @Unique
     private int candycraft$removeStuckProjectileTime;
+    @Unique
+    private boolean candycraft$hasStuckProjectiles;
 
     @Inject(method = "defineSynchedData", at = @At("TAIL"))
     private void candycraft$defineStuckProjectileData(CallbackInfo callback) {
         LivingEntity entity = (LivingEntity)(Object)this;
         entity.getEntityData().define(CANDYCRAFT_HONEY_ARROWS, 0);
         entity.getEntityData().define(CANDYCRAFT_HONEY_BOLTS, 0);
+        entity.getEntityData().define(CANDYCRAFT_PROPOLIS_SURFACE, false);
     }
 
     @Inject(method = "tick", at = @At("TAIL"))
@@ -44,9 +52,18 @@ public abstract class LivingEntityMixin implements CandyStuckProjectileCarrier {
             return;
         }
 
+        boolean hasPropolis = entity.hasEffect(CCMobEffects.HONEY_GLUE.get());
+        if (candycraft$hasPropolisSurface() != hasPropolis) {
+            entity.getEntityData().set(CANDYCRAFT_PROPOLIS_SURFACE, hasPropolis);
+        }
+
+        if (!candycraft$hasStuckProjectiles) {
+            return;
+        }
         int arrowCount = candycraft$getHoneyArrowCount();
         int boltCount = candycraft$getHoneyBoltCount();
         if (arrowCount + boltCount <= 0) {
+            candycraft$hasStuckProjectiles = false;
             candycraft$removeStuckProjectileTime = 0;
             return;
         }
@@ -63,8 +80,14 @@ public abstract class LivingEntityMixin implements CandyStuckProjectileCarrier {
 
     @Inject(method = "addAdditionalSaveData", at = @At("TAIL"))
     private void candycraft$saveStuckProjectiles(CompoundTag tag, CallbackInfo callback) {
-        tag.putInt("CandyCraftHoneyArrows", candycraft$getHoneyArrowCount());
-        tag.putInt("CandyCraftHoneyBolts", candycraft$getHoneyBoltCount());
+        int arrowCount = candycraft$getHoneyArrowCount();
+        int boltCount = candycraft$getHoneyBoltCount();
+        if (arrowCount > 0) {
+            tag.putInt("CandyCraftHoneyArrows", arrowCount);
+        }
+        if (boltCount > 0) {
+            tag.putInt("CandyCraftHoneyBolts", boltCount);
+        }
     }
 
     @Inject(method = "readAdditionalSaveData", at = @At("TAIL"))
@@ -80,7 +103,9 @@ public abstract class LivingEntityMixin implements CandyStuckProjectileCarrier {
 
     @Override
     public void candycraft$setHoneyArrowCount(int count) {
-        ((LivingEntity)(Object)this).getEntityData().set(CANDYCRAFT_HONEY_ARROWS, Math.max(0, count));
+        int clampedCount = Math.max(0, count);
+        ((LivingEntity)(Object)this).getEntityData().set(CANDYCRAFT_HONEY_ARROWS, clampedCount);
+        candycraft$hasStuckProjectiles = clampedCount > 0 || candycraft$getHoneyBoltCount() > 0;
     }
 
     @Override
@@ -90,7 +115,14 @@ public abstract class LivingEntityMixin implements CandyStuckProjectileCarrier {
 
     @Override
     public void candycraft$setHoneyBoltCount(int count) {
-        ((LivingEntity)(Object)this).getEntityData().set(CANDYCRAFT_HONEY_BOLTS, Math.max(0, count));
+        int clampedCount = Math.max(0, count);
+        ((LivingEntity)(Object)this).getEntityData().set(CANDYCRAFT_HONEY_BOLTS, clampedCount);
+        candycraft$hasStuckProjectiles = clampedCount > 0 || candycraft$getHoneyArrowCount() > 0;
+    }
+
+    @Override
+    public boolean candycraft$hasPropolisSurface() {
+        return ((LivingEntity)(Object)this).getEntityData().get(CANDYCRAFT_PROPOLIS_SURFACE);
     }
 
     @Inject(method = "canStandOnFluid", at = @At("HEAD"), cancellable = true)

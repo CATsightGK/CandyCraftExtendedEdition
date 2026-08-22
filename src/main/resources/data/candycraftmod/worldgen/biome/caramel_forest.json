@@ -1,7 +1,7 @@
 {
   "has_precipitation": false,
-  "temperature": 1,
-  "downfall": 0.3,
+  "temperature": 0.5,
+  "downfall": 0.5,
   "creature_spawn_probability": 0.1,
   "effects": {
     "sky_color": 16764032,

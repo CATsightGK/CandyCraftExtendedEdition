@@ -23,12 +23,10 @@ import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.animal.Pig;
-import net.minecraft.world.entity.animal.Rabbit;
 import net.minecraft.world.entity.animal.Wolf;
 import net.minecraft.world.entity.monster.Creeper;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.monster.Spider;
-import net.minecraft.world.entity.monster.Zombie;
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraftforge.event.entity.EntityAttributeCreationEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -50,10 +48,7 @@ public final class CCEntityAttributes {
             .add(Attributes.MAX_HEALTH, 10.0D)
             .add(Attributes.ATTACK_DAMAGE, 2.0D)
             .build());
-        event.put(CCEntityTypes.GUMMY_BUNNY.get(), Rabbit.createAttributes()
-            .add(Attributes.MAX_HEALTH, 10.0D)
-            .add(Attributes.MOVEMENT_SPEED, 0.20000000298023224D)
-            .build());
+        event.put(CCEntityTypes.GUMMY_BUNNY.get(), GummyBunnyEntity.createAttributes().build());
         event.put(CCEntityTypes.COTTON_CANDY_SHEEP.get(), CottonCandySheepEntity.createAttributes().build());
         event.put(CCEntityTypes.EASTER_CHICKEN.get(), EasterChickenEntity.createAttributes().build());
         event.put(CCEntityTypes.GUMMY_MOUSE.get(), GummyMouseEntity.createAttributes().build());
@@ -81,30 +76,22 @@ public final class CCEntityAttributes {
             .build();
         event.put(CCEntityTypes.MAGE_SUGUARD.get(), mageSuguard);
 
-        AttributeSupplier zombie = Zombie.createAttributes()
-            .add(Attributes.MAX_HEALTH, 20.0D)
-            .add(Attributes.MOVEMENT_SPEED, 0.25D)
-            .add(Attributes.ATTACK_DAMAGE, 3.0D)
+        AttributeSupplier mermaid = Monster.createMonsterAttributes()
+            .add(Attributes.MAX_HEALTH, 30.0D)
+            .add(Attributes.MOVEMENT_SPEED, 0.0D)
             .build();
-        event.put(CCEntityTypes.MERMAID.get(), zombie);
+        event.put(CCEntityTypes.MERMAID.get(), mermaid);
         event.put(CCEntityTypes.NESSIE.get(), NessieEntity.createAttributes().build());
-        event.put(CCEntityTypes.DRAGON.get(), Zombie.createAttributes()
+        event.put(CCEntityTypes.DRAGON.get(), Monster.createMonsterAttributes()
             .add(Attributes.MAX_HEALTH, 80.0D)
             .add(Attributes.MOVEMENT_SPEED, 0.4D)
             .add(Attributes.ATTACK_DAMAGE, 6.0D)
             .build());
-        event.put(CCEntityTypes.KING_BEETLE.get(), Zombie.createAttributes()
+        event.put(CCEntityTypes.KING_BEETLE.get(), Monster.createMonsterAttributes()
             .add(Attributes.MAX_HEALTH, 80.0D)
             .add(Attributes.MOVEMENT_SPEED, 0.3D)
             .add(Attributes.ATTACK_DAMAGE, 8.0D)
             .build());
-
-        AttributeSupplier spider = Monster.createMonsterAttributes()
-            .add(Attributes.MAX_HEALTH, 16.0D)
-            .add(Attributes.MOVEMENT_SPEED, 0.3D)
-            .add(Attributes.ATTACK_DAMAGE, 3.0D)
-            .build();
-        putSpider(event, spider);
 
         AttributeSupplier slime = Mob.createMobAttributes()
             .add(Attributes.MAX_HEALTH, 16.0D)
@@ -125,7 +112,7 @@ public final class CCEntityAttributes {
             .add(Attributes.MOVEMENT_SPEED, 0.35D)
             .add(Attributes.ATTACK_DAMAGE, 10.0D)
             .build());
-        event.put(CCEntityTypes.BOSS_SUGUARD.get(), Zombie.createAttributes()
+        event.put(CCEntityTypes.BOSS_SUGUARD.get(), Monster.createMonsterAttributes()
             .add(Attributes.MAX_HEALTH, 400.0D)
             .add(Attributes.MOVEMENT_SPEED, 0.35D)
             .add(Attributes.ATTACK_DAMAGE, 12.0D)
@@ -143,9 +130,6 @@ public final class CCEntityAttributes {
             .add(Attributes.ATTACK_DAMAGE, 12.0D)
             .build());
         event.put(CCEntityTypes.NOUGAT_GOLEM.get(), NougatGolemEntity.createAttributes().build());
-    }
-
-    private static void putSpider(EntityAttributeCreationEvent event, AttributeSupplier attributes) {
     }
 
     private static void putSlime(EntityAttributeCreationEvent event, AttributeSupplier attributes) {

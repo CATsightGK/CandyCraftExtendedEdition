@@ -1,0 +1,126 @@
+{
+  "has_precipitation": false,
+  "temperature": 0.8,
+  "downfall": 0.4,
+  "creature_spawn_probability": 0.1,
+  "effects": {
+    "sky_color": 16636119,
+    "fog_color": 16767191,
+    "water_color": 13473279,
+    "water_fog_color": 13473279,
+    "grass_color": 15641275,
+    "foliage_color": 15641275
+  },
+  "spawners": {
+    "creature": [
+      {
+        "type": "candycraftmod:candy_pig",
+        "weight": 40,
+        "minCount": 4,
+        "maxCount": 6
+      },
+      {
+        "type": "candycraftmod:gummy_bunny",
+        "weight": 55,
+        "minCount": 4,
+        "maxCount": 6
+      },
+      {
+        "type": "candycraftmod:waffle_sheep",
+        "weight": 8,
+        "minCount": 2,
+        "maxCount": 3
+      },
+      {
+        "type": "candycraftmod:cotton_candy_sheep",
+        "weight": 1,
+        "minCount": 1,
+        "maxCount": 1
+      }
+    ],
+    "monster": [
+      {
+        "type": "candycraftmod:caramel_bee",
+        "weight": 40,
+        "minCount": 2,
+        "maxCount": 3
+      },
+      {
+        "type": "candycraftmod:cotton_candy_spider",
+        "weight": 100,
+        "minCount": 4,
+        "maxCount": 4
+      },
+      {
+        "type": "candycraftmod:candy_creeper",
+        "weight": 100,
+        "minCount": 8,
+        "maxCount": 15
+      },
+      {
+        "type": "candycraftmod:suguard",
+        "weight": 100,
+        "minCount": 4,
+        "maxCount": 4
+      }
+    ],
+    "water_ambient": [
+      {
+        "type": "candycraftmod:candy_fish",
+        "weight": 50,
+        "minCount": 4,
+        "maxCount": 4
+      }
+    ]
+  },
+  "spawn_costs": {},
+  "carvers": {},
+  "features": [
+    [],
+    [],
+    [],
+    [
+      "candycraftmod:honey_dungeon",
+      "candycraftmod:underground_village"
+    ],
+    [
+      "candycraftmod:floating_island",
+      "candycraftmod:candy_plant_house",
+      "candycraftmod:suguard_outpost"
+    ],
+    [],
+    [
+      "candycraftmod:ore_honey",
+      "candycraftmod:ore_licorice",
+      "candycraftmod:ore_jelly",
+      "candycraftmod:ore_nougat",
+      "candycraftmod:ore_pez",
+      "candycraftmod:ore_lapis",
+      "candycraftmod:ore_chocolate_copper_slot",
+      "candycraftmod:ore_sweetscape_milk_brownie",
+      "candycraftmod:ore_sweetscape_white_brownie",
+      "candycraftmod:ore_sweetscape_dark_brownie",
+      "candycraftmod:ore_sweetscape_milk_brownie_cake_roll_x",
+      "candycraftmod:ore_sweetscape_milk_brownie_cake_roll_y",
+      "candycraftmod:ore_sweetscape_milk_brownie_cake_roll_z",
+      "candycraftmod:ore_sweetscape_white_brownie_cake_roll_x",
+      "candycraftmod:ore_sweetscape_white_brownie_cake_roll_y",
+      "candycraftmod:ore_sweetscape_white_brownie_cake_roll_z",
+      "candycraftmod:ore_sweetscape_dark_brownie_cake_roll_x",
+      "candycraftmod:ore_sweetscape_dark_brownie_cake_roll_y",
+      "candycraftmod:ore_sweetscape_dark_brownie_cake_roll_z",
+      "candycraftmod:ore_sweetscape_sugar_cookie",
+      "candycraftmod:ore_sweetscape_teleporter",
+      "candycraftmod:ore_sweetscape_sugar_sand"
+    ],
+    [],
+    [],
+    [
+      "candycraftmod:hard_candy_cane",
+      "candycraftmod:trees_candy_sparse",
+      "candycraftmod:candy_grass",
+      "candycraftmod:candy_seaweed"
+    ],
+    []
+  ]
+}

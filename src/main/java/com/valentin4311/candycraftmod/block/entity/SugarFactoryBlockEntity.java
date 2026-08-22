@@ -6,6 +6,7 @@ import com.valentin4311.candycraftmod.menu.SugarFactoryMenu;
 import com.valentin4311.candycraftmod.recipe.SugarFactoryRecipe;
 import com.valentin4311.candycraftmod.registry.CCBlockEntities;
 import com.valentin4311.candycraftmod.registry.CCBlocks;
+import com.valentin4311.candycraftmod.registry.CCItemTags;
 import com.valentin4311.candycraftmod.registry.CCItems;
 import com.valentin4311.candycraftmod.registry.CCRecipeTypes;
 import java.util.ArrayList;
@@ -20,6 +21,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.ContainerHelper;
+import net.minecraft.world.Containers;
 import net.minecraft.world.WorldlyContainer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -59,6 +61,12 @@ public class SugarFactoryBlockEntity extends BaseContainerBlockEntity implements
     private NonNullList<ItemStack> items = NonNullList.withSize(2, ItemStack.EMPTY);
     private int progress;
     private int processTime = DEFAULT_PROCESS_TIME;
+    private int pendingGlassBottles;
+    private List<SugarFactoryRecipe> cachedRecipes = List.of();
+    private ItemStack cachedInput = ItemStack.EMPTY;
+    private ProcessRecipe cachedProcessRecipe;
+    private boolean cachedAdvanced;
+    private boolean hasCachedProcessRecipe;
 
     public SugarFactoryBlockEntity(BlockPos pos, BlockState state) {
         super(CCBlockEntities.SUGAR_FACTORY.get(), pos, state);
@@ -66,7 +74,8 @@ public class SugarFactoryBlockEntity extends BaseContainerBlockEntity implements
 
     public static void serverTick(Level level, BlockPos pos, BlockState state, SugarFactoryBlockEntity blockEntity) {
         ItemStack input = blockEntity.items.get(0);
-        ProcessRecipe recipe = blockEntity.getProcessRecipe(input);
+        List<SugarFactoryRecipe> recipes = level.getRecipeManager().getAllRecipesFor(CCRecipeTypes.SUGAR_FACTORY_TYPE.get());
+        ProcessRecipe recipe = blockEntity.getProcessRecipe(recipes, input);
         ItemStack result = recipe == null ? ItemStack.EMPTY : recipe.result();
         blockEntity.processTime = recipe == null ? DEFAULT_PROCESS_TIME : recipe.processingTime();
         boolean changed = false;
@@ -117,6 +126,9 @@ public class SugarFactoryBlockEntity extends BaseContainerBlockEntity implements
     public ItemStack removeItem(int slot, int amount) {
         ItemStack stack = ContainerHelper.removeItem(items, slot, amount);
         if (!stack.isEmpty()) {
+            if (slot == 0) {
+                releasePendingGlassBottles();
+            }
             setChanged();
         }
         return stack;
@@ -124,12 +136,19 @@ public class SugarFactoryBlockEntity extends BaseContainerBlockEntity implements
 
     @Override
     public ItemStack removeItemNoUpdate(int slot) {
-        return ContainerHelper.takeItem(items, slot);
+        ItemStack stack = ContainerHelper.takeItem(items, slot);
+        if (slot == 0) {
+            releasePendingGlassBottles();
+        }
+        return stack;
     }
 
     @Override
     public void setItem(int slot, ItemStack stack) {
         items.set(slot, stack);
+        if (slot == 0 && stack.isEmpty()) {
+            releasePendingGlassBottles();
+        }
         if (stack.getCount() > getMaxStackSize()) {
             stack.setCount(getMaxStackSize());
         }
@@ -150,6 +169,7 @@ public class SugarFactoryBlockEntity extends BaseContainerBlockEntity implements
     @Override
     public void clearContent() {
         items.clear();
+        pendingGlassBottles = 0;
     }
 
     @Override
@@ -173,6 +193,8 @@ public class SugarFactoryBlockEntity extends BaseContainerBlockEntity implements
         items = NonNullList.withSize(getContainerSize(), ItemStack.EMPTY);
         ContainerHelper.loadAllItems(tag, items);
         progress = tag.getInt("Progress");
+        pendingGlassBottles = tag.getInt("PendingGlassBottles");
+        releasePendingGlassBottles();
     }
 
     @Override
@@ -180,6 +202,7 @@ public class SugarFactoryBlockEntity extends BaseContainerBlockEntity implements
         super.saveAdditional(tag);
         ContainerHelper.saveAllItems(tag, items);
         tag.putInt("Progress", progress);
+        tag.putInt("PendingGlassBottles", pendingGlassBottles);
     }
 
     private boolean isAdvanced() {
@@ -189,6 +212,24 @@ public class SugarFactoryBlockEntity extends BaseContainerBlockEntity implements
 
     public boolean isAdvancedFactory() {
         return isAdvanced();
+    }
+
+    public int getProgress() {
+        return progress;
+    }
+
+    public int getProcessTime() {
+        return processTime;
+    }
+
+    public ItemStack getExpectedResult() {
+        if (level == null) {
+            return ItemStack.EMPTY;
+        }
+        List<SugarFactoryRecipe> recipes = level.getRecipeManager()
+            .getAllRecipesFor(CCRecipeTypes.SUGAR_FACTORY_TYPE.get());
+        ProcessRecipe recipe = getProcessRecipe(recipes, items.get(0));
+        return recipe == null ? ItemStack.EMPTY : recipe.result().copy();
     }
 
     public static List<DisplayRecipe> getDisplayRecipes(Level level) {
@@ -215,6 +256,7 @@ public class SugarFactoryBlockEntity extends BaseContainerBlockEntity implements
         }
         Set<Item> inputs = new LinkedHashSet<>();
         inputs.add(Items.STICK);
+        addVanillaSugarInputs(inputs);
         ForgeRegistries.ITEMS.getValues().stream()
             .filter(SugarFactoryBlockEntity::isCandyCraftItem)
             .forEach(inputs::add);
@@ -276,7 +318,14 @@ public class SugarFactoryBlockEntity extends BaseContainerBlockEntity implements
         }
 
         ItemStack input = items.get(0);
-        if (inputCount == 1 && (input.is(CCItems.CARAMEL_BUCKET.get()) || input.is(CCItems.GRENADINE_BUCKET.get()))) {
+        if (inputCount == 1 && input.is(Items.HONEY_BOTTLE)) {
+            input.shrink(1);
+            pendingGlassBottles++;
+            if (input.isEmpty()) {
+                items.set(0, ItemStack.EMPTY);
+                releasePendingGlassBottles();
+            }
+        } else if (inputCount == 1 && (input.is(CCItems.CARAMEL_BUCKET.get()) || input.is(CCItems.GRENADINE_BUCKET.get()))) {
             items.set(0, new ItemStack(Items.BUCKET));
         } else {
             input.shrink(inputCount);
@@ -286,16 +335,50 @@ public class SugarFactoryBlockEntity extends BaseContainerBlockEntity implements
         }
     }
 
-    private ProcessRecipe getProcessRecipe(ItemStack input) {
-        if (level != null) {
-            for (SugarFactoryRecipe recipe : level.getRecipeManager().getAllRecipesFor(CCRecipeTypes.SUGAR_FACTORY_TYPE.get())) {
-                if (recipe.supportsFactory(isAdvanced()) && recipe.accepts(input)) {
-                    return new ProcessRecipe(recipe.resultForNetwork(), recipe.ingredientCount(), recipe.processingTime());
-                }
+    public void releasePendingGlassBottles() {
+        if (pendingGlassBottles > 0 && items.get(0).isEmpty()) {
+            items.set(0, new ItemStack(Items.GLASS_BOTTLE, pendingGlassBottles));
+            pendingGlassBottles = 0;
+            setChanged();
+        }
+    }
+
+    public void dropPendingGlassBottles() {
+        if (pendingGlassBottles > 0 && level != null) {
+            Containers.dropItemStack(level, worldPosition.getX(), worldPosition.getY(), worldPosition.getZ(),
+                new ItemStack(Items.GLASS_BOTTLE, pendingGlassBottles));
+            pendingGlassBottles = 0;
+            setChanged();
+        }
+    }
+
+    private ProcessRecipe getProcessRecipe(List<SugarFactoryRecipe> recipes, ItemStack input) {
+        boolean advanced = isAdvanced();
+        if (hasCachedProcessRecipe && cachedAdvanced == advanced
+                && cachedRecipes == recipes
+                && cachedInput.getCount() == input.getCount()
+                && ItemStack.isSameItemSameTags(cachedInput, input)) {
+            return cachedProcessRecipe;
+        }
+
+        ProcessRecipe processRecipe = null;
+        for (SugarFactoryRecipe recipe : recipes) {
+            if (recipe.supportsFactory(advanced) && recipe.accepts(input)) {
+                processRecipe = new ProcessRecipe(recipe.resultForNetwork(), recipe.ingredientCount(), recipe.processingTime());
+                break;
             }
         }
-        ItemStack fallback = getFallbackResult(input, isAdvanced());
-        return fallback.isEmpty() ? null : new ProcessRecipe(fallback, 1, DEFAULT_PROCESS_TIME);
+        if (processRecipe == null) {
+            ItemStack fallback = getFallbackResult(input, advanced);
+            processRecipe = fallback.isEmpty() ? null : new ProcessRecipe(fallback, 1, DEFAULT_PROCESS_TIME);
+        }
+
+        cachedRecipes = recipes;
+        cachedInput = input.copy();
+        cachedAdvanced = advanced;
+        cachedProcessRecipe = processRecipe;
+        hasCachedProcessRecipe = true;
+        return processRecipe;
     }
 
     private boolean acceptsCustomInput(ItemStack input) {
@@ -309,6 +392,9 @@ public class SugarFactoryBlockEntity extends BaseContainerBlockEntity implements
         }
 
         Item item = input.getItem();
+        if (item == Blocks.BEE_NEST.asItem() || item == Blocks.BEEHIVE.asItem()) {
+            return ItemStack.EMPTY;
+        }
         if (item == Items.STICK) {
             return new ItemStack(CCItems.MARSHMALLOW_STICK.get());
         }
@@ -317,9 +403,6 @@ public class SugarFactoryBlockEntity extends BaseContainerBlockEntity implements
         }
         if (item == CCBlocks.CHOCOLATE_STONE.get().asItem()) {
             return new ItemStack(CCItems.CHOCOLATE_COIN.get());
-        }
-        if (item == CCBlocks.HONEYCOMB_BLOCK.get().asItem()) {
-            return new ItemStack(CCItems.HONEYCOMB.get());
         }
         if (advanced && item == CCBlocks.NOUGAT_BLOCK.get().asItem()) {
             return new ItemStack(CCBlocks.NOUGAT_HEAD.get());
@@ -332,7 +415,28 @@ public class SugarFactoryBlockEntity extends BaseContainerBlockEntity implements
             return ItemStack.EMPTY;
         }
 
-        return isCandyCraftItem(item) ? new ItemStack(Items.SUGAR) : ItemStack.EMPTY;
+        return isCandyCraftItem(item) || input.is(CCItemTags.SWEET_FOODS) || isVanillaHoneyItem(item)
+            || item == Items.SUGAR_CANE || item == Items.PAPER
+            ? new ItemStack(Items.SUGAR) : ItemStack.EMPTY;
+    }
+
+    private static boolean isVanillaHoneyItem(Item item) {
+        return item == Items.HONEY_BOTTLE || item == Items.HONEYCOMB
+            || item == Blocks.HONEY_BLOCK.asItem() || item == Blocks.HONEYCOMB_BLOCK.asItem();
+    }
+
+    private static void addVanillaSugarInputs(Set<Item> inputs) {
+        inputs.add(Items.COOKIE);
+        inputs.add(Items.CAKE);
+        inputs.add(Items.PUMPKIN_PIE);
+        inputs.add(Items.HONEY_BOTTLE);
+        inputs.add(Items.HONEYCOMB);
+        inputs.add(Blocks.HONEY_BLOCK.asItem());
+        inputs.add(Blocks.HONEYCOMB_BLOCK.asItem());
+        inputs.add(Items.SWEET_BERRIES);
+        inputs.add(Items.GLOW_BERRIES);
+        inputs.add(Items.SUGAR_CANE);
+        inputs.add(Items.PAPER);
     }
 
     private static boolean isCandyCraftItem(Item item) {

@@ -30,9 +30,15 @@ public class CandyBiomeSource extends BiomeSource {
     private static final int SPAWN_LAND_RADIUS_BLOCKS = 100;
     private static final int SPAWN_LAND_MAX_RADIUS_BLOCKS = 148;
     private static final long SPAWN_ISLAND_NOISE_SALT = 0x534957454554534CL;
+    private static final int BIOME_TILE_SIZE = 16;
+    private static final double GUMMY_REGION_THRESHOLD = 0.69D;
+    private static final double CHOCOLATE_REGION_THRESHOLD = 0.47D;
+    private static final double COTTON_CANDY_REGION_THRESHOLD = 0.51D;
     private final List<Holder<Biome>> biomes;
     private final Map<String, Holder<Biome>> byPath;
     private final Map<Long, Layer> legacyLayers = new ConcurrentHashMap<>();
+    /** Final biome samples are requested repeatedly while terrain and surfaces are generated. */
+    private final Map<Long, Holder<Biome>> biomeSamples = new ConcurrentHashMap<>();
     private final Map<Long, Boolean> spawnLandNeeded = new ConcurrentHashMap<>();
     private volatile long worldSeedOverride = Long.MIN_VALUE;
 
@@ -58,18 +64,70 @@ public class CandyBiomeSource extends BiomeSource {
     @Override
     public Holder<Biome> getNoiseBiome(int quartX, int quartY, int quartZ, Climate.Sampler sampler) {
         long worldSeed = worldSeedOverride == Long.MIN_VALUE ? samplerSeed(sampler) : worldSeedOverride;
+        long sampleKey = packCoordinates(quartX, quartZ);
+        Holder<Biome> cached = biomeSamples.get(sampleKey);
+        if (cached != null) {
+            return cached;
+        }
+
         Layer legacyLayer = legacyLayers.computeIfAbsent(worldSeed, seed -> Layer.getLayer(seed, create1122Settings()));
-        BiomeInfo legacyBiome = legacyLayer.getBiomes(quartX, quartZ, 1, 1)[0];
-        boolean needsSpawnLand = spawnLandNeeded.computeIfAbsent(worldSeed, seed -> isOceanLike(legacyLayer.getBiomes(0, 0, 1, 1)[0]));
-        ResourceLocation mapped = needsSpawnLand && isSpawnLandRadius(quartX, quartZ, worldSeed) && isOceanLike(legacyBiome)
-            ? candy("sugar_plains")
-            : mapLegacyBiome(legacyBiome, quartX, quartZ, worldSeed);
-        String path = mapped.getPath();
-        return byPath.getOrDefault(path, biomes.get(0));
+        if (worldSeedOverride == Long.MIN_VALUE) {
+            // The real world seed is only known once chunk generation starts. Never cache these
+            // fallback-seed samples: a stale tile survives the later seed sync and shows up as a
+            // square patch of biomes that does not match the surrounding world.
+            BiomeInfo legacyBiome = legacyLayer.getBiomes(quartX, quartZ, 1, 1)[0];
+            boolean needsSpawnLand = spawnLandNeeded.computeIfAbsent(
+                worldSeed, seed -> isOceanLike(legacyLayer.getBiomes(0, 0, 1, 1)[0]));
+            ResourceLocation mapped = needsSpawnLand && isSpawnLandRadius(quartX, quartZ, worldSeed)
+                && isOceanLike(legacyBiome)
+                ? candy("sugar_plains")
+                : mapLegacyBiome(legacyBiome, quartX, quartZ, worldSeed);
+            return byPath.getOrDefault(mapped.getPath(), biomes.get(0));
+        }
+        synchronized (biomeSamples) {
+            cached = biomeSamples.get(sampleKey);
+            if (cached != null) {
+                return cached;
+            }
+
+            int tileX = Math.floorDiv(quartX, BIOME_TILE_SIZE) * BIOME_TILE_SIZE;
+            int tileZ = Math.floorDiv(quartZ, BIOME_TILE_SIZE) * BIOME_TILE_SIZE;
+            BiomeInfo[] tile = legacyLayer.getBiomes(tileX, tileZ, BIOME_TILE_SIZE, BIOME_TILE_SIZE);
+            if (biomeSamples.size() + BIOME_TILE_SIZE * BIOME_TILE_SIZE > 65536) {
+                biomeSamples.clear();
+            }
+            boolean needsSpawnLand = spawnLandNeeded.computeIfAbsent(
+                worldSeed, seed -> isOceanLike(legacyLayer.getBiomes(0, 0, 1, 1)[0]));
+            for (int localZ = 0; localZ < BIOME_TILE_SIZE; ++localZ) {
+                for (int localX = 0; localX < BIOME_TILE_SIZE; ++localX) {
+                    int sampleX = tileX + localX;
+                    int sampleZ = tileZ + localZ;
+                    BiomeInfo legacyBiome = tile[localX + localZ * BIOME_TILE_SIZE];
+                    ResourceLocation mapped = needsSpawnLand && isSpawnLandRadius(sampleX, sampleZ, worldSeed)
+                        && isOceanLike(legacyBiome)
+                        ? candy("sugar_plains")
+                        : mapLegacyBiome(legacyBiome, sampleX, sampleZ, worldSeed);
+                    Holder<Biome> result = byPath.getOrDefault(mapped.getPath(), biomes.get(0));
+                    biomeSamples.put(packCoordinates(sampleX, sampleZ), result);
+                }
+            }
+            return biomeSamples.get(sampleKey);
+        }
     }
 
     public void setWorldSeed(long worldSeed) {
+        if (this.worldSeedOverride != worldSeed) {
+            synchronized (biomeSamples) {
+                biomeSamples.clear();
+            }
+            legacyLayers.clear();
+            spawnLandNeeded.clear();
+        }
         this.worldSeedOverride = worldSeed;
+    }
+
+    private static long packCoordinates(int x, int z) {
+        return ((long) x << 32) ^ (z & 0xFFFFFFFFL);
     }
 
     private static ResourceLocation candy(String path) {
@@ -88,6 +146,21 @@ public class CandyBiomeSource extends BiomeSource {
         if (biome.isOcean()) {
             return candy("sugar_oceans");
         }
+        ResourceLocation base = mapBaseBiome(biome, quartX, quartZ, worldSeed);
+        // Chocolate forest, cotton candy plains and gummy swamp are standalone region biomes:
+        // they never take part in the forest/plains/swamp generation lists and only appear where
+        // their own region noise fields peak. The overlay covers every land biome (only rivers
+        // and oceans are exempt, handled by the early returns above): masking it to flat
+        // temperate land clipped each region at mountain or cold-biome borders and left thin
+        // biome slivers that carved canyon-like seams into the terrain.
+        ResourceLocation region = regionBiome(biome, quartX, quartZ, worldSeed);
+        if (region != null) {
+            return region;
+        }
+        return base;
+    }
+
+    private static ResourceLocation mapBaseBiome(BiomeInfo biome, int quartX, int quartZ, long worldSeed) {
         if (biome.is(BiomeIds.SNOWY_PLAINS)) {
             if (biome.type() == 1) {
                 return skyMountainRegion(quartX, quartZ, worldSeed)
@@ -105,7 +178,7 @@ public class CandyBiomeSource extends BiomeSource {
             return candy("sugar_cold_forest");
         }
         if (biome.is(BiomeIds.SWAMP)) {
-            return gummyRegion(quartX, quartZ, worldSeed) ? candy("gummy_swamp") : candy("sugar_plains");
+            return candy("sugar_plains");
         }
         if (biome.is(BiomeIds.DESERT)) {
             if (biome.type() == 2) {
@@ -114,12 +187,7 @@ public class CandyBiomeSource extends BiomeSource {
             return biome.type() == 1 ? candy("sugar_mountains") : candy("caramel_forest");
         }
         if (biome.is(BiomeIds.FOREST)) {
-            if (biome.type() == 1) {
-                return candy("sugar_mountains");
-            }
-            return chocolateRegion(quartX, quartZ, worldSeed)
-                ? candy("chocolate_forest")
-                : candy("sugar_forest");
+            return biome.type() == 1 ? candy("sugar_mountains") : candy("sugar_forest");
         }
         if (biome.is(BiomeIds.JUNGLE)) {
             return biome.type() == 1 ? candy("sugar_mountains") : candy("sugar_enchanted_forest");
@@ -139,18 +207,34 @@ public class CandyBiomeSource extends BiomeSource {
             return candy("sugar_plains");
         }
         if (biome.is(BiomeIds.PLAINS)) {
-            if (biome.type() == 1) {
-                return candy("sugar_mountains");
-            }
-            return cottonCandyRegion(quartX, quartZ, worldSeed)
-                ? candy("cotton_candy_plains")
-                : candy("sugar_plains");
+            return biome.type() == 1 ? candy("sugar_mountains") : candy("sugar_plains");
         }
         if (biome.type() == 1) {
             return candy("sugar_mountains");
         }
 
         return candy("sugar_plains");
+    }
+
+    private static ResourceLocation regionBiome(BiomeInfo biome, int quartX, int quartZ, long worldSeed) {
+        if (gummyRegionNoise(quartX, quartZ, worldSeed) > GUMMY_REGION_THRESHOLD) {
+            return candy("gummy_swamp");
+        }
+        // Chocolate forest is a warm biome: it accompanies sugar forests and never intrudes
+        // into the cold climates (ice cream plains, sugar cold forest, sky mountains).
+        if (!isColdClimate(biome)
+            && regionNoise(quartX, quartZ, worldSeed ^ 0x5F356495L, 0.008D) > CHOCOLATE_REGION_THRESHOLD) {
+            return candy("chocolate_forest");
+        }
+        if (regionNoise(quartX, quartZ, worldSeed ^ 0x34F1A52DL, 0.008D) > COTTON_CANDY_REGION_THRESHOLD) {
+            return candy("cotton_candy_plains");
+        }
+        return null;
+    }
+
+    private static boolean isColdClimate(BiomeInfo biome) {
+        return biome.is(BiomeIds.SNOWY_PLAINS) || biome.is(BiomeIds.SNOWY_TAIGA)
+            || biome.is(BiomeIds.WINDSWEPT_FOREST);
     }
 
     private static boolean isSpawnLandRadius(int quartX, int quartZ, long worldSeed) {
@@ -201,22 +285,14 @@ public class CandyBiomeSource extends BiomeSource {
         return biome != null && biome.isOcean();
     }
 
-    private static boolean gummyRegion(int quartX, int quartZ, long worldSeed) {
+    private static double gummyRegionNoise(int quartX, int quartZ, long worldSeed) {
         int blockX = quartX << 2;
         int blockZ = quartZ << 2;
         long distanceSq = (long)blockX * blockX + (long)blockZ * blockZ;
         if (distanceSq < 500L * 500L) {
-            return false;
+            return -1.0D;
         }
-        return regionNoise(quartX, quartZ, worldSeed ^ 0x6A6D6D7953555246L, 0.0105D) > 0.0D;
-    }
-
-    private static boolean chocolateRegion(int quartX, int quartZ, long worldSeed) {
-        return regionNoise(quartX, quartZ, worldSeed ^ 0x5F356495L, 0.008D) > 0.0D;
-    }
-
-    private static boolean cottonCandyRegion(int quartX, int quartZ, long worldSeed) {
-        return regionNoise(quartX, quartZ, worldSeed ^ 0x34F1A52DL, 0.008D) > 0.0D;
+        return regionNoise(quartX, quartZ, worldSeed ^ 0x6A6D6D7953555246L, 0.0105D);
     }
 
     private static boolean skyMountainRegion(int quartX, int quartZ, long worldSeed) {
@@ -367,7 +443,9 @@ public class CandyBiomeSource extends BiomeSource {
                 )
             ),
             new ClimaticBiomeList<>(
-                List.of(BiomeInfo.of(BiomeIds.DESERT, 2)),
+                List.of(
+                    BiomeInfo.of(BiomeIds.DESERT, 2)
+                ),
                 List.of(BiomeInfo.of(BiomeIds.DESERT, 2))
             )
         );

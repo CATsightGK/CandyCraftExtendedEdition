@@ -19,22 +19,27 @@ import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemp
 import java.util.OptionalInt;
 
 public final class TemplateSurfaceStructureFeature extends Feature<NoneFeatureConfiguration> {
-    private static final int FLAT_SITE_MARGIN = 2;
-    private static final int MAX_FLAT_SITE_HEIGHT_VARIATION = 2;
     private final ResourceLocation templateId;
     private final boolean requireFlatSite;
     private final boolean addFlourSupports;
+    private final int maxFlatSiteHeightVariation;
 
     public TemplateSurfaceStructureFeature(Codec<NoneFeatureConfiguration> codec, ResourceLocation templateId) {
-        this(codec, templateId, false, false);
+        this(codec, templateId, false, false, 4);
     }
 
     public TemplateSurfaceStructureFeature(Codec<NoneFeatureConfiguration> codec, ResourceLocation templateId,
             boolean requireFlatSite, boolean addFlourSupports) {
+        this(codec, templateId, requireFlatSite, addFlourSupports, 4);
+    }
+
+    public TemplateSurfaceStructureFeature(Codec<NoneFeatureConfiguration> codec, ResourceLocation templateId,
+            boolean requireFlatSite, boolean addFlourSupports, int maxFlatSiteHeightVariation) {
         super(codec);
         this.templateId = templateId;
         this.requireFlatSite = requireFlatSite;
         this.addFlourSupports = addFlourSupports;
+        this.maxFlatSiteHeightVariation = Math.max(0, maxFlatSiteHeightVariation);
     }
 
     @Override
@@ -53,7 +58,7 @@ public final class TemplateSurfaceStructureFeature extends Feature<NoneFeatureCo
         int placementY;
         if (requireFlatSite) {
             OptionalInt flatSiteY = findFlatSiteY(level, placementX, placementZ,
-                template.getSize().getX(), template.getSize().getZ());
+                template.getSize().getX(), template.getSize().getZ(), maxFlatSiteHeightVariation);
             if (flatSiteY.isEmpty()) {
                 return false;
             }
@@ -61,7 +66,8 @@ public final class TemplateSurfaceStructureFeature extends Feature<NoneFeatureCo
         } else {
             placementY = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
                 origin.getX(), origin.getZ());
-            if (!isCandyGround(level.getBlockState(new BlockPos(origin.getX(), placementY - 1, origin.getZ())))) {
+            if (!hasDryCandyFootprint(level, placementX, placementZ,
+                    template.getSize().getX(), template.getSize().getZ())) {
                 return false;
             }
         }
@@ -82,24 +88,47 @@ public final class TemplateSurfaceStructureFeature extends Feature<NoneFeatureCo
     }
 
     private static OptionalInt findFlatSiteY(WorldGenLevel level, int placementX, int placementZ,
-            int width, int depth) {
+            int width, int depth, int maxHeightVariation) {
         int minHeight = Integer.MAX_VALUE;
         int maxHeight = Integer.MIN_VALUE;
-        for (int x = placementX - FLAT_SITE_MARGIN; x < placementX + width + FLAT_SITE_MARGIN; x++) {
-            for (int z = placementZ - FLAT_SITE_MARGIN; z < placementZ + depth + FLAT_SITE_MARGIN; z++) {
+        for (int x = placementX; x < placementX + width; x++) {
+            for (int z = placementZ; z < placementZ + depth; z++) {
                 int height = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
+                BlockPos surface = new BlockPos(x, height - 1, z);
                 if (height <= level.getMinBuildHeight()
-                        || !isCandyGround(level.getBlockState(new BlockPos(x, height - 1, z)))) {
+                        || !isCandyGround(level.getBlockState(surface))
+                        || !level.getFluidState(surface).isEmpty()
+                        || !level.getFluidState(surface.above()).isEmpty()) {
                     return OptionalInt.empty();
                 }
                 minHeight = Math.min(minHeight, height);
                 maxHeight = Math.max(maxHeight, height);
-                if (maxHeight - minHeight > MAX_FLAT_SITE_HEIGHT_VARIATION) {
+                if (maxHeight - minHeight > maxHeightVariation) {
                     return OptionalInt.empty();
                 }
             }
         }
         return OptionalInt.of(maxHeight);
+    }
+
+    private static boolean hasDryCandyFootprint(WorldGenLevel level, int placementX, int placementZ,
+            int width, int depth) {
+        for (int x = placementX; x < placementX + width; x++) {
+            for (int z = placementZ; z < placementZ + depth; z++) {
+                int height = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
+                if (height <= level.getMinBuildHeight()) {
+                    return false;
+                }
+
+                BlockPos surface = new BlockPos(x, height - 1, z);
+                if (!isCandyGround(level.getBlockState(surface))
+                        || !level.getFluidState(surface).isEmpty()
+                        || !level.getFluidState(surface.above()).isEmpty()) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     private static void addFlourSupports(WorldGenLevel level, BlockPos placement, int width, int depth) {

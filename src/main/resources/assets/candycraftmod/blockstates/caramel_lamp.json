@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "hanging=false": {
+      "model": "candycraftmod:block/caramel_lamp"
+    },
+    "hanging=true": {
+      "model": "candycraftmod:block/caramel_lamp_hanging"
+    }
+  }
+}

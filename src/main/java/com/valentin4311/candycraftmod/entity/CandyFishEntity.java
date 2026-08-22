@@ -19,9 +19,15 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.phys.Vec3;
 import java.util.EnumSet;
+import javax.annotation.Nullable;
 
 public class CandyFishEntity extends AbstractSchoolingFish {
+    private static final int SURFACE_FLUID_CHECK_INTERVAL = 5;
     public float current;
+    @Nullable
+    private BlockPos cachedSurfaceCheckPos;
+    private int surfaceFluidCheckCooldown;
+    private boolean cachedWaterAbove;
 
     public CandyFishEntity(EntityType<? extends CandyFishEntity> type, Level level) {
         super(type, level);
@@ -46,8 +52,24 @@ public class CandyFishEntity extends AbstractSchoolingFish {
     @Override
     public void aiStep() {
         super.aiStep();
-        current += 0.2F;
-        if (!level().isClientSide && isInWater() && !level().getFluidState(blockPosition().above()).is(FluidTags.WATER)) {
+        if (level().isClientSide) {
+            current += 0.2F;
+            return;
+        }
+        if (!isInWater()) {
+            cachedSurfaceCheckPos = null;
+            surfaceFluidCheckCooldown = 0;
+            return;
+        }
+        BlockPos currentPos = blockPosition();
+        if (!currentPos.equals(cachedSurfaceCheckPos) || surfaceFluidCheckCooldown <= 0) {
+            cachedSurfaceCheckPos = currentPos.immutable();
+            cachedWaterAbove = level().getFluidState(currentPos.above()).is(FluidTags.WATER);
+            surfaceFluidCheckCooldown = SURFACE_FLUID_CHECK_INTERVAL - 1;
+        } else {
+            surfaceFluidCheckCooldown--;
+        }
+        if (!cachedWaterAbove) {
             setDeltaMovement(getDeltaMovement().add(0.0D, -0.04D, 0.0D));
         }
     }

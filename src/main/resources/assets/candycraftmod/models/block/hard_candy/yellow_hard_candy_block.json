@@ -1,0 +1,8 @@
+{
+  "parent": "block/cube_column",
+  "textures": {
+    "end": "candycraftmod:block/hard_candy_block_yellow_top",
+    "side": "candycraftmod:block/hard_candy_block_yellow",
+    "particle": "candycraftmod:block/hard_candy_block_yellow"
+  }
+}

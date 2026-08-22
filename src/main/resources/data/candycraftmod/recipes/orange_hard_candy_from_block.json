@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "candycraftmod:orange_hard_candy_block"
+    }
+  ],
+  "result": {
+    "item": "candycraftmod:orange_hard_candy",
+    "count": 4
+  }
+}

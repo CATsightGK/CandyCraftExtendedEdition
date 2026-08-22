@@ -1,7 +1,9 @@
 package com.valentin4311.candycraftmod.block;
 
+import com.valentin4311.candycraftmod.registry.CCMobEffects;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.BlockGetter;
@@ -17,10 +19,16 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 public class SpikesBlock extends Block {
     private static final VoxelShape SHAPE = Block.box(0.0D, 0.0D, 0.0D, 16.0D, 9.6D, 16.0D);
     private final int damage;
+    private final boolean appliesCloying;
 
     public SpikesBlock(int damage, BlockBehaviour.Properties properties) {
+        this(damage, false, properties);
+    }
+
+    public SpikesBlock(int damage, boolean appliesCloying, BlockBehaviour.Properties properties) {
         super(properties);
         this.damage = damage;
+        this.appliesCloying = appliesCloying;
     }
 
     @Override
@@ -63,8 +71,11 @@ public class SpikesBlock extends Block {
     }
 
     private void hurtEntity(Level level, Entity entity) {
-        if (!level.isClientSide && entity instanceof LivingEntity) {
+        if (!level.isClientSide && entity instanceof LivingEntity living) {
             entity.hurt(level.damageSources().generic(), damage / 2.0F);
+            if (appliesCloying) {
+                living.addEffect(new MobEffectInstance(CCMobEffects.CLOYING.get(), 5 * 20));
+            }
         }
     }
 }

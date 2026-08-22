@@ -28,8 +28,12 @@ public final class CCParticleTypes {
         PARTICLE_TYPES.register("royal_rations_fragment", () -> new SimpleParticleType(false));
     public static final RegistryObject<SimpleParticleType> LEMON_JELLY_FRAGMENT =
         PARTICLE_TYPES.register("lemon_jelly_fragment", () -> new SimpleParticleType(false));
+    public static final RegistryObject<SimpleParticleType> RASPBERRY_JELLY_FRAGMENT =
+        PARTICLE_TYPES.register("raspberry_jelly_fragment", () -> new SimpleParticleType(false));
     public static final RegistryObject<SimpleParticleType> MINT_JELLY_FRAGMENT =
         PARTICLE_TYPES.register("mint_jelly_fragment", () -> new SimpleParticleType(false));
+    public static final RegistryObject<SimpleParticleType> LIQUID_CANDY_FLAME =
+        PARTICLE_TYPES.register("liquid_candy_flame", () -> new SimpleParticleType(false));
 
     private CCParticleTypes() {
     }

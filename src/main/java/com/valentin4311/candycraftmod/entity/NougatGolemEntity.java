@@ -4,6 +4,7 @@ import com.valentin4311.candycraftmod.registry.CCBlocks;
 import com.valentin4311.candycraftmod.registry.CCEntityTypes;
 import com.valentin4311.candycraftmod.registry.CCItems;
 import java.util.List;
+import java.util.UUID;
 import javax.annotation.Nullable;
 import net.minecraft.core.particles.BlockParticleOption;
 import net.minecraft.core.particles.ItemParticleOption;
@@ -57,6 +58,7 @@ public class NougatGolemEntity extends AbstractGolem {
     private static final String TAG_LAUNCHED = "Launched";
     private static final String TAG_LAUNCH_DELAY = "LaunchDelay";
     private static final String TAG_LAUNCH_FUSE = "LaunchFuse";
+    private static final String TAG_LAUNCH_TARGET = "LaunchTarget";
     private static final String TAG_MODE = "Mode";
     private static final String TAG_NATURAL_SEGMENT = "NaturalSegment";
     private static final String TAG_GROWTH_TICKS = "GrowthTicks";
@@ -73,11 +75,15 @@ public class NougatGolemEntity extends AbstractGolem {
     private static final float MELEE_BASE_DAMAGE = 4.0F;
     private static final int MAX_STACK_SEGMENTS = 10;
     private static final int GROW_HEAD_TICKS = 30 * 20;
+    private static final int STACK_CAPACITY_CHECK_INTERVAL = 20;
     private static final int LAUNCH_STEP_DELAY = 7;
     private static final int LAUNCH_FUSE_TICKS = 50;
     private static final int LAUNCH_COLLISION_GRACE_TICKS = 5;
     private static final double LAUNCHED_SEGMENT_SPEED = 0.86D;
-    private static final double LAUNCHED_SEGMENT_STEER = 0.16D;
+    private static final double LAUNCHED_SEGMENT_STEER = 0.34D;
+    private static final double LAUNCHED_SEGMENT_CLOSE_STEER = 0.52D;
+    private static final double LAUNCHED_SEGMENT_CLOSE_RANGE_SQR = 4.0D * 4.0D;
+    private static final double LAUNCHED_SEGMENT_MAX_LEAD_TICKS = 4.0D;
     private int attackCooldown;
     private boolean stackCreated;
     private boolean launched;
@@ -86,8 +92,14 @@ public class NougatGolemEntity extends AbstractGolem {
     private int growthTicks;
     private int powderProgress;
     private int targetSearchCooldown;
+    private int stackCapacityCheckCooldown;
+    private boolean stackAtCapacity;
     @Nullable
     private LivingEntity launchTarget;
+    @Nullable
+    private UUID launchTargetUuid;
+    @Nullable
+    private ItemParticleOption cachedNougatPowderParticle;
 
     public NougatGolemEntity(EntityType<? extends NougatGolemEntity> type, Level level) {
         super(type, level);
@@ -219,21 +231,28 @@ public class NougatGolemEntity extends AbstractGolem {
             setLength(TOP_LENGTH);
         }
         if (!level().isClientSide && !isBase()) {
-            NougatGolemEntity base = getBase();
-            setMode(base.getMode());
-            LivingEntity baseTarget = base.getTarget();
-            if (baseTarget != null && baseTarget.isAlive()) {
-                super.setTarget(baseTarget);
-            } else {
-                super.setTarget(null);
+            if (getVehicle() instanceof NougatGolemEntity parent) {
+                int parentMode = parent.getMode();
+                if (getMode() != parentMode) {
+                    setMode(parentMode);
+                }
+                LivingEntity parentTarget = parent.getTarget();
+                LivingEntity desiredTarget = parentTarget != null && parentTarget.isAlive() ? parentTarget : null;
+                if (getTarget() != desiredTarget) {
+                    super.setTarget(desiredTarget);
+                }
             }
-            getNavigation().stop();
+            if (!getNavigation().isDone()) {
+                getNavigation().stop();
+            }
         } else if (!level().isClientSide) {
             tickTargeting();
             tickGrowth();
             tickStackCombat();
         }
-        spawnMovementTrail();
+        if (level().isClientSide) {
+            spawnMovementTrail();
+        }
         super.aiStep();
     }
 
@@ -358,6 +377,7 @@ public class NougatGolemEntity extends AbstractGolem {
         segment.launchDelay = 0;
         segment.launchFuse = LAUNCH_FUSE_TICKS;
         segment.launchTarget = target;
+        segment.launchTargetUuid = target != null ? target.getUUID() : null;
         segment.setDeltaMovement(direction.scale(LAUNCHED_SEGMENT_SPEED).add(0.0D, 0.08D, 0.0D));
         segment.hasImpulse = true;
         if (!launchingBase && stackSegments().size() == 1) {
@@ -503,23 +523,65 @@ public class NougatGolemEntity extends AbstractGolem {
     }
 
     private void guideLaunchedSegment() {
-        LivingEntity target = launchTarget;
-        if (target == null || !target.isAlive() || (!canExplosionDamage(target) && !canRetaliateAgainst(target))) {
-            launchTarget = null;
+        LivingEntity target = resolveLaunchTarget();
+        if (target == null) {
             return;
         }
         Vec3 from = position().add(0.0D, getLength() * 0.5D, 0.0D);
-        Vec3 desired = target.getEyePosition().subtract(from);
-        if (desired.lengthSqr() < 0.001D) {
+        Vec3 directOffset = target.getEyePosition().subtract(from);
+        double distanceSqr = directOffset.lengthSqr();
+        if (distanceSqr < 0.001D) {
             return;
         }
+
         Vec3 velocity = getDeltaMovement();
-        Vec3 steered = velocity.scale(1.0D - LAUNCHED_SEGMENT_STEER)
-            .add(desired.normalize().scale(LAUNCHED_SEGMENT_SPEED * LAUNCHED_SEGMENT_STEER));
+        double speed = Math.max(LAUNCHED_SEGMENT_SPEED, velocity.length());
+        double leadTicks = Math.min(LAUNCHED_SEGMENT_MAX_LEAD_TICKS, Math.sqrt(distanceSqr) / speed * 0.35D);
+        Vec3 targetPoint = target.getEyePosition().add(target.getDeltaMovement().scale(leadTicks));
+        Vec3 desiredVelocity = targetPoint.subtract(from).normalize().scale(speed);
+        double steering = distanceSqr <= LAUNCHED_SEGMENT_CLOSE_RANGE_SQR
+            ? LAUNCHED_SEGMENT_CLOSE_STEER
+            : LAUNCHED_SEGMENT_STEER;
+        Vec3 steered = velocity.scale(1.0D - steering).add(desiredVelocity.scale(steering));
         if (steered.lengthSqr() > 0.001D) {
-            setDeltaMovement(steered.normalize().scale(Math.max(LAUNCHED_SEGMENT_SPEED * 0.75D, steered.length())));
+            Vec3 guidedVelocity = steered.normalize().scale(speed);
+            setDeltaMovement(guidedVelocity);
+            faceLaunchedMovement(guidedVelocity);
             hasImpulse = true;
         }
+    }
+
+    @Nullable
+    private LivingEntity resolveLaunchTarget() {
+        if (isValidLaunchTarget(launchTarget)) {
+            return launchTarget;
+        }
+        launchTarget = null;
+        if (launchTargetUuid != null && level() instanceof ServerLevel serverLevel) {
+            Entity entity = serverLevel.getEntity(launchTargetUuid);
+            if (entity == null) {
+                return null;
+            }
+            if (entity instanceof LivingEntity living && isValidLaunchTarget(living)) {
+                launchTarget = living;
+                return living;
+            }
+        }
+        launchTargetUuid = null;
+        return null;
+    }
+
+    private boolean isValidLaunchTarget(@Nullable LivingEntity target) {
+        return target != null && target.isAlive()
+            && (canExplosionDamage(target) || canRetaliateAgainst(target));
+    }
+
+    private void faceLaunchedMovement(Vec3 movement) {
+        double horizontal = movement.horizontalDistance();
+        setYRot((float)(Mth.atan2(movement.z, movement.x) * Mth.RAD_TO_DEG) - 90.0F);
+        setXRot((float)(-(Mth.atan2(movement.y, horizontal) * Mth.RAD_TO_DEG)));
+        yBodyRot = getYRot();
+        yHeadRot = getYRot();
     }
 
     @Nullable
@@ -607,13 +669,15 @@ public class NougatGolemEntity extends AbstractGolem {
         if (target != null && !canTargetHostile(target) && !canRetaliateAgainst(target)) {
             target = null;
         }
-        super.setTarget(target);
+        if (getTarget() != target) {
+            super.setTarget(target);
+        }
         if (!isBase()) {
             return;
         }
         NougatGolemEntity segment = getTopPassenger();
         while (segment != null) {
-            if (segment != this) {
+            if (segment != this && segment.getTarget() != target) {
                 segment.superSetTarget(target);
             }
             segment = segment.getTopPassenger();
@@ -657,19 +721,27 @@ public class NougatGolemEntity extends AbstractGolem {
     }
 
     private void tickGrowth() {
-        if (!isBase() || launched || getMode() != MODE_TURRET || getStackHeight() <= 0.0F) {
+        if (!isBase() || launched || getMode() != MODE_TURRET) {
             return;
         }
-        if (getStackSegmentCount() >= MAX_STACK_SEGMENTS) {
+        if (stackCapacityCheckCooldown > 0) {
+            stackCapacityCheckCooldown--;
+        } else {
+            stackAtCapacity = getStackSegmentCount() >= MAX_STACK_SEGMENTS;
+            stackCapacityCheckCooldown = STACK_CAPACITY_CHECK_INTERVAL - 1;
+        }
+        if (stackAtCapacity) {
             growthTicks = 0;
             powderProgress = 0;
             return;
         }
         growthTicks++;
-        if (growthTicks >= GROW_HEAD_TICKS) {
-            growthTicks = 0;
-            addNaturalHead();
+        if (growthTicks < GROW_HEAD_TICKS) {
+            return;
         }
+        growthTicks = 0;
+        addNaturalHead();
+        stackCapacityCheckCooldown = 0;
     }
 
     private void feedPowder(Player player, ItemStack stack) {
@@ -727,7 +799,9 @@ public class NougatGolemEntity extends AbstractGolem {
         LivingEntity current = findStackTarget();
         double followRange = getAttributeValue(Attributes.FOLLOW_RANGE);
         if (current != null && canTargetHostile(current) && distanceToStackSqr(current) <= followRange * followRange) {
-            shareTarget(current);
+            if (getTarget() != current) {
+                shareTarget(current);
+            }
             targetSearchCooldown = 0;
             return;
         }
@@ -800,7 +874,6 @@ public class NougatGolemEntity extends AbstractGolem {
             shareTarget(null);
             return;
         }
-        shareTarget(target);
         getLookControl().setLookAt(target, 30.0F, 30.0F);
 
         int mode = getMode();
@@ -873,18 +946,23 @@ public class NougatGolemEntity extends AbstractGolem {
     }
 
     private void spawnMovementTrail() {
-        if (getMode() == MODE_TURRET || !isBase() || launched || getDeltaMovement().horizontalDistanceSqr() < 0.0025D || random.nextInt(2) != 0) {
+        Vec3 movement = getDeltaMovement();
+        if (getMode() == MODE_TURRET || !isBase() || launched || movement.horizontalDistanceSqr() < 0.0025D || random.nextInt(2) != 0) {
             return;
         }
         level().addParticle(nougatPowderParticle(),
-            getX() - getDeltaMovement().x * 2.0D + (random.nextDouble() - 0.5D) * 0.35D,
+            getX() - movement.x * 2.0D + (random.nextDouble() - 0.5D) * 0.35D,
             getY() + 0.12D + random.nextDouble() * Math.min(1.2D, getBbHeight()),
-            getZ() - getDeltaMovement().z * 2.0D + (random.nextDouble() - 0.5D) * 0.35D,
-            -getDeltaMovement().x * 0.1D, 0.02D, -getDeltaMovement().z * 0.1D);
+            getZ() - movement.z * 2.0D + (random.nextDouble() - 0.5D) * 0.35D,
+            -movement.x * 0.1D, 0.02D, -movement.z * 0.1D);
     }
 
-    private static ItemParticleOption nougatPowderParticle() {
-        return new ItemParticleOption(ParticleTypes.ITEM, new ItemStack(CCItems.NOUGAT_POWDER.get()));
+    private ItemParticleOption nougatPowderParticle() {
+        if (cachedNougatPowderParticle == null) {
+            cachedNougatPowderParticle = new ItemParticleOption(
+                ParticleTypes.ITEM, new ItemStack(CCItems.NOUGAT_POWDER.get()));
+        }
+        return cachedNougatPowderParticle;
     }
 
     private void setNaturalSegment(boolean natural) {
@@ -908,6 +986,9 @@ public class NougatGolemEntity extends AbstractGolem {
         tag.putBoolean(TAG_LAUNCHED, launched);
         tag.putInt(TAG_LAUNCH_DELAY, launchDelay);
         tag.putInt(TAG_LAUNCH_FUSE, launchFuse);
+        if (launchTargetUuid != null) {
+            tag.putUUID(TAG_LAUNCH_TARGET, launchTargetUuid);
+        }
         tag.putInt(TAG_MODE, getMode());
         tag.putBoolean(TAG_NATURAL_SEGMENT, entityData.get(NATURAL_SEGMENT));
         tag.putInt(TAG_GROWTH_TICKS, growthTicks);
@@ -922,6 +1003,7 @@ public class NougatGolemEntity extends AbstractGolem {
         launched = tag.getBoolean(TAG_LAUNCHED);
         launchDelay = tag.getInt(TAG_LAUNCH_DELAY);
         launchFuse = tag.getInt(TAG_LAUNCH_FUSE);
+        launchTargetUuid = tag.hasUUID(TAG_LAUNCH_TARGET) ? tag.getUUID(TAG_LAUNCH_TARGET) : null;
         setMode(tag.getInt(TAG_MODE));
         setNaturalSegment(tag.getBoolean(TAG_NATURAL_SEGMENT));
         growthTicks = tag.getInt(TAG_GROWTH_TICKS);

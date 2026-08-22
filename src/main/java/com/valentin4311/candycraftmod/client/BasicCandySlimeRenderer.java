@@ -10,6 +10,7 @@ import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.SlimeRenderer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.monster.Slime;
+import org.joml.Quaternionf;
 
 public class BasicCandySlimeRenderer extends SlimeRenderer {
     private static final float PEZ_ROLL_VISUAL_END = 0.5F;
@@ -176,12 +177,12 @@ public class BasicCandySlimeRenderer extends SlimeRenderer {
         if (elapsed < PEZ_ROLL_VISUAL_END) {
             Direction face = pez.getPezAttachFace();
             Direction direction = pez.getPezRollDirection();
-            applyPezAttachRotation(face, poseStack);
+            applyPezAttachRotation(pez, poseStack, partialTicks);
             applyPezBbmodelRollAnimation(pez, face, direction, poseStack, partialTicks);
             applyPezSurfaceOffset(face, poseStack, 0.22F);
         } else if (elapsed < PEZ_ATTACH_VISUAL_END) {
             Direction face = pez.getPezAttachFace();
-            applyPezAttachRotation(face, poseStack);
+            applyPezAttachRotation(pez, poseStack, partialTicks);
             applyPezSurfaceOffset(face, poseStack, 0.34F);
             float charge = smootherStep((elapsed - PEZ_ROLL_VISUAL_END) / (PEZ_ATTACH_VISUAL_END - PEZ_ROLL_VISUAL_END));
             float throb = (float)Math.sin(time * 0.62F) * (0.04F + 0.035F * charge);
@@ -240,19 +241,26 @@ public class BasicCandySlimeRenderer extends SlimeRenderer {
         poseStack.scale(1.12F + drip, 0.78F + recover * 0.18F, 1.12F - drip * 0.4F);
     }
 
-    private static void applyPezAttachRotation(Direction face, PoseStack poseStack) {
-        if (face == Direction.DOWN) {
-            poseStack.mulPose(Axis.XP.rotationDegrees(180.0F));
-            poseStack.translate(0.0F, -0.15F, 0.0F);
-        } else if (face == Direction.NORTH) {
-            poseStack.mulPose(Axis.XP.rotationDegrees(90.0F));
-        } else if (face == Direction.SOUTH) {
-            poseStack.mulPose(Axis.XP.rotationDegrees(-90.0F));
-        } else if (face == Direction.WEST) {
-            poseStack.mulPose(Axis.ZP.rotationDegrees(-90.0F));
-        } else if (face == Direction.EAST) {
-            poseStack.mulPose(Axis.ZP.rotationDegrees(90.0F));
-        }
+    private static void applyPezAttachRotation(BasicCandySlimeEntity pez, PoseStack poseStack, float partialTicks) {
+        Direction face = pez.getPezAttachFace();
+        Direction previousFace = pez.getPezPreviousAttachFace();
+        float progress = smootherStep(pez.getPezAttachTransitionProgress(partialTicks));
+        Quaternionf rotation = pezAttachRotation(previousFace).slerp(pezAttachRotation(face), progress);
+        poseStack.mulPose(rotation);
+        float previousOffset = previousFace == Direction.DOWN ? -0.15F : 0.0F;
+        float currentOffset = face == Direction.DOWN ? -0.15F : 0.0F;
+        poseStack.translate(0.0F, lerp(progress, previousOffset, currentOffset), 0.0F);
+    }
+
+    private static Quaternionf pezAttachRotation(Direction face) {
+        return switch (face) {
+            case DOWN -> new Quaternionf().rotationX((float)Math.PI);
+            case NORTH -> new Quaternionf().rotationX((float)Math.PI * 0.5F);
+            case SOUTH -> new Quaternionf().rotationX((float)-Math.PI * 0.5F);
+            case WEST -> new Quaternionf().rotationZ((float)-Math.PI * 0.5F);
+            case EAST -> new Quaternionf().rotationZ((float)Math.PI * 0.5F);
+            default -> new Quaternionf();
+        };
     }
 
     private static void applyPezSurfaceOffset(Direction face, PoseStack poseStack, float amount) {

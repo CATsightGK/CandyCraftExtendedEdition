@@ -97,6 +97,10 @@ public class ThrownForkEntity extends AbstractArrow {
     protected void onHitBlock(BlockHitResult hitResult) {
         super.onHitBlock(hitResult);
         entityData.set(EMBEDDED_IN_BLOCK, true);
+        // The vanilla handler resets the hit sound to ARROW_HIT for any later
+        // impacts (bounces, sliding, re-embedding); keep the fork on the
+        // trident sound instead.
+        setSoundEvent(SoundEvents.TRIDENT_HIT_GROUND);
     }
 
     @Override

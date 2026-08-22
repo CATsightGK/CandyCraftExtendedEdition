@@ -36,6 +36,7 @@ public class AlchemyTableBlockEntity extends BlockEntity {
     private NonNullList<ItemStack> ingredients = NonNullList.withSize(4, ItemStack.EMPTY);
     private float clientMixerAngle;
     private float clientMixerSpeed;
+    private float clientFlowFrame;
     private float clientLastAnimationTime = Float.NaN;
 
     public AlchemyTableBlockEntity(BlockPos pos, BlockState state) {
@@ -203,6 +204,16 @@ public class AlchemyTableBlockEntity extends BlockEntity {
         return clientMixerSpeed;
     }
 
+    /**
+     * Flowing-texture animation frame position (fractional frame index) for the
+     * alchemy cauldron side walls. Advances proportionally to the smoothed mixer
+     * speed, so it spins up and slows down together with the mixer.
+     */
+    public float getClientFlowFrame(float renderTime) {
+        updateClientMixerAnimation(renderTime);
+        return clientFlowFrame;
+    }
+
     private void updateClientMixerAnimation(float renderTime) {
         if (level == null || !level.isClientSide) {
             return;
@@ -219,16 +230,20 @@ public class AlchemyTableBlockEntity extends BlockEntity {
 
         float deltaTicks = Math.max(0.0F, Math.min(4.0F, renderTime - clientLastAnimationTime));
         clientLastAnimationTime = renderTime;
-        float targetSpeed = targetClientMixerSpeed();
+        float targetSpeed = getTargetMixerSpeed();
         float acceleration = targetSpeed > clientMixerSpeed ? 5.2F : 3.4F;
         if (targetSpeed > 48.0F || clientMixerSpeed > 48.0F) {
             acceleration = targetSpeed > clientMixerSpeed ? 7.6F : 4.8F;
         }
         clientMixerSpeed = approach(clientMixerSpeed, targetSpeed, acceleration * deltaTicks);
         clientMixerAngle = (clientMixerAngle + clientMixerSpeed * deltaTicks) % 360.0F;
+        if (clientMixerSpeed > 0.01F) {
+            float flowSpeed = Math.min(clientMixerSpeed, 96.0F);
+            clientFlowFrame += flowSpeed * 0.0072F * deltaTicks;
+        }
     }
 
-    private float targetClientMixerSpeed() {
+    public float getTargetMixerSpeed() {
         if (!isMixing()) {
             return 0.0F;
         }
@@ -438,7 +453,7 @@ public class AlchemyTableBlockEntity extends BlockEntity {
         return new MixerState(power, sugar, advancedSugar);
     }
 
-    private static boolean isMixerPowerSource(BlockState state) {
+    public static boolean isMixerPowerSource(BlockState state) {
         return state.is(CCBlocks.CANDY_CANE_BLOCK.get())
             || state.is(CCBlocks.SUGAR_FACTORY.get())
             || state.is(CCBlocks.ADVANCED_SUGAR_FACTORY.get())
@@ -511,4 +526,3 @@ public class AlchemyTableBlockEntity extends BlockEntity {
     private record MixerState(boolean hasPower, boolean hasSugar, boolean hasAdvancedSugar) {
     }
 }
-

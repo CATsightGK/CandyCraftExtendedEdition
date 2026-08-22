@@ -70,7 +70,7 @@ public class ForkItemRenderer extends BlockEntityWithoutLevelRenderer {
                 Minecraft.getInstance().getFrameTime()
             );
         }
-        ForkGeometryRenderer.renderRaw(poseStack, buffer, packedLight);
+        ForkGeometryRenderer.renderRaw(poseStack, buffer, packedLight, stack.hasFoil());
         renderHeldBlock(stack, poseStack, buffer, packedLight);
         poseStack.popPose();
     }

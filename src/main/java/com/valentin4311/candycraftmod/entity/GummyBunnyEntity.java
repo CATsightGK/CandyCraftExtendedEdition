@@ -15,15 +15,29 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.AgeableMob;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.animal.Rabbit;
+import net.minecraft.world.entity.ai.goal.BreedGoal;
+import net.minecraft.world.entity.ai.goal.FloatGoal;
+import net.minecraft.world.entity.ai.goal.FollowParentGoal;
+import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
+import net.minecraft.world.entity.ai.goal.PanicGoal;
+import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
+import net.minecraft.world.entity.ai.goal.TemptGoal;
+import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
+import net.minecraft.world.entity.animal.Animal;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
-public class GummyBunnyEntity extends Rabbit {
+public class GummyBunnyEntity extends Animal {
     private static final EntityDataAccessor<Integer> RED = SynchedEntityData.defineId(GummyBunnyEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Integer> GREEN = SynchedEntityData.defineId(GummyBunnyEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Integer> BLUE = SynchedEntityData.defineId(GummyBunnyEntity.class, EntityDataSerializers.INT);
@@ -42,7 +56,24 @@ public class GummyBunnyEntity extends Rabbit {
 
     public GummyBunnyEntity(EntityType<? extends GummyBunnyEntity> type, Level level) {
         super(type, level);
-        setVariant(Variant.WHITE);
+    }
+
+    public static AttributeSupplier.Builder createAttributes() {
+        return Mob.createMobAttributes()
+            .add(Attributes.MAX_HEALTH, 10.0D)
+            .add(Attributes.MOVEMENT_SPEED, 0.20000000298023224D);
+    }
+
+    @Override
+    protected void registerGoals() {
+        goalSelector.addGoal(0, new FloatGoal(this));
+        goalSelector.addGoal(1, new PanicGoal(this, 2.0D));
+        goalSelector.addGoal(2, new BreedGoal(this, 1.0D));
+        goalSelector.addGoal(3, new TemptGoal(this, 1.25D, Ingredient.of(CCItems.LICORICE.get()), false));
+        goalSelector.addGoal(4, new FollowParentGoal(this, 1.25D));
+        goalSelector.addGoal(5, new WaterAvoidingRandomStrollGoal(this, 1.0D));
+        goalSelector.addGoal(6, new LookAtPlayerGoal(this, Player.class, 6.0F));
+        goalSelector.addGoal(7, new RandomLookAroundGoal(this));
     }
 
     @Override
@@ -70,6 +101,10 @@ public class GummyBunnyEntity extends Rabbit {
         entityData.set(RED, red);
         entityData.set(GREEN, green);
         entityData.set(BLUE, blue);
+    }
+
+    public boolean isSwampGummyVariant() {
+        return entityData.get(SWAMP_GUMMY_VARIANT);
     }
 
     public void randomizeColor() {
@@ -121,15 +156,19 @@ public class GummyBunnyEntity extends Rabbit {
     @Override
     public void aiStep() {
         if (!level().isClientSide && !isInWaterOrBubble()) {
-            if (jumpDelay > 0 && onGround()) {
+            boolean grounded = onGround();
+            AttributeInstance movementSpeed = getAttribute(Attributes.MOVEMENT_SPEED);
+            if (jumpDelay > 0 && grounded) {
                 jumpDelay--;
-                setSpeed(0.0F);
-                setDeltaMovement(0.0D, getDeltaMovement().y, 0.0D);
+                if (getSpeed() != 0.0F) {
+                    setSpeed(0.0F);
+                }
+                stopHorizontalMovement();
             }
-            if (jumpDelay <= 0 && getAttribute(Attributes.MOVEMENT_SPEED) != null) {
-                getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(0.20000000298023224D);
+            if (jumpDelay <= 0) {
+                setMovementSpeedIfChanged(movementSpeed, 0.20000000298023224D);
             }
-            if (onGround()) {
+            if (grounded) {
                 jumpLocked = false;
             }
             if (hasHorizontalMovement() && !jumpLocked && jumpDelay <= 0) {
@@ -144,10 +183,10 @@ public class GummyBunnyEntity extends Rabbit {
                 jumpLocked = true;
                 playSound(SoundEvents.SLIME_JUMP_SMALL, 0.15F, 1.0F);
             }
-            if (jumpLocked && !onGround()) {
+            if (jumpLocked && !grounded) {
                 setYRot(lastJumpYaw);
-                if (!isInLove() && getAttribute(Attributes.MOVEMENT_SPEED) != null) {
-                    getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(0.40000000298023224D);
+                if (!isInLove()) {
+                    setMovementSpeedIfChanged(movementSpeed, 0.40000000298023224D);
                 }
             }
             lastJumpYaw = getYRot();
@@ -155,14 +194,26 @@ public class GummyBunnyEntity extends Rabbit {
         super.aiStep();
     }
 
+    private static void setMovementSpeedIfChanged(@Nullable AttributeInstance speed, double value) {
+        if (speed != null && speed.getBaseValue() != value) {
+            speed.setBaseValue(value);
+        }
+    }
+
+    private void stopHorizontalMovement() {
+        Vec3 movement = getDeltaMovement();
+        if (movement.x != 0.0D || movement.z != 0.0D) {
+            setDeltaMovement(0.0D, movement.y, 0.0D);
+        }
+    }
+
     @Nullable
     @Override
-    public Rabbit getBreedOffspring(ServerLevel level, AgeableMob partner) {
+    public GummyBunnyEntity getBreedOffspring(ServerLevel level, AgeableMob partner) {
         GummyBunnyEntity bunny = CCEntityTypes.GUMMY_BUNNY.get().create(level);
         if (bunny != null) {
             bunny.randomizeColor();
             bunny.entityData.set(SWAMP_GUMMY_VARIANT, false);
-            bunny.setVariant(Variant.WHITE);
         }
         return bunny;
     }
@@ -187,7 +238,6 @@ public class GummyBunnyEntity extends Rabbit {
         } else {
             randomizeColor();
         }
-        setVariant(Variant.WHITE);
         return data;
     }
 
@@ -205,7 +255,6 @@ public class GummyBunnyEntity extends Rabbit {
         super.readAdditionalSaveData(tag);
         setColor(tag.getInt("red"), tag.getInt("green"), tag.getInt("blue"));
         entityData.set(SWAMP_GUMMY_VARIANT, tag.getBoolean("SwampGummyVariant"));
-        setVariant(Variant.WHITE);
     }
 
     private boolean hasHorizontalMovement() {

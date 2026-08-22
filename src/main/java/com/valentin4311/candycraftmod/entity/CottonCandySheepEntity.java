@@ -2,8 +2,10 @@ package com.valentin4311.candycraftmod.entity;
 
 import com.valentin4311.candycraftmod.registry.CCEntityTypes;
 import com.valentin4311.candycraftmod.registry.CCBlocks;
+import com.valentin4311.candycraftmod.CandyCraft;
 import com.valentin4311.candycraftmod.registry.CCItems;
 import net.minecraft.core.BlockPos;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
@@ -39,6 +41,11 @@ import org.jetbrains.annotations.Nullable;
 public class CottonCandySheepEntity extends Sheep {
     public CottonCandySheepEntity(EntityType<? extends CottonCandySheepEntity> type, Level level) {
         super(type, level);
+    }
+
+    @Override
+    public ResourceLocation getDefaultLootTable() {
+        return new ResourceLocation(CandyCraft.MODID, "entities/cotton_candy_sheep");
     }
 
     @Override

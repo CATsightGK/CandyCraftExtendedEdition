@@ -32,6 +32,7 @@ import net.minecraft.world.entity.ai.goal.FollowParentGoal;
 import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.ai.goal.TemptGoal;
+import net.minecraft.world.entity.ai.targeting.TargetingConditions;
 import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -43,10 +44,21 @@ import net.minecraft.world.level.pathfinder.BlockPathTypes;
 import net.minecraft.world.phys.Vec3;
 
 public class NessieEntity extends Animal {
+    private static final int SOCIAL_TARGET_SEARCH_INTERVAL = 10;
+    private static final double TEMPT_RANGE_SQR = 10.0D * 10.0D;
+    private static final double FAMILY_RANGE_SQR = 8.0D * 8.0D;
+    private static final TargetingConditions SOCIAL_TARGETING = TargetingConditions.forNonCombat();
     private static final EntityDataAccessor<Integer> VARIANT = SynchedEntityData.defineId(NessieEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Boolean> SADDLED = SynchedEntityData.defineId(NessieEntity.class, EntityDataSerializers.BOOLEAN);
     @Nullable
     private BlockPos swimTarget;
+    private int socialTargetSearchCooldown;
+    @Nullable
+    private Player cachedTemptingPlayer;
+    @Nullable
+    private NessieEntity cachedMate;
+    @Nullable
+    private NessieEntity cachedParent;
 
     public NessieEntity(EntityType<? extends NessieEntity> type, Level level) {
         super(type, level);
@@ -83,13 +95,20 @@ public class NessieEntity extends Animal {
 
     @Override
     public void aiStep() {
-        setAirSupply(getMaxAirSupply());
-        if (!level().isClientSide && isInWater() && getControllingPassenger() == null) {
+        if (getAirSupply() != getMaxAirSupply()) {
+            setAirSupply(getMaxAirSupply());
+        }
+        boolean inWater = isInWater();
+        LivingEntity controllingPassenger = getControllingPassenger();
+        if (!level().isClientSide && inWater && controllingPassenger == null) {
             tickSwimming();
-        } else if (!isInWater() && onGround()) {
+        } else if (!inWater && onGround()) {
             swimTarget = null;
+            clearCachedSocialTargets();
             zza = 0.0F;
             setDeltaMovement(getDeltaMovement().multiply(0.15D, 1.0D, 0.15D).add(0.0D, 0.01D, 0.0D));
+        } else if (!level().isClientSide && controllingPassenger != null) {
+            clearCachedSocialTargets();
         }
         super.aiStep();
     }
@@ -130,39 +149,83 @@ public class NessieEntity extends Animal {
     }
 
     private void tickSwimming() {
-        Player temptedBy = level().getNearestPlayer(this, 10.0D);
-        if (temptedBy != null && (temptedBy.getMainHandItem().is(CCItems.CRANBERRY_FISH.get())
-                || temptedBy.getOffhandItem().is(CCItems.CRANBERRY_FISH.get()))) {
+        tickCachedSocialTargets();
+        Player temptedBy = cachedTemptingPlayer;
+        if (temptedBy != null) {
             swimToward(temptedBy.getX(), temptedBy.getY() + temptedBy.getBbHeight() * 0.5D, temptedBy.getZ());
             return;
         }
         if (isInLove()) {
-            NessieEntity mate = level().getNearestEntity(
-                level().getEntitiesOfClass(NessieEntity.class, getBoundingBox().inflate(8.0D), this::canMate),
-                net.minecraft.world.entity.ai.targeting.TargetingConditions.forNonCombat(), this,
-                getX(), getY(), getZ());
+            NessieEntity mate = cachedMate;
             if (mate != null) {
                 swimToward(mate.getX(), mate.getY(), mate.getZ());
                 return;
             }
         }
         if (isBaby()) {
-            NessieEntity parent = level().getNearestEntity(
-                level().getEntitiesOfClass(NessieEntity.class, getBoundingBox().inflate(8.0D), entity -> !entity.isBaby()),
-                net.minecraft.world.entity.ai.targeting.TargetingConditions.forNonCombat(), this,
-                getX(), getY(), getZ());
+            NessieEntity parent = cachedParent;
             if (parent != null) {
                 swimToward(parent.getX(), parent.getY(), parent.getZ());
                 return;
             }
         }
-        if (!isValidSwimTarget(swimTarget) || random.nextInt(100) == 0 || swimTarget.distToCenterSqr(position()) < 4.0D) {
+        if (!isValidSwimTarget(swimTarget) || random.nextInt(100) == 0
+                || swimTarget.distToCenterSqr(getX(), getY(), getZ()) < 4.0D) {
             swimTarget = chooseSwimTarget();
         }
         if (swimTarget == null) {
             return;
         }
         swimToward(swimTarget.getX() + 0.5D, swimTarget.getY() + 0.1D, swimTarget.getZ() + 0.5D);
+    }
+
+    private void tickCachedSocialTargets() {
+        if (cachedTemptingPlayer != null && !isValidTemptingPlayer(cachedTemptingPlayer)) {
+            cachedTemptingPlayer = null;
+            socialTargetSearchCooldown = 0;
+        }
+        if (cachedMate != null && (!isInLove() || !canMate(cachedMate)
+                || distanceToSqr(cachedMate) > FAMILY_RANGE_SQR)) {
+            cachedMate = null;
+            socialTargetSearchCooldown = 0;
+        }
+        if (cachedParent != null && (!isBaby() || !cachedParent.isAlive() || cachedParent.isBaby()
+                || distanceToSqr(cachedParent) > FAMILY_RANGE_SQR)) {
+            cachedParent = null;
+            socialTargetSearchCooldown = 0;
+        }
+        if (socialTargetSearchCooldown > 0) {
+            socialTargetSearchCooldown--;
+            return;
+        }
+
+        Player nearestPlayer = level().getNearestPlayer(this, 10.0D);
+        cachedTemptingPlayer = isValidTemptingPlayer(nearestPlayer) ? nearestPlayer : null;
+        cachedMate = isInLove()
+            ? level().getNearestEntity(
+                level().getEntitiesOfClass(NessieEntity.class, getBoundingBox().inflate(8.0D), this::canMate),
+                SOCIAL_TARGETING, this, getX(), getY(), getZ())
+            : null;
+        cachedParent = isBaby()
+            ? level().getNearestEntity(
+                level().getEntitiesOfClass(NessieEntity.class, getBoundingBox().inflate(8.0D), entity -> !entity.isBaby()),
+                SOCIAL_TARGETING, this, getX(), getY(), getZ())
+            : null;
+        socialTargetSearchCooldown = SOCIAL_TARGET_SEARCH_INTERVAL - 1;
+    }
+
+    private boolean isValidTemptingPlayer(@Nullable Player player) {
+        return player != null && player.isAlive() && !player.isSpectator()
+            && distanceToSqr(player) <= TEMPT_RANGE_SQR
+            && (player.getMainHandItem().is(CCItems.CRANBERRY_FISH.get())
+                || player.getOffhandItem().is(CCItems.CRANBERRY_FISH.get()));
+    }
+
+    private void clearCachedSocialTargets() {
+        cachedTemptingPlayer = null;
+        cachedMate = null;
+        cachedParent = null;
+        socialTargetSearchCooldown = 0;
     }
 
     private void swimToward(double x, double y, double z) {
@@ -258,7 +321,8 @@ public class NessieEntity extends Animal {
         if (random.nextInt(20) == 0) selected = 4;
         if (random.nextInt(20) == 0) selected = 5;
         if (random.nextInt(20) == 0) selected = 6;
-        if (random.nextInt(40) == 0) selected = 6;
+        // Legacy type 7 fell back to Nessie0 because the renderer only had textures 0-6.
+        if (random.nextInt(40) == 0) selected = 0;
         entityData.set(VARIANT, selected);
     }
 

@@ -1,5 +1,6 @@
 package com.valentin4311.candycraftmod.block;
 
+import com.valentin4311.candycraftmod.item.JellyDungeonKeyItem;
 import com.valentin4311.candycraftmod.world.CCDimensions;
 import com.valentin4311.candycraftmod.world.DungeonProgressData;
 import com.valentin4311.candycraftmod.world.DungeonProgressData.Instance;
@@ -25,6 +26,7 @@ import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
@@ -61,6 +63,10 @@ public class DungeonTeleporterBlock extends Block {
     public static BlockState state(DungeonKind kind, PortalRole role) {
         return com.valentin4311.candycraftmod.registry.CCBlocks.BLOCK_TELEPORTER.get()
             .defaultBlockState().setValue(DUNGEON, kind).setValue(ROLE, role);
+    }
+
+    public static boolean isProtectedSupport(LevelReader level, BlockPos pos) {
+        return level.getBlockState(pos.above()).getBlock() instanceof DungeonTeleporterBlock;
     }
 
     public static void markSuguard(Level level, BlockPos pos) {
@@ -105,12 +111,56 @@ public class DungeonTeleporterBlock extends Block {
             return InteractionResult.sidedSuccess(level.isClientSide);
         }
 
+        if (!isDungeonLevel(level) && state.getValue(ROLE) == PortalRole.ENTRY) {
+            ItemStack matchingKey = findMatchingKey(player, state.getValue(DUNGEON));
+            if (!matchingKey.isEmpty()) {
+                JellyDungeonKeyItem key = (JellyDungeonKeyItem) matchingKey.getItem();
+                recoverEntrancePortal(state, serverLevel, pos, serverPlayer, matchingKey, key);
+                return InteractionResult.CONSUME;
+            }
+        }
+
         if (isDungeonLevel(level)) {
             useInsideDungeon(state, serverLevel, pos, serverPlayer);
         } else {
             useEntrancePortal(state, serverLevel, pos, serverPlayer);
         }
         return InteractionResult.CONSUME;
+    }
+
+    private static ItemStack findMatchingKey(Player player, DungeonKind kind) {
+        for (InteractionHand candidate : InteractionHand.values()) {
+            ItemStack stack = player.getItemInHand(candidate);
+            if (stack.getItem() instanceof JellyDungeonKeyItem key && key.matchesDungeon(kind)) {
+                return stack;
+            }
+        }
+        return ItemStack.EMPTY;
+    }
+
+    private static boolean recoverEntrancePortal(BlockState state, ServerLevel level, BlockPos pos,
+            ServerPlayer player, ItemStack keyStack, JellyDungeonKeyItem key) {
+        DungeonProgressData data = DungeonProgressData.get(player.server);
+        PortalRecord portal = data.getPortal(level, pos);
+        if (portal == null || portal.kind() != state.getValue(DUNGEON)
+            || !key.recoverPortal(keyStack, player, portal)) {
+            return false;
+        }
+
+        data.removePortal(level, pos);
+        level.levelEvent(2001, pos, Block.getId(state));
+        level.setBlock(pos, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);
+        level.playSound(null, pos, SoundEvents.RESPAWN_ANCHOR_CHARGE, SoundSource.BLOCKS, 0.9F, 1.35F);
+        player.displayClientMessage(Component.translatable("message.candycraftmod.dungeon.portal_recovered"), true);
+        return true;
+    }
+
+    @Override
+    public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean moving) {
+        if (!state.is(newState.getBlock()) && !level.isClientSide && level instanceof ServerLevel serverLevel) {
+            DungeonProgressData.get(serverLevel.getServer()).removePortal(serverLevel, pos);
+        }
+        super.onRemove(state, level, pos, newState, moving);
     }
 
     private static void useEntrancePortal(BlockState state, ServerLevel level, BlockPos pos, ServerPlayer player) {

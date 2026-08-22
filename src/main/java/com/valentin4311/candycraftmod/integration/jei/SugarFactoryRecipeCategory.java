@@ -25,11 +25,11 @@ public class SugarFactoryRecipeCategory implements IRecipeCategory<SugarFactoryJ
     private static final int CROP_HEIGHT = 30;
     private static final int ROW_GAP = 4;
     private static final int ADVANCED_ROW_Y = CROP_HEIGHT + ROW_GAP;
-    private static final int INPUT_SLOT_X = 8;
+    private static final int INPUT_SLOT_X = 7;
     private static final int OUTPUT_SLOT_X = 151;
-    private static final int SLOT_Y = 8;
+    private static final int SLOT_Y = 7;
     private static final int PROGRESS_X = 27;
-    private static final int PROGRESS_Y = 10;
+    private static final int PROGRESS_Y = 9;
     private final IDrawable icon;
     private final IDrawableStatic sugarFactoryBackground;
     private final IDrawableStatic advancedSugarFactoryBackground;
@@ -43,7 +43,7 @@ public class SugarFactoryRecipeCategory implements IRecipeCategory<SugarFactoryJ
         IDrawableStatic sugarProgress = guiHelper.createDrawable(SUGAR_FACTORY_GUI, 1, 32, 120, 12);
         IDrawableStatic advancedProgress = guiHelper.createDrawable(ADVANCED_SUGAR_FACTORY_GUI, 1, 32, 120, 12);
         this.sugarFactoryProgress = guiHelper.createAnimatedDrawable(sugarProgress, 240, IDrawableAnimated.StartDirection.LEFT, false);
-        this.advancedSugarFactoryProgress = guiHelper.createAnimatedDrawable(advancedProgress, 240, IDrawableAnimated.StartDirection.LEFT, false);
+        this.advancedSugarFactoryProgress = guiHelper.createAnimatedDrawable(advancedProgress, 120, IDrawableAnimated.StartDirection.LEFT, false);
     }
 
     @Override

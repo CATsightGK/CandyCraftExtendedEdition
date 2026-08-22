@@ -12,6 +12,12 @@
     "candycraftmod:lollipop_plant",
     "candycraftmod:mint",
     "candycraftmod:sugar_essence_flower",
-    "candycraftmod:sugar_spikes"
+    "candycraftmod:sugar_spikes",
+    "candycraftmod:cotton_candy_block",
+    "candycraftmod:cotton_candy_slab",
+    "candycraftmod:cotton_candy_stairs",
+    "candycraftmod:dark_chocolate_leaves",
+    "candycraftmod:milk_chocolate_leaves",
+    "candycraftmod:white_chocolate_leaves"
   ]
 }

@@ -11,6 +11,11 @@
     "LivingEntityMixin",
     "PressurePlateBlockMixin"
   ],
+  "client": [
+    "client.ClientLevelMixin",
+    "client.AccessibilityOptionsScreenMixin",
+    "client.VillagerModelAccessor"
+  ],
   "injectors": {
     "defaultRequire": 1
   }

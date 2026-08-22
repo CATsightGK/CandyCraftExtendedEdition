@@ -9,6 +9,8 @@ import com.valentin4311.candycraftmod.registry.CCWorldgen;
 import com.valentin4311.candycraftmod.world.structure.CandyFeatureLocator;
 import com.mojang.datafixers.util.Pair;
 import com.valentin4311.candycraftmod.world.noise.LegacyPerlinOctaveNoise;
+import java.util.ArrayDeque;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -21,6 +23,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderSet;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.WorldGenRegion;
@@ -37,10 +40,12 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.ChunkGenerator;
+import net.minecraft.world.level.chunk.ChunkGeneratorStructureState;
 import net.minecraft.world.level.levelgen.GenerationStep;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.RandomState;
 import net.minecraft.world.level.levelgen.structure.Structure;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplateManager;
 import net.minecraft.world.level.levelgen.blending.Blender;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.util.RandomSource;
@@ -57,6 +62,7 @@ public class CandyWorldChunkGenerator extends ChunkGenerator {
     private static final int CARVER_RANGE = 8;
     private static final int NOISE_SIZE_XZ = 5;
     private static final int NOISE_SIZE_Y = 33;
+    private static final int MAX_POND_SCAN_COLUMNS = 32768;
     private static final int CELL_WIDTH = 4;
     private static final int CELL_HEIGHT = 8;
     private static final double COORDINATE_SCALE = 684.412D;
@@ -84,9 +90,16 @@ public class CandyWorldChunkGenerator extends ChunkGenerator {
     private static final BlockState AIR = Blocks.AIR.defaultBlockState();
     private static final BlockState WATER = Blocks.WATER.defaultBlockState();
     private static final BlockState FLAT_BOTTOM = CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState();
+    private static final BlockState BASE_STONE = CCBlocks.CRYSTALLIZED_SUGAR.get().defaultBlockState();
+    private static final BlockState LIQUID_CANDY = CCBlocks.LIQUID_CANDY.get().defaultBlockState();
+    private static final BlockState LIQUID_CHOCOLATE = CCBlocks.LIQUID_CHOCOLATE.get().defaultBlockState();
 
     private static final float[] PARABOLIC_FIELD = makeParabolicField();
     private static final Map<Long, LegacyTerrainNoise> TERRAIN_NOISE = new ConcurrentHashMap<>();
+    private final Map<Long, BiomeShape> biomeShapeCache = new ConcurrentHashMap<>();
+    private final Map<Long, Boolean> pondChocolateCache = new ConcurrentHashMap<>();
+    private final Map<Long, Boolean> openWaterColumnCache = new ConcurrentHashMap<>();
+    private volatile long biomeShapeSeed = Long.MIN_VALUE;
 
     public CandyWorldChunkGenerator(BiomeSource biomeSource) {
         super(biomeSource);
@@ -108,6 +121,23 @@ public class CandyWorldChunkGenerator extends ChunkGenerator {
     }
 
     @Override
+    public void createStructures(RegistryAccess registryAccess, ChunkGeneratorStructureState structureState,
+            StructureManager structureManager, ChunkAccess chunk, StructureTemplateManager templateManager) {
+        // Structure-start biome checks run before fillFromNoise; the biome source must already
+        // know the real world seed or the first chunks sample biomes with a fallback pseudo seed.
+        syncBiomeSourceSeed(structureState.randomState());
+        super.createStructures(registryAccess, structureState, structureManager, chunk, templateManager);
+    }
+
+    @Override
+    public CompletableFuture<ChunkAccess> createBiomes(Executor executor, RandomState randomState, Blender blender,
+            StructureManager structureManager, ChunkAccess chunk) {
+        // The chunk's biome container is baked during this phase, before fillFromNoise runs.
+        syncBiomeSourceSeed(randomState);
+        return super.createBiomes(executor, randomState, blender, structureManager, chunk);
+    }
+
+    @Override
     public CompletableFuture<ChunkAccess> fillFromNoise(Executor executor, Blender blender, RandomState randomState,
             StructureManager structureManager, ChunkAccess chunk) {
         return CompletableFuture.supplyAsync(() -> {
@@ -124,8 +154,15 @@ public class CandyWorldChunkGenerator extends ChunkGenerator {
     }
 
     private void syncBiomeSourceSeed(RandomState randomState) {
+        long seed = worldSeed(randomState);
+        if (biomeShapeSeed != seed) {
+            biomeShapeCache.clear();
+            pondChocolateCache.clear();
+            openWaterColumnCache.clear();
+            biomeShapeSeed = seed;
+        }
         if (getBiomeSource() instanceof CandyBiomeSource candyBiomeSource) {
-            candyBiomeSource.setWorldSeed(worldSeed(randomState));
+            candyBiomeSource.setWorldSeed(seed);
         }
     }
 
@@ -139,6 +176,20 @@ public class CandyWorldChunkGenerator extends ChunkGenerator {
         ChunkPos pos = chunk.getPos();
         double[] heightMap = generateHeightMap(pos.x * 4, pos.z * 4, randomState);
         BlockPos.MutableBlockPos mutable = new BlockPos.MutableBlockPos();
+        int[] worldXs = new int[16];
+        int[] worldZs = new int[16];
+        for (int i = 0; i < 16; ++i) {
+            worldXs[i] = pos.getBlockX(i);
+            worldZs[i] = pos.getBlockZ(i);
+        }
+        // Fluid assignment remains column-exact like the original generator, while avoiding
+        // repeating the biome lookup for every Y sample in the same column.
+        BlockState[] columnFluids = new BlockState[256];
+        for (int localX = 0; localX < 16; ++localX) {
+            for (int localZ = 0; localZ < 16; ++localZ) {
+                columnFluids[localX * 16 + localZ] = fluidForColumn(worldXs[localX], worldZs[localZ], randomState);
+            }
+        }
 
         for (int cellX = 0; cellX < 4; ++cellX) {
             int x0 = cellX * NOISE_SIZE_XZ;
@@ -173,11 +224,12 @@ public class CandyWorldChunkGenerator extends ChunkGenerator {
                             for (int subZ = 0; subZ < CELL_WIDTH; ++subZ) {
                                 int localX = cellX * CELL_WIDTH + subX;
                                 int localZ = cellZ * CELL_WIDTH + subZ;
-                                int worldX = pos.getBlockX(localX);
-                                int worldZ = pos.getBlockZ(localZ);
+                                int worldX = worldXs[localX];
+                                int worldZ = worldZs[localZ];
                                 int y = cellY * CELL_HEIGHT + subY;
 
-                                BlockState state = density > 0.0D ? baseStone() : y < SEA_LEVEL ? fluidForBiome(biomeId(worldX, worldZ, randomState)) : AIR;
+                                BlockState state = density > 0.0D ? BASE_STONE
+                                    : y < SEA_LEVEL ? columnFluids[localX * 16 + localZ] : AIR;
                                 if (!state.isAir() && y >= chunk.getMinBuildHeight() && y < chunk.getMaxBuildHeight()) {
                                     chunk.setBlockState(mutable.set(worldX, y, worldZ), state, false);
                                 }
@@ -209,9 +261,11 @@ public class CandyWorldChunkGenerator extends ChunkGenerator {
         for (int x = 0; x < NOISE_SIZE_XZ; ++x) {
             for (int z = 0; z < NOISE_SIZE_XZ; ++z) {
                 HeightConfig heightConfig = heightConfigAt(baseNoiseX + x, baseNoiseZ + z, randomState);
+                double depthNoise = sampleDepthNoise(noise, baseNoiseX + x, baseNoiseZ + z);
 
                 for (int y = 0; y < NOISE_SIZE_Y; ++y) {
-                    heightMap[index++] = sampleMajorReleaseDensity(noise, baseNoiseX + x, y, baseNoiseZ + z, heightConfig);
+                    heightMap[index++] = sampleMajorReleaseDensity(
+                        noise, baseNoiseX + x, y, baseNoiseZ + z, heightConfig, depthNoise);
                 }
             }
         }
@@ -270,6 +324,10 @@ public class CandyWorldChunkGenerator extends ChunkGenerator {
             int worldX = chunkPos.getBlockX(localX);
             for (int localZ = 0; localZ < 16; ++localZ) {
                 int worldZ = chunkPos.getBlockZ(localZ);
+                // This is a decoration pass only; keep the sparse scan to avoid slowing chunk loading.
+                if ((positiveHash(worldX, 0, worldZ, seed) & 7L) != 0L) {
+                    continue;
+                }
                 for (int worldY = MIN_Y + 1; worldY <= maxY; ++worldY) {
                     BlockState liquid = chunk.getBlockState(liquidPos.set(worldX, worldY, worldZ));
                     if (!liquid.is(CCBlocks.LIQUID_CANDY.get())) {
@@ -547,6 +605,7 @@ public class CandyWorldChunkGenerator extends ChunkGenerator {
         double noiseX = x / (double)CELL_WIDTH;
         double noiseZ = z / (double)CELL_WIDTH;
         HeightConfig heightConfig = heightConfigAt(Mth.floor(noiseX), Mth.floor(noiseZ), randomState);
+        BlockState columnFluid = fluidForColumn(x, z, randomState);
 
         for (int i = 0; i < height; ++i) {
             int y = minY + i;
@@ -557,7 +616,7 @@ public class CandyWorldChunkGenerator extends ChunkGenerator {
             } else if (density > 0.0D) {
                 states[i] = baseStone();
             } else if (y < SEA_LEVEL) {
-                states[i] = fluidForBiome(biomeId(x, z, randomState));
+                states[i] = columnFluid;
             } else {
                 states[i] = AIR;
             }
@@ -574,6 +633,7 @@ public class CandyWorldChunkGenerator extends ChunkGenerator {
     }
 
     private HeightConfig heightConfigAt(double noiseX, double noiseZ, RandomState randomState) {
+        long seed = worldSeed(randomState);
         BiomeShape center = biomeShape(Mth.floor(noiseX * CELL_WIDTH), Mth.floor(noiseZ * CELL_WIDTH), randomState);
         double scale = 0.0D;
         double depth = 0.0D;
@@ -603,10 +663,10 @@ public class CandyWorldChunkGenerator extends ChunkGenerator {
 
         double blockX = noiseX * CELL_WIDTH;
         double blockZ = noiseZ * CELL_WIDTH;
-        double spawnIsland = CandyBiomeSource.spawnIslandInfluence(blockX, blockZ, worldSeed(randomState));
+        double spawnIsland = CandyBiomeSource.spawnIslandInfluence(blockX, blockZ, seed);
         if (spawnIsland > 0.0D) {
-            double islandNoise = octaveNoise2D(blockX * 0.018D, blockZ * 0.018D, 4, worldSeed(randomState) ^ 0x5A51A7D15A4EL);
-            double detailNoise = octaveNoise2D(blockX * 0.055D, blockZ * 0.055D, 2, worldSeed(randomState) ^ 0x51A7D15A4E1CL);
+            double islandNoise = octaveNoise2D(blockX * 0.018D, blockZ * 0.018D, 4, seed ^ 0x5A51A7D15A4EL);
+            double detailNoise = octaveNoise2D(blockX * 0.055D, blockZ * 0.055D, 2, seed ^ 0x51A7D15A4E1CL);
             depth += spawnIsland * (0.045D + islandNoise * 0.035D + detailNoise * 0.012D);
             scale += spawnIsland * (0.035D + Math.abs(islandNoise) * 0.025D);
         }
@@ -615,7 +675,17 @@ public class CandyWorldChunkGenerator extends ChunkGenerator {
     }
 
     private static double sampleMajorReleaseDensity(LegacyTerrainNoise noise, double noiseX, double noiseY, double noiseZ, HeightConfig heightConfig) {
-        double depthNoise = noise.depth.sampleXZWrapped(noiseX, noiseZ, DEPTH_NOISE_SCALE_XZ, DEPTH_NOISE_SCALE_XZ);
+        return sampleMajorReleaseDensity(noise, noiseX, noiseY, noiseZ, heightConfig,
+            sampleDepthNoise(noise, noiseX, noiseZ));
+    }
+
+    private static double sampleDepthNoise(LegacyTerrainNoise noise, double noiseX, double noiseZ) {
+        return noise.depth.sampleXZWrapped(noiseX, noiseZ, DEPTH_NOISE_SCALE_XZ, DEPTH_NOISE_SCALE_XZ);
+    }
+
+    private static double sampleMajorReleaseDensity(LegacyTerrainNoise noise, double noiseX, double noiseY,
+            double noiseZ, HeightConfig heightConfig, double rawDepthNoise) {
+        double depthNoise = rawDepthNoise;
         depthNoise /= 8000.0D;
 
         if (depthNoise < 0.0D) {
@@ -987,11 +1057,11 @@ public class CandyWorldChunkGenerator extends ChunkGenerator {
     }
 
     private static BlockState baseStone() {
-        return CCBlocks.CRYSTALLIZED_SUGAR.get().defaultBlockState();
+        return BASE_STONE;
     }
 
     private static BlockState liquidCandy() {
-        return CCBlocks.LIQUID_CANDY.get().defaultBlockState();
+        return LIQUID_CANDY;
     }
 
     private static BlockState springFluidForMountain(ResourceLocation biomeId) {
@@ -1062,11 +1132,85 @@ public class CandyWorldChunkGenerator extends ChunkGenerator {
         };
     }
 
-    private static BlockState fluidForBiome(ResourceLocation biomeId) {
-        if (biomeId.equals(CHOCOLATE_FOREST)) {
-            return CCBlocks.LIQUID_CHOCOLATE.get().defaultBlockState();
+    private BlockState fluidForColumn(int worldX, int worldZ, RandomState randomState) {
+        if (!CHOCOLATE_FOREST.equals(biomeId(worldX, worldZ, randomState))) {
+            return WATER;
         }
-        return WATER;
+        long key = packColumnPos(worldX, worldZ);
+        Boolean chocolate = pondChocolateCache.get(key);
+        if (chocolate == null) {
+            scanChocolatePond(worldX, worldZ, randomState);
+            chocolate = pondChocolateCache.getOrDefault(key, Boolean.FALSE);
+        }
+        return chocolate ? LIQUID_CHOCOLATE : WATER;
+    }
+
+    /**
+     * Chocolate liquid only appears in water bodies that are fully enclosed by chocolate-forest
+     * surface (chocolate-covered white brownie top blocks). Any connection to foreign-biome water
+     * (ocean/river/other) or a non-forest shore keeps the whole body as plain water. The result is
+     * shared with every visited water column so each connected body is scanned only once.
+     */
+    private void scanChocolatePond(int startX, int startZ, RandomState randomState) {
+        ArrayDeque<Long> queue = new ArrayDeque<>();
+        Set<Long> visited = new HashSet<>();
+        queue.add(packColumnPos(startX, startZ));
+        boolean enclosed = true;
+
+        while (!queue.isEmpty()) {
+            if (visited.size() >= MAX_POND_SCAN_COLUMNS) {
+                enclosed = false;
+                break;
+            }
+            long packed = queue.poll();
+            if (!visited.add(packed)) {
+                continue;
+            }
+            int x = (int)(packed >> 32);
+            int z = (int)packed;
+            if (!CHOCOLATE_FOREST.equals(biomeId(x, z, randomState))) {
+                enclosed = false;
+                break;
+            }
+            if (isOpenWaterColumn(x, z, randomState)) {
+                queue.add(packColumnPos(x + 1, z));
+                queue.add(packColumnPos(x - 1, z));
+                queue.add(packColumnPos(x, z + 1));
+                queue.add(packColumnPos(x, z - 1));
+            }
+        }
+
+        if (pondChocolateCache.size() + visited.size() > 131072) {
+            pondChocolateCache.clear();
+        }
+        for (long packed : visited) {
+            pondChocolateCache.put(packed, enclosed);
+        }
+    }
+
+    /** Open water means no solid terrain at the two topmost sea-level layers of this column. */
+    private boolean isOpenWaterColumn(int x, int z, RandomState randomState) {
+        long key = packColumnPos(x, z);
+        Boolean cached = openWaterColumnCache.get(key);
+        if (cached != null) {
+            return cached;
+        }
+        LegacyTerrainNoise noise = terrainNoise(randomState);
+        double noiseX = x / (double)CELL_WIDTH;
+        double noiseZ = z / (double)CELL_WIDTH;
+        HeightConfig heightConfig = heightConfigAt(Mth.floor(noiseX), Mth.floor(noiseZ), randomState);
+        double depthNoise = sampleDepthNoise(noise, noiseX, noiseZ);
+        boolean water = sampleMajorReleaseDensity(noise, noiseX, (SEA_LEVEL - 1) / (double)CELL_HEIGHT, noiseZ, heightConfig, depthNoise) <= 0.0D
+            && sampleMajorReleaseDensity(noise, noiseX, SEA_LEVEL / (double)CELL_HEIGHT, noiseZ, heightConfig, depthNoise) <= 0.0D;
+        if (openWaterColumnCache.size() >= 131072) {
+            openWaterColumnCache.clear();
+        }
+        openWaterColumnCache.putIfAbsent(key, water);
+        return water;
+    }
+
+    private static long packColumnPos(int x, int z) {
+        return ((long)x << 32) ^ (z & 0xFFFFFFFFL);
     }
 
     private static BlockState underwaterMaterial(int replaced) {
@@ -1076,9 +1220,14 @@ public class CandyWorldChunkGenerator extends ChunkGenerator {
     }
 
     private BiomeShape biomeShape(int x, int z, RandomState randomState) {
+        long key = ((long) x << 32) ^ (z & 0xFFFFFFFFL);
+        BiomeShape cached = biomeShapeCache.get(key);
+        if (cached != null) {
+            return cached;
+        }
         ResourceLocation location = biomeId(x, z, randomState);
-        return switch (location.getPath()) {
-            case "ice_cream_sky_mountains" -> new BiomeShape(1.9F, 2.0F);
+        BiomeShape result = switch (location.getPath()) {
+            case "ice_cream_sky_mountains" -> new BiomeShape(3.55F, 2.9F);
             case "sugar_mountains" -> new BiomeShape(0.5F, 0.8F);
             case "sugar_hell_mountains" -> new BiomeShape(1.9F, 2.0F);
             case "sugar_plains" -> new BiomeShape(0.05F, 0.1F);
@@ -1088,12 +1237,17 @@ public class CandyWorldChunkGenerator extends ChunkGenerator {
             case "sugar_river" -> new BiomeShape(-0.5F, 0.0F);
             case "sugar_oceans" -> new BiomeShape(-1.0F, 0.1F);
             case "sugar_enchanted_forest" -> new BiomeShape(0.23F, 0.25F);
-            case "caramel_forest" -> new BiomeShape(0.0F, 0.3F);
+            case "caramel_forest" -> new BiomeShape(0.05F, 0.1F);
             case "cotton_candy_plains" -> new BiomeShape(0.05F, 0.1F);
             case "gummy_swamp" -> new BiomeShape(-0.1F, 0.1F);
             case "ice_cream_plains" -> new BiomeShape(0.05F, 0.1F);
             default -> new BiomeShape(0.05F, 0.1F);
         };
+        if (biomeShapeCache.size() >= 131072) {
+            biomeShapeCache.clear();
+        }
+        BiomeShape previous = biomeShapeCache.putIfAbsent(key, result);
+        return previous != null ? previous : result;
     }
 
     private ResourceLocation biomeId(int x, int z, RandomState randomState) {

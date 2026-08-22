@@ -32,9 +32,12 @@ import net.minecraft.world.entity.TamableAnimal;
 import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.monster.Slime;
 import net.minecraft.world.entity.projectile.Projectile;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
@@ -49,6 +52,10 @@ import net.minecraft.network.syncher.SynchedEntityData;
 import org.jetbrains.annotations.Nullable;
 
 public class BasicCandySlimeEntity extends Slime {
+    private static final Direction[] DIRECTIONS = Direction.values();
+    private static final Vec3[] DIRECTION_VECTORS = createDirectionVectors();
+    private static final int DORMANT_BOSS_HEAL_INTERVAL_TICKS = 20;
+    private static final float DORMANT_BOSS_HEAL_AMOUNT = 5.0F;
     public static final int JELLY_QUEEN_SLEEP_MODE = 0;
     public static final int JELLY_QUEEN_PINK_MODE = 1;
     public static final int JELLY_QUEEN_BLUE_MODE = 2;
@@ -69,12 +76,12 @@ public class BasicCandySlimeEntity extends Slime {
     private static final double PEZ_ENCLOSURE_PROBE_DISTANCE = 32.0D;
     private static final int PEZ_ROLL_ACCELERATION_TICKS = 20;
     private static final int PEZ_ROLL_DECELERATION_TICKS = 30;
+    private static final int INHERITED_TARGET_RESOLVE_INTERVAL = 10;
     private static final double PEZ_ROLL_ANIMATION_SECONDS = 0.9D;
-    private static final double PEZ_ROLL_MIN_WAYPOINT_DISTANCE = 18.0D;
-    private static final double PEZ_ROLL_MAX_WAYPOINT_DISTANCE = 56.0D;
+    private static final int PEZ_ATTACH_TRANSITION_DURATION = 5;
     private static final int BOSS_LOST_TARGET_TICKS = 200;
     private static final int BOSS_JELLY_BALL_MIN_DROP = 16;
-    private static final int BOSS_JELLY_BALL_MAX_DROP = 48;
+    private static final int BOSS_JELLY_BALL_MAX_DROP = 32;
     private static final double BOSS_TARGET_RANGE = 64.0D;
     private static final EntityDataAccessor<Boolean> BOSS_AWAKE = SynchedEntityData.defineId(BasicCandySlimeEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Integer> JELLY_QUEEN_MODE = SynchedEntityData.defineId(BasicCandySlimeEntity.class, EntityDataSerializers.INT);
@@ -83,6 +90,8 @@ public class BasicCandySlimeEntity extends Slime {
     private static final EntityDataAccessor<Integer> KING_DASH_TICKS = SynchedEntityData.defineId(BasicCandySlimeEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Integer> PEZ_ROLL_TICKS = SynchedEntityData.defineId(BasicCandySlimeEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Integer> PEZ_ATTACH_FACE = SynchedEntityData.defineId(BasicCandySlimeEntity.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Integer> PEZ_PREVIOUS_ATTACH_FACE = SynchedEntityData.defineId(BasicCandySlimeEntity.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Integer> PEZ_ATTACH_TRANSITION_TICKS = SynchedEntityData.defineId(BasicCandySlimeEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Integer> PEZ_ROLL_DIRECTION = SynchedEntityData.defineId(BasicCandySlimeEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Integer> PEZ_ROLL_STEPS = SynchedEntityData.defineId(BasicCandySlimeEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Float> PEZ_ROLL_DISTANCE = SynchedEntityData.defineId(BasicCandySlimeEntity.class, EntityDataSerializers.FLOAT);
@@ -99,7 +108,7 @@ public class BasicCandySlimeEntity extends Slime {
     private int kingDashCooldown;
     private int kingDashChargeTicks;
     private int bossBounceCooldown;
-    private int bossTargetSearchCooldown;
+    private int inheritedTargetResolveCooldown;
     private boolean bossBounceDamageReady;
     private boolean kingExpandDamageReady;
     @Nullable
@@ -107,14 +116,8 @@ public class BasicCandySlimeEntity extends Slime {
     private int bossMultiTargetSlamCount;
     private int pezSlamCount;
     private int pezRollCooldown;
-    private int pezRollDirectionTicks;
-    private int pezRollTargetBiasTicks;
-    private int pezRollTurnLockTicks;
     private int pezRollBrushDamageCooldown;
     private Vec3 pezRollTangent = Vec3.ZERO;
-    private Vec3 pezRollSmoothedTangent = Vec3.ZERO;
-    private Vec3 pezRollWaypoint = Vec3.ZERO;
-    private Vec3 pezRollNextWaypoint = Vec3.ZERO;
     private boolean pezRollAttackReleased;
     private boolean pezOpenGroundRoll;
     private final Set<Integer> pezOpenRollHitTargets = new HashSet<>();
@@ -132,26 +135,50 @@ public class BasicCandySlimeEntity extends Slime {
     private LivingEntity bossRetaliationTarget;
     @Nullable
     private UUID jellySummonerUuid;
+    @Nullable
+    private UUID inheritedBossTargetUuid;
 
     public BasicCandySlimeEntity(EntityType<? extends BasicCandySlimeEntity> type, Level level) {
         super(type, level);
+        if (isCandyBoss()) {
+            bossEvent.setName(type.getDescription());
+            bossEvent.setColor(getBossBarColor());
+        }
+    }
+
+    @Override
+    protected void registerGoals() {
+        super.registerGoals();
+        targetSelector.removeAllGoals(goal -> true);
+        targetSelector.addGoal(1, new NearestAttackableTargetGoal<>(this, Player.class, 10, true, false,
+            entity -> entity instanceof Player player && CandyTargeting.canAttackPlayer(player)));
     }
 
     @Override
     protected void defineSynchedData() {
         super.defineSynchedData();
-        entityData.define(BOSS_AWAKE, false);
-        entityData.define(JELLY_QUEEN_MODE, JELLY_QUEEN_SLEEP_MODE);
-        entityData.define(BOSS_SLAM_TICKS, 0);
-        entityData.define(KING_EXPAND_TICKS, 0);
-        entityData.define(KING_DASH_TICKS, 0);
-        entityData.define(PEZ_ROLL_TICKS, 0);
-        entityData.define(PEZ_ATTACH_FACE, Direction.UP.ordinal());
-        entityData.define(PEZ_ROLL_DIRECTION, Direction.NORTH.ordinal());
-        entityData.define(PEZ_ROLL_STEPS, 0);
-        entityData.define(PEZ_ROLL_DISTANCE, 0.0F);
-        entityData.define(BOSS_BOUNCE_TICKS, 0);
-        entityData.define(BOSS_RESTING_TICKS, 0);
+        if (isCandyBoss()) {
+            entityData.define(BOSS_AWAKE, false);
+            entityData.define(BOSS_SLAM_TICKS, 0);
+            entityData.define(KING_EXPAND_TICKS, 0);
+            entityData.define(BOSS_RESTING_TICKS, 0);
+        }
+        if (isJellyQueen()) {
+            entityData.define(JELLY_QUEEN_MODE, JELLY_QUEEN_SLEEP_MODE);
+        }
+        if (isKingSlime() || isJellyQueen()) {
+            entityData.define(KING_DASH_TICKS, 0);
+            entityData.define(BOSS_BOUNCE_TICKS, 0);
+        }
+        if (isPezJelly()) {
+            entityData.define(PEZ_ROLL_TICKS, 0);
+            entityData.define(PEZ_ATTACH_FACE, Direction.UP.ordinal());
+            entityData.define(PEZ_PREVIOUS_ATTACH_FACE, Direction.UP.ordinal());
+            entityData.define(PEZ_ATTACH_TRANSITION_TICKS, 0);
+            entityData.define(PEZ_ROLL_DIRECTION, Direction.NORTH.ordinal());
+            entityData.define(PEZ_ROLL_STEPS, 0);
+            entityData.define(PEZ_ROLL_DISTANCE, 0.0F);
+        }
     }
 
     @Override
@@ -164,29 +191,56 @@ public class BasicCandySlimeEntity extends Slime {
 
     @Override
     public void aiStep() {
-        if (isCandyBoss() && !isBossAwake()) {
+        boolean candyBoss = isCandyBoss();
+        boolean clientSide = level().isClientSide;
+        if (!clientSide && isPezRollingMovement()) {
+            setDeltaMovement(Vec3.ZERO);
+        }
+        if (candyBoss && !isBossAwake()) {
             freezeSleepingBoss();
         }
         super.aiStep();
-        updateBossBar();
+        if (!clientSide && inheritedBossTargetUuid != null) {
+            tickInheritedBossTarget();
+        }
+        if (candyBoss && !clientSide) {
+            updateBossBar();
+        }
         if (specialAttackCooldown > 0) {
             specialAttackCooldown--;
         }
-        if (bossTargetSearchCooldown > 0) {
-            bossTargetSearchCooldown--;
-        }
-        if (isTornadoJelly() && !onGround() && level().isClientSide && tickCount % 4 == 0) {
+        if (isTornadoJelly() && !onGround() && clientSide && tickCount % 4 == 0) {
             level().addParticle(ParticleTypes.CLOUD, getRandomX(0.8D), getRandomY(), getRandomZ(0.8D), 0.0D, 0.02D, 0.0D);
         }
+        if (candyBoss && !clientSide) {
+            tickServerBossBehavior();
+        }
+        if (candyBoss && !isBossAwake()) {
+            freezeSleepingBoss();
+        }
+        if (!clientSide) {
+            tickRetaliationTarget();
+        }
+    }
+
+    @Override
+    public void travel(Vec3 travelVector) {
+        if (!level().isClientSide && isPezRollingMovement()) {
+            return;
+        }
+        super.travel(travelVector);
+    }
+
+    private boolean isPezRollingMovement() {
+        return isPezJelly() && getPezRollTicks() >= PEZ_ROLL_TOTAL_TICKS - PEZ_ROLLING_TICKS;
+    }
+
+    private void tickServerBossBehavior() {
         tickBossSlamLandingAndAnimation();
         tickKingBossSpecialAnimation();
         tickBossBounceAndRest();
         tickPezRollSkill();
         tickBossAwakeBehavior();
-        if (isCandyBoss() && !isBossAwake()) {
-            freezeSleepingBoss();
-        }
-        tickRetaliationTarget();
     }
 
     @Override
@@ -214,11 +268,9 @@ public class BasicCandySlimeEntity extends Slime {
     @Override
     public void playerTouch(Player player) {
         if (!isSurvivalLike(player)) {
-            super.playerTouch(player);
             return;
         }
         if (!isAlive() || specialAttackCooldown > 0) {
-            super.playerTouch(player);
             return;
         }
         if (isCandyBoss() && !isBossAwake()) {
@@ -246,7 +298,22 @@ public class BasicCandySlimeEntity extends Slime {
             specialAttackCooldown = 15;
             hurtPlayerWithLegacyBossContact(player);
         }
-        super.playerTouch(player);
+    }
+
+    @Override
+    protected boolean isDealsDamage() {
+        // Contact damage is implemented above; disabling Slime's path also prevents its iron-golem attack shortcut.
+        return false;
+    }
+
+    @Override
+    public boolean removeWhenFarAway(double distanceToClosestPlayer) {
+        return false;
+    }
+
+    @Override
+    public boolean shouldDespawnInPeaceful() {
+        return false;
     }
 
     @Override
@@ -393,57 +460,89 @@ public class BasicCandySlimeEntity extends Slime {
 
     @Override
     protected void dropCustomDeathLoot(DamageSource source, int looting, boolean recentlyHit) {
-        if (isJellyQueen()) {
+        if (isYellowJelly()) {
+            spawnAtLocation(CCItems.LEMON_JELLY_BALL.get());
+        } else if (isRedJelly()) {
+            spawnAtLocation(CCItems.RASPBERRY_JELLY_BALL.get());
+        } else if (isTornadoJelly()) {
+            spawnAtLocation(CCItems.MINT_JELLY_BALL.get());
+        } else if (isJellyQueen()) {
             spawnAtLocation(CCItems.RECORD_1.get());
             spawnAtLocation(CCItems.JELLY_KEY.get());
             spawnAtLocation(CCItems.JELLY_EMBLEM.get());
-            spawnAtLocation(CCItems.STRAWBERRY_QUEEN_JELLY_BALL.get(), bossJellyBallDropCount());
+            dropBossJellyBalls(CCItems.STRAWBERRY_QUEEN_JELLY_BALL.get());
         } else if (isPezJelly() && getSize() <= 1) {
             spawnAtLocation(CCItems.JELLY_SENTRY_KEY.get());
-            spawnAtLocation(CCItems.PEZ_JELLY_BALL.get(), bossJellyBallDropCount());
+            dropBossJellyBalls(CCItems.PEZ_JELLY_BALL.get());
         } else if (isKingSlime()) {
             if (getSize() <= 1) {
                 spawnAtLocation(CCItems.JELLY_BOSS_KEY.get());
             }
-            spawnAtLocation(CCItems.CARAMEL_KING_JELLY_BALL.get(), bossJellyBallDropCount());
+            dropBossJellyBalls(CCItems.CARAMEL_KING_JELLY_BALL.get());
         }
     }
 
-    private int bossJellyBallDropCount() {
-        return BOSS_JELLY_BALL_MIN_DROP + random.nextInt(BOSS_JELLY_BALL_MAX_DROP - BOSS_JELLY_BALL_MIN_DROP + 1);
+    private void dropBossJellyBalls(Item jellyBall) {
+        int count = BOSS_JELLY_BALL_MIN_DROP
+            + random.nextInt(BOSS_JELLY_BALL_MAX_DROP - BOSS_JELLY_BALL_MIN_DROP + 1);
+        spawnAtLocation(new ItemStack(jellyBall, count));
     }
 
     @Override
     public void addAdditionalSaveData(CompoundTag tag) {
         super.addAdditionalSaveData(tag);
-        tag.putBoolean("BossAwake", isBossAwake());
-        tag.putInt("BossLostTargetTicks", bossLostTargetTicks);
-        tag.putInt("BossRangedCooldown", bossRangedCooldown);
-        tag.putInt("KingExpandCooldown", kingExpandCooldown);
-        tag.putInt("KingDashCooldown", kingDashCooldown);
-        tag.putInt("BossMultiTargetSlamCount", bossMultiTargetSlamCount);
-        tag.putInt("PezSlamCount", pezSlamCount);
-        tag.putInt("PezRollCooldown", pezRollCooldown);
+        if (isCandyBoss()) {
+            if (isBossAwake()) {
+                tag.putBoolean("BossAwake", true);
+            }
+            putIntIfNonZero(tag, "BossLostTargetTicks", bossLostTargetTicks);
+            putIntIfNonZero(tag, "BossRangedCooldown", bossRangedCooldown);
+            putIntIfNonZero(tag, "KingExpandCooldown", kingExpandCooldown);
+            if (isKingSlime() || isJellyQueen()) {
+                putIntIfNonZero(tag, "KingDashCooldown", kingDashCooldown);
+                putIntIfNonZero(tag, "BossMultiTargetSlamCount", bossMultiTargetSlamCount);
+            }
+            if (isPezJelly()) {
+                putIntIfNonZero(tag, "PezSlamCount", pezSlamCount);
+                putIntIfNonZero(tag, "PezRollCooldown", pezRollCooldown);
+            }
+        }
         if (jellySummonerUuid != null) {
             tag.putUUID("JellySummoner", jellySummonerUuid);
+        }
+        if (inheritedBossTargetUuid != null) {
+            tag.putUUID("InheritedBossTarget", inheritedBossTargetUuid);
         }
         if (isJellyQueen()) {
             tag.putInt("JellyQueenMode", getJellyQueenMode());
         }
     }
 
+    private static void putIntIfNonZero(CompoundTag tag, String key, int value) {
+        if (value != 0) {
+            tag.putInt(key, value);
+        }
+    }
+
     @Override
     public void readAdditionalSaveData(CompoundTag tag) {
         super.readAdditionalSaveData(tag);
-        setBossAwake(tag.getBoolean("BossAwake"));
-        bossLostTargetTicks = tag.getInt("BossLostTargetTicks");
-        bossRangedCooldown = tag.getInt("BossRangedCooldown");
-        kingExpandCooldown = tag.getInt("KingExpandCooldown");
-        kingDashCooldown = tag.getInt("KingDashCooldown");
-        bossMultiTargetSlamCount = tag.getInt("BossMultiTargetSlamCount");
-        pezSlamCount = tag.getInt("PezSlamCount");
-        pezRollCooldown = tag.getInt("PezRollCooldown");
+        if (isCandyBoss()) {
+            setBossAwake(tag.getBoolean("BossAwake"));
+            bossLostTargetTicks = tag.getInt("BossLostTargetTicks");
+            bossRangedCooldown = tag.getInt("BossRangedCooldown");
+            kingExpandCooldown = tag.getInt("KingExpandCooldown");
+            if (isKingSlime() || isJellyQueen()) {
+                kingDashCooldown = tag.getInt("KingDashCooldown");
+                bossMultiTargetSlamCount = tag.getInt("BossMultiTargetSlamCount");
+            }
+            if (isPezJelly()) {
+                pezSlamCount = tag.getInt("PezSlamCount");
+                pezRollCooldown = tag.getInt("PezRollCooldown");
+            }
+        }
         jellySummonerUuid = tag.hasUUID("JellySummoner") ? tag.getUUID("JellySummoner") : null;
+        inheritedBossTargetUuid = tag.hasUUID("InheritedBossTarget") ? tag.getUUID("InheritedBossTarget") : null;
         if (isJellyQueen()) {
             setJellyQueenMode(tag.contains("JellyQueenMode") ? tag.getInt("JellyQueenMode") : isBossAwake() ? JELLY_QUEEN_PINK_MODE : JELLY_QUEEN_SLEEP_MODE);
         }
@@ -499,21 +598,22 @@ public class BasicCandySlimeEntity extends Slime {
     @Override
     public void setSize(int size, boolean resetHealth) {
         super.setSize(size, resetHealth);
-        if (getAttribute(Attributes.MAX_HEALTH) != null) {
+        AttributeInstance maxHealth = getAttribute(Attributes.MAX_HEALTH);
+        if (maxHealth != null) {
             if (isKingSlime()) {
                 xpReward = 800;
-                getAttribute(Attributes.MAX_HEALTH).setBaseValue(800.0D);
+                setBaseValueIfChanged(maxHealth, 800.0D);
                 if (resetHealth) {
                     setHealth(getMaxHealth());
                 }
             } else if (isJellyQueen()) {
                 xpReward = 500;
-                getAttribute(Attributes.MAX_HEALTH).setBaseValue(300.0D);
+                setBaseValueIfChanged(maxHealth, 300.0D);
                 if (resetHealth) {
                     setHealth(getMaxHealth());
                 }
             } else if (isPezJelly()) {
-                getAttribute(Attributes.MAX_HEALTH).setBaseValue(size * 20.0D);
+                setBaseValueIfChanged(maxHealth, size * 20.0D);
                 if (resetHealth) {
                     setHealth(getMaxHealth());
                 }
@@ -524,6 +624,9 @@ public class BasicCandySlimeEntity extends Slime {
     private void tickBossAwakeBehavior() {
         if (!isCandyBoss() || level().isClientSide) {
             return;
+        }
+        if (!isBossAwake()) {
+            tickDormantBossRegeneration();
         }
         if (isJellyQueen()) {
             tickJellyQueenBossBehavior();
@@ -537,15 +640,13 @@ public class BasicCandySlimeEntity extends Slime {
         }
         bossLostTargetTicks = BOSS_LOST_TARGET_TICKS;
         if (isBossResting()) {
-            if (speed != null) {
-                speed.setBaseValue(0.0D);
-            }
-            setDeltaMovement(0.0D, Math.min(0.0D, getDeltaMovement().y), 0.0D);
+            setBaseValueIfChanged(speed, 0.0D);
+            stopHorizontalMovement(true);
             getNavigation().stop();
             return;
         }
-        if (isBossAwake() && speed != null) {
-            speed.setBaseValue(isJellyQueen() ? 0.7D : isKingSlime() ? 0.45D : 0.38D);
+        if (isBossAwake()) {
+            setBaseValueIfChanged(speed, isJellyQueen() ? 0.7D : isKingSlime() ? 0.45D : 0.38D);
         }
         tickBossRangedAttack(target);
         if (isKingSlime() || isJellyQueen()) {
@@ -555,9 +656,7 @@ public class BasicCandySlimeEntity extends Slime {
             tickPezExpandSpecial(target);
             tickPezRollTrigger(target);
             if (getPezRollTicks() > 0) {
-                if (speed != null) {
-                    speed.setBaseValue(0.0D);
-                }
+                setBaseValueIfChanged(speed, 0.0D);
                 return;
             }
         }
@@ -581,22 +680,15 @@ public class BasicCandySlimeEntity extends Slime {
 
         if (!isBossAwake()) {
             setJellyQueenMode(JELLY_QUEEN_SLEEP_MODE);
-            if (speed != null) {
-                speed.setBaseValue(0.0D);
-            }
-            setDeltaMovement(0.0D, getDeltaMovement().y, 0.0D);
-            heal(5.0F);
+            setBaseValueIfChanged(speed, 0.0D);
+            stopHorizontalMovement(false);
             return;
         }
 
-        if (speed != null) {
-            speed.setBaseValue(0.699999988079071D);
-        }
+        setBaseValueIfChanged(speed, 0.699999988079071D);
         if (isBossResting()) {
-            if (speed != null) {
-                speed.setBaseValue(0.0D);
-            }
-            setDeltaMovement(0.0D, Math.min(0.0D, getDeltaMovement().y), 0.0D);
+            setBaseValueIfChanged(speed, 0.0D);
+            stopHorizontalMovement(true);
             getNavigation().stop();
             return;
         }
@@ -783,6 +875,18 @@ public class BasicCandySlimeEntity extends Slime {
         double cos = Math.cos(radians);
         double sin = Math.sin(radians);
         return new Vec3(direction.x * cos - direction.z * sin, 0.0D, direction.x * sin + direction.z * cos).normalize();
+    }
+
+    private static Vec3[] createDirectionVectors() {
+        Vec3[] vectors = new Vec3[DIRECTIONS.length];
+        for (Direction direction : DIRECTIONS) {
+            vectors[direction.ordinal()] = Vec3.atLowerCornerOf(direction.getNormal());
+        }
+        return vectors;
+    }
+
+    private static Vec3 directionVector(Direction direction) {
+        return DIRECTION_VECTORS[direction.ordinal()];
     }
 
     private void tickBossRangedAttack(LivingEntity target) {
@@ -1024,6 +1128,7 @@ public class BasicCandySlimeEntity extends Slime {
             setNoGravity(false);
             return;
         }
+        tickPezAttachTransition();
         setPezRollTicks(ticks - 1);
         int elapsed = PEZ_ROLL_TOTAL_TICKS - ticks;
         LivingEntity target = pezRollTarget != null && pezRollTarget.isAlive() ? pezRollTarget : findBossAttackTarget();
@@ -1069,13 +1174,7 @@ public class BasicCandySlimeEntity extends Slime {
             : Direction.NORTH);
         setPezRollSteps(0);
         setPezRollDistance(0.0F);
-        pezRollDirectionTicks = 0;
-        pezRollTargetBiasTicks = 0;
-        pezRollTurnLockTicks = 0;
         pezRollTangent = Vec3.ZERO;
-        pezRollSmoothedTangent = Vec3.ZERO;
-        pezRollWaypoint = Vec3.ZERO;
-        pezRollNextWaypoint = Vec3.ZERO;
         pezRollTarget = target;
         pezRollAttackReleased = false;
         pezOpenGroundRoll = !isPezInEnclosedRollSpace();
@@ -1169,6 +1268,7 @@ public class BasicCandySlimeEntity extends Slime {
     private void finishPezRollSkill() {
         setPezRollTicks(0);
         setNoGravity(false);
+        setPezAttachTransitionTicks(0);
         pezRollAttackReleased = false;
         pezOpenGroundRoll = false;
         pezOpenRollHitTargets.clear();
@@ -1191,108 +1291,75 @@ public class BasicCandySlimeEntity extends Slime {
         if (face == null || !hasAttachSurface(face)) {
             face = choosePezRollFace();
             setPezAttachFace(face);
-            pezRollDirectionTicks = 0;
             pezRollTangent = Vec3.ZERO;
-            pezRollSmoothedTangent = Vec3.ZERO;
-            pezRollWaypoint = Vec3.ZERO;
-            pezRollNextWaypoint = Vec3.ZERO;
         }
 
-        updatePezRollWaypoints(face, target);
         Direction rollDirection = getPezRollDirection();
-        if (pezRollDirectionTicks <= 0 || !isPezRollDirectionValid(face, rollDirection)) {
-            rollDirection = choosePezRollDirection(face, target, true);
+        if (!isPezRollDirectionValid(face, rollDirection)) {
+            Direction recoveryDirection = choosePezOpenDirection(face, Vec3.ZERO);
+            if (recoveryDirection == null) {
+                setDeltaMovement(Vec3.ZERO);
+                return;
+            }
+            rollDirection = recoveryDirection;
             applyPezRollDirection(rollDirection);
-            pezRollDirectionTicks = 38 + random.nextInt(25);
-        } else {
-            pezRollDirectionTicks--;
+        } else if (pezRollTangent.lengthSqr() < 1.0E-4D) {
+            applyPezRollDirection(rollDirection);
         }
 
         setNoGravity(face != Direction.UP);
-        Vec3 normal = Vec3.atLowerCornerOf(face.getNormal());
-        Vec3 targetTangent = Vec3.atLowerCornerOf(rollDirection.getNormal());
         double speed = pezRollMatchedSpeed() * pezRollSpeedEnvelope(elapsed);
-        if (!canPezSlide(face, targetTangent)) {
-            Direction climbFace = findPezClimbFace(face, rollDirection, speed);
-            if (climbFace != null && climbFace != face) {
-                face = climbFace;
+        Vec3 beforeRollPosition = position();
+        Vec3 tangent = directionVector(rollDirection);
+        Vec3 segmentStart = position();
+        movePezAlongSurface(face, tangent, speed);
+        double movedDistance = segmentStart.distanceTo(position());
+        double forwardDistance = Math.max(0.0D, position().subtract(segmentStart).dot(tangent));
+        double remainingDistance = Math.max(0.0D, speed - forwardDistance);
+        Vec3 finalTangent = tangent;
+
+        if (speed > 0.05D && remainingDistance > Math.max(0.025D, speed * 0.08D)) {
+            Direction nextFace = findPezCornerFace(face, rollDirection);
+            if (nextFace != null) {
+                Direction continuationDirection = face;
+                face = nextFace;
                 setPezAttachFace(face);
-                pezRollWaypoint = Vec3.ZERO;
-                pezRollNextWaypoint = Vec3.ZERO;
-                updatePezRollWaypoints(face, target);
-                rollDirection = choosePezRollDirection(face, target, true);
-                applyPezRollDirection(rollDirection);
-                targetTangent = Vec3.atLowerCornerOf(rollDirection.getNormal());
-                normal = Vec3.atLowerCornerOf(face.getNormal());
-                pezRollDirectionTicks = 38 + random.nextInt(25);
-            }
-        }
-        if (!canPezSlide(face, targetTangent)) {
-            Direction escape = choosePezOpenDirection(face, targetTangent);
-            if (escape != null) {
-                applyPezRollDirection(escape);
-                targetTangent = Vec3.atLowerCornerOf(escape.getNormal());
-                pezRollDirectionTicks = 30 + random.nextInt(21);
+                applyPezRollDirection(continuationDirection);
+                finalTangent = directionVector(continuationDirection);
+                segmentStart = position();
+                movePezAlongSurface(face, finalTangent, remainingDistance);
+                movedDistance += segmentStart.distanceTo(position());
             } else {
-                Direction newFace = choosePezRollFace();
-                if (newFace != face && hasAttachSurface(newFace)) {
-                    face = newFace;
-                    setPezAttachFace(face);
-                    pezRollWaypoint = Vec3.ZERO;
-                    pezRollNextWaypoint = Vec3.ZERO;
-                    updatePezRollWaypoints(face, target);
-                    rollDirection = choosePezRollDirection(face, target, true);
-                    applyPezRollDirection(rollDirection);
-                    targetTangent = Vec3.atLowerCornerOf(rollDirection.getNormal());
-                    normal = Vec3.atLowerCornerOf(face.getNormal());
-                    pezRollDirectionTicks = 38 + random.nextInt(25);
-                } else {
-                    targetTangent = Vec3.ZERO;
+                Direction escape = choosePezOpenDirection(face, tangent);
+                if (escape != null && escape != rollDirection) {
+                    applyPezRollDirection(escape);
+                    finalTangent = directionVector(escape);
                 }
             }
         }
 
-        Vec3 tangent = targetTangent.lengthSqr() > 1.0E-4D ? targetTangent.normalize() : Vec3.ZERO;
-        if (tangent.lengthSqr() > 1.0E-4D) {
-            if (pezRollSmoothedTangent.lengthSqr() < 1.0E-4D) {
-                pezRollSmoothedTangent = tangent;
-            } else {
-                Vec3 blended = pezRollSmoothedTangent.scale(0.86D).add(tangent.scale(0.14D));
-                pezRollSmoothedTangent = blended.lengthSqr() > 1.0E-4D ? blended.normalize() : tangent;
-            }
-        }
-        Vec3 moveTangent = pezRollSmoothedTangent.lengthSqr() > 1.0E-4D ? pezRollSmoothedTangent.normalize() : tangent;
-        Vec3 desired = moveTangent.scale(speed).add(normal.scale(-0.045D));
-        if (!level().noCollision(this, getBoundingBox().move(desired.scale(0.65D)))) {
-            spawnPezRollBreakParticles(normal);
-            Direction escape = choosePezOpenDirection(face, tangent);
-            if (escape != null) {
-                applyPezRollDirection(escape);
-                pezRollDirectionTicks = 24 + random.nextInt(18);
-                Vec3 escapeTangent = Vec3.atLowerCornerOf(escape.getNormal());
-                pezRollSmoothedTangent = escapeTangent;
-                desired = escapeTangent.scale(speed * 0.9D).add(normal.scale(-0.04D));
-            } else {
-                desired = normal.scale(-0.04D);
-                pezRollDirectionTicks = 8;
-            }
-        }
-        Vec3 beforeRollPosition = position();
-        if (face == Direction.UP && !onGround() && elapsed % 13 < 4) {
-            desired = desired.add(0.0D, -0.12D, 0.0D);
-        }
-        move(MoverType.SELF, desired);
-        setDeltaMovement(desired.scale(0.75D));
+        setNoGravity(face != Direction.UP);
+        setDeltaMovement(finalTangent.scale(movedDistance));
         hasImpulse = true;
-        addPezRollDistance(beforeRollPosition.distanceTo(position()));
-        if (moveTangent.lengthSqr() > 1.0E-4D) {
-            Direction visualDirection = Direction.getNearest(moveTangent.x, moveTangent.y, moveTangent.z);
-            if (visualDirection.getAxis() != face.getAxis()) {
-                setPezRollDirection(visualDirection);
-            }
-            alignPezBodyToRoll(moveTangent);
+        addPezRollDistance(movedDistance);
+        if (finalTangent.lengthSqr() > 1.0E-4D) {
+            alignPezBodyToRoll(finalTangent);
         }
-        damagePezRollBrushTargets(moveTangent, beforeRollPosition);
+        damagePezRollBrushTargets(finalTangent, beforeRollPosition);
+    }
+
+    private void movePezAlongSurface(Direction face, Vec3 tangent, double distance) {
+        Vec3 surfaceNormal = directionVector(face);
+        move(MoverType.SELF, tangent.scale(distance).add(surfaceNormal.scale(-0.045D)));
+    }
+
+    @Nullable
+    private Direction findPezCornerFace(Direction currentFace, Direction rollDirection) {
+        Direction blockingFace = rollDirection.getOpposite();
+        if (blockingFace != currentFace && hasAttachSurface(blockingFace)) {
+            return blockingFace;
+        }
+        return null;
     }
 
     private double pezRollMatchedSpeed() {
@@ -1320,53 +1387,25 @@ public class BasicCandySlimeEntity extends Slime {
     }
 
     private boolean canPezSlide(Direction face, Vec3 tangent) {
-        if (tangent.lengthSqr() < 1.0E-4D || tangent.normalize().dot(Vec3.atLowerCornerOf(face.getNormal())) != 0.0D) {
+        if (tangent.lengthSqr() < 1.0E-4D) {
             return false;
         }
-        Vec3 step = tangent.normalize().scale(1.05D);
+        Vec3 normalized = tangent.normalize();
+        if (normalized.dot(directionVector(face)) != 0.0D) {
+            return false;
+        }
+        Vec3 step = normalized.scale(0.18D);
         return level().noCollision(this, getBoundingBox().move(step))
             && hasAttachSurfaceAt(face, position().add(step));
-    }
-
-    private boolean canPezSlideFrom(Direction face, Vec3 center, Vec3 tangent) {
-        if (tangent.lengthSqr() < 1.0E-4D || tangent.normalize().dot(Vec3.atLowerCornerOf(face.getNormal())) != 0.0D) {
-            return false;
-        }
-        Vec3 step = tangent.normalize().scale(1.05D);
-        AABB box = getBoundingBox().move(center.subtract(position())).move(step);
-        return level().noCollision(this, box)
-            && hasAttachSurfaceAt(face, center.add(step));
     }
 
     private boolean isPezRollDirectionValid(Direction face, Direction direction) {
         return direction != null && direction.getAxis() != face.getAxis();
     }
 
-    private Direction findPezClimbFace(Direction currentFace, Direction rollDirection, double speed) {
-        if (rollDirection == null || !isPezRollDirectionValid(currentFace, rollDirection)) {
-            return null;
-        }
-        Direction wallFace = rollDirection.getOpposite();
-        Vec3 ahead = position().add(Vec3.atLowerCornerOf(rollDirection.getNormal()).scale(Math.max(0.4D, speed * 1.4D)));
-        if (wallFace != currentFace && hasAttachSurfaceAt(wallFace, ahead)) {
-            return wallFace;
-        }
-        if (currentFace != Direction.DOWN && hasAttachSurfaceAt(Direction.DOWN, ahead)
-            && (rollDirection.getAxis() == Direction.Axis.X || rollDirection.getAxis() == Direction.Axis.Z)) {
-            return Direction.DOWN;
-        }
-        if (currentFace != Direction.UP && !hasAttachSurfaceAt(wallFace, ahead) && hasAttachSurfaceAt(Direction.UP, ahead)) {
-            return Direction.UP;
-        }
-        return null;
-    }
-
     private void applyPezRollDirection(Direction direction) {
         setPezRollDirection(direction);
-        pezRollTangent = Vec3.atLowerCornerOf(direction.getNormal());
-        if (pezRollSmoothedTangent.lengthSqr() < 1.0E-4D || Math.abs(pezRollSmoothedTangent.normalize().dot(pezRollTangent.normalize())) < 0.05D) {
-            pezRollSmoothedTangent = pezRollTangent;
-        }
+        pezRollTangent = directionVector(direction);
         setPezRollSteps(getPezRollSteps() + 1);
     }
 
@@ -1435,149 +1474,22 @@ public class BasicCandySlimeEntity extends Slime {
         return !level().noCollision(this, box);
     }
 
-    private void updatePezRollWaypoints(Direction face, LivingEntity target) {
-        boolean reached = pezRollWaypoint.lengthSqr() < 1.0E-4D || position().distanceToSqr(pezRollWaypoint) < 9.0D;
-        boolean tooClose = pezRollWaypoint.lengthSqr() > 1.0E-4D && position().distanceToSqr(pezRollWaypoint) < PEZ_ROLL_MIN_WAYPOINT_DISTANCE * PEZ_ROLL_MIN_WAYPOINT_DISTANCE;
-        if (!reached && !tooClose && canPezRollTowardWaypoint(face, pezRollWaypoint)) {
-            return;
-        }
-        Vec3 previous = pezRollWaypoint;
-        if (pezRollNextWaypoint.lengthSqr() > 1.0E-4D
-            && position().distanceToSqr(pezRollNextWaypoint) >= PEZ_ROLL_MIN_WAYPOINT_DISTANCE * PEZ_ROLL_MIN_WAYPOINT_DISTANCE
-            && canPezRollTowardWaypoint(face, pezRollNextWaypoint)) {
-            pezRollWaypoint = pezRollNextWaypoint;
-        } else {
-            pezRollWaypoint = choosePezDistantRollWaypoint(face, position(), previous, target);
-        }
-        pezRollNextWaypoint = choosePezDistantRollWaypoint(face, pezRollWaypoint, position(), target);
-        pezRollDirectionTicks = 0;
-    }
-
-    private boolean canPezRollTowardWaypoint(Direction face, Vec3 waypoint) {
-        Direction direction = directionTowardPezWaypoint(face, waypoint);
-        return direction != null && canPezSlide(face, Vec3.atLowerCornerOf(direction.getNormal()));
-    }
-
-    private Vec3 choosePezDistantRollWaypoint(Direction face, Vec3 origin, @Nullable Vec3 avoid, LivingEntity target) {
-        Vec3 best = Vec3.ZERO;
-        double bestScore = -Double.MAX_VALUE;
-        double minDistanceSqr = PEZ_ROLL_MIN_WAYPOINT_DISTANCE * PEZ_ROLL_MIN_WAYPOINT_DISTANCE;
-        for (Direction direction : Direction.values()) {
-            if (direction.getAxis() == face.getAxis()) {
-                continue;
-            }
-            Vec3 tangent = Vec3.atLowerCornerOf(direction.getNormal());
-            Vec3 cursor = origin;
-            for (int step = 1; step <= (int)PEZ_ROLL_MAX_WAYPOINT_DISTANCE; step++) {
-                if (!canPezSlideFrom(face, cursor, tangent)) {
-                    break;
-                }
-                cursor = cursor.add(tangent);
-                double distanceSqr = origin.distanceToSqr(cursor);
-                if (distanceSqr < minDistanceSqr) {
-                    continue;
-                }
-                double score = Math.sqrt(distanceSqr) * 3.0D + random.nextDouble() * 4.0D;
-                if (avoid != null && avoid.lengthSqr() > 1.0E-4D) {
-                    score += Math.sqrt(cursor.distanceToSqr(avoid)) * 0.35D;
-                }
-                if (target != null) {
-                    score += Math.sqrt(cursor.distanceToSqr(target.position())) * 0.55D;
-                }
-                if (score > bestScore) {
-                    best = cursor;
-                    bestScore = score;
-                }
-            }
-        }
-        if (best.lengthSqr() > 1.0E-4D) {
-            return best;
-        }
-        Direction fallback = choosePezOpenDirection(face, Vec3.ZERO);
-        if (fallback == null) {
-            for (Direction direction : Direction.values()) {
-                if (direction.getAxis() != face.getAxis()) {
-                    fallback = direction;
-                    break;
-                }
-            }
-        }
-        Vec3 fallbackStep = fallback == null ? Vec3.ZERO : Vec3.atLowerCornerOf(fallback.getNormal()).scale(PEZ_ROLL_MIN_WAYPOINT_DISTANCE);
-        return origin.add(fallbackStep);
-    }
-
-    private Direction directionTowardPezWaypoint(Direction face, Vec3 waypoint) {
-        if (waypoint.lengthSqr() < 1.0E-4D) {
-            return null;
-        }
-        Vec3 toWaypoint = waypoint.subtract(position());
-        Direction best = null;
-        double bestScore = 0.35D;
-        for (Direction direction : Direction.values()) {
-            if (direction.getAxis() == face.getAxis()) {
-                continue;
-            }
-            Vec3 candidate = Vec3.atLowerCornerOf(direction.getNormal());
-            double score = candidate.dot(toWaypoint);
-            if (score > bestScore) {
-                best = direction;
-                bestScore = score;
-            }
-        }
-        return best;
-    }
-
-    private Direction choosePezRollDirection(Direction face, LivingEntity target, boolean preferWaypoint) {
-        Direction best = Direction.NORTH;
-        double bestScore = -Double.MAX_VALUE;
-        Vec3 toTarget = target.position().subtract(position());
-        Vec3 toWaypoint = pezRollWaypoint.lengthSqr() > 1.0E-4D ? pezRollWaypoint.subtract(position()) : Vec3.ZERO;
-        boolean forceTowardTarget = pezRollTargetBiasTicks > 0;
-        boolean biasTowardTarget = forceTowardTarget || (!preferWaypoint && random.nextInt(7) == 0);
-        for (Direction direction : Direction.values()) {
-            if (direction.getAxis() == face.getAxis()) {
-                continue;
-            }
-            Vec3 candidate = Vec3.atLowerCornerOf(direction.getNormal());
-            double score = random.nextDouble() * 2.0D;
-            if (preferWaypoint && toWaypoint.lengthSqr() > 1.0E-4D) {
-                score += candidate.dot(toWaypoint.normalize()) * 30.0D;
-            }
-            if (canPezSlide(face, candidate)) {
-                score += 6.0D;
-            }
-            if (direction == getPezRollDirection()) {
-                score += 1.5D;
-            }
-            if (biasTowardTarget && toTarget.lengthSqr() > 1.0E-4D) {
-                score += candidate.dot(toTarget.normalize()) * (forceTowardTarget ? 12.0D : 2.3D);
-            }
-            if (score > bestScore) {
-                best = direction;
-                bestScore = score;
-            }
-        }
-        if (forceTowardTarget) {
-            pezRollTargetBiasTicks--;
-        }
-        return best;
-    }
-
     private Direction choosePezOpenDirection(Direction face, Vec3 previousTangent) {
         Direction best = null;
         double bestScore = -Double.MAX_VALUE;
         Vec3 previous = previousTangent.lengthSqr() > 1.0E-4D ? previousTangent.normalize() : Vec3.ZERO;
-        for (Direction direction : Direction.values()) {
+        for (Direction direction : DIRECTIONS) {
             if (direction.getAxis() == face.getAxis()) {
                 continue;
             }
-            Vec3 candidate = Vec3.atLowerCornerOf(direction.getNormal());
+            Vec3 candidate = directionVector(direction);
             if (!canPezSlide(face, candidate)) {
                 continue;
             }
             double score = random.nextDouble();
             if (previous.lengthSqr() > 1.0E-4D) {
-                score += candidate.dot(previous) * 0.7D;
+                double continuity = candidate.dot(previous);
+                score += continuity > 0.5D ? 8.0D : continuity < -0.5D ? -12.0D : 2.0D;
             }
             if (score > bestScore) {
                 best = direction;
@@ -1785,7 +1697,7 @@ public class BasicCandySlimeEntity extends Slime {
         if (isPezJelly() && random.nextInt(5) == 0) {
             BasicCandySlimeEntity tornado = CCEntityTypes.TORNADO_JELLY.get().create(serverLevel);
             if (tornado != null) {
-                tornado.setJellySummoner(this);
+                tornado.setJellySummoner(this, target);
                 tornado.moveTo(getX(), getY() + 0.5D, getZ(), random.nextFloat() * 360.0F, 0.0F);
                 serverLevel.addFreshEntity(tornado);
             }
@@ -1793,6 +1705,7 @@ public class BasicCandySlimeEntity extends Slime {
             if (random.nextInt(3) == 0) {
                 BasicCandySlimeEntity jelly = CCEntityTypes.YELLOW_JELLY.get().create(serverLevel);
                 if (jelly != null) {
+                    jelly.setJellySummoner(this, target);
                     jelly.moveTo(getX(), getY() + 0.5D, getZ(), random.nextFloat() * 360.0F, 0.0F);
                     serverLevel.addFreshEntity(jelly);
                 }
@@ -1818,9 +1731,6 @@ public class BasicCandySlimeEntity extends Slime {
     }
 
     private void tickRetaliationTarget() {
-        if (level().isClientSide) {
-            return;
-        }
         LivingEntity target = getTarget();
         if (target == null) {
             return;
@@ -1829,7 +1739,12 @@ public class BasicCandySlimeEntity extends Slime {
             setTarget(null);
             return;
         }
-        if (getBoundingBox().inflate(0.15D).intersects(target.getBoundingBox())) {
+        AABB bounds = getBoundingBox();
+        AABB targetBounds = target.getBoundingBox();
+        double padding = 0.15D;
+        if (bounds.minX - padding < targetBounds.maxX && bounds.maxX + padding > targetBounds.minX
+                && bounds.minY - padding < targetBounds.maxY && bounds.maxY + padding > targetBounds.minY
+                && bounds.minZ - padding < targetBounds.maxZ && bounds.maxZ + padding > targetBounds.minZ) {
             doHurtTarget(target);
         }
     }
@@ -1873,9 +1788,8 @@ public class BasicCandySlimeEntity extends Slime {
             if (CandyTargeting.canAttackEntity(attacker)) {
                 setTarget(attacker);
                 getNavigation().stop();
-                if (getAttribute(Attributes.MOVEMENT_SPEED) != null) {
-                    getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(isJellyQueen() ? 0.7D : isKingSlime() ? 0.45D : 0.38D);
-                }
+                setBaseValueIfChanged(getAttribute(Attributes.MOVEMENT_SPEED),
+                    isJellyQueen() ? 0.7D : isKingSlime() ? 0.45D : 0.38D);
             }
         }
     }
@@ -1956,8 +1870,51 @@ public class BasicCandySlimeEntity extends Slime {
         return null;
     }
 
-    private void setJellySummoner(BasicCandySlimeEntity summoner) {
+    private void setJellySummoner(BasicCandySlimeEntity summoner, @Nullable LivingEntity target) {
         jellySummonerUuid = summoner.getUUID();
+        if (target != null && canInheritBossTarget(target)) {
+            inheritedBossTargetUuid = target.getUUID();
+            inheritedTargetResolveCooldown = 0;
+            setTarget(target);
+        }
+    }
+
+    private void tickInheritedBossTarget() {
+        if (level().isClientSide || inheritedBossTargetUuid == null || !(level() instanceof ServerLevel serverLevel)) {
+            return;
+        }
+        LivingEntity currentTarget = getTarget();
+        if (currentTarget != null && inheritedBossTargetUuid.equals(currentTarget.getUUID())) {
+            if (canInheritBossTarget(currentTarget)) {
+                return;
+            }
+            setTarget(null);
+            inheritedBossTargetUuid = null;
+            inheritedTargetResolveCooldown = 0;
+            return;
+        }
+        if (inheritedTargetResolveCooldown > 0) {
+            inheritedTargetResolveCooldown--;
+            return;
+        }
+        inheritedTargetResolveCooldown = INHERITED_TARGET_RESOLVE_INTERVAL;
+        Entity inheritedTarget = serverLevel.getEntity(inheritedBossTargetUuid);
+        if (inheritedTarget instanceof LivingEntity livingTarget && canInheritBossTarget(livingTarget)) {
+            setTarget(livingTarget);
+        } else if (inheritedTarget != null) {
+            if (getTarget() == inheritedTarget) {
+                setTarget(null);
+            }
+            inheritedBossTargetUuid = null;
+            inheritedTargetResolveCooldown = 0;
+        }
+    }
+
+    private boolean canInheritBossTarget(Entity target) {
+        return target instanceof LivingEntity
+            && target.isAlive()
+            && !(target instanceof BasicCandySlimeEntity slimeTarget && isSummonedAlly(slimeTarget))
+            && CandyTargeting.canAttackEntity(target);
     }
 
     private boolean isSummonedAlly(BasicCandySlimeEntity other) {
@@ -1969,16 +1926,11 @@ public class BasicCandySlimeEntity extends Slime {
     }
 
     private void tickBossLostTarget(@Nullable AttributeInstance speed) {
-        if (speed != null) {
-            speed.setBaseValue(0.0D);
-        }
-        setDeltaMovement(0.0D, getDeltaMovement().y, 0.0D);
+        setBaseValueIfChanged(speed, 0.0D);
+        stopHorizontalMovement(false);
         getNavigation().stop();
         setJumping(false);
         if (!isBossAwake()) {
-            if (tickCount % 20 == 0) {
-                heal(5.0F);
-            }
             if (isJellyQueen()) {
                 setJellyQueenMode(JELLY_QUEEN_SLEEP_MODE);
             }
@@ -1995,6 +1947,12 @@ public class BasicCandySlimeEntity extends Slime {
         setKingDashTicks(0);
         if (isJellyQueen()) {
             setJellyQueenMode(JELLY_QUEEN_SLEEP_MODE);
+        }
+    }
+
+    private void tickDormantBossRegeneration() {
+        if (tickCount % DORMANT_BOSS_HEAL_INTERVAL_TICKS == 0) {
+            heal(DORMANT_BOSS_HEAL_AMOUNT);
         }
     }
 
@@ -2015,38 +1973,84 @@ public class BasicCandySlimeEntity extends Slime {
     }
 
     private void setJellyQueenMode(int mode) {
+        if (!isJellyQueen()) {
+            return;
+        }
         entityData.set(JELLY_QUEEN_MODE, Mth.clamp(mode, JELLY_QUEEN_SLEEP_MODE, JELLY_QUEEN_BROWN_MODE));
     }
 
     private void setBossSlamTicks(int ticks) {
+        if (!isCandyBoss()) {
+            return;
+        }
         entityData.set(BOSS_SLAM_TICKS, Mth.clamp(ticks, 0, BOSS_SLAM_POSE_TICKS));
     }
 
     private void setKingExpandTicks(int ticks) {
+        if (!isCandyBoss()) {
+            return;
+        }
         entityData.set(KING_EXPAND_TICKS, Mth.clamp(ticks, 0, KING_EXPAND_POSE_TICKS));
     }
 
     private void setKingDashTicks(int ticks) {
+        if (!(isKingSlime() || isJellyQueen())) {
+            return;
+        }
         entityData.set(KING_DASH_TICKS, Mth.clamp(ticks, 0, KING_DASH_POSE_TICKS));
     }
 
     private void setPezRollTicks(int ticks) {
+        if (!isPezJelly()) {
+            return;
+        }
         entityData.set(PEZ_ROLL_TICKS, Mth.clamp(ticks, 0, PEZ_ROLL_TOTAL_TICKS));
     }
 
     private void setPezAttachFace(Direction face) {
+        if (!isPezJelly()) {
+            return;
+        }
+        Direction currentFace = getPezAttachFace();
+        if (currentFace == face) {
+            return;
+        }
+        entityData.set(PEZ_PREVIOUS_ATTACH_FACE, currentFace.ordinal());
         entityData.set(PEZ_ATTACH_FACE, face.ordinal());
+        setPezAttachTransitionTicks(PEZ_ATTACH_TRANSITION_DURATION);
+    }
+
+    private void tickPezAttachTransition() {
+        int ticks = entityData.get(PEZ_ATTACH_TRANSITION_TICKS);
+        if (ticks > 0) {
+            setPezAttachTransitionTicks(ticks - 1);
+        }
+    }
+
+    private void setPezAttachTransitionTicks(int ticks) {
+        if (isPezJelly()) {
+            entityData.set(PEZ_ATTACH_TRANSITION_TICKS, Mth.clamp(ticks, 0, PEZ_ATTACH_TRANSITION_DURATION));
+        }
     }
 
     private void setPezRollDirection(Direction direction) {
+        if (!isPezJelly()) {
+            return;
+        }
         entityData.set(PEZ_ROLL_DIRECTION, direction.ordinal());
     }
 
     private void setPezRollSteps(int steps) {
+        if (!isPezJelly()) {
+            return;
+        }
         entityData.set(PEZ_ROLL_STEPS, Math.max(0, steps));
     }
 
     private void setPezRollDistance(float distance) {
+        if (!isPezJelly()) {
+            return;
+        }
         entityData.set(PEZ_ROLL_DISTANCE, Math.max(0.0F, distance));
     }
 
@@ -2057,57 +2061,85 @@ public class BasicCandySlimeEntity extends Slime {
     }
 
     private void setBossBounceTicks(int ticks) {
+        if (!(isKingSlime() || isJellyQueen())) {
+            return;
+        }
         entityData.set(BOSS_BOUNCE_TICKS, Mth.clamp(ticks, 0, BOSS_BOUNCE_POSE_TICKS));
     }
 
     private void setBossRestingTicks(int ticks) {
+        if (!isCandyBoss()) {
+            return;
+        }
         entityData.set(BOSS_RESTING_TICKS, Mth.clamp(ticks, 0, BOSS_REST_TICKS));
     }
 
     public int getJellyQueenMode() {
-        return entityData.get(JELLY_QUEEN_MODE);
+        return isJellyQueen() ? entityData.get(JELLY_QUEEN_MODE) : JELLY_QUEEN_SLEEP_MODE;
     }
 
     public int getBossSlamTicks() {
-        return entityData.get(BOSS_SLAM_TICKS);
+        return isCandyBoss() ? entityData.get(BOSS_SLAM_TICKS) : 0;
     }
 
     public int getKingExpandTicks() {
-        return entityData.get(KING_EXPAND_TICKS);
+        return isCandyBoss() ? entityData.get(KING_EXPAND_TICKS) : 0;
     }
 
     public int getKingDashTicks() {
-        return entityData.get(KING_DASH_TICKS);
+        return isKingSlime() || isJellyQueen() ? entityData.get(KING_DASH_TICKS) : 0;
     }
 
     public int getPezRollTicks() {
-        return entityData.get(PEZ_ROLL_TICKS);
+        return isPezJelly() ? entityData.get(PEZ_ROLL_TICKS) : 0;
     }
 
     public Direction getPezAttachFace() {
-        int ordinal = Mth.clamp(entityData.get(PEZ_ATTACH_FACE), 0, Direction.values().length - 1);
-        return Direction.values()[ordinal];
+        if (!isPezJelly()) {
+            return Direction.UP;
+        }
+        int ordinal = Mth.clamp(entityData.get(PEZ_ATTACH_FACE), 0, DIRECTIONS.length - 1);
+        return DIRECTIONS[ordinal];
+    }
+
+    public Direction getPezPreviousAttachFace() {
+        if (!isPezJelly()) {
+            return Direction.UP;
+        }
+        int ordinal = Mth.clamp(entityData.get(PEZ_PREVIOUS_ATTACH_FACE), 0, DIRECTIONS.length - 1);
+        return DIRECTIONS[ordinal];
+    }
+
+    public float getPezAttachTransitionProgress(float partialTicks) {
+        if (!isPezJelly()) {
+            return 1.0F;
+        }
+        float remaining = Math.max(0.0F, entityData.get(PEZ_ATTACH_TRANSITION_TICKS) - partialTicks);
+        return 1.0F - Mth.clamp(remaining / PEZ_ATTACH_TRANSITION_DURATION, 0.0F, 1.0F);
     }
 
     public Direction getPezRollDirection() {
-        int ordinal = Mth.clamp(entityData.get(PEZ_ROLL_DIRECTION), 0, Direction.values().length - 1);
-        return Direction.values()[ordinal];
+        if (!isPezJelly()) {
+            return Direction.NORTH;
+        }
+        int ordinal = Mth.clamp(entityData.get(PEZ_ROLL_DIRECTION), 0, DIRECTIONS.length - 1);
+        return DIRECTIONS[ordinal];
     }
 
     public int getPezRollSteps() {
-        return entityData.get(PEZ_ROLL_STEPS);
+        return isPezJelly() ? entityData.get(PEZ_ROLL_STEPS) : 0;
     }
 
     public float getPezRollDistance() {
-        return entityData.get(PEZ_ROLL_DISTANCE);
+        return isPezJelly() ? entityData.get(PEZ_ROLL_DISTANCE) : 0.0F;
     }
 
     public int getBossBounceTicks() {
-        return entityData.get(BOSS_BOUNCE_TICKS);
+        return isKingSlime() || isJellyQueen() ? entityData.get(BOSS_BOUNCE_TICKS) : 0;
     }
 
     public int getBossRestingTicks() {
-        return entityData.get(BOSS_RESTING_TICKS);
+        return isCandyBoss() ? entityData.get(BOSS_RESTING_TICKS) : 0;
     }
 
     private ParticleOptions jellyLandingParticle() {
@@ -2209,10 +2241,13 @@ public class BasicCandySlimeEntity extends Slime {
     }
 
     public boolean isBossAwake() {
-        return entityData.get(BOSS_AWAKE);
+        return isCandyBoss() && entityData.get(BOSS_AWAKE);
     }
 
     private void setBossAwake(boolean awake) {
+        if (!isCandyBoss()) {
+            return;
+        }
         if (isBossAwake() != awake) {
             dormantRotationInitialized = false;
         }
@@ -2239,7 +2274,6 @@ public class BasicCandySlimeEntity extends Slime {
         bossMultiTargetSlamCount = 0;
         pezSlamCount = 0;
         pezRollCooldown = 0;
-        pezRollTurnLockTicks = 0;
         pezRollTarget = null;
         pezRollAttackReleased = false;
         pezOpenGroundRoll = false;
@@ -2273,7 +2307,6 @@ public class BasicCandySlimeEntity extends Slime {
         pezRollAttackReleased = false;
         pezOpenGroundRoll = false;
         pezOpenRollHitTargets.clear();
-        pezRollTurnLockTicks = 0;
         pezRollBrushDamageCooldown = 0;
         setPezRollTicks(0);
         setPezRollSteps(0);
@@ -2323,7 +2356,9 @@ public class BasicCandySlimeEntity extends Slime {
             dormantYHeadRot = getYHeadRot();
             dormantRotationInitialized = true;
         }
-        setTarget(null);
+        if (getTarget() != null) {
+            setTarget(null);
+        }
         getNavigation().stop();
         setJumping(false);
         setYRot(dormantYRot);
@@ -2332,10 +2367,21 @@ public class BasicCandySlimeEntity extends Slime {
         yBodyRotO = dormantYRot;
         yHeadRot = dormantYHeadRot;
         yHeadRotO = dormantYHeadRot;
-        setDeltaMovement(0.0D, Math.min(0.0D, getDeltaMovement().y), 0.0D);
-        AttributeInstance speed = getAttribute(Attributes.MOVEMENT_SPEED);
-        if (speed != null) {
-            speed.setBaseValue(0.0D);
+        stopHorizontalMovement(true);
+        setBaseValueIfChanged(getAttribute(Attributes.MOVEMENT_SPEED), 0.0D);
+    }
+
+    private static void setBaseValueIfChanged(@Nullable AttributeInstance attribute, double value) {
+        if (attribute != null && attribute.getBaseValue() != value) {
+            attribute.setBaseValue(value);
+        }
+    }
+
+    private void stopHorizontalMovement(boolean clampUpwardMovement) {
+        Vec3 movement = getDeltaMovement();
+        double verticalMovement = clampUpwardMovement ? Math.min(0.0D, movement.y) : movement.y;
+        if (movement.x != 0.0D || movement.z != 0.0D || movement.y != verticalMovement) {
+            setDeltaMovement(0.0D, verticalMovement, 0.0D);
         }
     }
 
@@ -2366,8 +2412,9 @@ public class BasicCandySlimeEntity extends Slime {
         if (!isCandyBoss() || level().isClientSide) {
             return;
         }
-        bossEvent.setName(getType().getDescription());
-        bossEvent.setColor(getBossBarColor());
+        if (isJellyQueen()) {
+            bossEvent.setColor(getBossBarColor());
+        }
         bossEvent.setProgress(Math.max(0.0F, Math.min(1.0F, getHealth() / getMaxHealth())));
         bossEvent.setVisible(isBossAwake());
     }

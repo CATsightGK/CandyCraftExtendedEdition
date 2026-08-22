@@ -3,6 +3,9 @@ package com.valentin4311.candycraftmod.entity;
 import com.valentin4311.candycraftmod.registry.CCEntityTypes;
 import com.valentin4311.candycraftmod.registry.CCItems;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.core.BlockPos;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.AgeableMob;
 import net.minecraft.world.entity.EntityType;
@@ -14,14 +17,15 @@ import net.minecraft.world.entity.ai.goal.PanicGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.ai.goal.TemptGoal;
 import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
-import net.minecraft.world.entity.animal.Sheep;
+import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 
-public class WaffleSheepEntity extends Sheep {
+public class WaffleSheepEntity extends Animal {
     public WaffleSheepEntity(EntityType<? extends WaffleSheepEntity> type, Level level) {
         super(type, level);
         setPathfindingMalus(net.minecraft.world.level.pathfinder.BlockPathTypes.WATER, -1.0F);
@@ -37,11 +41,6 @@ public class WaffleSheepEntity extends Sheep {
         goalSelector.addGoal(5, new WaterAvoidingRandomStrollGoal(this, 1.0D));
         goalSelector.addGoal(6, new LookAtPlayerGoal(this, Player.class, 6.0F));
         goalSelector.addGoal(7, new RandomLookAroundGoal(this));
-    }
-
-    @Override
-    protected void customServerAiStep() {
-        // Waffle sheep use the vanilla sheep body, but not Sheep's grass-eating tick.
     }
 
     @Override
@@ -64,22 +63,27 @@ public class WaffleSheepEntity extends Sheep {
 
     @Nullable
     @Override
-    public Sheep getBreedOffspring(ServerLevel level, AgeableMob partner) {
+    public WaffleSheepEntity getBreedOffspring(ServerLevel level, AgeableMob partner) {
         return CCEntityTypes.WAFFLE_SHEEP.get().create(level);
     }
 
     @Override
-    public boolean readyForShearing() {
-        return false;
+    protected SoundEvent getAmbientSound() {
+        return SoundEvents.SHEEP_AMBIENT;
     }
 
     @Override
-    public boolean isSheared() {
-        return true;
+    protected SoundEvent getHurtSound(DamageSource source) {
+        return SoundEvents.SHEEP_HURT;
     }
 
     @Override
-    public void setSheared(boolean sheared) {
-        super.setSheared(true);
+    protected SoundEvent getDeathSound() {
+        return SoundEvents.SHEEP_DEATH;
+    }
+
+    @Override
+    protected void playStepSound(BlockPos pos, BlockState state) {
+        playSound(SoundEvents.SHEEP_STEP, 0.15F, 1.0F);
     }
 }

@@ -1,0 +1,10 @@
+{
+  "replace": false,
+  "values": [
+    "candycraftmod:honey_sword",
+    "candycraftmod:honey_shovel",
+    "candycraftmod:honey_pickaxe",
+    "candycraftmod:honey_axe",
+    "candycraftmod:honey_hoe"
+  ]
+}

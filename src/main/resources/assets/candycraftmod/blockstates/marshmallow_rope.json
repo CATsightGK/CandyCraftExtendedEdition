@@ -1,0 +1,14 @@
+{
+  "multipart": [
+    { "when": { "axis": "y" }, "apply": { "model": "candycraftmod:block/marshmallow_rope" } },
+    { "when": { "axis": "x" }, "apply": { "model": "candycraftmod:block/marshmallow_rope", "x": 90, "y": 90 } },
+    { "when": { "axis": "z" }, "apply": { "model": "candycraftmod:block/marshmallow_rope", "x": 90 } },
+
+    { "when": { "up": "true" }, "apply": { "model": "candycraftmod:block/marshmallow_rope_connector" } },
+    { "when": { "down": "true" }, "apply": { "model": "candycraftmod:block/marshmallow_rope_connector", "x": 180 } },
+    { "when": { "north": "true" }, "apply": { "model": "candycraftmod:block/marshmallow_rope_connector", "x": 90 } },
+    { "when": { "south": "true" }, "apply": { "model": "candycraftmod:block/marshmallow_rope_connector", "x": 90, "y": 180 } },
+    { "when": { "east": "true" }, "apply": { "model": "candycraftmod:block/marshmallow_rope_connector", "x": 90, "y": 90 } },
+    { "when": { "west": "true" }, "apply": { "model": "candycraftmod:block/marshmallow_rope_connector", "x": 90, "y": 270 } }
+  ]
+}

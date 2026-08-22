@@ -69,10 +69,7 @@ public class CandyPigEntity extends Pig {
             boostTime = 0;
             boostTimeTotal = 0;
         }
-        Player threat = level().getNearestPlayer(this, AVOID_DISTANCE);
-        boolean avoiding = threat != null && shouldAvoidPlayer(threat);
-        setSprinting(avoiding);
-        if (avoiding && level().isClientSide && random.nextInt(3) == 0) {
+        if (isSprinting() && level().isClientSide && random.nextInt(3) == 0) {
             level().addParticle(ParticleTypes.CLOUD,
                 getX() + (random.nextDouble() - 0.5D) * getBbWidth(),
                 getY() + 0.1D,
@@ -171,8 +168,14 @@ public class CandyPigEntity extends Pig {
 
         @Override
         public boolean canUse() {
-            Player player = pig.level().getNearestPlayer(pig, 10.0D);
-            return player != null && !pig.shouldAvoidPlayer(player) && super.canUse();
+            if (!super.canUse()) {
+                return false;
+            }
+            if (pig.shouldAvoidPlayer(player)) {
+                player = null;
+                return false;
+            }
+            return true;
         }
     }
 

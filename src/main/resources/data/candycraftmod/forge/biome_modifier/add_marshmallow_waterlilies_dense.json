@@ -1,0 +1,9 @@
+{
+  "type": "forge:add_features",
+  "biomes": [
+    "candycraftmod:sugar_forest",
+    "candycraftmod:cotton_candy_plains"
+  ],
+  "features": "candycraftmod:marshmallow_waterlilies_dense",
+  "step": "vegetal_decoration"
+}

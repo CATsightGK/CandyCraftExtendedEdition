@@ -12,6 +12,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 
 public class EmblemItem extends Item {
     private final String descriptionKey;
+    private static volatile int registeredCount = -1;
 
     public EmblemItem(String descriptionKey, Properties properties) {
         super(properties);
@@ -19,9 +20,15 @@ public class EmblemItem extends Item {
     }
 
     public static int getRegisteredCount() {
-        return Math.max(1, (int) ForgeRegistries.ITEMS.getValues().stream()
+        int cached = registeredCount;
+        if (cached >= 0) {
+            return cached;
+        }
+        int count = Math.max(1, (int) ForgeRegistries.ITEMS.getValues().stream()
             .filter(EmblemItem.class::isInstance)
             .count());
+        registeredCount = count;
+        return count;
     }
 
     @Override

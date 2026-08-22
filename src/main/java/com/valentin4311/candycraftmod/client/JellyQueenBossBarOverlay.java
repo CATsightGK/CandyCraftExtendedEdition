@@ -31,13 +31,13 @@ import java.util.UUID;
 public final class JellyQueenBossBarOverlay {
     private static final BossBarLayout JELLY_BOSS_BAR_LAYOUT = new BossBarLayout(
         new ResourceLocation(CandyCraft.MODID, "textures/gui/jelly_queen_boss_bar.png"),
-        128, 5, 9, 116, 17, 8, 110, 4, 3, 9);
+        128, 5, 9, 116, 17, 8, 46, 18, 46, 4, 3, 9);
     private static final BossBarLayout LICORICE_BEETLE_LAYOUT = new BossBarLayout(
         new ResourceLocation(CandyCraft.MODID, "textures/gui/licorice_beetle_boss_bar.png"),
-        128, 5, 8, 117, 17, 8, 111, 4, 3, 10);
+        128, 5, 8, 117, 17, 8, 46, 19, 46, 4, 3, 10);
     private static final BossBarLayout SUGUARD_TOTEM_LAYOUT = new BossBarLayout(
         new ResourceLocation(CandyCraft.MODID, "textures/gui/suguard_totem_boss_bar.png"),
-        128, 0, 3, 128, 23, 3, 122, 4, 3, 15);
+        128, 0, 8, 128, 18, 3, 46, 30, 46, 4, 3, 10);
     private static final BossBarStyle JELLY_QUEEN_STYLE = new BossBarStyle(
         "entity.candycraftmod.jelly_queen", "gui.candycraftmod.jelly_queen.angry_subtitle",
         JELLY_BOSS_BAR_LAYOUT, -1, 0xFFD6E5);
@@ -53,13 +53,15 @@ public final class JellyQueenBossBarOverlay {
     private static final BossBarStyle SUGUARD_TOTEM_STYLE = new BossBarStyle(
         "entity.candycraftmod.boss_suguard", "gui.candycraftmod.boss_suguard.subtitle",
         SUGUARD_TOTEM_LAYOUT, 27, 0xFFFFFF);
-    private static final float BAR_SCALE = 1.6F;
+    private static final float BAR_SCALE = 1.5F;
     private static final float SUBTITLE_SCALE = 0.625F;
     private static final int PINK_FILL_V = 27;
     private static final int BLUE_FILL_V = 32;
     private static final int CARAMEL_FILL_V = 37;
     private static final float FADE_IN_PER_SECOND = 2.5F;
     private static final float FADE_OUT_PER_SECOND = 2.0F;
+    private static final float SUBTITLE_VISIBLE_SECONDS = 10.0F;
+    private static final float SUBTITLE_FADE_OUT_PER_SECOND = 2.0F;
     private static final float HIDDEN_SCALE_MULTIPLIER = 0.86F;
     private static final int HIDDEN_Y_OFFSET = 9;
     private static final Map<UUID, AnimatedBossBar> ANIMATED_BARS = new HashMap<>();
@@ -103,7 +105,7 @@ public final class JellyQueenBossBarOverlay {
 
         event.setCanceled(true);
         event.setIncrement(firstOfType
-            ? (shouldShowSubtitle(style) ? 8 : 1) + displayedFrameHeight(style) + belowBarLabelHeight(style) + 10
+            ? subtitleGap(animatedBar, style) + displayedFrameHeight(style) + 10
             : compactBarIncrement(style));
     }
 
@@ -120,7 +122,7 @@ public final class JellyQueenBossBarOverlay {
                 BossBarStyle style = groupEntry.getKey();
                 List<AnimatedBossBar> bars = groupEntry.getValue();
                 boolean showSubtitle = shouldShowSubtitle(style);
-                int firstFrameY = groupY + (showSubtitle ? 8 : 1);
+                int firstFrameY = groupY + subtitleGap(bars.get(0), style);
                 for (int index = 0; index < bars.size(); index++) {
                     AnimatedBossBar animatedBar = bars.get(index);
                     animatedBar.setLayout(firstFrameY + index * compactBarIncrement(style), groupY,
@@ -128,7 +130,7 @@ public final class JellyQueenBossBarOverlay {
                     renderAnimatedBossBar(event.getGuiGraphics(), screenWidth, animatedBar);
                 }
                 int lastFrameY = firstFrameY + (bars.size() - 1) * compactBarIncrement(style);
-                groupY = lastFrameY + displayedFrameHeight(style) + belowBarLabelHeight(style) + 10;
+                groupY = lastFrameY + displayedFrameHeight(style) + 10;
             }
         }
 
@@ -166,24 +168,18 @@ public final class JellyQueenBossBarOverlay {
             return;
         }
         BossBarLayout layout = animatedBar.style.layout();
-        float transformProgress = animatedBar.disappearing ? 1.0F : opacity;
+        float transformProgress = opacity;
         float scaleProgress = HIDDEN_SCALE_MULTIPLIER + (1.0F - HIDDEN_SCALE_MULTIPLIER) * transformProgress;
         float animatedScale = barScale(animatedBar.style) * scaleProgress;
         int frameX = (screenWidth - Math.round(layout.frameWidth() * animatedScale)) / 2;
         int animationYOffset = Math.round((1.0F - transformProgress) * HIDDEN_Y_OFFSET);
         int frameY = animatedBar.frameY + animationYOffset;
-        int fillWidth = Math.min(layout.fillWidth(),
-            Math.max(0, (int)Math.ceil(animatedBar.progress * layout.fillWidth())));
 
         graphics.setColor(1.0F, 1.0F, 1.0F, opacity);
         graphics.pose().pushPose();
         graphics.pose().translate(frameX, frameY, 0.0F);
         graphics.pose().scale(animatedScale, animatedScale, 1.0F);
-        if (fillWidth > 0) {
-            graphics.blit(layout.texture(), layout.fillXOffset(), layout.fillYOffset(),
-                layout.fillU(), fillV(animatedBar.style, animatedBar.bossBarColor), fillWidth, layout.fillHeight(),
-                layout.textureSize(), layout.textureSize());
-        }
+        renderSplitFill(graphics, animatedBar, layout);
         graphics.pose().translate(0.0F, 0.0F, 1.0F);
         graphics.blit(layout.texture(), 0, 0, layout.frameU(), layout.frameV(),
             layout.frameWidth(), layout.frameHeight(), layout.textureSize(), layout.textureSize());
@@ -194,24 +190,45 @@ public final class JellyQueenBossBarOverlay {
             return;
         }
         Font font = Minecraft.getInstance().font;
-        int nameY = animatedBar.style == SUGUARD_TOTEM_STYLE
-            ? frameY + (int)Math.ceil(layout.frameHeight() * animatedScale) + 2
-            : animatedBar.labelY - 9 + animationYOffset;
+        int nameY = animatedBar.labelY - 9 + animationYOffset;
         graphics.drawString(font, animatedBar.name, (screenWidth - font.width(animatedBar.name)) / 2,
             nameY, colorWithAlpha(0xFFFFFF, opacity), true);
 
         if (animatedBar.showSubtitle) {
-            Component subtitle = Component.translatable(animatedBar.style.subtitleTranslationKey());
-            float subtitleWidth = font.width(subtitle) * SUBTITLE_SCALE;
-            float subtitleY = animatedBar.style == SUGUARD_TOTEM_STYLE
-                ? nameY + 10.0F
-                : animatedBar.labelY + 1.0F + animationYOffset;
-            graphics.pose().pushPose();
-            graphics.pose().translate((screenWidth - subtitleWidth) / 2.0F,
-                subtitleY, 0.0F);
-            graphics.pose().scale(SUBTITLE_SCALE, SUBTITLE_SCALE, 1.0F);
-            graphics.drawString(font, subtitle, 0, 0, colorWithAlpha(animatedBar.style.subtitleColor(), opacity), true);
-            graphics.pose().popPose();
+            float subtitleOpacity = opacity * smoothStep(animatedBar.subtitleVisibility);
+            if (subtitleOpacity > 0.0F) {
+                Component subtitle = Component.translatable(animatedBar.style.subtitleTranslationKey());
+                float subtitleWidth = font.width(subtitle) * SUBTITLE_SCALE;
+                float subtitleY = animatedBar.labelY + 1.0F + animationYOffset;
+                graphics.pose().pushPose();
+                graphics.pose().translate((screenWidth - subtitleWidth) / 2.0F,
+                    subtitleY, 0.0F);
+                graphics.pose().scale(SUBTITLE_SCALE, SUBTITLE_SCALE, 1.0F);
+                graphics.drawString(font, subtitle, 0, 0, colorWithAlpha(animatedBar.style.subtitleColor(), subtitleOpacity), true);
+                graphics.pose().popPose();
+            }
+        }
+    }
+
+    private static void renderSplitFill(GuiGraphics graphics, AnimatedBossBar animatedBar, BossBarLayout layout) {
+        int totalFillWidth = layout.leftFillWidth() + layout.rightFillWidth();
+        int filledPixels = Math.min(totalFillWidth,
+            Math.max(0, (int)Math.ceil(animatedBar.progress * totalFillWidth)));
+        int leftFilled = Math.min(layout.leftFillWidth(), filledPixels);
+        int rightFilled = Math.min(layout.rightFillWidth(),
+            Math.max(0, filledPixels - layout.leftFillWidth()));
+        int fillV = fillV(animatedBar.style, animatedBar.bossBarColor);
+
+        if (leftFilled > 0) {
+            graphics.blit(layout.texture(), layout.fillXOffset(), layout.fillYOffset(),
+                layout.fillU(), fillV, leftFilled, layout.fillHeight(),
+                layout.textureSize(), layout.textureSize());
+        }
+        if (rightFilled > 0) {
+            int rightOffset = layout.leftFillWidth() + layout.centerGapWidth();
+            graphics.blit(layout.texture(), layout.fillXOffset() + rightOffset, layout.fillYOffset(),
+                layout.fillU() + rightOffset, fillV, rightFilled, layout.fillHeight(),
+                layout.textureSize(), layout.textureSize());
         }
     }
 
@@ -265,8 +282,17 @@ public final class JellyQueenBossBarOverlay {
         return (int)Math.ceil(style.layout().frameHeight() * barScale(style));
     }
 
+    // The subtitle reserves 8px between the name and the bar; once it fades
+    // out the bar slides up to the 1px no-subtitle gap.
+    private static int subtitleGap(AnimatedBossBar animatedBar, BossBarStyle style) {
+        if (!shouldShowSubtitle(style)) {
+            return 1;
+        }
+        return 1 + Math.round(7.0F * smoothStep(animatedBar.subtitleVisibility));
+    }
+
     private static int compactBarIncrement(BossBarStyle style) {
-        return displayedFrameHeight(style) + belowBarLabelHeight(style) + 1;
+        return displayedFrameHeight(style) + 1;
     }
 
     private static float barScale(BossBarStyle style) {
@@ -274,10 +300,6 @@ public final class JellyQueenBossBarOverlay {
             return BAR_SCALE * LICORICE_BEETLE_LAYOUT.frameWidth() / SUGUARD_TOTEM_LAYOUT.frameWidth();
         }
         return BAR_SCALE;
-    }
-
-    private static int belowBarLabelHeight(BossBarStyle style) {
-        return style == SUGUARD_TOTEM_STYLE ? 10 : 0;
     }
 
     private static float smoothStep(float value) {
@@ -295,8 +317,9 @@ public final class JellyQueenBossBarOverlay {
     }
 
     private record BossBarLayout(ResourceLocation texture, int textureSize, int frameU, int frameV,
-                                 int frameWidth, int frameHeight, int fillU, int fillWidth, int fillHeight,
-                                 int fillXOffset, int fillYOffset) {
+                                 int frameWidth, int frameHeight, int fillU, int leftFillWidth,
+                                 int centerGapWidth, int rightFillWidth, int fillHeight, int fillXOffset,
+                                 int fillYOffset) {
     }
 
     private static final class AnimatedBossBar {
@@ -311,6 +334,8 @@ public final class JellyQueenBossBarOverlay {
         private boolean showLabels;
         private boolean showSubtitle;
         private boolean disappearing;
+        private float subtitleVisibility = 1.0F;
+        private float visibleSeconds;
 
         private AnimatedBossBar(long now) {
             lastUpdateNanos = now;
@@ -333,9 +358,25 @@ public final class JellyQueenBossBarOverlay {
         private void update(long now, boolean visible) {
             float elapsedSeconds = Math.min(0.1F, Math.max(0.0F, (now - lastUpdateNanos) / 1_000_000_000.0F));
             lastUpdateNanos = now;
+            boolean wasDisappearing = disappearing;
             disappearing = !visible;
+            if (visible && wasDisappearing) {
+                // Re-awakened before the fade-out finished: restart the
+                // subtitle timer like a fresh bar.
+                visibleSeconds = 0.0F;
+                subtitleVisibility = 1.0F;
+            }
             float speed = visible ? FADE_IN_PER_SECOND : FADE_OUT_PER_SECOND;
             visibility = Math.max(0.0F, Math.min(1.0F, visibility + (visible ? 1.0F : -1.0F) * elapsedSeconds * speed));
+            if (visible) {
+                visibleSeconds += elapsedSeconds;
+                // The subtitle hides after the bar has been up for a while; a
+                // fresh bar (e.g. boss re-awakened from dormancy) shows it again.
+                if (visibleSeconds >= SUBTITLE_VISIBLE_SECONDS) {
+                    subtitleVisibility = Math.max(0.0F,
+                        subtitleVisibility - elapsedSeconds * SUBTITLE_FADE_OUT_PER_SECOND);
+                }
+            }
         }
     }
 }

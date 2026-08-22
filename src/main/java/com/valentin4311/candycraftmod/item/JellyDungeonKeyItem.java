@@ -6,6 +6,7 @@ import com.valentin4311.candycraftmod.block.DungeonTeleporterBlock.PortalRole;
 import com.valentin4311.candycraftmod.world.CCDimensions;
 import com.valentin4311.candycraftmod.world.DungeonProgressData;
 import com.valentin4311.candycraftmod.world.DungeonProgressData.Instance;
+import com.valentin4311.candycraftmod.world.DungeonProgressData.PortalRecord;
 import java.util.List;
 import javax.annotation.Nullable;
 import net.minecraft.ChatFormatting;
@@ -32,6 +33,7 @@ public class JellyDungeonKeyItem extends Item {
     private static final String COMPLETIONS_TAG = "CandyCraftDungeonKeyCompletions";
     private static final String ACTIVE_TAG = "CandyCraftDungeonKeyActive";
     private static final String EXHAUSTED_TAG = "CandyCraftDungeonKeyExhausted";
+    private static final String PORTAL_PLACED_TAG = "CandyCraftDungeonKeyPortalPlaced";
     private final DungeonKind kind;
 
     public JellyDungeonKeyItem(Properties properties) {
@@ -50,7 +52,7 @@ public class JellyDungeonKeyItem extends Item {
             return InteractionResult.FAIL;
         }
         BlockPos supportPos = context.getClickedPos();
-        if (!level.getBlockState(supportPos).isSolid()) {
+        if (!level.getBlockState(supportPos).isCollisionShapeFullBlock(level, supportPos)) {
             return InteractionResult.FAIL;
         }
         BlockPos pos = supportPos.above();
@@ -62,10 +64,13 @@ public class JellyDungeonKeyItem extends Item {
             return InteractionResult.SUCCESS;
         }
 
-        ServerPlayer player = (ServerPlayer)context.getPlayer();
+        if (!(context.getPlayer() instanceof ServerPlayer player) || !(level instanceof ServerLevel serverLevel)) {
+            return InteractionResult.FAIL;
+        }
         ItemStack stack = context.getItemInHand();
         refreshState(stack, player);
-        if (stack.getOrCreateTag().getBoolean(EXHAUSTED_TAG)) {
+        CompoundTag tag = stack.getOrCreateTag();
+        if (tag.getBoolean(EXHAUSTED_TAG)) {
             player.displayClientMessage(Component.translatable("message.candycraftmod.dungeon.key_exhausted"), true);
             return InteractionResult.FAIL;
         }
@@ -77,16 +82,45 @@ public class JellyDungeonKeyItem extends Item {
         }
         DungeonProgressData data = DungeonProgressData.get(player.server);
         Instance active = data.getActive(player.getUUID(), kind);
-        if (active != null && active.generated()) {
-            player.displayClientMessage(Component.translatable("message.candycraftmod.dungeon.active_loaded"), true);
+        boolean bound = tag.contains(INSTANCE_TAG);
+        if (bound && (tag.hasUUID(OWNER_TAG) && !tag.getUUID(OWNER_TAG).equals(player.getUUID())
+            || active == null || active.id() != tag.getLong(INSTANCE_TAG))) {
+            tag.putBoolean(EXHAUSTED_TAG, true);
+            player.displayClientMessage(Component.translatable("message.candycraftmod.dungeon.key_exhausted"), true);
             return InteractionResult.FAIL;
         }
-        Instance instance = data.getOrCreate(player, kind);
-        bind(stack, player, instance, data.getCompletionCount(player.getUUID(), kind));
-        level.setBlock(pos, DungeonTeleporterBlock.state(kind, PortalRole.ENTRY), Block.UPDATE_ALL);
-        data.registerPortal((ServerLevel)level, pos, player.getUUID(), kind, instance.id());
+        if (active != null && data.hasLiveEntrancePortal(player.server, player.getUUID(), kind, active.id())) {
+            tag.putBoolean(PORTAL_PLACED_TAG, true);
+            player.displayClientMessage(Component.translatable("message.candycraftmod.dungeon.portal_already_open"), true);
+            return InteractionResult.FAIL;
+        }
+
+        Instance instance = active == null ? data.getOrCreate(player, kind) : active;
+        if (!level.setBlock(pos, DungeonTeleporterBlock.state(kind, PortalRole.ENTRY), Block.UPDATE_ALL)) {
+            return InteractionResult.FAIL;
+        }
+        bind(stack, player, instance, data.getCompletionCount(player.getUUID(), kind), true);
+        data.registerPortal(serverLevel, pos, player.getUUID(), kind, instance.id());
         level.playSound(null, pos, SoundEvents.PORTAL_TRIGGER, SoundSource.BLOCKS, 1.0F, 1.25F);
+        player.displayClientMessage(Component.translatable("message.candycraftmod.dungeon.portal_opened"), true);
         return InteractionResult.CONSUME;
+    }
+
+    public boolean recoverPortal(ItemStack stack, ServerPlayer player, PortalRecord portal) {
+        if (portal.kind() != kind || !portal.owner().equals(player.getUUID())) {
+            return false;
+        }
+        DungeonProgressData data = DungeonProgressData.get(player.server);
+        Instance active = data.getActive(player.getUUID(), kind);
+        if (active == null || active.id() != portal.instanceId()) {
+            return false;
+        }
+        bind(stack, player, active, data.getCompletionCount(player.getUUID(), kind), false);
+        return true;
+    }
+
+    public boolean matchesDungeon(DungeonKind dungeonKind) {
+        return kind == dungeonKind;
     }
 
     @Override
@@ -103,18 +137,28 @@ public class JellyDungeonKeyItem extends Item {
         Instance active = data.getActive(player.getUUID(), kind);
         boolean bound = tag.contains(INSTANCE_TAG);
         boolean exhausted = bound && (active == null || active.id() != tag.getLong(INSTANCE_TAG));
+        boolean portalPlaced = bound && !exhausted
+            && data.hasLiveEntrancePortal(player.server, player.getUUID(), kind, tag.getLong(INSTANCE_TAG));
         tag.putInt(COMPLETIONS_TAG, data.getCompletionCount(player.getUUID(), kind));
-        tag.putBoolean(ACTIVE_TAG, active != null);
+        tag.putBoolean(ACTIVE_TAG, bound && !exhausted);
         tag.putBoolean(EXHAUSTED_TAG, exhausted);
+        tag.putBoolean(PORTAL_PLACED_TAG, portalPlaced);
     }
 
-    private static void bind(ItemStack stack, ServerPlayer player, Instance instance, int completions) {
+    private static void bind(ItemStack stack, ServerPlayer player, Instance instance, int completions,
+            boolean portalPlaced) {
         CompoundTag tag = stack.getOrCreateTag();
         tag.putUUID(OWNER_TAG, player.getUUID());
         tag.putLong(INSTANCE_TAG, instance.id());
         tag.putInt(COMPLETIONS_TAG, completions);
         tag.putBoolean(ACTIVE_TAG, true);
         tag.putBoolean(EXHAUSTED_TAG, false);
+        tag.putBoolean(PORTAL_PLACED_TAG, portalPlaced);
+    }
+
+    @Override
+    public boolean isFoil(ItemStack stack) {
+        return false;
     }
 
     @Override
@@ -126,8 +170,10 @@ public class JellyDungeonKeyItem extends Item {
         ).withStyle(ChatFormatting.GRAY));
         if (tag != null && tag.getBoolean(EXHAUSTED_TAG)) {
             tooltip.add(Component.translatable("tooltip.candycraftmod.dungeon_key.exhausted").withStyle(ChatFormatting.RED));
-        } else if (tag != null && tag.getBoolean(ACTIVE_TAG)) {
+        } else if (tag != null && tag.getBoolean(ACTIVE_TAG) && tag.getBoolean(PORTAL_PLACED_TAG)) {
             tooltip.add(Component.translatable("tooltip.candycraftmod.dungeon_key.active").withStyle(ChatFormatting.YELLOW));
+        } else if (tag != null && tag.getBoolean(ACTIVE_TAG)) {
+            tooltip.add(Component.translatable("tooltip.candycraftmod.dungeon_key.charged").withStyle(ChatFormatting.GREEN));
         }
     }
 }

@@ -1,7 +1,7 @@
 {
   "has_precipitation": false,
-  "temperature": 0.7,
-  "downfall": 0.6,
+  "temperature": 0.5,
+  "downfall": 0.5,
   "creature_spawn_probability": 0.1,
   "effects": {
     "sky_color": 14207743,
@@ -56,12 +56,6 @@
         "weight": 100,
         "minCount": 4,
         "maxCount": 4
-      },
-      {
-        "type": "candycraftmod:mage_suguard",
-        "weight": 45,
-        "minCount": 1,
-        "maxCount": 1
       }
     ],
     "water_ambient": [

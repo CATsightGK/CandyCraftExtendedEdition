@@ -33,7 +33,7 @@ public class MarshmallowChestRenderer implements BlockEntityRenderer<Marshmallow
         uv(45, 10, 59, 20), uv(30, 14, 15, 0), uv(45, 14, 30, 28));
     private static final Box DOUBLE_LID_VISUAL_LEFT = box(1, 10, 1, 16, 15, 15, 64,
         uv(45, 40, 60, 45), uv(0, 52, 14, 57), uv(45, 45, 60, 50),
-        uv(14, 52, 28, 57), uv(45, 28, 30, 14), uv(30, 28, 15, 42));
+        uv(14, 52, 28, 57), uv(45, 28, 30, 14), uv(45, 28, 30, 14));
     private static final Box DOUBLE_LOCK_VISUAL_LEFT = box(15, 8, 0, 16, 12, 1, 64,
         uv(56, 55, 57, 59), uv(0, 57, 1, 61), uv(1, 57, 2, 61),
         uv(2, 57, 3, 61), uv(29, 53, 28, 52), uv(30, 52, 29, 53));
@@ -45,7 +45,7 @@ public class MarshmallowChestRenderer implements BlockEntityRenderer<Marshmallow
         uv(45, 30, 59, 40), uv(15, 14, 0, 0), uv(45, 0, 30, 14));
     private static final Box DOUBLE_LID_VISUAL_RIGHT = box(0, 10, 1, 15, 15, 15, 64,
         uv(30, 48, 45, 53), uv(28, 53, 42, 58), uv(45, 50, 60, 55),
-        uv(42, 55, 56, 60), uv(45, 14, 30, 0), uv(45, 14, 30, 28));
+        uv(42, 55, 56, 60), uv(45, 14, 30, 0), uv(45, 14, 30, 0));
     private static final Box DOUBLE_LOCK_VISUAL_RIGHT = box(0, 8, 0, 1, 12, 1, 64,
         uv(3, 57, 4, 61), uv(4, 57, 5, 61), uv(5, 57, 6, 61),
         uv(6, 57, 7, 61), uv(43, 54, 42, 53), uv(44, 53, 43, 54));

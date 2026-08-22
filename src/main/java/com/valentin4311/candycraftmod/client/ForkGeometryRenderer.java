@@ -5,6 +5,7 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.valentin4311.candycraftmod.CandyCraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.ResourceLocation;
 import org.joml.Matrix3f;
@@ -51,15 +52,17 @@ public final class ForkGeometryRenderer {
     }
 
     public static void renderCentered(PoseStack poseStack, MultiBufferSource buffer, int packedLight) {
-        render(poseStack, buffer, packedLight, true);
+        render(poseStack, buffer, packedLight, true, false);
     }
 
-    public static void renderRaw(PoseStack poseStack, MultiBufferSource buffer, int packedLight) {
-        render(poseStack, buffer, packedLight, false);
+    public static void renderRaw(PoseStack poseStack, MultiBufferSource buffer, int packedLight, boolean foil) {
+        render(poseStack, buffer, packedLight, false, foil);
     }
 
-    private static void render(PoseStack poseStack, MultiBufferSource buffer, int packedLight, boolean centered) {
-        VertexConsumer consumer = buffer.getBuffer(RenderType.entityCutoutNoCull(TEXTURE));
+    private static void render(PoseStack poseStack, MultiBufferSource buffer, int packedLight,
+            boolean centered, boolean foil) {
+        RenderType renderType = RenderType.entityCutoutNoCull(TEXTURE);
+        VertexConsumer consumer = ItemRenderer.getFoilBufferDirect(buffer, renderType, true, foil);
         PoseStack.Pose pose = poseStack.last();
         for (Cuboid cuboid : CUBOIDS) {
             renderCuboid(pose, consumer, packedLight, cuboid, centered);

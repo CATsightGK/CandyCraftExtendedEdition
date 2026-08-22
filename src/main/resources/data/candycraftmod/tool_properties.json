@@ -14,6 +14,8 @@
       "enchantability": 8,
       "useVanillaEnchantments": false,
       "allowedEnchantments": [
+        "candycraftmod:devouring",
+        "candycraftmod:gluttony",
         "minecraft:fire_aspect",
         "minecraft:knockback",
         "minecraft:looting",

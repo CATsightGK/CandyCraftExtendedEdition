@@ -11,6 +11,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -22,6 +24,7 @@ public final class CCToolProperties {
     private static final String RESOURCE_PATH = "data/" + CandyCraft.MODID + "/tool_properties.json";
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final Map<String, Profile> PROFILES = loadProfiles();
+    private static final Map<Item, Optional<Profile>> ITEM_CACHE = new ConcurrentHashMap<>();
 
     private CCToolProperties() {
     }
@@ -32,7 +35,16 @@ public final class CCToolProperties {
 
     public static Profile get(Item item) {
         ResourceLocation id = ForgeRegistries.ITEMS.getKey(item);
-        return id == null ? null : PROFILES.get(id.toString());
+        if (id == null) {
+            return null;
+        }
+        Optional<Profile> cached = ITEM_CACHE.get(item);
+        if (cached != null) {
+            return cached.orElse(null);
+        }
+        Optional<Profile> profile = Optional.ofNullable(PROFILES.get(id.toString()));
+        ITEM_CACHE.put(item, profile);
+        return profile.orElse(null);
     }
 
     public static Boolean configuredEnchantmentRule(ItemStack stack, Enchantment enchantment) {

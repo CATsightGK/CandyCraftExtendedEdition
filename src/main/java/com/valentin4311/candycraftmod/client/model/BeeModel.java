@@ -12,6 +12,7 @@ import net.minecraft.client.model.geom.builders.CubeListBuilder;
 import net.minecraft.client.model.geom.builders.LayerDefinition;
 import net.minecraft.client.model.geom.builders.MeshDefinition;
 import net.minecraft.client.model.geom.builders.PartDefinition;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 
@@ -30,6 +31,7 @@ public class BeeModel<T extends CaramelBeeEntity> extends EntityModel<T> {
     private final ModelPart antennaFront;
 
     public BeeModel(ModelPart root) {
+        super(RenderType::entityTranslucent);
         stinger = root.getChild("stinger");
         tail = root.getChild("tail");
         body = root.getChild("body");
@@ -62,9 +64,55 @@ public class BeeModel<T extends CaramelBeeEntity> extends EntityModel<T> {
 
     @Override
     public void setupAnim(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
-        float flap = Mth.sin(ageInTicks * 0.9F);
+        boolean flying = !entity.isHanged();
+        float horizontalSpeed = (float)entity.getDeltaMovement().horizontalDistance();
+        float activity = Mth.clamp(horizontalSpeed * 5.0F, 0.0F, 1.0F);
+        float wingPhase = ageInTicks * (flying ? 1.65F + activity * 0.35F : 0.32F);
+        float flap = Mth.sin(wingPhase) * (flying ? 0.82F : 0.12F)
+            + Mth.sin(wingPhase * 2.0F + 0.6F) * (flying ? 0.10F : 0.02F);
+        float wingSweep = Mth.cos(wingPhase) * (flying ? 0.09F : 0.02F);
+
         wingRight.zRot = -1.570796F + flap;
         wingLeft.zRot = 1.570796F - flap;
+        wingRight.xRot = 0.08F + wingSweep;
+        wingLeft.xRot = 0.08F + wingSweep;
+        wingRight.yRot = -0.05F * Mth.sin(wingPhase * 0.5F);
+        wingLeft.yRot = 0.05F * Mth.sin(wingPhase * 0.5F);
+
+        float hover = flying ? Mth.sin(ageInTicks * 0.22F) * 0.18F : 0.0F;
+        stinger.y = 19.0F + hover;
+        tail.y = 18.5F + hover;
+        body.y = 17.5F + hover;
+        abdomen.y = 18.0F + hover;
+        head.y = 19.5F + hover;
+        wingRight.y = 18.0F + hover;
+        wingLeft.y = 18.0F + hover;
+        legRight.y = 20.5F + hover;
+        legLeft.y = 20.5F + hover;
+        antennaBack.y = 19.5F + hover;
+        antennaFront.y = 19.5F + hover;
+
+        float flightTilt = Mth.clamp((float)-entity.getDeltaMovement().y * 1.25F, -0.22F, 0.22F);
+        float bodyPulse = Mth.sin(ageInTicks * 0.16F) * 0.025F;
+        body.xRot = flightTilt + bodyPulse;
+        abdomen.xRot = flightTilt * 0.75F - bodyPulse;
+        tail.xRot = flightTilt * 0.55F - bodyPulse * 1.5F;
+        stinger.xRot = flightTilt * 0.45F;
+        head.xRot = Mth.clamp(headPitch * Mth.DEG_TO_RAD * 0.35F, -0.25F, 0.25F) + bodyPulse;
+        head.yRot = Mth.clamp(netHeadYaw * Mth.DEG_TO_RAD * 0.35F, -0.35F, 0.35F);
+
+        float legCycle = ageInTicks * 0.28F;
+        float legSwing = flying ? 0.14F : 0.05F;
+        legRight.xRot = 0.16F + Mth.sin(legCycle) * legSwing + Mth.sin(legCycle * 2.0F) * 0.035F;
+        legLeft.xRot = 0.16F + Mth.sin(legCycle + Mth.PI) * legSwing - Mth.sin(legCycle * 2.0F) * 0.035F;
+        legRight.zRot = -0.07F + Mth.sin(legCycle * 0.7F) * 0.035F;
+        legLeft.zRot = 0.07F - Mth.sin(legCycle * 0.7F) * 0.035F;
+
+        float antennaSway = Mth.sin(ageInTicks * 0.18F) * 0.055F;
+        antennaFront.xRot = -0.04F + antennaSway;
+        antennaBack.xRot = -0.04F - antennaSway;
+        antennaFront.zRot = antennaSway * 0.45F;
+        antennaBack.zRot = -antennaSway * 0.45F;
     }
 
     @Override

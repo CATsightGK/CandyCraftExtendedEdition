@@ -38,9 +38,11 @@ import com.valentin4311.candycraftmod.block.LegacyMetadataBlock;
 import com.valentin4311.candycraftmod.block.LegacySaplingBlock;
 import com.valentin4311.candycraftmod.block.LegacyTypeBlock;
 import com.valentin4311.candycraftmod.block.LicoriceFurnaceBlock;
+import com.valentin4311.candycraftmod.block.LazyParticleTorchBlock;
 import com.valentin4311.candycraftmod.block.LollipopBlock;
 import com.valentin4311.candycraftmod.block.LollipopPlantBlock;
 import com.valentin4311.candycraftmod.block.MarshmallowChestBlock;
+import com.valentin4311.candycraftmod.block.MarshmallowRopeBlock;
 import com.valentin4311.candycraftmod.block.MilkCauldronBlock;
 import com.valentin4311.candycraftmod.block.NougatHeadBlock;
 import com.valentin4311.candycraftmod.block.PuddingBlock;
@@ -52,26 +54,25 @@ import com.valentin4311.candycraftmod.block.SugarBlock;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
-import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.level.block.FallingBlock;
 import net.minecraft.world.level.block.RotatedPillarBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.ChainBlock;
 import net.minecraft.world.level.block.DoorBlock;
 import net.minecraft.world.level.block.FenceBlock;
 import net.minecraft.world.level.block.FenceGateBlock;
 import net.minecraft.world.level.block.GlassBlock;
 import net.minecraft.world.level.block.IronBarsBlock;
 import net.minecraft.world.level.block.LadderBlock;
+import net.minecraft.world.level.block.LanternBlock;
 import net.minecraft.world.level.block.LiquidBlock;
 import net.minecraft.world.level.block.SlabBlock;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.StairBlock;
-import net.minecraft.world.level.block.TorchBlock;
 import net.minecraft.world.level.block.TrapDoorBlock;
 import net.minecraft.world.level.block.WallBlock;
-import net.minecraft.world.level.block.WallTorchBlock;
 import net.minecraft.world.level.block.WaterlilyBlock;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
@@ -109,6 +110,11 @@ public final class CCBlocks {
     public static final RegistryObject<Block> LICORICE_BRICK_SLAB = register("licorice_brick_slab", () -> new SlabBlock(stone().strength(3.0F, 5.0F)));
     public static final RegistryObject<Block> LICORICE_BLOCK = register("licorice_block", () -> new Block(metal(MapColor.COLOR_BLACK).strength(5.0F, 10.0F)));
     public static final RegistryObject<Block> COOKIE_BLOCK = register("cookie_block", () -> new Block(cookieBlockProperties()));
+    public static final RegistryObject<Block> WAFFLE_BLOCK = register("waffle_block", () -> new Block(cookieBlockProperties()));
+    public static final RegistryObject<Block> WAFER_CONE_BLOCK = register("wafer_cone_block", () -> new Block(cookieBlockProperties()));
+    public static final RegistryObject<Block> SOLID_WAFER_BLOCK = register("solid_wafer_block", () ->
+        new Block(BlockBehaviour.Properties.copy(Blocks.OAK_LOG).mapColor(MapColor.TERRACOTTA_ORANGE)
+            .sound(CCSoundTypes.COOKIE)));
     public static final RegistryObject<Block> COOKIE_BLOCK_STAIRS = register("cookie_block_stairs", () ->
         stairs(COOKIE_BLOCK.get().defaultBlockState(), cookieBlockProperties()));
     public static final RegistryObject<Block> COOKIE_BLOCK_SLAB = register("cookie_block_slab", () -> new SlabBlock(cookieBlockProperties()));
@@ -133,14 +139,21 @@ public final class CCBlocks {
             .mapColor(MapColor.METAL).strength(0.3F).sound(SoundType.SLIME_BLOCK).noOcclusion(),
             () -> CCItems.ROYAL_RATIONS.get(), () -> CCItems.ROYAL_RATIONS_SLICE.get(),
             () -> CCParticleTypes.ROYAL_RATIONS_FRAGMENT.get()));
-    public static final RegistryObject<Block> LEMON_JELLY_FOOD = translucent(registerNoItem("lemon_jelly_food", () ->
+    // Not wrapped in translucent(): the composite models declare per-child render
+    // types (cutout core + translucent shell), and a block-wide translucent layer
+    // override would flatten them into a single pass like the big jelly blocks.
+    public static final RegistryObject<Block> LEMON_JELLY_FOOD = registerNoItem("lemon_jelly_food", () ->
         new PlaceableJellyFoodBlock(BlockBehaviour.Properties.copy(Blocks.SLIME_BLOCK)
             .mapColor(MapColor.COLOR_YELLOW).strength(0.3F).sound(SoundType.SLIME_BLOCK).noOcclusion(),
-            () -> CCItems.LEMON_JELLY_SLICE.get(), () -> CCParticleTypes.LEMON_JELLY_FRAGMENT.get())));
-    public static final RegistryObject<Block> MINT_JELLY_FOOD = translucent(registerNoItem("mint_jelly_food", () ->
+            () -> CCItems.LEMON_JELLY_SLICE.get(), () -> CCParticleTypes.LEMON_JELLY_FRAGMENT.get()));
+    public static final RegistryObject<Block> RASPBERRY_JELLY_FOOD = registerNoItem("raspberry_jelly_food", () ->
+        new PlaceableJellyFoodBlock(BlockBehaviour.Properties.copy(Blocks.SLIME_BLOCK)
+            .mapColor(MapColor.COLOR_RED).strength(0.3F).sound(SoundType.SLIME_BLOCK).noOcclusion(),
+            () -> CCItems.RASPBERRY_JELLY_SLICE.get(), () -> CCParticleTypes.RASPBERRY_JELLY_FRAGMENT.get()));
+    public static final RegistryObject<Block> MINT_JELLY_FOOD = registerNoItem("mint_jelly_food", () ->
         new PlaceableJellyFoodBlock(BlockBehaviour.Properties.copy(Blocks.SLIME_BLOCK)
             .mapColor(MapColor.COLOR_LIGHT_GREEN).strength(0.3F).sound(SoundType.SLIME_BLOCK).noOcclusion(),
-            () -> CCItems.MINT_JELLY_SLICE.get(), () -> CCParticleTypes.MINT_JELLY_FRAGMENT.get())));
+            () -> CCItems.MINT_JELLY_SLICE.get(), () -> CCParticleTypes.MINT_JELLY_FRAGMENT.get()));
     public static final RegistryObject<Block> TRAMPOJELLY = translucent(register("trampojelly", () -> new JellyBlock(2.0D, jelly())));
     public static final RegistryObject<Block> RED_TRAMPOJELLY = translucent(register("red_trampojelly", () -> new JellyBlock(4.0D, jelly())));
     public static final RegistryObject<Block> JELLY_SHOCK_ABSORBER = translucent(register("jelly_shock_absorber", () -> new JellyBlock(-1.0D, jelly())));
@@ -170,6 +183,9 @@ public final class CCBlocks {
     public static final RegistryObject<Block> MARSHMALLOW_WORKBENCH_LIGHT = register("marshmallow_workbench_light", () -> new CandyWorkbenchBlock(CandyWorkbenchBlock.CandyWorkbenchTheme.MARSHMALLOW_LIGHT, wood(MapColor.TERRACOTTA_WHITE).strength(2.5F)));
     public static final RegistryObject<Block> MARSHMALLOW_WORKBENCH_DARK = register("marshmallow_workbench_dark", () -> new CandyWorkbenchBlock(CandyWorkbenchBlock.CandyWorkbenchTheme.MARSHMALLOW_DARK, wood(MapColor.COLOR_BROWN).strength(2.5F)));
     public static final RegistryObject<Block> MARSHMALLOW_LADDER = cutout(register("marshmallow_ladder", () -> new LadderBlock(wood(MapColor.COLOR_PINK).strength(2.5F).noOcclusion())));
+    public static final RegistryObject<Block> MARSHMALLOW_ROPE = cutout(register("marshmallow_rope", () ->
+        new MarshmallowRopeBlock(BlockBehaviour.Properties.copy(Blocks.OAK_PLANKS).mapColor(MapColor.COLOR_PINK)
+            .sound(SoundType.WOOL).noOcclusion())));
     public static final RegistryObject<Block> MARSHMALLOW_DOOR = cutout(register("marshmallow_door", () -> new DoorBlock(oakDoor(MapColor.COLOR_PINK), BlockSetType.OAK)));
     public static final RegistryObject<Block> MARSHMALLOW_DOOR_DARK = cutout(register("marshmallow_door_dark", () -> new DoorBlock(oakDoor(MapColor.COLOR_BROWN), BlockSetType.OAK)));
     public static final RegistryObject<Block> MARSHMALLOW_DOOR_LIGHT = cutout(register("marshmallow_door_light", () -> new DoorBlock(oakDoor(MapColor.TERRACOTTA_WHITE), BlockSetType.OAK)));
@@ -185,10 +201,17 @@ public final class CCBlocks {
     public static final RegistryObject<Block> MARSHMALLOW_CHEST_DARK = register("marshmallow_chest_dark", () -> new MarshmallowChestBlock(MarshmallowChestBlock.Theme.DARK, wood(MapColor.COLOR_BROWN).strength(2.5F).noOcclusion()));
     public static final RegistryObject<Block> MARSHMALLOW_CHEST_LIGHT = register("marshmallow_chest_light", () -> new MarshmallowChestBlock(MarshmallowChestBlock.Theme.LIGHT, wood(MapColor.TERRACOTTA_WHITE).strength(2.5F).noOcclusion()));
     public static final RegistryObject<Block> HONEY_ORE = register("honey_ore", () -> new Block(stone().strength(3.0F, 5.0F).requiresCorrectToolForDrops()));
-    public static final RegistryObject<Block> HONEY_TORCH = cutout(register("honey_torch", () -> new TorchBlock(BlockBehaviour.Properties.copy(Blocks.TORCH).lightLevel(state -> 15), ParticleTypes.FLAME)));
-    public static final RegistryObject<Block> HONEY_WALL_TORCH = cutout(registerNoItem("honey_wall_torch", () -> new WallTorchBlock(BlockBehaviour.Properties.copy(Blocks.WALL_TORCH).lightLevel(state -> 15), ParticleTypes.FLAME)));
+    public static final RegistryObject<Block> HONEY_TORCH = cutout(register("honey_torch", () -> new LazyParticleTorchBlock(BlockBehaviour.Properties.copy(Blocks.TORCH).lightLevel(state -> 15), CCParticleTypes.LIQUID_CANDY_FLAME)));
+    public static final RegistryObject<Block> HONEY_WALL_TORCH = cutout(registerNoItem("honey_wall_torch", () -> new LazyParticleTorchBlock.Wall(BlockBehaviour.Properties.copy(Blocks.WALL_TORCH).lightLevel(state -> 15), CCParticleTypes.LIQUID_CANDY_FLAME)));
     public static final RegistryObject<Block> HONEYCOMB_BLOCK = register("honeycomb_block", () -> new Block(stone().mapColor(MapColor.COLOR_YELLOW).strength(2.0F)));
-    public static final RegistryObject<Block> HONEY_LAMP = register("honey_lamp", () -> new Block(metal(MapColor.COLOR_YELLOW).strength(1.0F).sound(SoundType.GLASS).lightLevel(state -> 15)));
+    public static final RegistryObject<Block> MARSHMALLOW_LANTERN = cutout(register("marshmallow_lantern", () ->
+        new LanternBlock(BlockBehaviour.Properties.copy(Blocks.LANTERN).mapColor(MapColor.COLOR_PINK).lightLevel(state -> 15))));
+    public static final RegistryObject<Block> HONEY_LAMP = register("honey_lamp", () ->
+        new Block(metal(MapColor.COLOR_YELLOW).strength(1.0F).sound(SoundType.GLASS).lightLevel(state -> 15)));
+    public static final RegistryObject<Block> HONEY_LANTERN = cutout(register("honey_lantern", () ->
+        new LanternBlock(BlockBehaviour.Properties.copy(Blocks.LANTERN).mapColor(MapColor.COLOR_YELLOW).lightLevel(state -> 15))));
+    public static final RegistryObject<Block> CARAMEL_LAMP = cutout(register("caramel_lamp", () ->
+        new LanternBlock(BlockBehaviour.Properties.copy(Blocks.LANTERN).mapColor(MapColor.COLOR_ORANGE).lightLevel(state -> 15))));
     public static final RegistryObject<Block> MILK_CAULDRON = registerNoItem("milk_cauldron", () ->
         new MilkCauldronBlock(BlockBehaviour.Properties.copy(Blocks.CAULDRON).mapColor(MapColor.SNOW).noOcclusion()));
     public static final RegistryObject<Block> PEZ_ORE = register("pez_ore", () -> new Block(stone().strength(3.0F, 5.0F).requiresCorrectToolForDrops()));
@@ -200,7 +223,7 @@ public final class CCBlocks {
     public static final RegistryObject<Block> PURPLE_TRAMPOJELLY = translucent(register("purple_trampojelly", () -> new JellyBlock(2.1D, jelly().lightLevel(state -> 13))));
     public static final RegistryObject<Block> RASPBERRY_COTTON_CANDY_BLOCK = register("raspberry_cotton_candy_block", () -> new Block(wool(MapColor.COLOR_PINK).strength(0.6F)));
     public static final RegistryObject<Block> JAW_BREAKER_LIGHT = register("jaw_breaker_light", () -> new Block(stone().strength(-1.0F, 6000000.0F).lightLevel(state -> 11)));
-    public static final RegistryObject<Block> CRANBERRY_SPIKES = cutout(register("cranberry_spikes", () -> new SpikesBlock(2, spikes())));
+    public static final RegistryObject<Block> CRANBERRY_SPIKES = cutout(register("cranberry_spikes", () -> new SpikesBlock(2, true, spikes())));
     public static final RegistryObject<Block> RASPBERRY_COTTON_CANDY_STAIRS = register("raspberry_cotton_candy_stairs", () -> stairs(Blocks.WHITE_WOOL.defaultBlockState(), wool(MapColor.COLOR_PINK).strength(0.6F)));
     public static final RegistryObject<Block> RASPBERRY_COTTON_CANDY_SLAB = register("raspberry_cotton_candy_slab", () -> new SlabBlock(wool(MapColor.COLOR_PINK).strength(3.0F, 5.0F)));
     public static final RegistryObject<Block> COTTON_CANDY_BED_BLOCK = cutout(register("cotton_candy_bed_block", () -> new CandyBedBlock(DyeColor.PINK, Blocks.PINK_BED)));
@@ -389,8 +412,18 @@ public final class CCBlocks {
     public static final RegistryObject<Block> WHITE_HARD_CANDY_BLOCK = register("white_hard_candy_block", () -> new RotatedPillarBlock(hardCandy(MapColor.TERRACOTTA_WHITE)));
     public static final RegistryObject<Block> RED_HARD_CANDY_BLOCK = register("red_hard_candy_block", () -> new RotatedPillarBlock(hardCandy(MapColor.COLOR_RED)));
     public static final RegistryObject<Block> GREEN_HARD_CANDY_BLOCK = register("green_hard_candy_block", () -> new RotatedPillarBlock(hardCandy(MapColor.COLOR_GREEN)));
+    public static final RegistryObject<Block> YELLOW_HARD_CANDY_BLOCK = register("yellow_hard_candy_block", () -> new RotatedPillarBlock(hardCandy(MapColor.COLOR_YELLOW)));
+    public static final RegistryObject<Block> ORANGE_HARD_CANDY_BLOCK = register("orange_hard_candy_block", () -> new RotatedPillarBlock(hardCandy(MapColor.COLOR_ORANGE)));
+    public static final RegistryObject<Block> LIGHT_BLUE_HARD_CANDY_BLOCK = register("light_blue_hard_candy_block", () -> new RotatedPillarBlock(hardCandy(MapColor.COLOR_LIGHT_BLUE)));
+    public static final RegistryObject<Block> PINK_HARD_CANDY_BLOCK = register("pink_hard_candy_block", () -> new RotatedPillarBlock(hardCandy(MapColor.COLOR_PINK)));
+    public static final RegistryObject<Block> PURPLE_HARD_CANDY_BLOCK = register("purple_hard_candy_block", () -> new RotatedPillarBlock(hardCandy(MapColor.COLOR_PURPLE)));
     public static final RegistryObject<Block> WHITE_RED_HARD_CANDY_BLOCK = register("white_red_hard_candy_block", () -> new RotatedPillarBlock(hardCandy(MapColor.COLOR_RED)));
     public static final RegistryObject<Block> WHITE_GREEN_HARD_CANDY_BLOCK = register("white_green_hard_candy_block", () -> new RotatedPillarBlock(hardCandy(MapColor.COLOR_GREEN)));
+    public static final RegistryObject<Block> WHITE_YELLOW_HARD_CANDY_BLOCK = register("white_yellow_hard_candy_block", () -> new RotatedPillarBlock(hardCandy(MapColor.COLOR_YELLOW)));
+    public static final RegistryObject<Block> WHITE_ORANGE_HARD_CANDY_BLOCK = register("white_orange_hard_candy_block", () -> new RotatedPillarBlock(hardCandy(MapColor.COLOR_ORANGE)));
+    public static final RegistryObject<Block> WHITE_LIGHT_BLUE_HARD_CANDY_BLOCK = register("white_light_blue_hard_candy_block", () -> new RotatedPillarBlock(hardCandy(MapColor.COLOR_LIGHT_BLUE)));
+    public static final RegistryObject<Block> WHITE_PINK_HARD_CANDY_BLOCK = register("white_pink_hard_candy_block", () -> new RotatedPillarBlock(hardCandy(MapColor.COLOR_PINK)));
+    public static final RegistryObject<Block> WHITE_PURPLE_HARD_CANDY_BLOCK = register("white_purple_hard_candy_block", () -> new RotatedPillarBlock(hardCandy(MapColor.COLOR_PURPLE)));
     public static final RegistryObject<Block> RED_GREEN_HARD_CANDY_BLOCK = register("red_green_hard_candy_block", () -> new RotatedPillarBlock(hardCandy(MapColor.COLOR_RED)));
 
     public static final RegistryObject<Block> WHITE_HARD_CANDY_WORKBENCH = register("white_hard_candy_workbench", () -> new CandyWorkbenchBlock(CandyWorkbenchBlock.CandyWorkbenchTheme.WHITE_HARD_CANDY, hardCandy(MapColor.TERRACOTTA_WHITE)));
@@ -585,4 +618,3 @@ public final class CCBlocks {
         return new StairBlock(baseState, properties);
     }
 }
-

@@ -1,0 +1,21 @@
+{
+  "replace": false,
+  "values": [
+    "candycraftmod:white_hard_candy",
+    "candycraftmod:red_hard_candy",
+    "candycraftmod:green_hard_candy",
+    "candycraftmod:yellow_hard_candy",
+    "candycraftmod:orange_hard_candy",
+    "candycraftmod:light_blue_hard_candy",
+    "candycraftmod:pink_hard_candy",
+    "candycraftmod:purple_hard_candy",
+    "candycraftmod:white_red_hard_candy",
+    "candycraftmod:white_green_hard_candy",
+    "candycraftmod:white_yellow_hard_candy",
+    "candycraftmod:white_orange_hard_candy",
+    "candycraftmod:white_light_blue_hard_candy",
+    "candycraftmod:white_pink_hard_candy",
+    "candycraftmod:white_purple_hard_candy",
+    "candycraftmod:red_green_hard_candy"
+  ]
+}

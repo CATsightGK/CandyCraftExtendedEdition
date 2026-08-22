@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "RRR",
+    "RTR",
+    "RRR"
+  ],
+  "key": {
+    "R": {
+      "item": "candycraftmod:rock_candy"
+    },
+    "T": {
+      "item": "candycraftmod:honey_torch"
+    }
+  },
+  "result": {
+    "item": "candycraftmod:marshmallow_lantern"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "#@",
+    "@#"
+  ],
+  "key": {
+    "#": {
+      "item": "candycraftmod:white_hard_candy"
+    },
+    "@": {
+      "item": "candycraftmod:light_blue_hard_candy"
+    }
+  },
+  "result": {
+    "item": "candycraftmod:white_light_blue_hard_candy_block"
+  }
+}
