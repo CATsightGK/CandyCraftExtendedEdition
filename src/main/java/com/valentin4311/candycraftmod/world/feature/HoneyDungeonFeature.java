@@ -9,7 +9,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.WorldGenRegion;
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.Container;
 import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.SpawnerBlockEntity;
@@ -17,11 +16,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.feature.Feature;
 import net.minecraft.world.level.levelgen.feature.FeaturePlaceContext;
 import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
-import net.minecraft.world.level.storage.loot.LootParams;
-import net.minecraft.world.level.storage.loot.LootTable;
-import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
-import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
-import net.minecraft.world.phys.Vec3;
 
 public class HoneyDungeonFeature extends Feature<NoneFeatureConfiguration> {
     private static final ResourceLocation LOOT_TABLE = new ResourceLocation(CandyCraft.MODID, "chests/honey_dungeon");
@@ -106,20 +100,11 @@ public class HoneyDungeonFeature extends Feature<NoneFeatureConfiguration> {
             level.setBlock(pos, chestState, 2);
             MarshmallowChestBlockEntity chest = new MarshmallowChestBlockEntity(pos, chestState);
             level.getChunk(pos).setBlockEntity(chest);
-            fillLoot(level, random, pos, chest);
+            // Defer loot generation until the chest is opened on the server
+            // thread. Arclight rejects LootGenerateEvent during async chunk gen.
+            chest.setLootTable(LOOT_TABLE, random.nextLong());
             ++placed;
         }
-    }
-
-    private static void fillLoot(WorldGenLevel level, RandomSource random, BlockPos pos, Container container) {
-        if (!(level instanceof WorldGenRegion region)) {
-            return;
-        }
-        LootTable lootTable = region.getLevel().getServer().getLootData().getLootTable(LOOT_TABLE);
-        LootParams params = new LootParams.Builder(region.getLevel())
-            .withParameter(LootContextParams.ORIGIN, Vec3.atCenterOf(pos))
-            .create(LootContextParamSets.CHEST);
-        lootTable.fill(container, params, random.nextLong());
     }
 
     private static int countSolidSides(WorldGenLevel level, BlockPos pos) {

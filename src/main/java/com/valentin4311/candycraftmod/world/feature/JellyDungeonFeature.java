@@ -23,7 +23,6 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.Container;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.WorldGenLevel;
@@ -49,13 +48,8 @@ import net.minecraft.world.level.block.state.properties.SlabType;
 import net.minecraft.world.level.levelgen.feature.Feature;
 import net.minecraft.world.level.levelgen.feature.FeaturePlaceContext;
 import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
-import net.minecraft.world.level.storage.loot.LootParams;
-import net.minecraft.world.level.storage.loot.LootTable;
-import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
-import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.core.Direction;
 import net.minecraft.world.phys.AABB;
-import net.minecraft.world.phys.Vec3;
 
 public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
     private static final ResourceLocation LOOT_TABLE = new ResourceLocation(CandyCraft.MODID, "chests/jelly_dungeon");
@@ -1077,24 +1071,12 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
             .setValue(MarshmallowChestBlock.TYPE, ChestType.SINGLE);
         set(level, pos, state);
         if (level.getBlockEntity(pos) instanceof MarshmallowChestBlockEntity chest) {
-            fillLoot(level, random, pos, chest);
+            // Defer loot generation until the chest is opened on the server
+            // thread; chunk generation may run asynchronously under Arclight.
+            chest.setLootTable(LOOT_TABLE, random.nextLong());
             chest.setItem(13, new ItemStack(CCItems.JELLY_CROWN.get()));
         }
     }
-
-    private static void fillLoot(WorldGenLevel level, RandomSource random, BlockPos pos, Container container) {
-        ServerLevel serverLevel = level instanceof ServerLevel directLevel ? directLevel
-            : level instanceof WorldGenRegion region ? region.getLevel() : null;
-        if (serverLevel == null) {
-            return;
-        }
-        LootTable lootTable = serverLevel.getServer().getLootData().getLootTable(LOOT_TABLE);
-        LootParams params = new LootParams.Builder(serverLevel)
-            .withParameter(LootContextParams.ORIGIN, Vec3.atCenterOf(pos))
-            .create(LootContextParamSets.CHEST);
-        lootTable.fill(container, params, random.nextLong());
-    }
-
 
     private static BlockState jawBreaker(RandomSource random) {
         return random.nextInt(10) == 0

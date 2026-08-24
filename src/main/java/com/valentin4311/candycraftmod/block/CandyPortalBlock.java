@@ -49,7 +49,9 @@ public class CandyPortalBlock extends Block {
     );
     private static final int SURVIVAL_PORTAL_DELAY = 80;
     private static final int CREATIVE_PORTAL_DELAY = 1;
-    private static final int ARRIVAL_PRELOAD_RADIUS = 1;
+    // Loading a 3x3 region synchronously during a portal tick can block the
+    // dedicated server while the custom candy terrain is generated.
+    private static final int ARRIVAL_PRELOAD_RADIUS = 0;
     private static final int CANDY_WORLD_ARRIVAL_Y = 300;
     private static final int ARRIVAL_SEARCH_RADIUS = 4;
     private static final int ARRIVAL_SEARCH_HEIGHT = 16;
@@ -455,7 +457,7 @@ public class CandyPortalBlock extends Block {
         for (int x = -1; x <= 1; x++) {
             for (int z = -1; z <= 1; z++) {
                 for (int y = 0; y < ARRIVAL_CLEAR_HEIGHT; y++) {
-                    level.setBlockAndUpdate(pos.offset(x, y, z), Blocks.AIR.defaultBlockState());
+                    level.setBlock(pos.offset(x, y, z), Blocks.AIR.defaultBlockState(), Block.UPDATE_CLIENTS);
                 }
             }
         }
@@ -464,7 +466,7 @@ public class CandyPortalBlock extends Block {
     private static void prepareEmergencyArrival(ServerLevel level, BlockPos pos) {
         for (int x = -1; x <= 1; x++) {
             for (int z = -1; z <= 1; z++) {
-                level.setBlockAndUpdate(pos.offset(x, -1, z), Blocks.COBBLESTONE.defaultBlockState());
+                level.setBlock(pos.offset(x, -1, z), Blocks.COBBLESTONE.defaultBlockState(), Block.UPDATE_CLIENTS);
             }
         }
         clearArrivalSpace(level, pos);

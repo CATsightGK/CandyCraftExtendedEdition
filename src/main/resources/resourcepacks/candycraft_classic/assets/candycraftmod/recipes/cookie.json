@@ -8,8 +8,7 @@
       "item": "candycraftmod:flour"
     },
     "$": {
-      "item": "minecraft:dye",
-      "data": 3
+      "item": "minecraft:cocoa_beans"
     }
   },
   "result": {

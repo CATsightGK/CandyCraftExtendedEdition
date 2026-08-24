@@ -83,7 +83,6 @@ public class LegacyCandyTreeFeature extends Feature<NoneFeatureConfiguration> {
     }
 
     private static boolean generateCaramelClassic(LevelAccessor level, RandomSource random, BlockPos base) {
-        trySpawnJellyQueenFromClassicTree(level, random, base);
         BlockState trunk = CCBlocks.MARSHMALLOW_LOG_DARK.get().defaultBlockState();
         BlockState leaves = CCBlocks.CANDY_LEAVES_DARK.get().defaultBlockState();
         int height = 3 + random.nextInt(5);
@@ -101,10 +100,12 @@ public class LegacyCandyTreeFeature extends Feature<NoneFeatureConfiguration> {
             int radius = 1 - topOffset / 2;
             placeLegacySmallCaramelLayer(level, base.above(y), leaves, radius, topOffset, random);
         }
+        // Spawn after the tree is complete and above its highest leaf layer.
+        trySpawnJellyQueenFromClassicTree(level, random, base, height);
         return true;
     }
 
-    private static void trySpawnJellyQueenFromClassicTree(LevelAccessor level, RandomSource random, BlockPos base) {
+    private static void trySpawnJellyQueenFromClassicTree(LevelAccessor level, RandomSource random, BlockPos base, int treeHeight) {
         if (!(level instanceof ServerLevelAccessor serverLevel) || random.nextInt(2000) != 100) {
             return;
         }
@@ -112,7 +113,7 @@ public class LegacyCandyTreeFeature extends Feature<NoneFeatureConfiguration> {
         if (queen == null) {
             return;
         }
-        BlockPos spawnPos = base.above();
+        BlockPos spawnPos = base.above(treeHeight + 1);
         queen.moveTo(spawnPos, random.nextFloat() * 360.0F, 0.0F);
         queen.finalizeSpawn(serverLevel, serverLevel.getCurrentDifficultyAt(spawnPos), MobSpawnType.CHUNK_GENERATION, null, null);
         serverLevel.addFreshEntityWithPassengers(queen);
