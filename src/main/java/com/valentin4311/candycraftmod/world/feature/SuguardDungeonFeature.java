@@ -7,6 +7,7 @@ import com.valentin4311.candycraftmod.block.DungeonTeleporterBlock.PortalRole;
 import com.valentin4311.candycraftmod.registry.CCBlocks;
 import com.valentin4311.candycraftmod.registry.CCEntityTypes;
 import com.valentin4311.candycraftmod.registry.CCItems;
+import com.valentin4311.candycraftmod.world.DungeonResetManager;
 import java.util.List;
 import java.util.Locale;
 import net.minecraft.core.BlockPos;
@@ -56,24 +57,40 @@ public class SuguardDungeonFeature extends Feature<NoneFeatureConfiguration> {
         super(codec);
     }
 
-    public static void generateInDungeonLevel(ServerLevel level, BlockPos origin) {
-        RandomSource random = level.getRandom();
-        purgeDungeonItemEntities(level, origin, -132, 64, -63, 190, -160, 160);
-        clearArea(level, origin, -132, 64, -63, 190, -160, 160);
-        new SuguardDungeonFeature(NoneFeatureConfiguration.CODEC).legacyDungeon(level, random, origin);
-        purgeDungeonItemEntities(level, origin, -132, 64, -63, 190, -160, 160);
+    public static final int CLEAR_MIN_X = -132;
+    public static final int CLEAR_MAX_X = 64;
+    public static final int CLEAR_MIN_Y = -63;
+    public static final int CLEAR_MAX_Y = 190;
+    public static final int CLEAR_MIN_Z = -160;
+    public static final int CLEAR_MAX_Z = 160;
+
+    /**
+     * Queues the instance reset (entity purge + region clear + rebuild) on the
+     * tick-budgeted {@link DungeonResetManager} instead of running it inline,
+     * which used to freeze the server for seconds. Returns false when a prepare
+     * for this instance is already queued or running.
+     */
+    public static boolean beginPrepare(ServerLevel level, BlockPos origin) {
+        purgeDungeonEntities(level, origin);
+        return DungeonResetManager.beginPrepare(level, origin,
+            CLEAR_MIN_X, CLEAR_MAX_X, CLEAR_MIN_Y, CLEAR_MAX_Y, CLEAR_MIN_Z, CLEAR_MAX_Z,
+            () -> new SuguardDungeonFeature(NoneFeatureConfiguration.CODEC).legacyDungeon(level, level.getRandom(), origin));
     }
 
-    public static void clearDungeonInstance(ServerLevel level, BlockPos origin) {
-        loadDungeonChunks(level, origin, -132, 64, -160, 160);
+    public static void purgeDungeonEntities(ServerLevel level, BlockPos origin) {
         AABB bounds = new AABB(
-            origin.getX() - 132, origin.getY() - 63, origin.getZ() - 160,
-            origin.getX() + 65, origin.getY() + 191, origin.getZ() + 161
+            origin.getX() + CLEAR_MIN_X, origin.getY() + CLEAR_MIN_Y, origin.getZ() + CLEAR_MIN_Z,
+            origin.getX() + CLEAR_MAX_X + 1, origin.getY() + CLEAR_MAX_Y + 1, origin.getZ() + CLEAR_MAX_Z + 1
         );
         for (Entity entity : level.getEntitiesOfClass(Entity.class, bounds, entity -> !(entity instanceof Player))) {
             entity.discard();
         }
-        clearArea(level, origin, -132, 64, -63, 190, -160, 160);
+    }
+
+    public static void clearDungeonInstance(ServerLevel level, BlockPos origin) {
+        purgeDungeonEntities(level, origin);
+        DungeonResetManager.enqueueClear(level, origin,
+            CLEAR_MIN_X, CLEAR_MAX_X, CLEAR_MIN_Y, CLEAR_MAX_Y, CLEAR_MIN_Z, CLEAR_MAX_Z);
     }
 
     public static List<String> debugRoomNames() {
@@ -1055,16 +1072,6 @@ public class SuguardDungeonFeature extends Feature<NoneFeatureConfiguration> {
                     level.setBlock(origin.offset(x, y, z), Blocks.AIR.defaultBlockState(), 50);
                 }
             }
-        }
-    }
-
-    private static void purgeDungeonItemEntities(ServerLevel level, BlockPos origin, int minX, int maxX, int minY, int maxY, int minZ, int maxZ) {
-        AABB bounds = new AABB(
-            origin.getX() + minX, origin.getY() + minY, origin.getZ() + minZ,
-            origin.getX() + maxX + 1, origin.getY() + maxY + 1, origin.getZ() + maxZ + 1
-        );
-        for (ItemEntity item : level.getEntitiesOfClass(ItemEntity.class, bounds)) {
-            item.discard();
         }
     }
 

@@ -24,7 +24,7 @@
             "type": "minecraft:all_of",
             "predicates": [
               { "type": "minecraft:matching_blocks", "blocks": ["minecraft:air"] },
-              { "type": "minecraft:matching_blocks", "offset": [0, -1, 0], "blocks": ["candycraftmod:candy_grass_block", "candycraftmod:milk_brownie_block"] }
+              { "type": "minecraft:matching_blocks", "offset": [0, -1, 0], "blocks": ["candycraftmod:candy_grass_block", "candycraftmod:milk_brownie_block", "candycraftmod:pudding"] }
             ]
           }
         }

@@ -13,17 +13,20 @@ import com.valentin4311.candycraftmod.registry.CCBlocks;
 import com.valentin4311.candycraftmod.registry.CCEntityTypes;
 import com.valentin4311.candycraftmod.registry.CCItems;
 import com.valentin4311.candycraftmod.util.EmblemHelper;
+import com.valentin4311.candycraftmod.world.DungeonResetManager;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import net.minecraft.core.BlockPos;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.WorldGenRegion;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.MobSpawnType;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.RotatedPillarBlock;
@@ -50,7 +53,7 @@ public class LegacyStructureFeature extends Feature<NoneFeatureConfiguration> {
     private static final ResourceLocation WATER_TEMPLE_LOOT = new ResourceLocation(CandyCraft.MODID, "chests/water_temple");
     private static final boolean ENABLE_STRUCTURE_GINGERBREAD = true;
     private static final long VILLAGE_COOLDOWN_TICKS = 1200L;
-    private static final ConcurrentHashMap<ServerLevel, AtomicLong> LAST_VILLAGE_TICK = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<ResourceKey<Level>, AtomicLong> LAST_VILLAGE_TICK = new ConcurrentHashMap<>();
     private final Kind kind;
 
     public LegacyStructureFeature(Codec<NoneFeatureConfiguration> codec, Kind kind) {
@@ -87,7 +90,9 @@ public class LegacyStructureFeature extends Feature<NoneFeatureConfiguration> {
             }
             BlockPos villageOrigin = origin.immutable();
             long villageSeed = random.nextLong();
-            region.getLevel().getServer().execute(() ->
+            // Routed through the tick-budgeted queue so the village build never
+            // collides with a dungeon reset on the same tick.
+            DungeonResetManager.enqueueUnit(() ->
                 undergroundVillage(region.getLevel(), RandomSource.create(villageSeed), villageOrigin));
             return true;
         }
@@ -95,7 +100,9 @@ public class LegacyStructureFeature extends Feature<NoneFeatureConfiguration> {
     }
 
     private static boolean claimVillageGeneration(ServerLevel level) {
-        AtomicLong lastGeneration = LAST_VILLAGE_TICK.computeIfAbsent(level, ignored -> new AtomicLong(Long.MIN_VALUE));
+        // Keyed by dimension id, never by the ServerLevel itself: strong Level
+        // references in a static map would leak every previously visited world.
+        AtomicLong lastGeneration = LAST_VILLAGE_TICK.computeIfAbsent(level.dimension(), ignored -> new AtomicLong(Long.MIN_VALUE));
         long now = level.getGameTime();
         while (true) {
             long last = lastGeneration.get();

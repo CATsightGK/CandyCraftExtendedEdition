@@ -4,7 +4,6 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.valentin4311.candycraftmod.CandyCraft;
 import com.valentin4311.candycraftmod.registry.CCBlocks;
-import com.valentin4311.candycraftmod.registry.CCBlocks;
 import com.valentin4311.candycraftmod.registry.CCWorldgen;
 import com.valentin4311.candycraftmod.world.structure.CandyFeatureLocator;
 import com.mojang.datafixers.util.Pair;
@@ -1074,11 +1073,7 @@ public class CandyWorldChunkGenerator extends ChunkGenerator {
         return state.is(CCBlocks.CRYSTALLIZED_SUGAR.get());
     }
 
-    private static SurfaceMaterials surfaceMaterials(ResourceLocation biomeId, int worldX, int worldZ, RandomState randomState) {
-        if (biomeId.equals(COTTON_CANDY_PLAINS)) {
-            BlockState under = CCBlocks.MILK_BROWNIE_BLOCK.get().defaultBlockState();
-            return new SurfaceMaterials(CCBlocks.CANDY_GRASS_BLOCK.get().defaultBlockState(), under, under);
-        }
+    private SurfaceMaterials surfaceMaterials(ResourceLocation biomeId, int worldX, int worldZ, RandomState randomState) {
         if (biomeId.equals(CHOCOLATE_FOREST)) {
             BlockState under = CCBlocks.WHITE_BROWNIE_BLOCK.get().defaultBlockState();
             return new SurfaceMaterials(CCBlocks.CHOCOLATE_COVERED_WHITE_BROWNIE.get().defaultBlockState(), under, under);

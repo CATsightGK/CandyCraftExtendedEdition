@@ -54,8 +54,6 @@ import org.jetbrains.annotations.Nullable;
 public class BasicCandySlimeEntity extends Slime {
     private static final Direction[] DIRECTIONS = Direction.values();
     private static final Vec3[] DIRECTION_VECTORS = createDirectionVectors();
-    private static final int DORMANT_BOSS_HEAL_INTERVAL_TICKS = 20;
-    private static final float DORMANT_BOSS_HEAL_AMOUNT = 5.0F;
     public static final int JELLY_QUEEN_SLEEP_MODE = 0;
     public static final int JELLY_QUEEN_PINK_MODE = 1;
     public static final int JELLY_QUEEN_BLUE_MODE = 2;
@@ -278,8 +276,10 @@ public class BasicCandySlimeEntity extends Slime {
         }
         if (isYellowJelly()) {
             specialAttackCooldown = 10;
-            player.hurt(damageSources().mobAttack(this), 6.0F);
-            playSound(SoundEvents.SLIME_ATTACK, 1.0F, 1.0F);
+            if (!level().isClientSide) {
+                player.hurt(damageSources().mobAttack(this), 6.0F);
+                playSound(SoundEvents.SLIME_ATTACK, 1.0F, 1.0F);
+            }
         } else if (isRedJelly()) {
             specialAttackCooldown = 20;
             if (!level().isClientSide) {
@@ -385,13 +385,7 @@ public class BasicCandySlimeEntity extends Slime {
 
     @Nullable
     private static LivingEntity getLivingAttacker(DamageSource source) {
-        if (source.getEntity() instanceof LivingEntity attacker) {
-            return attacker;
-        }
-        if (source.getDirectEntity() instanceof LivingEntity attacker) {
-            return attacker;
-        }
-        return null;
+        return CandyMobHelper.getLivingAttacker(source);
     }
 
     @Override
@@ -685,7 +679,7 @@ public class BasicCandySlimeEntity extends Slime {
             return;
         }
 
-        setBaseValueIfChanged(speed, 0.699999988079071D);
+        setBaseValueIfChanged(speed, 0.7D);
         if (isBossResting()) {
             setBaseValueIfChanged(speed, 0.0D);
             stopHorizontalMovement(true);
@@ -1951,9 +1945,7 @@ public class BasicCandySlimeEntity extends Slime {
     }
 
     private void tickDormantBossRegeneration() {
-        if (tickCount % DORMANT_BOSS_HEAL_INTERVAL_TICKS == 0) {
-            heal(DORMANT_BOSS_HEAL_AMOUNT);
-        }
+        CandyMobHelper.tickDormantBossRegeneration(this);
     }
 
     private void updateJellyQueenMode() {
@@ -2372,17 +2364,11 @@ public class BasicCandySlimeEntity extends Slime {
     }
 
     private static void setBaseValueIfChanged(@Nullable AttributeInstance attribute, double value) {
-        if (attribute != null && attribute.getBaseValue() != value) {
-            attribute.setBaseValue(value);
-        }
+        CandyMobHelper.setBaseValueIfChanged(attribute, value);
     }
 
     private void stopHorizontalMovement(boolean clampUpwardMovement) {
-        Vec3 movement = getDeltaMovement();
-        double verticalMovement = clampUpwardMovement ? Math.min(0.0D, movement.y) : movement.y;
-        if (movement.x != 0.0D || movement.z != 0.0D || movement.y != verticalMovement) {
-            setDeltaMovement(0.0D, verticalMovement, 0.0D);
-        }
+        CandyMobHelper.stopHorizontalMovement(this, clampUpwardMovement);
     }
 
     private void reflectProjectile(DamageSource source) {

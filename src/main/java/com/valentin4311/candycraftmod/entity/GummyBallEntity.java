@@ -274,7 +274,7 @@ public class GummyBallEntity extends ThrowableItemProjectile {
         Entity entity = result.getEntity();
         int power = getPower();
         boolean bossBeetleProjectile = isBossBeetleProjectile();
-        float damage = getBonusDamage() > 0.0F ? getBonusDamage() : getSourceDamage(power, bossBeetleProjectile);
+        float damage = getBonusDamage() > 0.0F ? getBonusDamage() : getSourceDamage(power);
         if (entity instanceof BasicCandySlimeEntity candy && (candy.isPezJelly() || candy.isKingSlime() || candy.isJellyQueen())) {
             entity.hurt(damageSources().thrown(this, getOwner()), damage);
             return false;
@@ -299,7 +299,7 @@ public class GummyBallEntity extends ThrowableItemProjectile {
         return true;
     }
 
-    private float getSourceDamage(int power, boolean bossBeetleProjectile) {
+    private float getSourceDamage(int power) {
         if (power == 1) {
             return 6.0F;
         }
@@ -307,7 +307,9 @@ public class GummyBallEntity extends ThrowableItemProjectile {
             return 4.0F;
         }
         if (power == 3) {
-            return bossBeetleProjectile ? 3.0F : 3.0F;
+            // Boss-beetle volleys and player power-3 balls both deal 3.0F; this
+            // matches the shipped behavior from before getSourceDamage existed.
+            return 3.0F;
         }
         if (power == 4) {
             return 8.0F;

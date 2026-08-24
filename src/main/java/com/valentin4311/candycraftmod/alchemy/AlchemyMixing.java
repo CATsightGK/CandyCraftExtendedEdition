@@ -39,7 +39,7 @@ public final class AlchemyMixing {
     private static final Map<Item, IngredientEffect> RECIPES = new LinkedHashMap<>();
 
     static {
-        register(CCItems.COTTON_CANDY.get(), COLOR_RED, MobEffects.SATURATION);
+        register(CCItems.RASPBERRY_COTTON_CANDY.get(), COLOR_RED, MobEffects.SATURATION);
         register(CCItems.HONEY_SHARD.get(), COLOR_YELLOW, MobEffects.DIG_SPEED);
         register(CCItems.SUGAR_CRYSTAL.get(), COLOR_GRAY, MobEffects.INVISIBILITY);
         register(CCItems.NOUGAT_POWDER.get(), COLOR_PURPLE, MobEffects.GLOWING);

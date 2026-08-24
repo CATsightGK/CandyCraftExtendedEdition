@@ -59,8 +59,6 @@ public class BasicCandySpiderEntity extends Monster {
     private static final int BOSS_VOLLEY_CHARGE_DURATION = 100;
     private static final int BOSS_SINGLE_SHOT_ANIMATION_DURATION = 12;
     private static final int BOSS_NO_TARGET_SLEEP_DELAY = 20 * 12;
-    private static final int DORMANT_BOSS_HEAL_INTERVAL_TICKS = 20;
-    private static final float DORMANT_BOSS_HEAL_AMOUNT = 5.0F;
     public static final int BOSS_ATTACK_NONE = 0;
     public static final int BOSS_ATTACK_VOLLEY_CHARGE = 1;
     public static final int BOSS_ATTACK_VOLLEY = 2;
@@ -643,9 +641,7 @@ public class BasicCandySpiderEntity extends Monster {
     }
 
     private void tickDormantBossRegeneration() {
-        if (tickCount % DORMANT_BOSS_HEAL_INTERVAL_TICKS == 0) {
-            heal(DORMANT_BOSS_HEAL_AMOUNT);
-        }
+        CandyMobHelper.tickDormantBossRegeneration(this);
     }
 
     private void tickBossMeleeMode(LivingEntity target) {
@@ -877,17 +873,11 @@ public class BasicCandySpiderEntity extends Monster {
     }
 
     private void setMovementSpeedBase(double value) {
-        AttributeInstance speed = getAttribute(Attributes.MOVEMENT_SPEED);
-        if (speed != null && speed.getBaseValue() != value) {
-            speed.setBaseValue(value);
-        }
+        CandyMobHelper.setMovementSpeedBase(this, value);
     }
 
     private void stopHorizontalMovement() {
-        net.minecraft.world.phys.Vec3 movement = getDeltaMovement();
-        if (movement.x != 0.0D || movement.z != 0.0D) {
-            setDeltaMovement(0.0D, movement.y, 0.0D);
-        }
+        CandyMobHelper.stopHorizontalMovement(this, false);
     }
 
     private boolean isBeetle() {

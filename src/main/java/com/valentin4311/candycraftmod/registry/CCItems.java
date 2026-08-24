@@ -100,12 +100,22 @@ public final class CCItems {
     public static final RegistryObject<Item> LOLLIPOP_SEEDS = registerSeedItem("lollipop_seeds", () -> CCBlocks.LOLLIPOP_PLANT.get());
     public static final RegistryObject<Item> DRAGIBUS = registerPortItem("dragibus", () -> new DragibusSeedFoodItem(CCBlocks.DRAGIBUS_CROPS.get()));
     public static final RegistryObject<Item> MARSHMALLOW_FLOWER = registerPortItem("marshmallow_flower");
+    public static final RegistryObject<Item> CHOCOLATE_ICE_CREAM_SCOOP = registerFood("chocolate_ice_cream_scoop", 2, 0.6F);
+    public static final RegistryObject<Item> MATCHA_ICE_CREAM_SCOOP = registerFood("matcha_ice_cream_scoop", 2, 0.6F);
+    public static final RegistryObject<Item> STRAWBERRY_ICE_CREAM_SCOOP = registerFood("strawberry_ice_cream_scoop", 2, 0.6F);
+    public static final RegistryObject<Item> BLUEBERRY_ICE_CREAM_SCOOP = registerFood("blueberry_ice_cream_scoop", 2, 0.6F);
+    public static final RegistryObject<Item> MILK_ICE_CREAM_SCOOP = registerFood("milk_ice_cream_scoop", 2, 0.6F);
+    public static final RegistryObject<Item> MINT_ICE_CREAM_SCOOP = registerFood("mint_ice_cream_scoop", 2, 0.6F);
+    public static final RegistryObject<Item> VANILLA_ICE_CREAM_SCOOP = registerFood("vanilla_ice_cream_scoop", 2, 0.6F);
     public static final RegistryObject<Item> CANDIED_CHERRY = registerPortItem("candied_cherry", () -> new CandiedCherryItem(foodProperties(3, 0.6F, true)));
     public static final RegistryObject<Item> CANDY_CANE = registerFood("candy_cane", 4, 0.6F, true);
     public static final RegistryObject<Item> WHITE_GREEN_CANDY_CANE = registerFood("white_green_candy_cane", 4, 0.6F, true);
     public static final RegistryObject<Item> RED_GREEN_CANDY_CANE = registerFood("red_green_candy_cane", 4, 0.6F, true);
     public static final RegistryObject<Item> CHEWING_GUM = registerFood("chewing_gum", 1, 0.1F);
-    public static final RegistryObject<Item> COTTON_CANDY = registerPortItem("raspberry_cotton_candy", () -> new Item(new Item.Properties().food(new FoodProperties.Builder()
+    // Legacy CandyCraft cotton candy; carries the "raspberry_" prefix because
+    // CandyWorld's own "cotton_candy" item (COTTON_CANDY below) claimed the
+    // original registry id during the mod merge.
+    public static final RegistryObject<Item> RASPBERRY_COTTON_CANDY = registerPortItem("raspberry_cotton_candy", () -> new Item(new Item.Properties().food(new FoodProperties.Builder()
         .nutrition(3)
         .saturationMod(0.6F)
         .alwaysEat()
@@ -272,7 +282,7 @@ public final class CCItems {
 
 
     public static final RegistryObject<Item> BUTTER = registerSweetscapeFood("butter", 1, 1.0F);
-    public static final RegistryObject<Item> CANDY_FLOSS = registerSweetscapeFood("cotton_candy", 4, 0.5F);
+    public static final RegistryObject<Item> COTTON_CANDY = registerSweetscapeFood("cotton_candy", 4, 0.5F);
     public static final RegistryObject<Item> WAFER_STICK = registerSweetscapeFood("wafer_stick", 5, 0.6F);
     public static final RegistryObject<Item> ROCK_CANDY = registerSweetscapeFood("rock_candy", 4, 0.2F);
     public static final RegistryObject<Item> WHITE_HARD_CANDY = registerSweetscapeFood("white_hard_candy", 2, 0.6F);

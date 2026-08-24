@@ -37,6 +37,10 @@ public final class CCDimensions {
         return level.dimension().equals(JELLY_DUNGEON) || level.dimension().equals(SUGUARD_DUNGEON);
     }
 
+    public static boolean isCandyWorld(Level level) {
+        return level.dimension().equals(CANDY_WORLD);
+    }
+
     private CCDimensions() {
     }
 }

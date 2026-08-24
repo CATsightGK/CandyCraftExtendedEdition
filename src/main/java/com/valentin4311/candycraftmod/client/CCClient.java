@@ -31,7 +31,6 @@ import com.valentin4311.candycraftmod.registry.CCFluids;
 import com.valentin4311.candycraftmod.registry.CCItems;
 import com.valentin4311.candycraftmod.registry.CCMenus;
 import com.valentin4311.candycraftmod.registry.CCParticleTypes;
-import com.valentin4311.candycraftmod.registry.CCBlocks;
 import com.valentin4311.candycraftmod.item.CaramelCrossbowItem;
 import com.valentin4311.candycraftmod.item.DynamiteItem;
 import com.valentin4311.candycraftmod.item.JellyWandItem;
@@ -109,8 +108,6 @@ public final class CCClient {
     private static final ResourceLocation VANILLA_PORTAL_OVERLAY = new ResourceLocation("textures/misc/nausea.png");
     private static final ResourceLocation CANDY_WORLD_EFFECTS = new ResourceLocation(CandyCraft.MODID, "candy_world_effects");
     private static final ResourceLocation DUNGEON_EFFECTS = new ResourceLocation(CandyCraft.MODID, "candy_dungeon_effects");
-    private static final int CANDY_WORLD_FOG_FALLBACK = 0xEEAABB;
-    private static final int CANDY_WORLD_SKY_FALLBACK = 0xFDD8D7;
     private static final float CANDY_WORLD_MIN_DAY_FACTOR = 0.3957580F;
     private static int portalOverlayTicks;
     private static boolean dungeonLoadingActive;
@@ -297,7 +294,7 @@ public final class CCClient {
         float scaled = Mth.clamp(progress, 0.0F, 1.0F) * (palette.length - 1);
         int index = Mth.clamp((int)scaled, 0, palette.length - 1);
         int next = Math.min(index + 1, palette.length - 1);
-        return lerpColor(palette[index], palette[next], scaled - index);
+        return CandyColors.lerpColor(palette[index], palette[next], scaled - index);
     }
 
     private static net.minecraft.world.item.ItemStack activeChargeStack(net.minecraft.world.entity.player.Player player) {
@@ -374,12 +371,9 @@ public final class CCClient {
     @SubscribeEvent
     public static void registerBlockColors(RegisterColorHandlersEvent.Block event) {
         BlockColors colors = event.getBlockColors();
-        event.register((state, level, pos, tintIndex) -> {
-            if (tintIndex < 0) {
-                return -1;
-            }
-            return level != null && pos != null ? puddingColor(level, pos) : PuddingBlock.DEFAULT_COLOR;
-        }, CCBlocks.PUDDING.get());
+        event.register((state, level, pos, tintIndex) -> tintIndex != 0 || level == null || pos == null
+                ? PuddingBlock.DEFAULT_COLOR
+                : puddingColor(level, pos), CCBlocks.PUDDING.get());
         event.register((state, level, pos, tintIndex) -> {
             if (tintIndex < 0) {
                 return -1;
@@ -443,7 +437,7 @@ public final class CCClient {
 
     private static int legacyCandyFogColor(Level level, net.minecraft.core.BlockPos pos) {
         if (!level.hasChunkAt(pos)) {
-            return CANDY_WORLD_FOG_FALLBACK;
+            return CandyColors.CANDY_WORLD_FOG_FALLBACK;
         }
 
         String path = biomePath(level.getBiome(pos));
@@ -474,28 +468,18 @@ public final class CCClient {
         }
 
         if (samples == 0) {
-            return CANDY_WORLD_FOG_FALLBACK;
+            return CandyColors.CANDY_WORLD_FOG_FALLBACK;
         }
         return ((red / samples) & 255) << 16 | ((green / samples) & 255) << 8 | (blue / samples) & 255;
     }
 
     private static int legacyCandySkyColor(Level level, net.minecraft.core.BlockPos pos, float partialTick) {
         if (!level.hasChunkAt(pos)) {
-            return CANDY_WORLD_SKY_FALLBACK;
+            return CandyColors.CANDY_WORLD_SKY_FALLBACK;
         }
         return level.getBiome(pos).value().getSkyColor();
     }
 
-    private static int toRgb(Vec3 color) {
-        int red = Mth.clamp((int)Math.round(color.x * 255.0D), 0, 255);
-        int green = Mth.clamp((int)Math.round(color.y * 255.0D), 0, 255);
-        int blue = Mth.clamp((int)Math.round(color.z * 255.0D), 0, 255);
-        return (red << 16) | (green << 8) | blue;
-    }
-
-    private static Vec3 rgbVec(int color) {
-        return new Vec3(((color >> 16) & 255) / 255.0D, ((color >> 8) & 255) / 255.0D, (color & 255) / 255.0D);
-    }
 
     private static String biomePath(net.minecraft.core.Holder<Biome> biome) {
         if (biome == null) {
@@ -530,14 +514,14 @@ public final class CCClient {
         double noise = smoothNoise2D(x * 0.0225D, z * 0.0225D, 0x53494E4B5F435259L);
         if (noise < -0.5D) {
             double blend = smoothstep(-0.85D, -0.5D, noise);
-            return lerpColor(0xB0ECFF, 0xB0D8FF, blend);
+            return CandyColors.lerpColor(0xB0ECFF, 0xB0D8FF, blend);
         }
         if (noise < -0.1D) {
             double blend = smoothstep(-0.5D, -0.1D, noise);
-            return lerpColor(0xB0D8FF, 0xB0B0FF, blend);
+            return CandyColors.lerpColor(0xB0D8FF, 0xB0B0FF, blend);
         }
         double blend = smoothstep(-0.1D, 0.45D, noise);
-        return lerpColor(0xB0B0FF, 0xA376DA, blend);
+        return CandyColors.lerpColor(0xB0B0FF, 0xA376DA, blend);
     }
 
     private static double smoothNoise2D(double x, double z, long salt) {
@@ -580,18 +564,6 @@ public final class CCClient {
         return t * t * (3.0D - 2.0D * t);
     }
 
-    private static int lerpColor(int from, int to, double amount) {
-        int fromRed = (from >> 16) & 255;
-        int fromGreen = (from >> 8) & 255;
-        int fromBlue = from & 255;
-        int toRed = (to >> 16) & 255;
-        int toGreen = (to >> 8) & 255;
-        int toBlue = to & 255;
-        int red = (int)Math.round(fromRed + (toRed - fromRed) * amount);
-        int green = (int)Math.round(fromGreen + (toGreen - fromGreen) * amount);
-        int blue = (int)Math.round(fromBlue + (toBlue - fromBlue) * amount);
-        return (red & 255) << 16 | (green & 255) << 8 | (blue & 255);
-    }
 
     @SubscribeEvent
     public static void registerItemColors(RegisterColorHandlersEvent.Item event) {
@@ -1147,197 +1119,4 @@ public final class CCClient {
             return Math.max(CANDY_WORLD_MIN_DAY_FACTOR, Math.min(1.0F, value));
         }
     }
-
-    private static final class CandyWorldEffects extends DimensionSpecialEffects {
-        private CandyWorldEffects() {
-            super(192.0F, true, SkyType.NORMAL, false, false);
-        }
-
-        @Override
-        public Vec3 getBrightnessDependentFogColor(Vec3 color, float brightness) {
-            Vec3 fallback = rgbVec(CANDY_WORLD_FOG_FALLBACK);
-            return new Vec3(
-                color.x * 0.94D + fallback.x * 0.06D,
-                color.y * 0.94D + fallback.y * 0.06D,
-                color.z * 0.94D + fallback.z * 0.06D
-            );
-        }
-
-        @Override
-        public boolean isFoggyAt(int x, int z) {
-            return false;
-        }
-
-        @Override
-        public boolean renderClouds(ClientLevel level, int ticks, float partialTick, PoseStack poseStack, double camX, double camY, double camZ, Matrix4f projectionMatrix) {
-            return false;
-        }
-
-        @Override
-        public boolean renderSky(ClientLevel level, int ticks, float partialTick, PoseStack poseStack, Camera camera, Matrix4f projectionMatrix, boolean isFoggy, Runnable setupFog) {
-            net.minecraft.core.BlockPos pos = camera.getBlockPosition();
-            if (level.hasChunkAt(pos)) {
-                return false;
-            }
-
-            setupFog.run();
-            float day = candySkyDayFactor(level, partialTick);
-            float night = 1.0F - day;
-            Vec3 sky = rgbVec(lerpColor(0x321326, CANDY_WORLD_SKY_FALLBACK, day));
-            RenderSystem.depthMask(false);
-            RenderSystem.enableBlend();
-            RenderSystem.defaultBlendFunc();
-            RenderSystem.setShader(GameRenderer::getPositionShader);
-            RenderSystem.setShaderColor((float)sky.x, (float)sky.y, (float)sky.z, 1.0F);
-
-            poseStack.pushPose();
-            poseStack.mulPose(Axis.XP.rotationDegrees(90.0F));
-            Matrix4f matrix = poseStack.last().pose();
-            drawSkyQuad(matrix, 128.0F);
-            if (night > 0.25F) {
-                drawCandyStars(matrix, Mth.clamp((night - 0.25F) / 0.75F, 0.0F, 1.0F));
-            }
-            poseStack.popPose();
-
-            RenderSystem.disableBlend();
-            RenderSystem.depthMask(true);
-            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-            return true;
-        }
-
-        @Override
-        public boolean renderSnowAndRain(ClientLevel level, int ticks, float partialTick,
-                net.minecraft.client.renderer.LightTexture lightTexture, double cameraX, double cameraY, double cameraZ) {
-            MilkRainRenderer.render(level, ticks, partialTick, lightTexture, cameraX, cameraY, cameraZ);
-            return true;
-        }
-
-        @Override
-        public boolean tickRain(ClientLevel level, int ticks, Camera camera) {
-            MilkRainRenderer.tick(level, ticks, camera);
-            return true;
-        }
-
-        private static void drawSkyQuad(Matrix4f matrix, float radius) {
-            Tesselator tesselator = Tesselator.getInstance();
-            BufferBuilder buffer = tesselator.getBuilder();
-            buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
-            buffer.vertex(matrix, -radius, -radius, -radius).endVertex();
-            buffer.vertex(matrix, -radius, -radius, radius).endVertex();
-            buffer.vertex(matrix, radius, -radius, radius).endVertex();
-            buffer.vertex(matrix, radius, -radius, -radius).endVertex();
-            tesselator.end();
-        }
-
-        private static void drawCandyStars(Matrix4f matrix, float alpha) {
-            RenderSystem.setShader(GameRenderer::getPositionColorShader);
-            Tesselator tesselator = Tesselator.getInstance();
-            BufferBuilder buffer = tesselator.getBuilder();
-            buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
-            for (int i = 0; i < 360; i++) {
-                int hash = i * 1103515245 + 12345;
-                float x = (((hash >>> 8) & 1023) / 1023.0F - 0.5F) * 240.0F;
-                float z = (((hash >>> 20) & 1023) / 1023.0F - 0.5F) * 240.0F;
-                if (x * x + z * z < 900.0F) {
-                    continue;
-                }
-                float y = -122.0F + ((hash >>> 4) & 15) * 0.12F;
-                float size = 0.22F + ((hash >>> 16) & 3) * 0.08F;
-                int brightness = 210 + ((hash >>> 12) & 45);
-                float red = brightness / 255.0F;
-                float green = (brightness * 0.86F) / 255.0F;
-                float blue = (brightness * 0.96F) / 255.0F;
-                buffer.vertex(matrix, x - size, y, z - size).color(red, green, blue, alpha).endVertex();
-                buffer.vertex(matrix, x - size, y, z + size).color(red, green, blue, alpha).endVertex();
-                buffer.vertex(matrix, x + size, y, z + size).color(red, green, blue, alpha).endVertex();
-                buffer.vertex(matrix, x + size, y, z - size).color(red, green, blue, alpha).endVertex();
-            }
-            tesselator.end();
-        }
-
-        private static float candySkyDayFactor(Level level, float partialTick) {
-            float value = (float)Math.cos(level.getTimeOfDay(partialTick) * ((float)Math.PI * 2.0F)) * 2.0F + 0.5F;
-            return Math.max(0.0F, Math.min(1.0F, value));
-        }
-    }
-
-    private static final class DungeonEffects extends DimensionSpecialEffects {
-        private DungeonEffects() {
-            super(0.0F, false, SkyType.NONE, false, false);
-        }
-
-        @Override
-        public Vec3 getBrightnessDependentFogColor(Vec3 color, float brightness) {
-            return Vec3.ZERO;
-        }
-
-        @Override
-        public boolean isFoggyAt(int x, int z) {
-            return false;
-        }
-
-        @Override
-        public boolean renderClouds(ClientLevel level, int ticks, float partialTick, PoseStack poseStack,
-                double camX, double camY, double camZ, Matrix4f projectionMatrix) {
-            return true;
-        }
-
-        @Override
-        public boolean renderSky(ClientLevel level, int ticks, float partialTick, PoseStack poseStack,
-                Camera camera, Matrix4f projectionMatrix, boolean isFoggy, Runnable setupFog) {
-            setupFog.run();
-            RenderSystem.depthMask(false);
-            RenderSystem.disableBlend();
-            RenderSystem.disableCull();
-            RenderSystem.setShader(GameRenderer::getPositionShader);
-            RenderSystem.setShaderColor(0.0F, 0.0F, 0.0F, 1.0F);
-
-            poseStack.pushPose();
-            drawBlackSkyBox(poseStack.last().pose(), 128.0F);
-            poseStack.popPose();
-
-            RenderSystem.enableCull();
-            RenderSystem.depthMask(true);
-            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-            return true;
-        }
-
-        private static void drawBlackSkyBox(Matrix4f matrix, float radius) {
-            Tesselator tesselator = Tesselator.getInstance();
-            BufferBuilder buffer = tesselator.getBuilder();
-            buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
-
-            buffer.vertex(matrix, -radius, -radius, -radius).endVertex();
-            buffer.vertex(matrix, radius, -radius, -radius).endVertex();
-            buffer.vertex(matrix, radius, radius, -radius).endVertex();
-            buffer.vertex(matrix, -radius, radius, -radius).endVertex();
-
-            buffer.vertex(matrix, radius, -radius, radius).endVertex();
-            buffer.vertex(matrix, -radius, -radius, radius).endVertex();
-            buffer.vertex(matrix, -radius, radius, radius).endVertex();
-            buffer.vertex(matrix, radius, radius, radius).endVertex();
-
-            buffer.vertex(matrix, -radius, -radius, radius).endVertex();
-            buffer.vertex(matrix, -radius, -radius, -radius).endVertex();
-            buffer.vertex(matrix, -radius, radius, -radius).endVertex();
-            buffer.vertex(matrix, -radius, radius, radius).endVertex();
-
-            buffer.vertex(matrix, radius, -radius, -radius).endVertex();
-            buffer.vertex(matrix, radius, -radius, radius).endVertex();
-            buffer.vertex(matrix, radius, radius, radius).endVertex();
-            buffer.vertex(matrix, radius, radius, -radius).endVertex();
-
-            buffer.vertex(matrix, -radius, radius, -radius).endVertex();
-            buffer.vertex(matrix, radius, radius, -radius).endVertex();
-            buffer.vertex(matrix, radius, radius, radius).endVertex();
-            buffer.vertex(matrix, -radius, radius, radius).endVertex();
-
-            buffer.vertex(matrix, -radius, -radius, radius).endVertex();
-            buffer.vertex(matrix, radius, -radius, radius).endVertex();
-            buffer.vertex(matrix, radius, -radius, -radius).endVertex();
-            buffer.vertex(matrix, -radius, -radius, -radius).endVertex();
-            tesselator.end();
-        }
-    }
 }
-

@@ -1,0 +1,6 @@
+{
+    "parent": "item/generated",
+    "textures": {
+        "layer0": "candycraftmod:item/blueberry_ice_cream_scoop"
+    }
+}

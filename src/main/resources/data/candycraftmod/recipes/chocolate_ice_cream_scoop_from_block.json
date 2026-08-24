@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "candycraftmod:chocolate_ice_cream"
+    }
+  ],
+  "result": {
+    "item": "candycraftmod:chocolate_ice_cream_scoop",
+    "count": 1
+  }
+}

@@ -7,8 +7,8 @@
     "###"
   ],
   "key": {
-    "#": { "item": "minecraft:glass" },
-    "H": { "item": "candycraftmod:honeycomb" }
+    "#": { "item": "candycraftmod:sugar_glass" },
+    "H": { "item": "minecraft:honeycomb" }
   },
   "result": {
     "item": "candycraftmod:honey_glass",

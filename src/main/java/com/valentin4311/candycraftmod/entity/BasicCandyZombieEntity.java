@@ -73,8 +73,6 @@ public class BasicCandyZombieEntity extends PathfinderMob implements PlayerRidea
     private static final int BOSS_SUGUARD_BOW_DRAW_DURATION = 14;
     private static final double BOSS_SUGUARD_CLOSE_BARRAGE_RANGE_SQR = 9.0D;
     private static final int BOSS_SUGUARD_CLOSE_BARRAGE_VOLLEYS = 5;
-    private static final int DORMANT_BOSS_HEAL_INTERVAL_TICKS = 20;
-    private static final float DORMANT_BOSS_HEAL_AMOUNT = 5.0F;
     private static final double DRAGON_MIN_ASCENT_SPEED = 0.16D;
     private static final double DRAGON_MAX_ASCENT_SPEED = 0.42D;
     private static final String TAG_ANGRY = "Angry";
@@ -628,13 +626,7 @@ public class BasicCandyZombieEntity extends PathfinderMob implements PlayerRidea
 
     @Nullable
     private static LivingEntity getLivingAttacker(DamageSource source) {
-        if (source.getEntity() instanceof LivingEntity attacker) {
-            return attacker;
-        }
-        if (source.getDirectEntity() instanceof LivingEntity attacker) {
-            return attacker;
-        }
-        return null;
+        return CandyMobHelper.getLivingAttacker(source);
     }
 
     private void alertCaramelBeeWitnesses(@Nullable Player attacker) {
@@ -1384,9 +1376,7 @@ public class BasicCandyZombieEntity extends PathfinderMob implements PlayerRidea
         if (getBossSuguardStat() != 0) {
             setBossSuguardStat(0);
         }
-        if (tickCount % DORMANT_BOSS_HEAL_INTERVAL_TICKS == 0) {
-            heal(DORMANT_BOSS_HEAL_AMOUNT);
-        }
+        CandyMobHelper.tickDormantBossRegeneration(this);
         if (getTarget() != null) {
             setTarget(null);
         }
@@ -1418,17 +1408,11 @@ public class BasicCandyZombieEntity extends PathfinderMob implements PlayerRidea
     }
 
     private void setMovementSpeedBase(double value) {
-        AttributeInstance speed = getAttribute(Attributes.MOVEMENT_SPEED);
-        if (speed != null && speed.getBaseValue() != value) {
-            speed.setBaseValue(value);
-        }
+        CandyMobHelper.setMovementSpeedBase(this, value);
     }
 
     private void stopHorizontalMovement() {
-        Vec3 movement = getDeltaMovement();
-        if (movement.x != 0.0D || movement.z != 0.0D) {
-            setDeltaMovement(0.0D, movement.y, 0.0D);
-        }
+        CandyMobHelper.stopHorizontalMovement(this, false);
     }
 
     public int getBossSuguardStat() {

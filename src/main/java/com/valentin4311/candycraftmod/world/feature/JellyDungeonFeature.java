@@ -2,6 +2,7 @@ package com.valentin4311.candycraftmod.world.feature;
 
 import com.mojang.serialization.Codec;
 import com.valentin4311.candycraftmod.CandyCraft;
+import com.valentin4311.candycraftmod.world.DungeonResetManager;
 import com.valentin4311.candycraftmod.block.DungeonTeleporterBlock;
 import com.valentin4311.candycraftmod.block.DungeonTeleporterBlock.DungeonKind;
 import com.valentin4311.candycraftmod.block.DungeonTeleporterBlock.PortalRole;
@@ -59,7 +60,12 @@ import net.minecraft.world.phys.Vec3;
 public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
     private static final ResourceLocation LOOT_TABLE = new ResourceLocation(CandyCraft.MODID, "chests/jelly_dungeon");
     private static final int LEGACY_WATER_ROOM_MINT_JELLY_COUNT = 87;
-    private int cursorZ;
+    public static final int CLEAR_MIN_X = -36;
+    public static final int CLEAR_MAX_X = 36;
+    public static final int CLEAR_MIN_Y = -7;
+    public static final int CLEAR_MAX_Y = 56;
+    public static final int CLEAR_MIN_Z = -430;
+    public static final int CLEAR_MAX_Z = 24;
     private int posX;
     private int incrementer;
 
@@ -67,25 +73,33 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
         super(codec);
     }
 
-    public static void generateInDungeonLevel(ServerLevel level, BlockPos origin) {
-        RandomSource random = level.getRandom();
-        loadDungeonChunks(level, origin, -36, 36, -430, 24);
-        purgeDungeonItemEntities(level, origin, -36, 36, -7, 56, -430, 24);
-        clearArea(level, origin, -36, 36, -7, 56, -430, 24);
-        new JellyDungeonFeature(NoneFeatureConfiguration.CODEC).legacyDungeon(level, random, origin);
-        purgeDungeonItemEntities(level, origin, -36, 36, -7, 56, -430, 24);
+    /**
+     * Queues the instance reset (entity purge + region clear + rebuild) on the
+     * tick-budgeted {@link DungeonResetManager} instead of running it inline,
+     * which used to freeze the server for seconds. Returns false when a prepare
+     * for this instance is already queued or running.
+     */
+    public static boolean beginPrepare(ServerLevel level, BlockPos origin) {
+        purgeDungeonEntities(level, origin);
+        return DungeonResetManager.beginPrepare(level, origin,
+            CLEAR_MIN_X, CLEAR_MAX_X, CLEAR_MIN_Y, CLEAR_MAX_Y, CLEAR_MIN_Z, CLEAR_MAX_Z,
+            () -> new JellyDungeonFeature(NoneFeatureConfiguration.CODEC).legacyDungeon(level, level.getRandom(), origin));
     }
 
-    public static void clearDungeonInstance(ServerLevel level, BlockPos origin) {
-        loadDungeonChunks(level, origin, -36, 36, -430, 24);
+    public static void purgeDungeonEntities(ServerLevel level, BlockPos origin) {
         AABB bounds = new AABB(
-            origin.getX() - 36, origin.getY() - 7, origin.getZ() - 430,
-            origin.getX() + 37, origin.getY() + 57, origin.getZ() + 25
+            origin.getX() + CLEAR_MIN_X, origin.getY() + CLEAR_MIN_Y, origin.getZ() + CLEAR_MIN_Z,
+            origin.getX() + CLEAR_MAX_X + 1, origin.getY() + CLEAR_MAX_Y + 1, origin.getZ() + CLEAR_MAX_Z + 1
         );
         for (Entity entity : level.getEntitiesOfClass(Entity.class, bounds, entity -> !(entity instanceof Player))) {
             entity.discard();
         }
-        clearArea(level, origin, -36, 36, -7, 56, -430, 24);
+    }
+
+    public static void clearDungeonInstance(ServerLevel level, BlockPos origin) {
+        purgeDungeonEntities(level, origin);
+        DungeonResetManager.enqueueClear(level, origin,
+            CLEAR_MIN_X, CLEAR_MAX_X, CLEAR_MIN_Y, CLEAR_MAX_Y, CLEAR_MIN_Z, CLEAR_MAX_Z);
     }
 
     public static void generateDebugShowcase(ServerLevel level, BlockPos origin) {
@@ -141,7 +155,11 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
             return false;
         }
 
-        legacyDungeon(level, random, origin);
+        // The registered feature is a shared singleton placed from parallel
+        // world-gen threads, while posX/incrementer act as per-dungeon cursors.
+        // Build every dungeon against a fresh instance so concurrent placements
+        // never share mutable cursor state.
+        new JellyDungeonFeature(NoneFeatureConfiguration.CODEC).legacyDungeon(level, random, origin);
         return true;
     }
 
@@ -765,64 +783,6 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
         return true;
     }
 
-    private void compactDungeon(WorldGenLevel level, RandomSource random, BlockPos origin) {
-        int x = origin.getX();
-        int y = origin.getY();
-        int z = origin.getZ();
-        boxRoom(level, random, x, y, z, 6, 6, 6);
-        boxRoom(level, random, x, y, z - 13, 5, 8, 5);
-        boxRoom(level, random, x, y - 2, z + 13, 6, 6, 5);
-        boxRoom(level, random, x - 13, y, z, 5, 7, 5);
-        boxRoom(level, random, x + 13, y, z, 5, 7, 5);
-        boxRoom(level, random, x - 13, y + 4, z - 13, 5, 6, 5);
-        boxRoom(level, random, x + 13, y + 4, z - 13, 5, 6, 5);
-        boxRoom(level, random, x - 13, y - 3, z + 13, 5, 6, 5);
-        boxRoom(level, random, x + 13, y - 3, z + 13, 5, 6, 5);
-        connector(level, random, x, y, z, 0, -1, 7);
-        connector(level, random, x, y, z, 0, 1, 7);
-        connector(level, random, x, y, z, -1, 0, 7);
-        connector(level, random, x, y, z, 1, 0, 7);
-        diagonalConnector(level, random, x, y + 2, z, -1, -1);
-        diagonalConnector(level, random, x, y + 2, z, 1, -1);
-        diagonalConnector(level, random, x, y - 2, z, -1, 1);
-        diagonalConnector(level, random, x, y - 2, z, 1, 1);
-        lockedDoor(level, random, new BlockPos(x - 7, y + 2, z), false, CCBlocks.JELLY_SENTRY_KEY_HOLE.get().defaultBlockState());
-        lockedDoor(level, random, new BlockPos(x + 7, y + 2, z), false, CCBlocks.JELLY_BOSS_KEY_HOLE.get().defaultBlockState());
-        lockedDoor(level, random, new BlockPos(x, y + 2, z - 7), true, CCBlocks.JELLY_SENTRY_KEY_HOLE.get().defaultBlockState());
-
-        placeJellyPads(level, x, y + 1, z - 2, 4, CCBlocks.TRAMPOJELLY.get().defaultBlockState());
-        set(level, new BlockPos(x - 3, y + 1, z - 3), CCBlocks.CARAMEL_BLOCK.get().defaultBlockState());
-        set(level, new BlockPos(x - 3, y + 2, z - 3), DungeonTeleporterBlock.state(DungeonKind.JELLY, PortalRole.ENTRY));
-        keyChest(level, new BlockPos(x + 3, y + 1, z - 3), CCItems.JELLY_SENTRY_KEY.get());
-
-        for (int i = 0; i < 5; i++) {
-            set(level, new BlockPos(x - 2 + i, y + 2 + i, z - 10 - i), randomJelly(random));
-        }
-        for (int dx = -3; dx <= 3; dx++) {
-            for (int dz = -3; dz <= 3; dz++) {
-                if (Math.abs(dx) < 3 && Math.abs(dz) < 3) {
-                    set(level, new BlockPos(x + dx, y + 1, z + 13 + dz), CCBlocks.GRENADINE.get().defaultBlockState());
-                }
-            }
-        }
-        setSpawner(level, new BlockPos(x - 13, y + 1, z), CCEntityTypes.YELLOW_JELLY.get());
-        set(level, new BlockPos(x - 13, y + 1, z + 3), CCBlocks.JELLY_SENTRY_KEY_HOLE.get().defaultBlockState());
-        setSpawner(level, new BlockPos(x + 13, y + 1, z), CCEntityTypes.RED_JELLY.get());
-        set(level, new BlockPos(x + 13, y + 1, z - 3), CCBlocks.JELLY_BOSS_KEY_HOLE.get().defaultBlockState());
-        setSpawner(level, new BlockPos(x - 13, y + 5, z - 13), CCEntityTypes.TORNADO_JELLY.get());
-        setSpawner(level, new BlockPos(x + 13, y + 5, z - 13), CCEntityTypes.YELLOW_JELLY.get());
-        placeJellyPads(level, x - 13, y + 5, z - 13, 4, CCBlocks.PURPLE_TRAMPOJELLY.get().defaultBlockState());
-        placeJellyPads(level, x + 13, y + 5, z - 13, 4, CCBlocks.RED_TRAMPOJELLY.get().defaultBlockState());
-        set(level, new BlockPos(x - 13, y - 2, z + 13), CCBlocks.JELLY_SHOCK_ABSORBER.get().defaultBlockState());
-        set(level, new BlockPos(x + 13, y - 2, z + 13), CCBlocks.JELLY_BOSS_KEY_HOLE.get().defaultBlockState());
-
-        BlockPos chestPos = new BlockPos(x + 13, y + 1, z + 3);
-        keyChest(level, chestPos, CCItems.JELLY_BOSS_KEY.get());
-        setSpawner(level, new BlockPos(x + 13, y - 2, z + 13), CCEntityTypes.KING_SLIME.get());
-        BlockPos crownChestPos = new BlockPos(x + 13, y - 2, z + 15);
-        lootChest(level, random, crownChestPos);
-    }
-
     private void legacyEntranceDoor189(WorldGenLevel level, int x, int y, int z) {
         placeLegacyDoorRedstone189(level, x, y, z);
         set(level, x + 7, y + 2, z, CCBlocks.LICORICE_BRICK.get().defaultBlockState());
@@ -922,17 +882,6 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
     private static void placeOpposingPistonRepeaters(WorldGenLevel level, int westDoorX, int eastDoorX, int y, int z) {
         set(level, westDoorX, y, z, repeater(Direction.EAST));
         set(level, eastDoorX, y, z, repeater(Direction.WEST));
-    }
-
-    private static void ironDoor(WorldGenLevel level, int x, int y, int z, Direction facing, boolean rightHinge) {
-        BlockState lower = Blocks.IRON_DOOR.defaultBlockState()
-            .setValue(DoorBlock.FACING, facing)
-            .setValue(DoorBlock.HALF, DoubleBlockHalf.LOWER)
-            .setValue(DoorBlock.HINGE, rightHinge ? DoorHingeSide.RIGHT : DoorHingeSide.LEFT)
-            .setValue(DoorBlock.OPEN, false);
-        BlockState upper = lower.setValue(DoorBlock.HALF, DoubleBlockHalf.UPPER);
-        set(level, x, y, z, lower);
-        set(level, x, y + 1, z, upper);
     }
 
     private static void legacyIronDoor(WorldGenLevel level, int x, int y, int z, int lowerMeta, int upperMeta) {
@@ -1146,208 +1095,11 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
         lootTable.fill(container, params, random.nextLong());
     }
 
-    private void lockedDoor(WorldGenLevel level, RandomSource random, BlockPos center, boolean alongX, BlockState lock) {
-        for (int horizontal = -2; horizontal <= 2; horizontal++) {
-            for (int dy = -1; dy <= 2; dy++) {
-                BlockPos pos = alongX ? center.offset(horizontal, dy, 0) : center.offset(0, dy, horizontal);
-                set(level, pos, jawBreaker(random));
-            }
-        }
-        set(level, center, lock);
-        set(level, center.above(), lock);
-    }
-
-    private void boxRoom(WorldGenLevel level, RandomSource random, int centerX, int y, int centerZ, int radiusX, int height, int radiusZ) {
-        for (int dx = -radiusX; dx <= radiusX; dx++) {
-            for (int dy = 0; dy <= height; dy++) {
-                for (int dz = -radiusZ; dz <= radiusZ; dz++) {
-                    boolean wall = dx == -radiusX || dx == radiusX || dy == 0 || dy == height || dz == -radiusZ || dz == radiusZ;
-                    set(level, new BlockPos(centerX + dx, y + dy, centerZ + dz), wall ? jawBreaker(random) : Blocks.AIR.defaultBlockState());
-                }
-            }
-        }
-        set(level, new BlockPos(centerX - radiusX, y + 3, centerZ), CCBlocks.JAW_BREAKER_LIGHT.get().defaultBlockState());
-        set(level, new BlockPos(centerX + radiusX, y + 3, centerZ), CCBlocks.JAW_BREAKER_LIGHT.get().defaultBlockState());
-        set(level, new BlockPos(centerX, y + 3, centerZ - radiusZ), CCBlocks.JAW_BREAKER_LIGHT.get().defaultBlockState());
-        set(level, new BlockPos(centerX, y + 3, centerZ + radiusZ), CCBlocks.JAW_BREAKER_LIGHT.get().defaultBlockState());
-    }
-
-    private void connector(WorldGenLevel level, RandomSource random, int centerX, int y, int centerZ, int stepX, int stepZ, int length) {
-        for (int i = 0; i <= length; i++) {
-            int cx = centerX + stepX * i;
-            int cz = centerZ + stepZ * i;
-            for (int ox = -1; ox <= 1; ox++) {
-                for (int oz = -1; oz <= 1; oz++) {
-                    for (int dy = 1; dy <= 3; dy++) {
-                        set(level, new BlockPos(cx + ox, y + dy, cz + oz), Blocks.AIR.defaultBlockState());
-                    }
-                }
-            }
-            if (i > 0 && i < length && i % 3 == 0) {
-                set(level, new BlockPos(cx, y + 1, cz), randomJelly(random));
-            }
-        }
-    }
-
-    private void diagonalConnector(WorldGenLevel level, RandomSource random, int centerX, int y, int centerZ, int stepX, int stepZ) {
-        for (int i = 2; i <= 12; i++) {
-            int cx = centerX + stepX * i;
-            int cz = centerZ + stepZ * i;
-            for (int ox = -1; ox <= 1; ox++) {
-                for (int oz = -1; oz <= 1; oz++) {
-                    for (int dy = 1; dy <= 3; dy++) {
-                        set(level, new BlockPos(cx + ox, y + dy, cz + oz), Blocks.AIR.defaultBlockState());
-                    }
-                }
-            }
-            if (i % 4 == 0) {
-                set(level, new BlockPos(cx, y + 1, cz), randomJelly(random));
-            }
-        }
-    }
-
-    private void placeModule(WorldGenLevel level, RandomSource random, Module module, int x, int y) {
-        switch (module) {
-            case JUMP -> jumpRoom(level, random, x, y - 3);
-            case WATER -> waterRoom(level, random, x, y);
-            case MOB -> mobRoom(level, random, x, y);
-        }
-    }
-
-    private void spawnRoom(WorldGenLevel level, RandomSource random, int x, int y, int z) {
-        room(level, random, x, y, z, 6, 7, 11);
-        placeJellyPads(level, x, y + 1, z - 4, 5, CCBlocks.TRAMPOJELLY.get().defaultBlockState());
-        set(level, new BlockPos(x - 4, y + 1, z - 2), CCBlocks.CARAMEL_BLOCK.get().defaultBlockState());
-        set(level, new BlockPos(x - 4, y + 2, z - 2), DungeonTeleporterBlock.state(DungeonKind.JELLY, PortalRole.ENTRY));
-        cursorZ -= 11;
-    }
-
-    private void corridor(WorldGenLevel level, RandomSource random, int x, int y) {
-        room(level, random, x, y, cursorZ, 3, 5, 10);
-        for (int z = cursorZ - 1; z >= cursorZ - 9; z -= 2) {
-            set(level, new BlockPos(x - 3, y + 2, z), randomJelly(random));
-            set(level, new BlockPos(x + 3, y + 2, z), randomJelly(random));
-        }
-        cursorZ -= 10;
-    }
-
-    private void jumpRoom(WorldGenLevel level, RandomSource random, int x, int y) {
-        int z = cursorZ;
-        room(level, random, x, y, z, 5, 34, 42);
-        for (int i = 0; i < 9; i++) {
-            int stepZ = z - 4 - i * 4;
-            int stepY = y + 2 + i * 3;
-            set(level, new BlockPos(x + random.nextInt(5) - 2, stepY, stepZ), randomJelly(random));
-        }
-        set(level, new BlockPos(x, y + 31, z - 38), CCBlocks.PURPLE_TRAMPOJELLY.get().defaultBlockState());
-        cursorZ -= 42;
-    }
-
-    private void waterRoom(WorldGenLevel level, RandomSource random, int x, int y) {
-        int z = cursorZ;
-        room(level, random, x, y, z, 7, 8, 18);
-        for (int dx = -5; dx <= 5; dx++) {
-            for (int dz = -14; dz <= -4; dz++) {
-                if (Math.abs(dx) == 5 || dz == -14 || dz == -4) {
-                    continue;
-                }
-                set(level, new BlockPos(x + dx, y + 1, z + dz), CCBlocks.GRENADINE.get().defaultBlockState());
-                set(level, new BlockPos(x + dx, y + 2, z + dz), CCBlocks.GRENADINE.get().defaultBlockState());
-            }
-        }
-        set(level, new BlockPos(x, y + 3, z - 9), CCBlocks.JELLY_SHOCK_ABSORBER.get().defaultBlockState());
-        cursorZ -= 18;
-    }
-
-    private void mobRoom(WorldGenLevel level, RandomSource random, int x, int y) {
-        int z = cursorZ;
-        room(level, random, x, y, z, 8, 8, 18);
-        setSpawner(level, new BlockPos(x - 3, y + 1, z - 7), CCEntityTypes.YELLOW_JELLY.get());
-        setSpawner(level, new BlockPos(x + 3, y + 1, z - 10), CCEntityTypes.RED_JELLY.get());
-        set(level, new BlockPos(x, y + 1, z - 15), CCBlocks.JELLY_SENTRY_KEY_HOLE.get().defaultBlockState());
-        placeJellyPads(level, x, y + 1, z - 8, 6, CCBlocks.RED_TRAMPOJELLY.get().defaultBlockState());
-        cursorZ -= 18;
-    }
-
-    private void miniBossRoom(WorldGenLevel level, RandomSource random, int x, int y) {
-        int z = cursorZ;
-        room(level, random, x, y, z, 9, 9, 22);
-        setSpawner(level, new BlockPos(x, y + 1, z - 11), CCEntityTypes.PEZ_JELLY.get());
-        set(level, new BlockPos(x - 6, y + 1, z - 11), CCBlocks.JELLY_SENTRY_KEY_HOLE.get().defaultBlockState());
-        set(level, new BlockPos(x + 6, y + 1, z - 11), CCBlocks.JELLY_SENTRY_KEY_HOLE.get().defaultBlockState());
-        cursorZ -= 22;
-    }
-
-    private void bossRoom(WorldGenLevel level, RandomSource random, int x, int y) {
-        int z = cursorZ;
-        room(level, random, x, y, z, 11, 12, 28);
-        setSpawner(level, new BlockPos(x, y + 1, z - 14), CCEntityTypes.KING_SLIME.get());
-        set(level, new BlockPos(x, y + 1, z - 25), CCBlocks.JELLY_BOSS_KEY_HOLE.get().defaultBlockState());
-        for (int dx = -7; dx <= 7; dx += 7) {
-            for (int dz = -20; dz <= -8; dz += 6) {
-                set(level, new BlockPos(x + dx, y + 1, z + dz), CCBlocks.PURPLE_TRAMPOJELLY.get().defaultBlockState());
-            }
-        }
-        cursorZ -= 28;
-    }
-
-    private void rewardRoom(WorldGenLevel level, RandomSource random, int x, int y) {
-        int z = cursorZ;
-        room(level, random, x, y, z, 6, 6, 18);
-        BlockPos chestPos = new BlockPos(x + 1, y + 1, z - 10);
-        finalRewardChest(level, random, chestPos);
-        set(level, new BlockPos(x + 2, y + 1, z - 13), DungeonTeleporterBlock.state(DungeonKind.JELLY, PortalRole.END));
-        cursorZ -= 18;
-    }
-
-    private void room(WorldGenLevel level, RandomSource random, int centerX, int y, int startZ, int radiusX, int height, int length) {
-        for (int dx = -radiusX; dx <= radiusX; dx++) {
-            for (int dy = 0; dy <= height; dy++) {
-                for (int dz = 0; dz >= -length; dz--) {
-                    boolean wall = dx == -radiusX || dx == radiusX || dy == 0 || dy == height || dz == 0 || dz == -length;
-                    BlockPos pos = new BlockPos(centerX + dx, y + dy, startZ + dz);
-                    if (wall) {
-                        set(level, pos, jawBreaker(random));
-                    } else {
-                        set(level, pos, Blocks.AIR.defaultBlockState());
-                    }
-                }
-            }
-        }
-        for (int dz = -2; dz >= -length + 2; dz -= 5) {
-            set(level, new BlockPos(centerX - radiusX, y + 3, startZ + dz), CCBlocks.JAW_BREAKER_LIGHT.get().defaultBlockState());
-            set(level, new BlockPos(centerX + radiusX, y + 3, startZ + dz), CCBlocks.JAW_BREAKER_LIGHT.get().defaultBlockState());
-        }
-        for (int dx = -1; dx <= 1; dx++) {
-            set(level, new BlockPos(centerX + dx, y + 1, startZ), Blocks.AIR.defaultBlockState());
-            set(level, new BlockPos(centerX + dx, y + 2, startZ), Blocks.AIR.defaultBlockState());
-            set(level, new BlockPos(centerX + dx, y + 1, startZ - length), Blocks.AIR.defaultBlockState());
-            set(level, new BlockPos(centerX + dx, y + 2, startZ - length), Blocks.AIR.defaultBlockState());
-        }
-    }
-
-    private void placeJellyPads(WorldGenLevel level, int x, int y, int z, int count, BlockState state) {
-        for (int i = 0; i < count; i++) {
-            int dx = (i % 3 - 1) * 2;
-            int dz = -i * 2;
-            set(level, new BlockPos(x + dx, y, z + dz), state);
-        }
-    }
 
     private static BlockState jawBreaker(RandomSource random) {
         return random.nextInt(10) == 0
             ? CCBlocks.JAW_BREAKER_LIGHT.get().defaultBlockState()
             : CCBlocks.JAW_BREAKER_BLOCK.get().defaultBlockState();
-    }
-
-    private static BlockState randomJelly(RandomSource random) {
-        return switch (random.nextInt(5)) {
-            case 0 -> CCBlocks.RED_TRAMPOJELLY.get().defaultBlockState();
-            case 1 -> CCBlocks.PURPLE_TRAMPOJELLY.get().defaultBlockState();
-            case 2 -> CCBlocks.YELLOW_TRAMPOJELLY.get().defaultBlockState();
-            case 3 -> CCBlocks.JELLY_SHOCK_ABSORBER.get().defaultBlockState();
-            default -> CCBlocks.TRAMPOJELLY.get().defaultBlockState();
-        };
     }
 
     private static void setSpawner(WorldGenLevel level, BlockPos pos, EntityType<?> entityType) {
@@ -1402,20 +1154,6 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
         level.setBlock(pos, state, 2);
     }
 
-    private static boolean updateNeighbors(BlockState state) {
-        net.minecraft.world.level.block.Block block = state.getBlock();
-        return block == Blocks.REDSTONE_WIRE
-            || block == Blocks.REDSTONE_TORCH
-            || block == Blocks.REDSTONE_WALL_TORCH
-            || block == Blocks.REPEATER
-            || block == Blocks.REDSTONE_LAMP
-            || block == Blocks.STICKY_PISTON
-            || block == Blocks.PISTON_HEAD
-            || block == Blocks.STONE_PRESSURE_PLATE
-            || block == Blocks.IRON_DOOR
-            || block == Blocks.LEVER;
-    }
-
     private static void clearArea(ServerLevel level, BlockPos origin, int minX, int maxX, int minY, int maxY, int minZ, int maxZ) {
         for (int x = minX; x <= maxX; x++) {
             for (int z = minZ; z <= maxZ; z++) {
@@ -1426,31 +1164,4 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
         }
     }
 
-    private static void purgeDungeonItemEntities(ServerLevel level, BlockPos origin, int minX, int maxX, int minY, int maxY, int minZ, int maxZ) {
-        AABB bounds = new AABB(
-            origin.getX() + minX, origin.getY() + minY, origin.getZ() + minZ,
-            origin.getX() + maxX + 1, origin.getY() + maxY + 1, origin.getZ() + maxZ + 1
-        );
-        for (ItemEntity item : level.getEntitiesOfClass(ItemEntity.class, bounds)) {
-            item.discard();
-        }
-    }
-
-    private static void loadDungeonChunks(ServerLevel level, BlockPos origin, int minX, int maxX, int minZ, int maxZ) {
-        int minChunkX = Math.floorDiv(origin.getX() + minX, 16);
-        int maxChunkX = Math.floorDiv(origin.getX() + maxX, 16);
-        int minChunkZ = Math.floorDiv(origin.getZ() + minZ, 16);
-        int maxChunkZ = Math.floorDiv(origin.getZ() + maxZ, 16);
-        for (int cx = minChunkX; cx <= maxChunkX; cx++) {
-            for (int cz = minChunkZ; cz <= maxChunkZ; cz++) {
-                level.getChunk(cx, cz);
-            }
-        }
-    }
-
-    private enum Module {
-        JUMP,
-        WATER,
-        MOB
-    }
 }

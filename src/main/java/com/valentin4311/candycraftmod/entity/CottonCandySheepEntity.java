@@ -72,13 +72,13 @@ public class CottonCandySheepEntity extends Sheep {
             setSheared(true);
             if (!level().isClientSide) {
                 if (stack.getCount() == 1 && !player.getAbilities().instabuild) {
-                    player.setItemInHand(hand, new ItemStack(CCItems.CANDY_FLOSS.get()));
+                    player.setItemInHand(hand, new ItemStack(CCItems.COTTON_CANDY.get()));
                 } else {
                     if (!player.getAbilities().instabuild) {
                         stack.shrink(1);
                     }
-                    if (!player.addItem(new ItemStack(CCItems.CANDY_FLOSS.get()))) {
-                        spawnAtLocation(CCItems.CANDY_FLOSS.get());
+                    if (!player.addItem(new ItemStack(CCItems.COTTON_CANDY.get()))) {
+                        spawnAtLocation(CCItems.COTTON_CANDY.get());
                     }
                 }
             }
@@ -136,7 +136,7 @@ public class CottonCandySheepEntity extends Sheep {
     protected void dropCustomDeathLoot(DamageSource source, int looting, boolean recentlyHit) {
         if (!isSheared()) {
             int count = 1 + random.nextInt(2) + random.nextInt(looting + 1);
-            spawnAtLocation(new ItemStack(CCItems.CANDY_FLOSS.get(), count));
+            spawnAtLocation(new ItemStack(CCItems.COTTON_CANDY.get(), count));
         }
     }
 

@@ -27,7 +27,7 @@ public class CottonCandyTreeFeature extends Feature<NoneFeatureConfiguration> {
 
     public static boolean generate(LevelAccessor level, RandomSource random, BlockPos base) {
         BlockState below = level.getBlockState(base.below());
-        if (!below.is(CCBlocks.CANDY_GRASS_BLOCK.get()) && !below.is(CCBlocks.MILK_BROWNIE_BLOCK.get())) {
+        if (!below.is(CCBlocks.CANDY_GRASS_BLOCK.get()) && !below.is(CCBlocks.MILK_BROWNIE_BLOCK.get()) && !below.is(CCBlocks.PUDDING.get())) {
             return false;
         }
 

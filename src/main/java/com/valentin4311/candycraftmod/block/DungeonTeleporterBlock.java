@@ -3,6 +3,7 @@ package com.valentin4311.candycraftmod.block;
 import com.valentin4311.candycraftmod.item.JellyDungeonKeyItem;
 import com.valentin4311.candycraftmod.world.CCDimensions;
 import com.valentin4311.candycraftmod.world.DungeonProgressData;
+import com.valentin4311.candycraftmod.world.DungeonResetManager;
 import com.valentin4311.candycraftmod.world.DungeonProgressData.Instance;
 import com.valentin4311.candycraftmod.world.DungeonProgressData.LocatedPortal;
 import com.valentin4311.candycraftmod.world.DungeonProgressData.PortalRecord;
@@ -230,12 +231,29 @@ public class DungeonTeleporterBlock extends Block {
         playerData.putString(CURRENT_KIND, kind.getSerializedName());
         playerData.putLong(CURRENT_INSTANCE, instance.id());
 
+        source.playSound(null, player.blockPosition(), SoundEvents.PORTAL_TRAVEL, SoundSource.PLAYERS, 0.8F, 1.0F);
+
         if (!instance.generated()) {
-            prepareDungeon(target, kind, instance.origin());
-            data.markGenerated(owner, kind, instance.id());
+            BlockPos origin = instance.origin();
+            boolean started = kind == DungeonKind.JELLY
+                ? JellyDungeonFeature.beginPrepare(target, origin)
+                : SuguardDungeonFeature.beginPrepare(target, origin);
+            if (started) {
+                // Marked on completion so a crash mid-rebuild leaves the
+                // instance ungenerated and self-heals on the next entry.
+                DungeonResetManager.onPrepared(target, origin,
+                    () -> data.markGenerated(owner, kind, instance.id()));
+            }
+            // Instance content is being rebuilt across ticks; hold the teleport
+            // until the queued clear+build pipeline reports completion.
+            DungeonResetManager.onPrepared(target, origin, () -> {
+                if (player.server.getPlayerList().getPlayer(player.getUUID()) == player) {
+                    teleportToDungeonEntry(player, target, kind, origin);
+                }
+            });
+            return;
         }
 
-        source.playSound(null, player.blockPosition(), SoundEvents.PORTAL_TRAVEL, SoundSource.PLAYERS, 0.8F, 1.0F);
         teleportToDungeonEntry(player, target, kind, instance.origin());
     }
 
@@ -338,21 +356,6 @@ public class DungeonTeleporterBlock extends Block {
         data.remove(CURRENT_OWNER);
         data.remove(CURRENT_KIND);
         data.remove(CURRENT_INSTANCE);
-    }
-
-    private static void prepareDungeon(ServerLevel level, DungeonKind kind, BlockPos origin) {
-        if (kind == DungeonKind.JELLY) {
-            JellyDungeonFeature.generateInDungeonLevel(level, origin);
-            return;
-        }
-        int centerChunkX = origin.getX() >> 4;
-        int centerChunkZ = origin.getZ() >> 4;
-        for (int cx = centerChunkX - 8; cx <= centerChunkX + 4; cx++) {
-            for (int cz = centerChunkZ - 10; cz <= centerChunkZ + 10; cz++) {
-                level.getChunk(cx, cz);
-            }
-        }
-        SuguardDungeonFeature.generateInDungeonLevel(level, origin);
     }
 
     private static BlockPos entryFor(DungeonKind kind, BlockPos origin) {

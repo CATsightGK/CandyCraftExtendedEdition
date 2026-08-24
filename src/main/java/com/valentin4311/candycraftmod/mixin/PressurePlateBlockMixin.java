@@ -19,18 +19,26 @@ public abstract class PressurePlateBlockMixin {
         0.9375D, 0.25D, 0.9375D
     );
 
+    /**
+     * Vanilla stone plates use Sensitivity.MOBS, i.e. they already count only
+     * LivingEntity instances inside TOUCH_AABB with the same bounds used below.
+     * This injection therefore only subtracts TORNADO_JELLY from that count and
+     * must stay limited to Blocks.STONE_PRESSURE_PLATE to preserve vanilla
+     * behavior for every other pressure plate instance.
+     */
     @Inject(method = "getSignalStrength", at = @At("HEAD"), cancellable = true)
     private void candycraft$excludeMintJelly(Level level, BlockPos pos, CallbackInfoReturnable<Integer> callback) {
         if ((Object)this != Blocks.STONE_PRESSURE_PLATE) {
             return;
         }
 
-        boolean hasTriggeringEntity = level.getEntitiesOfClass(
-            LivingEntity.class,
-            PRESSURE_PLATE_TOUCH_AREA.move(pos)
-        ).stream().anyMatch(entity ->
-            !entity.isIgnoringBlockTriggers() && entity.getType() != CCEntityTypes.TORNADO_JELLY.get()
-        );
+        boolean hasTriggeringEntity = false;
+        for (LivingEntity entity : level.getEntitiesOfClass(LivingEntity.class, PRESSURE_PLATE_TOUCH_AREA.move(pos))) {
+            if (!entity.isIgnoringBlockTriggers() && entity.getType() != CCEntityTypes.TORNADO_JELLY.get()) {
+                hasTriggeringEntity = true;
+                break;
+            }
+        }
         callback.setReturnValue(hasTriggeringEntity ? 15 : 0);
     }
 }
