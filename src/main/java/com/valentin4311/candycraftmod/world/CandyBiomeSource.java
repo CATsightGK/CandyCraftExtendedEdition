@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 import net.minecraft.core.Holder;
@@ -34,6 +35,11 @@ public class CandyBiomeSource extends BiomeSource {
     private static final double GUMMY_REGION_THRESHOLD = 0.69D;
     private static final double CHOCOLATE_REGION_THRESHOLD = 0.47D;
     private static final double COTTON_CANDY_REGION_THRESHOLD = 0.51D;
+    /** Biomes whose surface blocks are not pudding (see CandyWorldChunkGenerator#surfaceMaterials). */
+    private static final Set<String> SPECIAL_SURFACE_BIOMES = Set.of(
+        "chocolate_forest", "gummy_swamp");
+    private static final String SUGAR_RIVER_PATH = "sugar_river";
+    private static final String SUGAR_OCEANS_PATH = "sugar_oceans";
     private final List<Holder<Biome>> biomes;
     private final Map<String, Holder<Biome>> byPath;
     private final Map<Long, Layer> legacyLayers = new ConcurrentHashMap<>();
@@ -75,13 +81,14 @@ public class CandyBiomeSource extends BiomeSource {
             // The real world seed is only known once chunk generation starts. Never cache these
             // fallback-seed samples: a stale tile survives the later seed sync and shows up as a
             // square patch of biomes that does not match the surrounding world.
-            BiomeInfo legacyBiome = legacyLayer.getBiomes(quartX, quartZ, 1, 1)[0];
             boolean needsSpawnLand = spawnLandNeeded.computeIfAbsent(
                 worldSeed, seed -> isOceanLike(legacyLayer.getBiomes(0, 0, 1, 1)[0]));
-            ResourceLocation mapped = needsSpawnLand && isSpawnLandRadius(quartX, quartZ, worldSeed)
-                && isOceanLike(legacyBiome)
-                ? candy("sugar_plains")
-                : mapLegacyBiome(legacyBiome, quartX, quartZ, worldSeed);
+            ResourceLocation mapped = borderRiverOr(
+                rawMappedBiome(legacyLayer, quartX, quartZ, worldSeed, needsSpawnLand),
+                rawMappedBiome(legacyLayer, quartX - 1, quartZ, worldSeed, needsSpawnLand),
+                rawMappedBiome(legacyLayer, quartX + 1, quartZ, worldSeed, needsSpawnLand),
+                rawMappedBiome(legacyLayer, quartX, quartZ - 1, worldSeed, needsSpawnLand),
+                rawMappedBiome(legacyLayer, quartX, quartZ + 1, worldSeed, needsSpawnLand));
             return byPath.getOrDefault(mapped.getPath(), biomes.get(0));
         }
         synchronized (biomeSamples) {
@@ -90,25 +97,36 @@ public class CandyBiomeSource extends BiomeSource {
                 return cached;
             }
 
+            // Sample one ring of margin cells around the tile so the special/normal
+            // surface border pass can inspect every cell's four neighbors.
             int tileX = Math.floorDiv(quartX, BIOME_TILE_SIZE) * BIOME_TILE_SIZE;
             int tileZ = Math.floorDiv(quartZ, BIOME_TILE_SIZE) * BIOME_TILE_SIZE;
-            BiomeInfo[] tile = legacyLayer.getBiomes(tileX, tileZ, BIOME_TILE_SIZE, BIOME_TILE_SIZE);
+            int gridSize = BIOME_TILE_SIZE + 2;
+            int originX = tileX - 1;
+            int originZ = tileZ - 1;
+            BiomeInfo[] legacyTile = legacyLayer.getBiomes(originX, originZ, gridSize, gridSize);
             if (biomeSamples.size() + BIOME_TILE_SIZE * BIOME_TILE_SIZE > 65536) {
                 biomeSamples.clear();
             }
             boolean needsSpawnLand = spawnLandNeeded.computeIfAbsent(
                 worldSeed, seed -> isOceanLike(legacyLayer.getBiomes(0, 0, 1, 1)[0]));
+            ResourceLocation[] rawGrid = new ResourceLocation[gridSize * gridSize];
+            for (int i = 0; i < rawGrid.length; ++i) {
+                int sampleX = originX + i % gridSize;
+                int sampleZ = originZ + i / gridSize;
+                rawGrid[i] = rawMappedBiome(legacyLayer, legacyTile[i], sampleX, sampleZ, worldSeed, needsSpawnLand);
+            }
             for (int localZ = 0; localZ < BIOME_TILE_SIZE; ++localZ) {
                 for (int localX = 0; localX < BIOME_TILE_SIZE; ++localX) {
-                    int sampleX = tileX + localX;
-                    int sampleZ = tileZ + localZ;
-                    BiomeInfo legacyBiome = tile[localX + localZ * BIOME_TILE_SIZE];
-                    ResourceLocation mapped = needsSpawnLand && isSpawnLandRadius(sampleX, sampleZ, worldSeed)
-                        && isOceanLike(legacyBiome)
-                        ? candy("sugar_plains")
-                        : mapLegacyBiome(legacyBiome, sampleX, sampleZ, worldSeed);
+                    int gridIndex = (localX + 1) + (localZ + 1) * gridSize;
+                    ResourceLocation mapped = borderRiverOr(
+                        rawGrid[gridIndex],
+                        rawGrid[gridIndex - 1],
+                        rawGrid[gridIndex + 1],
+                        rawGrid[gridIndex - gridSize],
+                        rawGrid[gridIndex + gridSize]);
                     Holder<Biome> result = byPath.getOrDefault(mapped.getPath(), biomes.get(0));
-                    biomeSamples.put(packCoordinates(sampleX, sampleZ), result);
+                    biomeSamples.put(packCoordinates(tileX + localX, tileZ + localZ), result);
                 }
             }
             return biomeSamples.get(sampleKey);
@@ -124,6 +142,43 @@ public class CandyBiomeSource extends BiomeSource {
             spawnLandNeeded.clear();
         }
         this.worldSeedOverride = worldSeed;
+    }
+
+    private ResourceLocation rawMappedBiome(Layer legacyLayer, int quartX, int quartZ, long worldSeed, boolean needsSpawnLand) {
+        return rawMappedBiome(legacyLayer, legacyLayer.getBiomes(quartX, quartZ, 1, 1)[0], quartX, quartZ, worldSeed, needsSpawnLand);
+    }
+
+    private static ResourceLocation rawMappedBiome(Layer legacyLayer, BiomeInfo legacyBiome, int quartX, int quartZ,
+            long worldSeed, boolean needsSpawnLand) {
+        return needsSpawnLand && isSpawnLandRadius(quartX, quartZ, worldSeed) && isOceanLike(legacyBiome)
+            ? candy("sugar_plains")
+            : mapLegacyBiome(legacyBiome, quartX, quartZ, worldSeed);
+    }
+
+    /**
+     * Guarantees a river between special-surface biomes and the normal pudding
+     * biomes: a special cell bordering ordinary land becomes sugar_river, which
+     * the chunk generator carves into a real fluid channel. Rivers and oceans
+     * are left untouched.
+     */
+    private static ResourceLocation borderRiverOr(ResourceLocation self, ResourceLocation west, ResourceLocation east,
+            ResourceLocation north, ResourceLocation south) {
+        if (!isSpecialSurface(self)) {
+            return self;
+        }
+        if (isNormalLand(west) || isNormalLand(east) || isNormalLand(north) || isNormalLand(south)) {
+            return candy(SUGAR_RIVER_PATH);
+        }
+        return self;
+    }
+
+    private static boolean isSpecialSurface(ResourceLocation id) {
+        return id != null && SPECIAL_SURFACE_BIOMES.contains(id.getPath());
+    }
+
+    private static boolean isNormalLand(ResourceLocation id) {
+        return id != null && !SPECIAL_SURFACE_BIOMES.contains(id.getPath())
+            && !SUGAR_RIVER_PATH.equals(id.getPath()) && !SUGAR_OCEANS_PATH.equals(id.getPath());
     }
 
     private static long packCoordinates(int x, int z) {
