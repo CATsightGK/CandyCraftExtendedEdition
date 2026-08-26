@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "bottom": "candycraftmod:block/matcha_cake_base",
+    "side": "candycraftmod:block/matcha_white_cream_cake_base_side",
+    "top": "candycraftmod:block/matcha_cake_base"
+  }
+}

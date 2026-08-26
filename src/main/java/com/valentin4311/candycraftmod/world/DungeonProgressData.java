@@ -58,6 +58,7 @@ public final class DungeonProgressData extends SavedData {
                 value.active = new Instance(
                     active.getLong("Id"),
                     BlockPos.of(active.getLong("Origin")),
+                    active.getBoolean("GenerationStarted") || active.getBoolean("Generated"),
                     active.getBoolean("Generated"),
                     active.getBoolean("BossDefeated")
                 );
@@ -88,7 +89,7 @@ public final class DungeonProgressData extends SavedData {
         }
 
         BlockPos origin = randomOrigin(player.server, kind);
-        value.active = new Instance(nextInstanceId++, origin, false, false);
+        value.active = new Instance(nextInstanceId++, origin, false, false, false);
         setDirty();
         return value.active;
     }
@@ -112,7 +113,16 @@ public final class DungeonProgressData extends SavedData {
     public void markGenerated(UUID owner, DungeonKind kind, long instanceId) {
         Instance active = getActive(owner, kind);
         if (active != null && active.id == instanceId && !active.generated) {
+            active.generationStarted = true;
             active.generated = true;
+            setDirty();
+        }
+    }
+
+    public void markGenerationStarted(UUID owner, DungeonKind kind, long instanceId) {
+        Instance active = getActive(owner, kind);
+        if (active != null && active.id == instanceId && !active.generationStarted) {
+            active.generationStarted = true;
             setDirty();
         }
     }
@@ -280,6 +290,7 @@ public final class DungeonProgressData extends SavedData {
                 CompoundTag active = new CompoundTag();
                 active.putLong("Id", value.active.id);
                 active.putLong("Origin", value.active.origin.asLong());
+                active.putBoolean("GenerationStarted", value.active.generationStarted);
                 active.putBoolean("Generated", value.active.generated);
                 active.putBoolean("BossDefeated", value.active.bossDefeated);
                 entry.put("Active", active);
@@ -322,12 +333,14 @@ public final class DungeonProgressData extends SavedData {
     public static final class Instance {
         private final long id;
         private final BlockPos origin;
+        private boolean generationStarted;
         private boolean generated;
         private boolean bossDefeated;
 
-        private Instance(long id, BlockPos origin, boolean generated, boolean bossDefeated) {
+        private Instance(long id, BlockPos origin, boolean generationStarted, boolean generated, boolean bossDefeated) {
             this.id = id;
             this.origin = origin;
+            this.generationStarted = generationStarted;
             this.generated = generated;
             this.bossDefeated = bossDefeated;
         }
@@ -342,6 +355,10 @@ public final class DungeonProgressData extends SavedData {
 
         public boolean generated() {
             return generated;
+        }
+
+        public boolean generationStarted() {
+            return generationStarted;
         }
 
         public boolean bossDefeated() {

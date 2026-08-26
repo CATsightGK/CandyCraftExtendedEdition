@@ -1,0 +1,7 @@
+{
+    "parent": "block/cube_column",
+    "textures": {
+        "end": "candycraftmod:block/matcha_cake_roll_end",
+        "side": "candycraftmod:block/matcha_cake_roll_side"
+    }
+}

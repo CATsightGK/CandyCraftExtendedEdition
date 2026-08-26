@@ -1,0 +1,9 @@
+{
+  "parent": "candycraftmod:block/wafer_stick_block",
+  "textures": {
+    "0": "candycraftmod:block/matcha_wafer_cone_side",
+    "1": "candycraftmod:block/matcha_wafer_cone_top",
+    "2": "candycraftmod:block/matcha_wafer_cone_inside",
+    "particle": "candycraftmod:block/matcha_wafer_cone_side"
+  }
+}

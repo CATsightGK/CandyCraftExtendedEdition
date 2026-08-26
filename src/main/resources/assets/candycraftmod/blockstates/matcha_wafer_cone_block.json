@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "axis=y": {
+      "model": "candycraftmod:block/matcha_wafer_cone_block"
+    },
+    "axis=x": {
+      "model": "candycraftmod:block/matcha_wafer_cone_block",
+      "x": 90,
+      "y": 90
+    },
+    "axis=z": {
+      "model": "candycraftmod:block/matcha_wafer_cone_block",
+      "x": 90
+    }
+  }
+}

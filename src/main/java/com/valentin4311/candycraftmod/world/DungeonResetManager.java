@@ -1,5 +1,6 @@
 package com.valentin4311.candycraftmod.world;
 
+import com.mojang.logging.LogUtils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -11,6 +12,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
+import org.slf4j.Logger;
 
 /**
  * Server-thread work queue that spreads huge region rewrites (dungeon instance
@@ -20,6 +22,7 @@ import net.minecraft.world.level.block.Blocks;
  */
 public final class DungeonResetManager {
     private static final long TIME_BUDGET_NANOS = 8_000_000L;
+    private static final Logger LOGGER = LogUtils.getLogger();
 
     private static final ConcurrentLinkedDeque<Job> JOBS = new ConcurrentLinkedDeque<>();
     private static final ConcurrentLinkedQueue<Runnable> IDLE_CALLBACKS = new ConcurrentLinkedQueue<>();
@@ -36,13 +39,37 @@ public final class DungeonResetManager {
      */
     public static boolean beginPrepare(ServerLevel level, BlockPos origin, int minX, int maxX, int minY, int maxY,
             int minZ, int maxZ, Runnable buildStep) {
+        return beginPrepareSteps(level, origin, minX, maxX, minY, maxY, minZ, maxZ,
+            buildStep == null ? List.of() : List.of(buildStep));
+    }
+
+    public static boolean beginPrepareSteps(ServerLevel level, BlockPos origin, int minX, int maxX, int minY, int maxY,
+            int minZ, int maxZ, List<Runnable> buildSteps) {
         PrepareKey key = new PrepareKey(level.dimension(), origin);
         if (ACTIVE_PREPARES.containsKey(key)) {
             return false;
         }
         ACTIVE_PREPARES.put(key, new ArrayList<>());
+        LOGGER.info("Recovering dungeon build in {} at {} with {} generation steps",
+            level.dimension().location(), origin.toShortString(), buildSteps.size());
         JOBS.addLast(new ClearRegionJob(level, origin, minX, maxX, minY, maxY, minZ, maxZ));
-        if (buildStep != null) {
+        for (Runnable buildStep : buildSteps) {
+            JOBS.addLast(new UnitJob(buildStep));
+        }
+        JOBS.addLast(new PrepareCompletionJob(key));
+        return true;
+    }
+
+    /** Queues a fresh dungeon build without scanning its unused region first. */
+    public static boolean beginBuild(ServerLevel level, BlockPos origin, List<Runnable> buildSteps) {
+        PrepareKey key = new PrepareKey(level.dimension(), origin);
+        if (ACTIVE_PREPARES.containsKey(key)) {
+            return false;
+        }
+        ACTIVE_PREPARES.put(key, new ArrayList<>());
+        LOGGER.info("Starting fresh dungeon build in {} at {} with {} generation steps",
+            level.dimension().location(), origin.toShortString(), buildSteps.size());
+        for (Runnable buildStep : buildSteps) {
             JOBS.addLast(new UnitJob(buildStep));
         }
         JOBS.addLast(new PrepareCompletionJob(key));
@@ -100,6 +127,8 @@ public final class DungeonResetManager {
 
     private static void finishPrepare(PrepareFinalizer finalizer) {
         List<Runnable> callbacks = ACTIVE_PREPARES.remove(finalizer.key());
+        LOGGER.info("Dungeon build complete in {} at {}",
+            finalizer.key().dimension().location(), finalizer.key().origin().toShortString());
         if (callbacks != null) {
             callbacks.forEach(Runnable::run);
         }

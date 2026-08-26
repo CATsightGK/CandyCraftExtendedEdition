@@ -235,17 +235,28 @@ public class DungeonTeleporterBlock extends Block {
 
         if (!instance.generated()) {
             BlockPos origin = instance.origin();
-            boolean started = kind == DungeonKind.JELLY
-                ? JellyDungeonFeature.beginPrepare(target, origin)
-                : SuguardDungeonFeature.beginPrepare(target, origin);
+            boolean recoveringInterruptedBuild = instance.generationStarted();
+            if (!recoveringInterruptedBuild) {
+                data.markGenerationStarted(owner, kind, instance.id());
+            }
+            boolean started;
+            if (kind == DungeonKind.JELLY) {
+                started = recoveringInterruptedBuild
+                    ? JellyDungeonFeature.beginPrepare(target, origin)
+                    : JellyDungeonFeature.beginGenerate(target, origin);
+            } else {
+                started = recoveringInterruptedBuild
+                    ? SuguardDungeonFeature.beginPrepare(target, origin)
+                    : SuguardDungeonFeature.beginGenerate(target, origin);
+            }
             if (started) {
-                // Marked on completion so a crash mid-rebuild leaves the
+                // Marked on completion so a crash mid-build leaves the
                 // instance ungenerated and self-heals on the next entry.
                 DungeonResetManager.onPrepared(target, origin,
                     () -> data.markGenerated(owner, kind, instance.id()));
             }
-            // Instance content is being rebuilt across ticks; hold the teleport
-            // until the queued clear+build pipeline reports completion.
+            player.displayClientMessage(Component.translatable("chat.generating"), true);
+            // Hold the teleport until every queued room reports completion.
             DungeonResetManager.onPrepared(target, origin, () -> {
                 if (player.server.getPlayerList().getPlayer(player.getUUID()) == player) {
                     teleportToDungeonEntry(player, target, kind, origin);

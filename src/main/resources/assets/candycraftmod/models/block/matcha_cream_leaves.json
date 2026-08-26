@@ -1,0 +1,6 @@
+{
+    "textures":  {
+                     "all":  "candycraftmod:block/matcha_cream_leaves"
+                 },
+    "parent":  "minecraft:block/cube_all"
+}

@@ -2,7 +2,6 @@ package com.valentin4311.candycraftmod.client;
 
 import com.valentin4311.candycraftmod.CandyCraft;
 import com.mojang.logging.LogUtils;
-import com.valentin4311.candycraftmod.block.DungeonTeleporterBlock;
 import com.valentin4311.candycraftmod.block.PuddingBlock;
 import com.valentin4311.candycraftmod.client.particle.ChocolateSplashParticle;
 import com.valentin4311.candycraftmod.client.particle.MilkRainDropParticle;
@@ -34,7 +33,6 @@ import com.valentin4311.candycraftmod.registry.CCParticleTypes;
 import com.valentin4311.candycraftmod.item.CaramelCrossbowItem;
 import com.valentin4311.candycraftmod.item.DynamiteItem;
 import com.valentin4311.candycraftmod.item.JellyWandItem;
-import com.valentin4311.candycraftmod.item.JellyDungeonKeyItem;
 import com.valentin4311.candycraftmod.item.JumpWandItem;
 import com.valentin4311.candycraftmod.item.RawGummyItem;
 import com.valentin4311.candycraftmod.item.SugarPillItem;
@@ -86,7 +84,6 @@ import net.minecraftforge.client.event.RegisterDimensionSpecialEffectsEvent;
 import net.minecraftforge.client.event.RegisterColorHandlersEvent;
 import net.minecraftforge.client.event.EntityRenderersEvent;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -110,9 +107,6 @@ public final class CCClient {
     private static final ResourceLocation DUNGEON_EFFECTS = new ResourceLocation(CandyCraft.MODID, "candy_dungeon_effects");
     private static final float CANDY_WORLD_MIN_DAY_FACTOR = 0.3957580F;
     private static int portalOverlayTicks;
-    private static boolean dungeonLoadingActive;
-    private static boolean dungeonLoadingSuguard;
-    private static int dungeonLoadingTimeoutTicks;
     private static boolean candyWorldLoadingActive;
     private static int candyWorldLoadingTimeoutTicks;
     private static int candyWorldLoadingGraceTicks;
@@ -802,41 +796,11 @@ public final class CCClient {
             Minecraft minecraft = Minecraft.getInstance();
             if (minecraft.player == null) {
                 portalOverlayTicks = 0;
-                dungeonLoadingActive = false;
-                dungeonLoadingTimeoutTicks = 0;
                 clearCandyWorldLoadingState(false);
                 return;
             }
-            tickDungeonLoadingScreen(minecraft);
             tickCandyWorldLoadingScreen(minecraft);
             updateCandyPortalOverlay(minecraft);
-        }
-
-        @SubscribeEvent
-        public static void onClientRightClickBlock(PlayerInteractEvent.RightClickBlock event) {
-            if (event.getLevel().isClientSide() && event.getLevel().getBlockState(event.getPos()).is(CCBlocks.BLOCK_TELEPORTER.get())) {
-                net.minecraft.world.level.block.state.BlockState portal = event.getLevel().getBlockState(event.getPos());
-                if (portal.getValue(DungeonTeleporterBlock.ROLE) == DungeonTeleporterBlock.PortalRole.ENTRY) {
-                    DungeonTeleporterBlock.DungeonKind kind = portal.getValue(DungeonTeleporterBlock.DUNGEON);
-                    if (hasMatchingDungeonKey(event.getEntity(), kind)) {
-                        clearDungeonLoadingScreen();
-                        return;
-                    }
-                    dungeonLoadingSuguard = kind == DungeonTeleporterBlock.DungeonKind.SUGUARD;
-                    beginDungeonLoadingScreen();
-                }
-            }
-        }
-
-        private static boolean hasMatchingDungeonKey(net.minecraft.world.entity.player.Player player,
-                DungeonTeleporterBlock.DungeonKind kind) {
-            for (net.minecraft.world.InteractionHand hand : net.minecraft.world.InteractionHand.values()) {
-                net.minecraft.world.item.ItemStack stack = player.getItemInHand(hand);
-                if (stack.getItem() instanceof JellyDungeonKeyItem key && key.matchesDungeon(kind)) {
-                    return true;
-                }
-            }
-            return false;
         }
 
         @SubscribeEvent
@@ -875,7 +839,7 @@ public final class CCClient {
 
         private static boolean isDungeonLoadingContext() {
             Minecraft minecraft = Minecraft.getInstance();
-            return dungeonLoadingActive || isDungeonLevel(minecraft.level);
+            return isDungeonLevel(minecraft.level);
         }
 
         private static void renderDungeonLoadingFrame(GuiGraphics graphics) {
@@ -883,8 +847,8 @@ public final class CCClient {
             int width = minecraft.getWindow().getGuiScaledWidth();
             int height = minecraft.getWindow().getGuiScaledHeight();
             renderDungeonLoadingBackground(graphics, width, height);
-            boolean suguard = dungeonLoadingSuguard
-                || (minecraft.level != null && "suguard_dungeon".equals(minecraft.level.dimension().location().getPath()));
+            boolean suguard = minecraft.level != null
+                && "suguard_dungeon".equals(minecraft.level.dimension().location().getPath());
             net.minecraft.world.item.ItemStack key = new net.minecraft.world.item.ItemStack(
                 suguard ? CCItems.SUGUARD_KEY.get() : CCItems.JELLY_KEY.get()
             );
@@ -900,53 +864,13 @@ public final class CCClient {
 
         private static void renderCustomLoadingBackground(GuiGraphics graphics, Screen screen) {
             Minecraft minecraft = Minecraft.getInstance();
-            boolean dungeon = dungeonLoadingActive || isDungeonLevel(minecraft.level);
+            boolean dungeon = isDungeonLevel(minecraft.level);
             int width = minecraft.getWindow().getGuiScaledWidth();
             int height = minecraft.getWindow().getGuiScaledHeight();
             if (dungeon) {
                 renderDungeonLoadingBackground(graphics, width, height);
             } else if (candyWorldLoadingActive || isCandyWorldLevel(minecraft.level)) {
                 renderCandyWorldLoadingBackground(graphics, width, height);
-            }
-        }
-
-        private static void beginDungeonLoadingScreen() {
-            Minecraft minecraft = Minecraft.getInstance();
-            dungeonLoadingActive = true;
-            dungeonLoadingTimeoutTicks = 20 * 60;
-            if (!(minecraft.screen instanceof ReceivingLevelScreen || minecraft.screen instanceof LevelLoadingScreen)) {
-                minecraft.setScreen(new GenericDirtMessageScreen(Component.translatable("chat.generating")));
-            }
-        }
-
-        private static void clearDungeonLoadingScreen() {
-            Minecraft minecraft = Minecraft.getInstance();
-            dungeonLoadingActive = false;
-            dungeonLoadingTimeoutTicks = 0;
-            if (minecraft.screen instanceof GenericDirtMessageScreen) {
-                minecraft.setScreen(null);
-            }
-        }
-
-        private static void tickDungeonLoadingScreen(Minecraft minecraft) {
-            if (!dungeonLoadingActive) {
-                return;
-            }
-            if (isDungeonLevel(minecraft.level)
-                && !(minecraft.screen instanceof ReceivingLevelScreen)
-                && !(minecraft.screen instanceof LevelLoadingScreen)) {
-                dungeonLoadingActive = false;
-                dungeonLoadingTimeoutTicks = 0;
-                if (minecraft.screen instanceof GenericDirtMessageScreen) {
-                    minecraft.setScreen(null);
-                }
-                return;
-            }
-            if (--dungeonLoadingTimeoutTicks <= 0) {
-                dungeonLoadingActive = false;
-                if (minecraft.screen instanceof GenericDirtMessageScreen) {
-                    minecraft.setScreen(null);
-                }
             }
         }
 

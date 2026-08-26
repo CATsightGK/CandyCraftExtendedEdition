@@ -1,0 +1,7 @@
+{
+    "variants": {
+        "axis=y":  { "model": "candycraftmod:block/matcha_cake_roll" },
+        "axis=z":   { "model": "candycraftmod:block/matcha_cake_roll", "x": 90 },
+        "axis=x":   { "model": "candycraftmod:block/matcha_cake_roll", "x": 90, "y": 90 }
+    }
+}

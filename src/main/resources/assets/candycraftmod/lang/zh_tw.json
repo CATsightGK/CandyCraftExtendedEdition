@@ -1,3 +1,13 @@
 {
-  "block.candycraftmod.wafer_cone_block": "甜筒塊"
+  "block.candycraftmod.wafer_cone_block": "甜筒塊",
+  "block.candycraftmod.matcha_wafer_cone_block": "抹茶蛋捲塊",
+  "block.candycraftmod.porous_biscuit_slice": "多孔餅乾片",
+  "block.candycraftmod.pink_cream_leaves": "粉色奶油樹葉",
+  "block.candycraftmod.matcha_cream_leaves": "抹茶奶油樹葉",
+  "block.candycraftmod.matcha_cream_cake_base": "抹茶味奶油蛋糕胚",
+  "block.candycraftmod.matcha_white_cream_cake_base": "抹茶白奶油蛋糕胚",
+  "block.candycraftmod.matcha_cake_base": "抹茶蛋糕胚",
+  "block.candycraftmod.coffee_cream_fern": "咖啡奶油蕨",
+  "block.candycraftmod.matcha_cream_grass": "抹茶奶油草",
+  "block.candycraftmod.sakura_cream_grass": "櫻花奶油草"
 }

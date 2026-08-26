@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "waterlogged=false": {
+      "model": "candycraftmod:block/porous_biscuit_slice"
+    },
+    "waterlogged=true": {
+      "model": "candycraftmod:block/porous_biscuit_slice"
+    }
+  }
+}

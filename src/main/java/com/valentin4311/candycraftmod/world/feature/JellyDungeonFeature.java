@@ -12,6 +12,8 @@ import com.valentin4311.candycraftmod.entity.BasicCandySlimeEntity;
 import com.valentin4311.candycraftmod.registry.CCBlocks;
 import com.valentin4311.candycraftmod.registry.CCEntityTypes;
 import com.valentin4311.candycraftmod.registry.CCItems;
+import java.util.ArrayList;
+import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
@@ -75,9 +77,81 @@ public class JellyDungeonFeature extends Feature<NoneFeatureConfiguration> {
      */
     public static boolean beginPrepare(ServerLevel level, BlockPos origin) {
         purgeDungeonEntities(level, origin);
-        return DungeonResetManager.beginPrepare(level, origin,
+        return DungeonResetManager.beginPrepareSteps(level, origin,
             CLEAR_MIN_X, CLEAR_MAX_X, CLEAR_MIN_Y, CLEAR_MAX_Y, CLEAR_MIN_Z, CLEAR_MAX_Z,
-            () -> new JellyDungeonFeature(NoneFeatureConfiguration.CODEC).legacyDungeon(level, level.getRandom(), origin));
+            buildSteps(level, origin));
+    }
+
+    public static boolean beginGenerate(ServerLevel level, BlockPos origin) {
+        purgeDungeonEntities(level, origin);
+        return DungeonResetManager.beginBuild(level, origin, buildSteps(level, origin));
+    }
+
+    private static List<Runnable> buildSteps(ServerLevel level, BlockPos origin) {
+        JellyDungeonFeature feature = new JellyDungeonFeature(NoneFeatureConfiguration.CODEC);
+        RandomSource random = RandomSource.create(level.getSeed() ^ origin.asLong());
+        List<Runnable> steps = new ArrayList<>();
+        int x = origin.getX();
+        int y = origin.getY();
+        int z = origin.getZ();
+        feature.posX = 0;
+        int route = random.nextInt(4);
+        boolean jumpBeforeMob = random.nextBoolean();
+
+        steps.add(() -> feature.spawnRoom189(level, random, x - 1, y - 1, z - 1));
+        steps.add(() -> feature.genCoridor189(level, random, x + 7, y, z - feature.posX));
+        if (route == 0 || route == 2) {
+            steps.add(() -> feature.genJumpCraft189(level, random, x + 5, y - 3, z - feature.posX));
+        } else if (route == 1) {
+            steps.add(() -> feature.genMob189(level, random, x + 7, y, z - feature.posX));
+        } else {
+            steps.add(() -> feature.genWaterRoom189(level, random, x + 7, y, z - feature.posX));
+        }
+        steps.add(() -> feature.genCoridor189(level, random, x + 7, y, z - feature.posX));
+        if (route == 0 || route == 1) {
+            steps.add(() -> feature.genWaterRoom189(level, random, x + 7, y, z - feature.posX));
+        } else {
+            steps.add(() -> feature.genMob189(level, random, x + 7, y, z - feature.posX));
+        }
+        steps.add(() -> feature.genCoridor189(level, random, x + 7, y, z - feature.posX));
+        if (route == 0) {
+            steps.add(() -> feature.genMob189(level, random, x + 7, y, z - feature.posX));
+        } else if (route == 1) {
+            steps.add(() -> feature.genJumpCraft189(level, random, x + 5, y - 3, z - feature.posX));
+        } else if (route == 2) {
+            steps.add(() -> feature.genWaterRoom189(level, random, x + 7, y, z - feature.posX));
+        } else {
+            steps.add(() -> feature.genJumpCraft189(level, random, x + 5, y - 3, z - feature.posX));
+        }
+        steps.add(() -> feature.genCoridor189(level, random, x + 7, y, z - feature.posX));
+        steps.add(() -> {
+            int pezZ = z - feature.posX;
+            feature.genMiniBossRoom189(level, random, x + 7, y, pezZ);
+            feature.fillLoweredPezGap(level, x + 7, y, pezZ);
+        });
+
+        int postPezY = y - 2;
+        int kingY = postPezY - 1;
+        steps.add(() -> feature.genCoridor189(level, random, x + 7, postPezY, z - feature.posX));
+        if (jumpBeforeMob) {
+            steps.add(() -> feature.genJumpCraft189(level, random, x + 5, postPezY - 3, z - feature.posX));
+            steps.add(() -> feature.genCoridor189(level, random, x + 7, postPezY, z - feature.posX));
+            steps.add(() -> feature.genMob189(level, random, x + 7, postPezY, z - feature.posX));
+        } else {
+            steps.add(() -> feature.genMob189(level, random, x + 7, postPezY, z - feature.posX));
+            steps.add(() -> feature.genCoridor189(level, random, x + 7, postPezY, z - feature.posX));
+            steps.add(() -> feature.genJumpCraft189(level, random, x + 5, postPezY - 3, z - feature.posX));
+        }
+        steps.add(() -> feature.genCoridor189(level, random, x + 7, postPezY, z - feature.posX));
+        steps.add(() -> {
+            int kingZ = z - feature.posX;
+            feature.genBossRoom189(level, random, x + 7, kingY, kingZ);
+            feature.fillLoweredKingGap(level, x + 7, kingY, kingZ);
+        });
+        int postKingY = kingY - 1;
+        steps.add(() -> feature.genCoridor189(level, random, x + 7, postKingY, z - feature.posX));
+        steps.add(() -> feature.genReward189(level, random, x + 7, postKingY, z - feature.posX));
+        return steps;
     }
 
     public static void purgeDungeonEntities(ServerLevel level, BlockPos origin) {

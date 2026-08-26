@@ -72,9 +72,45 @@ public class SuguardDungeonFeature extends Feature<NoneFeatureConfiguration> {
      */
     public static boolean beginPrepare(ServerLevel level, BlockPos origin) {
         purgeDungeonEntities(level, origin);
-        return DungeonResetManager.beginPrepare(level, origin,
+        return DungeonResetManager.beginPrepareSteps(level, origin,
             CLEAR_MIN_X, CLEAR_MAX_X, CLEAR_MIN_Y, CLEAR_MAX_Y, CLEAR_MIN_Z, CLEAR_MAX_Z,
-            () -> new SuguardDungeonFeature(NoneFeatureConfiguration.CODEC).legacyDungeon(level, level.getRandom(), origin));
+            buildSteps(level, origin));
+    }
+
+    public static boolean beginGenerate(ServerLevel level, BlockPos origin) {
+        purgeDungeonEntities(level, origin);
+        return DungeonResetManager.beginBuild(level, origin, buildSteps(level, origin));
+    }
+
+    private static List<Runnable> buildSteps(ServerLevel level, BlockPos origin) {
+        SuguardDungeonFeature feature = new SuguardDungeonFeature(NoneFeatureConfiguration.CODEC);
+        RandomSource random = RandomSource.create(level.getSeed() ^ origin.asLong());
+        int x = origin.getX();
+        int y = origin.getY();
+        int z = origin.getZ();
+        return List.of(
+            () -> feature.spawnRoom(level, random, origin),
+            () -> feature.zCorridor(level, x, y, z - 5),
+            () -> feature.zCorridor(level, x, y, z + 13),
+            () -> feature.xCorridor(level, x - 5, y, z),
+            () -> feature.xCorridor(level, x + 19, y, z),
+            () -> feature.bossRoom(level, random, x + 40, y - 3, z, -20, 3, 0, true),
+            () -> feature.archerRoom(level, random, x, y, z - 14),
+            () -> feature.zCorridor(level, x, y, z - 65),
+            () -> feature.waterRoom(level, random, x, y, z - 73),
+            () -> feature.zCorridor(level, x, y, z - 104),
+            () -> feature.bossRoom(level, random, x, y - 3, z - 132, 0, 3, 20, false),
+            () -> feature.barrierRoom(level, random, x, y, z + 14),
+            () -> feature.zCorridor(level, x, y, z + 75),
+            () -> feature.jumpRoom(level, random, x, y, z + 76),
+            () -> feature.zCorridor(level, x, y - 53, z + 104),
+            () -> feature.bossRoom(level, random, x, y - 56, z + 125, 0, 3, -20, false),
+            () -> feature.fallRoom(level, random, x - 14, y, z),
+            () -> feature.xCorridor(level, x - 27, y - 53, z),
+            () -> feature.fightRoom(level, random, x - 36, y - 53, z),
+            () -> feature.xCorridor(level, x - 77, y - 9, z),
+            () -> feature.bossRoom(level, random, x - 105, y - 12, z, 20, 3, 0, false)
+        );
     }
 
     public static void purgeDungeonEntities(ServerLevel level, BlockPos origin) {

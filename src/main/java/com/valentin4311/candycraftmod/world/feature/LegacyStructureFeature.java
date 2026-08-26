@@ -24,7 +24,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.WorldGenRegion;
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.Container;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.WorldGenLevel;
@@ -33,7 +32,7 @@ import net.minecraft.world.level.block.RotatedPillarBlock;
 import net.minecraft.world.level.block.SlabBlock;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.CropBlock;
-import net.minecraft.world.level.block.entity.ChestBlockEntity;
+import net.minecraft.world.level.block.entity.RandomizableContainerBlockEntity;
 import net.minecraft.world.level.block.entity.SpawnerBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.SlabType;
@@ -41,11 +40,6 @@ import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.feature.Feature;
 import net.minecraft.world.level.levelgen.feature.FeaturePlaceContext;
 import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
-import net.minecraft.world.level.storage.loot.LootParams;
-import net.minecraft.world.level.storage.loot.LootTable;
-import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
-import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
-import net.minecraft.world.phys.Vec3;
 
 public class LegacyStructureFeature extends Feature<NoneFeatureConfiguration> {
     private static final ResourceLocation CANDY_HOUSE_LOOT = new ResourceLocation(CandyCraft.MODID, "chests/candy_house");
@@ -1033,16 +1027,10 @@ public class LegacyStructureFeature extends Feature<NoneFeatureConfiguration> {
     }
 
     private static void loot(WorldGenLevel level, RandomSource random, BlockPos pos, ResourceLocation table) {
-        if (level.getBlockEntity(pos) instanceof ChestBlockEntity chest) {
-            chest.setLootTable(table, random.nextLong());
-            return;
-        }
-        if (level.getBlockEntity(pos) instanceof Container container && level instanceof WorldGenRegion region) {
-            LootTable lootTable = region.getLevel().getServer().getLootData().getLootTable(table);
-            LootParams params = new LootParams.Builder(region.getLevel())
-                .withParameter(LootContextParams.ORIGIN, Vec3.atCenterOf(pos))
-                .create(LootContextParamSets.CHEST);
-            lootTable.fill(container, params, random.nextLong());
+        if (level.getBlockEntity(pos) instanceof RandomizableContainerBlockEntity container) {
+            // Defer loot generation until the chest is opened on the server
+            // thread; chunk generation may run asynchronously under Arclight.
+            container.setLootTable(table, random.nextLong());
         }
     }
 

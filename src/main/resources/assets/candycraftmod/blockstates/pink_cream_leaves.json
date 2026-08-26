@@ -1,0 +1,9 @@
+{
+  "multipart": [
+    {
+      "apply": {
+        "model": "candycraftmod:block/pink_cream_leaves"
+      }
+    }
+  ]
+}
